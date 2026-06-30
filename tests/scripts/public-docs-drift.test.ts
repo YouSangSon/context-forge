@@ -176,6 +176,15 @@ describe("public documentation drift checks", () => {
       expect(text).not.toContain("node-%3E%3D20");
     }
 
+    const staleUnreleasedNodeSignals = ["Node ≥20", "node-%3E%3D20", "Node 20+22"];
+    for (const path of ["CHANGELOG.md", "CHANGELOG.ko.md"]) {
+      const section = unreleasedChangelogSection(path);
+      expect(section).toContain("Node ≥22");
+      for (const staleSignal of staleUnreleasedNodeSignals) {
+        expect(section).not.toContain(staleSignal);
+      }
+    }
+
     const ci = read(".github/workflows/ci.yml");
     expect(ci).toContain('node: ["22", "24"]');
     expect(ci).not.toContain('"20"');

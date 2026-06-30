@@ -3869,3 +3869,21 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`63` files passed, `2` skipped; `612` tests passed, `34` skipped)
 - `git diff --check`
+
+- Fixed Unreleased Node runtime changelog drift after the project moved to
+  Node 22+:
+  - `CHANGELOG.md` and `CHANGELOG.ko.md` now describe the current README
+    landing badge set as Node ≥22 instead of Node ≥20.
+  - `tests/scripts/public-docs-drift.test.ts` checks only Unreleased changelog
+    sections for stale `Node ≥20`, `node-%3E%3D20`, and `Node 20+22` current
+    support wording, while preserving historical 1.0.0 release text.
+  - Existing Node runtime decision/source remains `DECISIONS.md` 2026-06-27;
+    no new decision was needed.
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`25` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`77` files passed, `2` skipped; `1796` tests passed, `34` skipped)
+- `git diff --check`

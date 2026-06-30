@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Unreleased English/Korean changelog README landing badge wording now reflects
+  Node ≥22, with Unreleased-only drift coverage to keep stale Node 20 wording
+  out of current-support notes.
 - `.env.example` describes Compose environment loading as variable
   substitution, matching `compose.yaml` and the configuration docs.
 - Docker, CI, and local installer dependency installs skip onnxruntime-node CUDA

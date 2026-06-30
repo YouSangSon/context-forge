@@ -4,19 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Unreleased Ingest Outbox Changelog Drift
+## Current Loop — Unreleased Node Runtime Changelog Drift
 
 Status:
-- `CHANGELOG.md` and `CHANGELOG.ko.md` Unreleased now describe Migration 007
-  as the shipped Qdrant outbox support for the implemented, opt-in ingest
-  sweeper/retry loop.
-- `tests/scripts/public-docs-drift.test.ts` now checks only the Unreleased
-  Migration 007 ingest outbox bullet for stale `#12 branch`, `in-flight`, or
-  `in-progress` wording, leaving older release history alone.
+- `CHANGELOG.md` and `CHANGELOG.ko.md` Unreleased now describe the README
+  landing badges as Node ≥22, matching the current runtime floor.
+- `tests/scripts/public-docs-drift.test.ts` now checks only Unreleased
+  changelog sections for stale Node ≥20 / `node-%3E%3D20` / `Node 20+22`
+  wording while leaving historical release notes alone.
 
 Loop closeout:
-- Focused public docs drift test passed; controller review and final commit;
-  do not push from this loop.
+- Focused public docs drift test passed. Local commit is expected/done by the
+  controller; do not push or merge from this loop.
 
 ## Next Loop Candidates
 

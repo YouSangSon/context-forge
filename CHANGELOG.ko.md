@@ -280,7 +280,7 @@ CHANGELOG에서 명시적으로 표기합니다.
   전환 reference, 1회성 마이그레이션 아님.
   ([`a3b456a`](https://github.com/YouSangSon/akasha/commit/a3b456a))
 - **README landing 30초 가치 파악용으로 정리** — CI / License /
-  MCP-compatible / Node ≥20 badges 추가, 강조형 1줄 tagline *"Persistent
+  MCP-compatible / Node ≥22 badges 추가, 강조형 1줄 tagline *"Persistent
   memory for AI coding agents — free, local, self-hosted"* + elevator
   paragraph 로 차별화 포인트 surface (API key 불필요, $0 cost, 데이터는
   본인 머신에서만). Quick-start fix: *"fill in OPENAI_API_KEY at minimum"*

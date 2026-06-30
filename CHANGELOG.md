@@ -300,7 +300,7 @@ small actual impact surface.
   switching in either direction, not a one-time migration.
   ([`a3b456a`](https://github.com/YouSangSon/akasha/commit/a3b456a))
 - **README landing tightened for 30-second value comprehension** — added
-  CI / License / MCP-compatible / Node ≥20 badges, leading tagline
+  CI / License / MCP-compatible / Node ≥22 badges, leading tagline
   "Persistent memory for AI coding agents — free, local, self-hosted" +
   elevator paragraph surfacing the differentiator (no API key, $0 cost,
   data stays on your box). Quick-start fix: "fill in `OPENAI_API_KEY` at
