@@ -3887,3 +3887,21 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`77` files passed, `2` skipped; `1796` tests passed, `34` skipped)
 - `git diff --check`
+
+- Fixed stale pre-P17 compaction apply comments:
+  - `src/app/server.ts` now describes the current unauthenticated non-loopback
+    risk as destructive/admin operations instead of a future P17 apply path.
+  - `tests/compact/compact-memory.test.ts` now documents that
+    `buildCompactionPlan` is planning/summary-only and the `applyCompaction`
+    orchestrator fills actual archived IDs.
+  - `tests/scripts/public-docs-drift.test.ts` now guards exact stale
+    future-tense phrases only in the touched source/test files.
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts tests/compact/compact-memory.test.ts`
+  (`62` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`77` files passed, `2` skipped; `1797` tests passed, `34` skipped)
+- `git diff --check` (passed)

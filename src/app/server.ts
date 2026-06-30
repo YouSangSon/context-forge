@@ -113,7 +113,7 @@ function normalizeTokens(
 // Loopback hosts are safe to expose without auth — only processes on the
 // same machine can reach them. Anything else (0.0.0.0, public IP, hostname)
 // must require bearer tokens, otherwise an unauthenticated remote can
-// trigger destructive operations once compaction-apply ships in P17.
+// trigger destructive or admin operations.
 export function isLoopbackHost(host: string): boolean {
   if (host === "127.0.0.1") return true;
   if (host === "localhost") return true;

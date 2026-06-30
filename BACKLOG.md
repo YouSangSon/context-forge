@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Stale pre-P17 compaction-apply source/test comments now describe current
+  apply behavior, with focused drift coverage for the touched files.
 - Unreleased English/Korean changelog README landing badge wording now reflects
   Node ≥22, with Unreleased-only drift coverage to keep stale Node 20 wording
   out of current-support notes.

@@ -254,6 +254,27 @@ describe("public documentation drift checks", () => {
     );
   });
 
+  it("keeps compaction apply comments current in touched files", () => {
+    const staleSignals = [
+      {
+        path: "src/app/server.ts",
+        text: "trigger destructive operations once compaction-apply ships in P17",
+      },
+      {
+        path: "tests/compact/compact-memory.test.ts",
+        text: "archivedIds remains [] in this PR",
+      },
+      {
+        path: "tests/compact/compact-memory.test.ts",
+        text: "apply path lands in P17 step 3",
+      },
+    ];
+
+    for (const { path, text } of staleSignals) {
+      expect(read(path)).not.toContain(text);
+    }
+  });
+
   it("documents descriptor-driven tool validation in API docs", () => {
     expect(read("docs/api-reference.md")).toContain("shared tool schema");
     expect(read("docs/api-reference.ko.md")).toContain("공유 tool schema");
