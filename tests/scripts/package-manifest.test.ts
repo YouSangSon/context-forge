@@ -29,7 +29,6 @@ const EXPECTED_PACKAGE_FILES = [
   "SECURITY.md",
   "SECURITY.ko.md",
   "LICENSE",
-  "install.sh",
 ] as const;
 
 const DISALLOWED_ALLOWLIST_ENTRIES = [
@@ -42,6 +41,8 @@ const DISALLOWED_ALLOWLIST_ENTRIES = [
   "DECISIONS.md",
   "PLAN.md",
   "WORKLOG.md",
+  // Valid for source-checkout docs, but not self-contained in npm tarballs.
+  "install.sh",
   "src/",
   "src/**",
   "tests/",
@@ -67,7 +68,7 @@ describe("package manifest publish surface", () => {
     }
   });
 
-  it("keeps source, test, CI, and internal work tracking paths out of the allowlist", () => {
+  it("keeps source, test, CI, internal work tracking, and source-checkout-only paths out of the allowlist", () => {
     const files = packageFiles(readPackageJson());
 
     for (const disallowed of DISALLOWED_ALLOWLIST_ENTRIES) {

@@ -2,6 +2,37 @@
 
 ## 2026-07-01
 
+- Removed the source-checkout-only installer from the npm package allowlist:
+  - `package.json#files` no longer includes `install.sh`; the script remains a
+    repository-checkout installer and source-checkout docs may still reference
+    it.
+  - `tests/scripts/package-manifest.test.ts` now expects the smaller allowlist
+    and explicitly rejects `install.sh` as a source-checkout-only package entry.
+  - `PLAN.md` and `BACKLOG.md` reflect the completed package-surface hygiene
+    correction.
+  - No `DECISIONS.md` entry is needed because this is a package-surface hygiene
+    correction, not a durable installer behavior or package UX decision.
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm pack --dry-run --json`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`3` tests passed)
+- `npm pack --dry-run --json` (passed; `prepack` rebuilt `dist/`, `115`
+  package entries)
+  - Included built runtime output under `dist/src/**` and `dist/scripts/**`,
+    plus `scripts/*.sh`, `.env.example`, public docs, mirrored root docs, and
+    `LICENSE`.
+  - Excluded `install.sh`, `docker/**`, `compose*.yaml`, root `src/**`, and
+    `tests/**`.
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1800` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Fixed stale Unreleased ingest outbox sweeper changelog wording:
   - `CHANGELOG.md` and `CHANGELOG.ko.md` now describe Migration 007 as shipped
     Qdrant outbox support for the implemented opt-in ingest sweeper/retry loop,

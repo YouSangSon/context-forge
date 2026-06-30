@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Source-checkout-only `install.sh` is no longer part of the npm package
+  allowlist, keeping tarballs self-contained after Docker/Compose assets were
+  excluded.
 - npm package tarballs now use an explicit manifest allowlist, build `dist/`
   from a clean slate before pack, and guard the publish surface with a focused
   manifest test.
