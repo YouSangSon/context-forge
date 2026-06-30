@@ -33,6 +33,31 @@ Verification:
 - `npm test` (`78` files passed, `2` skipped; `1800` tests passed, `34` skipped)
 - `git diff --check` (passed)
 
+- Added the missing Unreleased npm package tarball changelog notes:
+  - `CHANGELOG.md` now says published packages include built runtime output
+    under `dist/`, exclude root source/tests/CI/internal work tracking plus
+    source-checkout-only `install.sh` and Docker/Compose assets, and rebuild a
+    clean `dist/` via `prepack`.
+  - `CHANGELOG.ko.md` carries the equivalent Korean Unreleased note.
+  - `tests/scripts/public-docs-drift.test.ts` now checks only the Unreleased
+    changelog sections for stable package tarball markers in both languages.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`27` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1801` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Fixed stale Unreleased ingest outbox sweeper changelog wording:
   - `CHANGELOG.md` and `CHANGELOG.ko.md` now describe Migration 007 as shipped
     Qdrant outbox support for the implemented opt-in ingest sweeper/retry loop,

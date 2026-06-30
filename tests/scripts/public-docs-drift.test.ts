@@ -460,6 +460,34 @@ describe("public documentation drift checks", () => {
     expect(korean).not.toContain("진행중");
   });
 
+  it("records the npm package tarball surface fix in Unreleased changelogs", () => {
+    const english = unreleasedChangelogBulletContaining(
+      "CHANGELOG.md",
+      "npm package tarball",
+    );
+    expect(english).toMatch(/built\s+runtime\s+output/);
+    expect(english).toContain("source/tests/CI/internal");
+    expect(english).toContain("source-checkout-only");
+    expect(english).toContain("Docker/Compose");
+    expect(english).toContain("`dist/`");
+    expect(english).toContain("`prepack`");
+    expect(english).toContain("clean `dist/`");
+    expect(english).toContain("`install.sh`");
+
+    const korean = unreleasedChangelogBulletContaining(
+      "CHANGELOG.ko.md",
+      "npm package tarball",
+    );
+    expect(korean).toMatch(/built\s+runtime\s+output/);
+    expect(korean).toContain("source/tests/CI/internal");
+    expect(korean).toContain("source-checkout-only");
+    expect(korean).toContain("Docker/Compose");
+    expect(korean).toContain("`dist/`");
+    expect(korean).toContain("`prepack`");
+    expect(korean).toContain("clean `dist/`");
+    expect(korean).toContain("`install.sh`");
+  });
+
   it("documents every service tool and JSON HTTP route in public docs", () => {
     const docs = [
       "README.md",

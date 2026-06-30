@@ -15,10 +15,14 @@ Status:
   `npm pack` / publish.
 - `tests/scripts/package-manifest.test.ts` guards the package surface without
   invoking `npm pack`.
+- The missing Unreleased English/Korean changelog notes now document the
+  package tarball surface, and public docs drift coverage checks those notes.
 
 Loop closeout:
 - Focused package manifest tests passed; `npm pack --dry-run --json` confirms
   the runtime tarball remains self-contained, and `git diff --check` passed.
+- Focused public docs drift coverage now passes for the Unreleased changelog
+  package tarball notes, and `git diff --check` passed after this update.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

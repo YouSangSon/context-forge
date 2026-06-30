@@ -30,6 +30,10 @@ CHANGELOG에서 명시적으로 표기합니다.
 - 문서: 공개 문서가 descriptor 공유 검증, non-root 컨테이너 런타임 기본값,
   production 자격증명 교체, atomic archive-cleanup claim semantics를 반영하도록
   정렬되었고, 현재 동작과 맞지 않던 pgvector reindex follow-up 주석을 제거함.
+- npm package tarball surface: 게시되는 패키지가 이제 `dist/` 아래 built
+  runtime output을 포함하고, root source/tests/CI/internal work tracking 문서와
+  source-checkout-only `install.sh`, Docker/Compose asset은 제외하며, `prepack`
+  이 pack/publish 전에 clean `dist/` 를 다시 빌드합니다.
 
 릴리스 후 audit 사이클. v1.0.0이 OSS 사용자 0명 상태로 출시되어 — 멀티
 테넌시 boundary 의 default-strict 강화 + secret-scrubber surface 보강을

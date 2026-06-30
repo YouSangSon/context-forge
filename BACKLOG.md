@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Unreleased English/Korean changelog notes now record the npm package tarball
+  surface fix, with Unreleased-only drift coverage for package tarball
+  inclusion/exclusion markers.
 - Source-checkout-only `install.sh` is no longer part of the npm package
   allowlist, keeping tarballs self-contained after Docker/Compose assets were
   excluded.

@@ -31,6 +31,10 @@ changes; CHANGELOG entries call those out explicitly.
   container runtime defaults, production credential replacement, and atomic
   archive-cleanup claim semantics; stale pgvector reindex follow-up comments
   removed to match current behavior.
+- npm package tarball surface: published packages now include built runtime
+  output under `dist/`, exclude root source/tests/CI/internal work tracking plus
+  source-checkout-only `install.sh` and Docker/Compose assets, and `prepack`
+  rebuilds a clean `dist/` before pack/publish.
 
 Post-release audit cycle. v1.0.0 shipped with 0 OSS users, so this window
 was the safe time to tighten default-strict behavior on multi-tenancy
