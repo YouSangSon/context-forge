@@ -4,18 +4,21 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Compaction Apply Comment Drift
+## Current Loop — NPM Package Tarball Manifest Hygiene
 
 Status:
-- Stale pre-P17 compaction-apply comments in `src/app/server.ts` and
-  `tests/compact/compact-memory.test.ts` now describe the current apply path.
-- `tests/scripts/public-docs-drift.test.ts` now narrowly guards those touched
-  files against the old future-tense P17 wording.
+- `package.json` now has an explicit `files` allowlist for built runtime output,
+  shell/runtime assets, public docs, and Korean mirrors.
+- `npm run build` now cleans `dist/` first, and `prepack` runs the build before
+  `npm pack` / publish.
+- `tests/scripts/package-manifest.test.ts` guards the package surface without
+  invoking `npm pack`.
 
 Loop closeout:
-- Focused compaction/public-docs drift tests passed, and `git diff --check`
-  passed. Local commit is expected/done by the controller; do not push or merge
-  from this loop.
+- Focused package/public-docs tests passed; `npm run build`,
+  `npm pack --dry-run --json`, and `git diff --check` passed.
+- Local commit is expected/done by the controller; do not push or merge from
+  this loop.
 
 ## Next Loop Candidates
 

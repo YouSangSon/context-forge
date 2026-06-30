@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- npm package tarballs now use an explicit manifest allowlist, build `dist/`
+  from a clean slate before pack, and guard the publish surface with a focused
+  manifest test.
 - Stale pre-P17 compaction-apply source/test comments now describe current
   apply behavior, with focused drift coverage for the touched files.
 - Unreleased English/Korean changelog README landing badge wording now reflects

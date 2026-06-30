@@ -3905,3 +3905,40 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`77` files passed, `2` skipped; `1797` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Fixed npm package tarball manifest hygiene:
+  - `package.json` now uses an explicit `files` allowlist for `dist/`, runtime
+    shell scripts, `.env.example`, public docs, Korean mirror docs, `LICENSE`,
+    and `install.sh`.
+  - The allowlist excludes source, tests, CI config, internal work-tracking
+    docs, and compiled test/config artifacts via omission plus targeted
+    negations.
+  - `npm run build` now runs a portable Node `fs.rmSync` clean before TypeScript
+    emits, and `prepack` runs the build before `npm pack` / publish.
+  - Added `tests/scripts/package-manifest.test.ts` so CI can verify the
+    manifest contract without invoking `npm pack` or requiring prebuilt `dist`.
+- Source rationale:
+  - npm package metadata `files` controls package inclusion, while packages
+    without an `.npmignore` fall back to `.gitignore` behavior for exclusion.
+    That fallback was excluding `dist/` while allowing tracked source, tests,
+    CI, and internal planning files into the tarball.
+    Official docs: https://docs.npmjs.com/cli/v11/configuring-npm/package-json#files
+    and https://docs.npmjs.com/cli/v11/using-npm/developers#keeping-files-out-of-your-package
+  - No `DECISIONS.md` entry: this is package hygiene for the existing runtime
+    shape, not a durable package UX/API decision.
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts tests/scripts/public-docs-drift.test.ts`
+  (`29` tests passed)
+- `npm run build` (passed; runs `clean` before `tsc`)
+- `npm pack --dry-run --json` (passed; `prepack` rebuilt first, no
+  `.npmignore`/`.gitignore` fallback warning, `116` entries)
+  - Included built runtime output under `dist/src/**` and `dist/scripts/**`,
+    shell scripts under `scripts/*.sh`, `.env.example`, public docs, mirrored
+    root docs, `LICENSE`, and `install.sh`.
+  - Excluded root `src/**`, `tests/**`, `.github/**`, `PLAN.md`, `BACKLOG.md`,
+    `WORKLOG.md`, and `DECISIONS.md`.
+- `npm run typecheck`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1800` tests passed, `34` skipped)
+- `git diff --check` (passed)
