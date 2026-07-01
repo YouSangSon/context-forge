@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Concurrency Guard
+## Current Loop — CI Database Service Health Guard
 
 Status:
-- CI uses a workflow-level concurrency group to cancel stale runs for the same
-  branch or pull request when a newer commit arrives.
-- The loop adds a CI workflow hygiene guard that keeps the concurrency group
-  expression and `cancel-in-progress: true` contract in place.
+- CI Postgres and pgvector integration jobs use Docker health checks so tests
+  wait for database service containers before connecting.
+- The loop adds a CI workflow hygiene guard that keeps the `pg_isready` health
+  command, interval, timeout, and retry settings in place.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

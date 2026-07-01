@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now guards the Postgres and pgvector service
+  container health checks that integration jobs rely on before connecting.
 - CI workflow hygiene coverage now guards the workflow-level concurrency group
   and stale-run cancellation setting.
 - CI workflow hygiene coverage now guards that all `actions/setup-node` steps

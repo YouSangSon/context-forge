@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- Guarded database service health checks in CI:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that the Postgres
+    and pgvector integration jobs keep `pg_isready` service health checks.
+  - The guard covers the health command, interval, timeout, and retry settings
+    so CI waits for database containers before integration tests connect.
+  - Source checked: GitHub Actions' PostgreSQL service container guide uses
+    health check options to make sure the service is running:
+    https://docs.github.com/actions/using-containerized-services/creating-postgresql-service-containers
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`16` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1845` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded CI stale-run cancellation:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that CI keeps the
     workflow-level concurrency group based on workflow name and branch/PR ref.

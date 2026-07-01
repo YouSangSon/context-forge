@@ -141,6 +141,14 @@ describe("CI workflow hygiene", () => {
     expect(pgvectorJob).not.toContain("        run: npm test\n");
   });
 
+  it("waits for database service containers to pass health checks", () => {
+    for (const dbName of ["memory_os", "memory_pgv"]) {
+      expect(ciWorkflow).toContain(
+        `        options: >-\n          --health-cmd "pg_isready -U memory -d ${dbName}"\n          --health-interval 10s\n          --health-timeout 5s\n          --health-retries 10\n`,
+      );
+    }
+  });
+
   it("sets explicit job timeouts so hung CI runs do not use the default 360 minutes", () => {
     for (const jobId of [
       "typecheck-and-test",
