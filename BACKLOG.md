@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards the contributor-facing `typecheck` and
+  `test` package scripts used by local verification guidance.
 - Package manifest coverage now guards that `package-lock.json` top-level
   identity and v3 format stay aligned with the current package manifest.
 - Package manifest coverage now guards that `package-lock.json` root package

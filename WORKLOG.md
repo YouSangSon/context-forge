@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded contributor verification scripts:
+  - `tests/scripts/package-manifest.test.ts` now checks that package scripts
+    keep `typecheck` on `tsc --noEmit` and `test` on `vitest run`.
+  - This catches package script drift before README, CONTRIBUTING, PR template,
+    and CI guidance can point contributors at commands with changed behavior.
+  - Source checked: README and CONTRIBUTING list `npm run typecheck`,
+    `npm run build`, `npm audit --audit-level=moderate`, and `npm test` as the
+    local verification sequence, while CI runs the same typecheck/build/audit
+    and test gates.
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`9` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1853` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package lockfile top-level format:
   - `tests/scripts/package-manifest.test.ts` now checks that
     `package-lock.json` top-level `name` and `version` match `package.json`.

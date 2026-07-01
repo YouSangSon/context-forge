@@ -185,6 +185,13 @@ describe("package manifest publish surface", () => {
     expect(packageJson.exports).toBeUndefined();
   });
 
+  it("keeps contributor verification scripts stable", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.scripts?.typecheck).toBe("tsc --noEmit");
+    expect(packageJson.scripts?.test).toBe("vitest run");
+  });
+
   it("keeps the excluded eval harness out of runtime imports", () => {
     const violations: string[] = [];
     const evalImportPattern =

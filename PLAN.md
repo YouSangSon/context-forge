@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Lock Format Guard
+## Current Loop — Verification Script Guard
 
 Status:
-- Package manifest coverage guards `package-lock.json` top-level package
-  identity against `package.json`.
-- The loop keeps the committed lockfile on the current npm v9+ v3 format with
-  an explicit root package entry.
+- Package manifest coverage guards the contributor-facing `typecheck` and
+  `test` package scripts used throughout README, CONTRIBUTING, and CI docs.
+- The loop keeps those verification commands anchored to `tsc --noEmit` and
+  `vitest run` so docs cannot stay green while scripts drift underneath them.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,
