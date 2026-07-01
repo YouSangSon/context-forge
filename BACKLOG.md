@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now guards that every CI job installs
+  dependencies after setting up Node.
 - CI workflow hygiene coverage now guards that every CI job checks out the
   repository before setting up Node.
 - CI workflow hygiene coverage now guards that Postgres and pgvector integration

@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Checkout Guard
+## Current Loop — CI Install Ordering Guard
 
 Status:
-- CI jobs check out the repository before setting up Node, installing
-  dependencies, or running package commands.
-- The loop adds a CI workflow hygiene guard that keeps `actions/checkout@v4`
-  immediately before each `actions/setup-node` step.
+- CI jobs set up Node before installing dependencies with the CPU-only
+  `npm ci` command.
+- The loop adds a CI workflow hygiene guard that keeps every `Install` step
+  immediately after the matching `actions/setup-node` step.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

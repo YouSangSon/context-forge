@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- Guarded CI install ordering:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that every CI job
+    runs the CPU-only `Install` step immediately after `actions/setup-node`.
+  - This keeps `npm ci` on a runner where Akasha's configured Node version and
+    npm cache settings are already active.
+  - Source checked: `actions/setup-node` examples run checkout, setup-node,
+    `npm ci`, then tests, including the npm caching example:
+    https://github.com/actions/setup-node
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`20` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1849` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded CI checkout ordering:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that every CI job
     uses `actions/checkout@v4` immediately before `actions/setup-node`.

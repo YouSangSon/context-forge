@@ -65,6 +65,14 @@ describe("CI workflow hygiene", () => {
     expect(installSteps).toHaveLength(3);
   });
 
+  it("installs dependencies after setting up Node in every job", () => {
+    const setupThenInstallSteps = ciWorkflow.match(
+      /      - name: Setup Node\n        uses: actions\/setup-node@v4\n        with:\n(?:          [^\n]+\n)+\n      - name: Install\n(?:        # [^\n]+\n)*        run: ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci\n/g,
+    );
+
+    expect(setupThenInstallSteps).toHaveLength(3);
+  });
+
   it("keeps the main CI Node matrix on supported runtime lines", () => {
     expect(ciWorkflow).toContain('        node: ["22", "24"]\n');
     expect(ciWorkflow).toContain("          node-version: ${{ matrix.node }}\n");
