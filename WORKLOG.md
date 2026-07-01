@@ -2,6 +2,31 @@
 
 ## 2026-07-01
 
+- Refreshed ingest sweeper repository comments:
+  - `src/jobs/ingest-job-repository.ts` now describes `listPendingForRetry` as
+    a read-only monitoring/manual replay query and points production sweepers
+    at the implemented `claimPendingForRetry` claim path.
+  - `tests/scripts/public-docs-drift.test.ts` now guards against
+    reintroducing the stale future-tense "The sweeper PR will" wording.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npx vitest run tests/jobs/ingest-job-claim.test.ts tests/compact/ingest-sweeper.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts tests/jobs/ingest-job-claim.test.ts tests/compact/ingest-sweeper.test.ts`
+  (`102` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1821` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned contributing daily commands:
   - `CONTRIBUTING.md` and `CONTRIBUTING.ko.md` now list `npm run build` and
     `npm audit --audit-level=moderate` in the daily command tables.

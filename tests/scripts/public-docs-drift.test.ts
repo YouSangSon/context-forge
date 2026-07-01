@@ -477,6 +477,12 @@ describe("public documentation drift checks", () => {
     }
   });
 
+  it("keeps ingest sweeper repository comments current", () => {
+    expect(read("src/jobs/ingest-job-repository.ts")).not.toContain(
+      "The sweeper PR will",
+    );
+  });
+
   it("documents descriptor-driven tool validation in API docs", () => {
     expect(read("docs/api-reference.md")).toContain("shared tool schema");
     expect(read("docs/api-reference.ko.md")).toContain("공유 tool schema");

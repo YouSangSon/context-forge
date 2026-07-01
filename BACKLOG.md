@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Ingest job retry monitoring comments now describe the implemented
+  `claimPendingForRetry` path instead of a future sweeper PR, guarded by
+  public-docs drift coverage.
 - Contributing docs daily command tables now include build and moderate-level
   dependency audit commands, guarded by public-docs drift coverage.
 - Refreshed a stale P17 planning-era comment in `src/compact/compact-memory.ts`

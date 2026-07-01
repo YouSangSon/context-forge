@@ -175,9 +175,9 @@ export function createIngestJobRepository(pool: PgPool): IngestJobRepository {
       assertRetryQueryInput(input);
       const { limit, now } = input;
 
-      // Read-only query for monitoring / manual replay. The sweeper PR will
-      // add claim semantics (FOR UPDATE SKIP LOCKED inside a transaction) so
-      // multiple replicas don't race on the same row.
+      // Read-only query for monitoring / manual replay. Production sweepers
+      // should use claimPendingForRetry so multiple replicas don't race on
+      // the same row.
       const result = await pool.query<IngestJobRow>(
         `
           SELECT ${RETURNING_COLUMNS}
