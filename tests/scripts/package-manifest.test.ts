@@ -13,6 +13,7 @@ type PackageJson = {
   cpu?: unknown;
   dependencies?: Record<string, string>;
   description?: unknown;
+  directories?: unknown;
   devEngines?: unknown;
   devDependencies?: Record<string, string>;
   engines?: Record<string, string>;
@@ -24,6 +25,7 @@ type PackageJson = {
   libc?: unknown;
   license?: unknown;
   main?: unknown;
+  man?: unknown;
   name?: unknown;
   optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
@@ -306,6 +308,13 @@ describe("package manifest publish surface", () => {
     const packageJson = readPackageJson();
 
     expect(packageJson.browser).toBeUndefined();
+  });
+
+  it("does not declare manpage or package directory metadata", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.man).toBeUndefined();
+    expect(packageJson.directories).toBeUndefined();
   });
 
   it("keeps lockfile root package metadata aligned with package.json", () => {

@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Native Addon Build Metadata Guard
+## Current Loop — Package Manual Metadata Guard
 
 Status:
-- Package manifest coverage guards that package `gypfile` metadata and tracked
-  root `binding.gyp` stay absent.
-- The loop catches metadata drift that would introduce npm's native addon
-  node-gyp build path without an explicit packaging decision.
+- Package manifest coverage guards that package `man` and `directories`
+  metadata stay absent.
+- The loop catches metadata drift that would add npm-installed manual page or
+  directory-derived bin/man surfaces without an explicit packaging decision.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

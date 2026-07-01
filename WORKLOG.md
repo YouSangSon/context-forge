@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded package manual metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package `man` and
+    `directories` metadata stay absent.
+  - This catches metadata drift that would add npm-installed manual page or
+    directory-derived bin/man surfaces without an explicit packaging decision.
+  - Source checked: npm documents `man` as installed manual page metadata and
+    `directories.bin`/`directories.man` as directory-derived executable/manual
+    page metadata:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`32` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1876` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded native addon build metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package `gypfile`
     metadata and tracked root `binding.gyp` stay absent.
