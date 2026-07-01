@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository row mapping now handles node-postgres string
+  `BIGSERIAL`/`BIGINT` values for archive/run/cleanup/restore IDs.
 - Compaction recent-apply count mapping now rejects malformed `COUNT(*)` rows
   instead of accepting `Number.parseInt` partial numeric strings.
 - Pgvector query row mapping now rejects malformed `score` and

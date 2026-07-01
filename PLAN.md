@@ -4,17 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Compaction Count Row Guard
+## Current Loop — Memory Archive BIGINT Row Mapping
 
 Status:
-- `src/store/memory-archive-repository.ts` now maps
-  `countRecentApplyRuns` count rows through shared numeric validation instead
-  of `Number.parseInt`.
-- `tests/store/memory-archive-repository.test.ts` covers numeric count strings,
-  no-row fallback, and malformed count values.
+- `src/store/memory-archive-repository.ts` now maps `BIGSERIAL`/`BIGINT`
+  archive, run, cleanup, and restore row values through shared DB helpers.
+- `tests/store/memory-archive-repository.test.ts` now uses string BIGINT row
+  fixtures for archive repository mappers while preserving numeric API output.
 
 Verification:
-- Focused archive/convention tests passed.
+- Focused archive/db-utils/convention tests passed.
 - Typecheck, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Reused DB helpers across memory archive row mappers:
+  - `src/store/memory-archive-repository.ts` now maps compaction run rows,
+    archive insert rows, pending cleanup rows, archive lookup rows, and restore
+    insert ids through shared `toNumber`; archive timestamps now use shared
+    `toIsoString`.
+  - `tests/store/memory-archive-repository.test.ts` now uses string row values
+    for `BIGSERIAL`/`BIGINT` fields returned by node-postgres while preserving
+    numeric repository API results.
+  - Source checked: `compaction_runs`, `memory_archive`, `memory_records`, and
+    related FK columns use `BIGSERIAL`/`BIGINT` in migrations.
+
+Verification plan:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/apply-compaction.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/apply-compaction.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`119` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1952` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded compaction recent-apply count mapping:
   - `src/store/memory-archive-repository.ts` now maps
     `countRecentApplyRuns` count rows through shared `toNumber` validation plus

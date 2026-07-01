@@ -15,13 +15,13 @@ function makeMockPool(handler: QueryFn): { pool: PgPool; query: ReturnType<typeo
 }
 
 const RUN_ROW = {
-  id: 7,
+  id: "7",
   organization_id: "org-a",
   status: "pending" as const,
-  archived_count: 0,
-  duplicate_count: 0,
-  decay_count: 0,
-  qdrant_failed: 0,
+  archived_count: "0",
+  duplicate_count: "0",
+  decay_count: "0",
+  qdrant_failed: "0",
 };
 
 describe("createMemoryArchiveRepository", () => {
@@ -73,7 +73,7 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
     const { pool } = makeMockPool(async () => {
       call += 1;
       if (call === 1) return { rows: [] }; // insert conflicted
-      return { rows: [{ ...RUN_ROW, status: "completed", archived_count: 5 }] };
+      return { rows: [{ ...RUN_ROW, status: "completed", archived_count: "5" }] };
     });
     const repo = createMemoryArchiveRepository(pool);
 
@@ -170,7 +170,7 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
 describe("MemoryArchiveRepository.applyCompactionRecord", () => {
   it("returns archived=true with archiveId and qdrantPointIds on success", async () => {
     const { pool, query } = makeMockPool(async () => ({
-      rows: [{ archive_id: 42, qdrant_point_ids: ["p1", "p2"] }],
+      rows: [{ archive_id: "42", qdrant_point_ids: ["p1", "p2"] }],
     }));
     const repo = createMemoryArchiveRepository(pool);
 
@@ -327,16 +327,16 @@ describe("MemoryArchiveRepository.findPendingQdrantCleanup", () => {
     const { pool } = makeMockPool(async () => ({
       rows: [
         {
-          id: 1,
+          id: "1",
           organization_id: "org-a",
           qdrant_point_ids: ["pa1", "pa2"],
-          qdrant_attempt_count: 0,
+          qdrant_attempt_count: "0",
         },
         {
-          id: 2,
+          id: "2",
           organization_id: "org-b",
           qdrant_point_ids: ["pb1"],
-          qdrant_attempt_count: 3,
+          qdrant_attempt_count: "3",
         },
       ],
     }));
@@ -403,10 +403,10 @@ describe("MemoryArchiveRepository.claimPendingQdrantCleanup", () => {
     const { pool, query } = makeMockPool(async () => ({
       rows: [
         {
-          id: 1,
+          id: "1",
           organization_id: "org-a",
           qdrant_point_ids: ["pa1"],
-          qdrant_attempt_count: 2,
+          qdrant_attempt_count: "2",
         },
       ],
     }));
@@ -518,10 +518,10 @@ describe("MemoryArchiveRepository.findArchiveByIds", () => {
     const { pool } = makeMockPool(async () => ({
       rows: [
         {
-          id: 50,
+          id: "50",
           organization_id: "org-a",
-          source_record_id: 100,
-          source_id: 200,
+          source_record_id: "100",
+          source_id: "200",
           scope_type: "project",
           scope_id: "alpha",
           project_key: "alpha",
@@ -530,7 +530,7 @@ describe("MemoryArchiveRepository.findArchiveByIds", () => {
           content: "Decision: ship Friday",
           summary: null,
           durability: "durable",
-          importance: 5,
+          importance: "5",
           original_created_at: new Date("2026-04-25T00:00:00.000Z"),
           original_updated_at: "2026-04-25T01:00:00.000Z",
           unarchived_at: null,
@@ -574,7 +574,7 @@ describe("MemoryArchiveRepository.restoreToCanonical", () => {
   }
 
   it("INSERTs into memory_records preserving original timestamps + source_id", async () => {
-    const { pool, query } = makeMockPool(async () => ({ rows: [{ id: 999 }] }));
+    const { pool, query } = makeMockPool(async () => ({ rows: [{ id: "999" }] }));
     const repo = createMemoryArchiveRepository(pool);
 
     const result = await repo.restoreToCanonical(makeArchive(), "org-a");

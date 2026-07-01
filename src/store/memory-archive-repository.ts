@@ -12,7 +12,7 @@
 //   6. findRunByIdempotencyKey  — replay defense
 
 import type { PgPool } from "../db/connection.js";
-import { toNumber } from "./db-utils.js";
+import { toIsoString, toNumber } from "./db-utils.js";
 import { assertNonBlankText } from "./memory-content.js";
 
 const QDRANT_CLEANUP_VISIBILITY_TIMEOUT_MS = 60_000;
@@ -155,13 +155,13 @@ export function createMemoryArchiveRepository(
       // row (with its outcome counters) if a run with this UUID already
       // exists — caller decides whether to skip or replay the apply.
       const result = await pool.query<{
-        id: number;
+        id: number | string;
         organization_id: string;
         status: CompactionRunStatus;
-        archived_count: number;
-        duplicate_count: number;
-        decay_count: number;
-        qdrant_failed: number;
+        archived_count: number | string;
+        duplicate_count: number | string;
+        decay_count: number | string;
+        qdrant_failed: number | string;
       }>(
         `
           INSERT INTO compaction_runs (
@@ -201,13 +201,13 @@ export function createMemoryArchiveRepository(
 
     async findRunByIdempotencyKey(idempotencyKey) {
       const result = await pool.query<{
-        id: number;
+        id: number | string;
         organization_id: string;
         status: CompactionRunStatus;
-        archived_count: number;
-        duplicate_count: number;
-        decay_count: number;
-        qdrant_failed: number;
+        archived_count: number | string;
+        duplicate_count: number | string;
+        decay_count: number | string;
+        qdrant_failed: number | string;
       }>(
         `
           SELECT id, organization_id, status, archived_count,
@@ -232,7 +232,7 @@ export function createMemoryArchiveRepository(
       // updated_at > planGeneratedAt = TOCTOU skip), the INSERT sees no
       // RETURNING payload and result.rows is empty.
       const result = await pool.query<{
-        archive_id: number;
+        archive_id: number | string;
         qdrant_point_ids: string[];
       }>(
         `
@@ -298,7 +298,7 @@ export function createMemoryArchiveRepository(
       const row = result.rows[0]!;
       return {
         archived: true,
-        archiveId: row.archive_id,
+        archiveId: toNumber(row.archive_id),
         qdrantPointIds: row.qdrant_point_ids ?? [],
       };
     },
@@ -380,10 +380,10 @@ export function createMemoryArchiveRepository(
       // Read-only compatibility wrapper for tests/manual monitoring. Sweeper
       // workers must use claimPendingQdrantCleanup for atomic visibility.
       const result = await pool.query<{
-        id: number;
+        id: number | string;
         organization_id: string;
         qdrant_point_ids: string[];
-        qdrant_attempt_count: number;
+        qdrant_attempt_count: number | string;
       }>(
         `
           SELECT id, organization_id, qdrant_point_ids, qdrant_attempt_count
@@ -399,10 +399,10 @@ export function createMemoryArchiveRepository(
         [limit],
       );
       return result.rows.map((row) => ({
-        archiveId: row.id,
+        archiveId: toNumber(row.id),
         organizationId: row.organization_id,
         qdrantPointIds: row.qdrant_point_ids ?? [],
-        attemptCount: row.qdrant_attempt_count,
+        attemptCount: toNumber(row.qdrant_attempt_count),
       }));
     },
 
@@ -414,10 +414,10 @@ export function createMemoryArchiveRepository(
         now.getTime() + QDRANT_CLEANUP_VISIBILITY_TIMEOUT_MS,
       );
       const result = await pool.query<{
-        id: number;
+        id: number | string;
         organization_id: string;
         qdrant_point_ids: string[];
-        qdrant_attempt_count: number;
+        qdrant_attempt_count: number | string;
       }>(
         `
           UPDATE memory_archive
@@ -441,10 +441,10 @@ export function createMemoryArchiveRepository(
       );
 
       return result.rows.map((row) => ({
-        archiveId: row.id,
+        archiveId: toNumber(row.id),
         organizationId: row.organization_id,
         qdrantPointIds: row.qdrant_point_ids ?? [],
-        attemptCount: row.qdrant_attempt_count,
+        attemptCount: toNumber(row.qdrant_attempt_count),
       }));
     },
 
@@ -475,10 +475,10 @@ export function createMemoryArchiveRepository(
 
       if (archiveIds.length === 0) return [];
       const result = await pool.query<{
-        id: number;
+        id: number | string;
         organization_id: string;
-        source_record_id: number;
-        source_id: number | null;
+        source_record_id: number | string;
+        source_id: number | string | null;
         scope_type: string;
         scope_id: string;
         project_key: string | null;
@@ -487,7 +487,7 @@ export function createMemoryArchiveRepository(
         content: string;
         summary: string | null;
         durability: string;
-        importance: number;
+        importance: number | string;
         original_created_at: string | Date;
         original_updated_at: string | Date;
         unarchived_at: string | Date | null;
@@ -504,10 +504,10 @@ export function createMemoryArchiveRepository(
         [archiveIds, organizationId],
       );
       return result.rows.map((row) => ({
-        id: row.id,
+        id: toNumber(row.id),
         organizationId: row.organization_id,
-        sourceRecordId: row.source_record_id,
-        sourceId: row.source_id,
+        sourceRecordId: toNumber(row.source_record_id),
+        sourceId: row.source_id === null ? null : toNumber(row.source_id),
         scopeType: row.scope_type,
         scopeId: row.scope_id,
         projectKey: row.project_key,
@@ -516,10 +516,11 @@ export function createMemoryArchiveRepository(
         content: row.content,
         summary: row.summary,
         durability: row.durability,
-        importance: row.importance,
-        originalCreatedAt: toIso(row.original_created_at),
-        originalUpdatedAt: toIso(row.original_updated_at),
-        unarchivedAt: row.unarchived_at === null ? null : toIso(row.unarchived_at),
+        importance: toNumber(row.importance),
+        originalCreatedAt: toIsoString(row.original_created_at),
+        originalUpdatedAt: toIsoString(row.original_updated_at),
+        unarchivedAt:
+          row.unarchived_at === null ? null : toIsoString(row.unarchived_at),
       }));
     },
 
@@ -541,7 +542,7 @@ export function createMemoryArchiveRepository(
           `restoreToCanonical: archive ${archive.id} has no source_id; cannot restore until the original source is rebuilt`,
         );
       }
-      const result = await pool.query<{ id: number }>(
+      const result = await pool.query<{ id: number | string }>(
         `
           INSERT INTO memory_records (
             organization_id, scope_type, scope_id, project_key, kind, title,
@@ -573,7 +574,7 @@ export function createMemoryArchiveRepository(
           `restoreToCanonical: INSERT returned no id for archive ${archive.id}`,
         );
       }
-      return { restoredRecordId: newId };
+      return { restoredRecordId: toNumber(newId) };
     },
 
     async deleteRestoredCanonicalRecord(recordId, organizationId) {
@@ -649,10 +650,6 @@ function assertQdrantCleanupClaimInput(value: unknown): asserts value is {
   assertValidDate(candidate.now, "now");
 }
 
-function toIso(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : value;
-}
-
 function toRecentApplyRunCount(value: unknown): number {
   let count: number;
   try {
@@ -671,22 +668,22 @@ function toRecentApplyRunCount(value: unknown): number {
 }
 
 function mapRunRow(row: {
-  id: number;
+  id: number | string;
   organization_id: string;
   status: CompactionRunStatus;
-  archived_count: number;
-  duplicate_count: number;
-  decay_count: number;
-  qdrant_failed: number;
+  archived_count: number | string;
+  duplicate_count: number | string;
+  decay_count: number | string;
+  qdrant_failed: number | string;
 }): CompactionRunRow {
   return {
-    id: row.id,
+    id: toNumber(row.id),
     organizationId: row.organization_id,
     status: row.status,
-    archivedCount: row.archived_count,
-    duplicateCount: row.duplicate_count,
-    decayCount: row.decay_count,
-    qdrantFailed: row.qdrant_failed,
+    archivedCount: toNumber(row.archived_count),
+    duplicateCount: toNumber(row.duplicate_count),
+    decayCount: toNumber(row.decay_count),
+    qdrantFailed: toNumber(row.qdrant_failed),
   };
 }
 
