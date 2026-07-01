@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Metrics registry HTTP request observations now validate status codes as
+  safe integers in the `100..599` range before using them as metric labels.
 - Metrics registry sweeper row counters now validate known row outcomes as
   non-negative safe integers instead of clamping negative counts or accepting
   fractional values.

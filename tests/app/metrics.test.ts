@@ -353,7 +353,34 @@ describe("createMetricsRegistry HTTP metrics", () => {
         statusCode: Number.NaN,
         durationSeconds: 0.1,
       },
-      message: "statusCode must be a finite number",
+      message: "statusCode must be an integer from 100 to 599",
+    },
+    {
+      input: {
+        method: "GET",
+        route: "/healthz",
+        statusCode: 200.5,
+        durationSeconds: 0.1,
+      },
+      message: "statusCode must be an integer from 100 to 599",
+    },
+    {
+      input: {
+        method: "GET",
+        route: "/healthz",
+        statusCode: 99,
+        durationSeconds: 0.1,
+      },
+      message: "statusCode must be an integer from 100 to 599",
+    },
+    {
+      input: {
+        method: "GET",
+        route: "/healthz",
+        statusCode: 600,
+        durationSeconds: 0.1,
+      },
+      message: "statusCode must be an integer from 100 to 599",
     },
     {
       input: {

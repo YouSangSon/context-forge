@@ -493,7 +493,7 @@ function assertHttpRequestObservation(
   const candidate = assertObject(value, "HTTP request observation");
   assertOptionalString(candidate.method, "method");
   assertString(candidate.route, "route");
-  assertFiniteNumber(candidate.statusCode, "statusCode");
+  assertHttpStatusCode(candidate.statusCode, "statusCode");
   assertFiniteNumber(candidate.durationSeconds, "durationSeconds");
 }
 
@@ -640,5 +640,19 @@ function assertNonNegativeSafeInteger(
 ): asserts value is number {
   if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
     throw new Error(`${fieldName} must be a non-negative safe integer`);
+  }
+}
+
+function assertHttpStatusCode(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value < 100 ||
+    value > 599
+  ) {
+    throw new Error(`${fieldName} must be an integer from 100 to 599`);
   }
 }

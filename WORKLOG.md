@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded HTTP metrics status code labels:
+  - `src/app/metrics.ts` now validates HTTP request metric `statusCode`
+    observations as safe integers in the `100..599` range before rendering
+    status labels.
+  - `tests/app/metrics.test.ts` now covers `NaN`, fractional, low, and high
+    status code observations.
+  - Source checked: `startOperatorServer` records `res.statusCode` after the
+    response finishes, so valid server traffic remains unchanged while direct
+    malformed metric observations fail closed.
+
+Verification plan:
+- `npx vitest run tests/app/metrics.test.ts tests/app/server.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/metrics.test.ts tests/app/server.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`120` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2048` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded metrics registry sweeper row counters:
   - `src/app/metrics.ts` now validates known sweeper row outcome counters as
     non-negative safe integers instead of clamping negative values or accepting
