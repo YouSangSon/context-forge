@@ -109,6 +109,21 @@ const EXPECTED_PACKAGE_OVERRIDES = {
 
 const EXPECTED_ESBUILD_LOCK_VERSION = "0.28.1";
 
+const DISALLOWED_PACKAGE_LIFECYCLE_SCRIPTS = [
+  "dependencies",
+  "install",
+  "postinstall",
+  "postpack",
+  "postprepare",
+  "postpublish",
+  "preinstall",
+  "prepare",
+  "preprepare",
+  "prepublish",
+  "prepublishOnly",
+  "publish",
+] as const;
+
 const EXPECTED_PACKAGE_IDENTITY = {
   license: "MIT",
   name: "akasha-mcp",
@@ -312,6 +327,15 @@ describe("package manifest publish surface", () => {
     expect(packageJson.bin).toBeUndefined();
     expect(packageJson.exports).toBeUndefined();
     expect(packageJson.main).toBeUndefined();
+  });
+
+  it("keeps package lifecycle scripts limited to prepack", () => {
+    const scripts = readPackageJson().scripts ?? {};
+
+    expect(scripts.prepack).toBe("npm run build");
+    for (const scriptName of DISALLOWED_PACKAGE_LIFECYCLE_SCRIPTS) {
+      expect(scripts).not.toHaveProperty(scriptName);
+    }
   });
 
   it("keeps contributor verification scripts stable", () => {

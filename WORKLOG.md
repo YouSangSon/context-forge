@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded package lifecycle scripts:
+  - `tests/scripts/package-manifest.test.ts` now checks that npm
+    install/publish lifecycle scripts stay absent except for the existing
+    `prepack` build hook.
+  - This catches package metadata drift that would add hidden install or
+    publish-time side effects beyond the documented clean build before pack.
+  - Source checked: npm documents install, pack, and publish lifecycle script
+    order, including `preinstall`, `install`, `postinstall`, `prepare`,
+    `prepack`, `postpack`, `prepublishOnly`, `publish`, and `postpublish`:
+    https://docs.npmjs.com/cli/v11/using-npm/scripts/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`21` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1865` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package lockfile precedence:
   - `tests/scripts/package-manifest.test.ts` now checks that tracked
     `npm-shrinkwrap.json` stays absent.
