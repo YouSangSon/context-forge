@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Ranking now rejects normalized vector and lexical score options outside the
+  `0..1` range instead of silently clamping invalid internal scoring inputs.
 - Qdrant vector query row mapping now validates returned point IDs before
   returning `VectorHit[]`, preserving numeric-ID coercion while rejecting
   malformed missing or invalid IDs.

@@ -286,8 +286,8 @@ function assertScoreSearchResultOptions(
   const value = options as Record<string, unknown>;
   assertFiniteTimestamp(value.newestUpdatedAt as number, "newestUpdatedAt");
   assertOptionalCandidateSource(value.source);
-  assertOptionalFiniteNumber(value.vectorScore, "vectorScore");
-  assertOptionalFiniteNumber(value.lexicalScore, "lexicalScore");
+  assertOptionalUnitScore(value.vectorScore, "vectorScore");
+  assertOptionalUnitScore(value.lexicalScore, "lexicalScore");
 }
 
 function assertObject(value: unknown, fieldName: string): void {
@@ -344,15 +344,21 @@ function assertOptionalCandidateSource(value: unknown): void {
   }
 }
 
-function assertOptionalFiniteNumber(value: unknown, fieldName: string): void {
+function assertOptionalUnitScore(value: unknown, fieldName: string): void {
   if (value === undefined) {
     return;
   }
 
   assertFiniteNumber(value, fieldName);
+  if (value < 0 || value > 1) {
+    throw new Error(`${fieldName} must be between 0 and 1`);
+  }
 }
 
-function assertFiniteNumber(value: unknown, fieldName: string): void {
+function assertFiniteNumber(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new Error(`${fieldName} must be a finite number`);
   }
@@ -410,8 +416,7 @@ function vectorScore(
   if (rawScore === undefined) {
     return undefined;
   }
-  const score =
-    clampUnitScore(rawScore) * RANKING_WEIGHTS.vector.maxBonus;
+  const score = rawScore * RANKING_WEIGHTS.vector.maxBonus;
   reasons.push(`vector:${score}`);
   return score;
 }
@@ -423,16 +428,9 @@ function lexicalScore(
   if (rawScore === undefined) {
     return undefined;
   }
-  const score = clampUnitScore(rawScore) * RANKING_WEIGHTS.lexical.maxBonus;
+  const score = rawScore * RANKING_WEIGHTS.lexical.maxBonus;
   reasons.push(`lexical:${score}`);
   return score;
-}
-
-function clampUnitScore(score: number): number {
-  if (!Number.isFinite(score)) {
-    return 0;
-  }
-  return Math.min(1, Math.max(0, score));
 }
 
 function parseCanonicalIsoTimestamp(value: unknown, name: string): number {

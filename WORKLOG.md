@@ -2,6 +2,25 @@
 
 ## 2026-07-02
 
+- Hardened ranking normalized score inputs:
+  - `src/search/rank-results.ts` now validates `vectorScore` and `lexicalScore`
+    as unit-interval values before ranking.
+  - `vectorScore` and `lexicalScore` now multiply the validated normalized score
+    directly instead of clamping bad inputs to `0..1`.
+  - `assertFiniteNumber` is now a TypeScript assertion helper so unit-score
+    range checks remain type-safe after runtime validation.
+  - `tests/search/rank-results.test.ts` covers negative and greater-than-one
+    score options.
+
+Verification:
+- `npx vitest run tests/search/rank-results.test.ts tests/search/retrieve-memory.test.ts tests/search/lexical-score.test.ts --reporter=dot`
+  (`3` files passed; `64` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2055` tests passed, `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant vector point ID mapping:
   - `src/vector/qdrant-index.ts` now validates Qdrant query result point IDs
     before returning `VectorHit[]`.

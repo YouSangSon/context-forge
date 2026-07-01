@@ -339,6 +339,18 @@ describe("rankResults", () => {
         lexicalScore: Number.POSITIVE_INFINITY,
       }),
     ).toThrow("lexicalScore must be a finite number");
+    expect(
+      callScoreSearchResult(createResult({}), {
+        newestUpdatedAt: Date.parse("2026-03-28T10:00:00.000Z"),
+        vectorScore: -0.1,
+      }),
+    ).toThrow("vectorScore must be between 0 and 1");
+    expect(
+      callScoreSearchResult(createResult({}), {
+        newestUpdatedAt: Date.parse("2026-03-28T10:00:00.000Z"),
+        lexicalScore: 1.1,
+      }),
+    ).toThrow("lexicalScore must be between 0 and 1");
   });
 
   it("rejects invalid rank candidate input before sorting", () => {

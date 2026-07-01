@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Qdrant Vector ID Validation
+## Current Loop - Ranking Unit Score Validation
 
 Status:
-- `src/vector/qdrant-index.ts` now validates Qdrant query result point IDs
-  before returning `VectorHit[]`, while preserving numeric-ID string coercion.
-- `tests/vector/qdrant-index.test.ts` now covers numeric point IDs and malformed
-  IDs so bad remote/client responses fail at the vector adapter boundary.
+- `src/search/rank-results.ts` now validates normalized vector and lexical
+  scores as unit-interval values before ranking.
+- `tests/search/rank-results.test.ts` now covers negative and greater-than-one
+  score options so bad internal scoring inputs fail before ranking.
 
 Verification:
 - Focused vector/search tests passed.
