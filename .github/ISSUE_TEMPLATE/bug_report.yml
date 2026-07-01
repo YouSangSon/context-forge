@@ -67,6 +67,7 @@ body:
     attributes:
       label: EMBEDDING_PROVIDER
       options:
+        - transformers
         - openai
         - local
     validations:

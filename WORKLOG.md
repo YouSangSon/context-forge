@@ -2,6 +2,28 @@
 
 ## 2026-07-01
 
+- Fixed the bug report embedding-provider dropdown:
+  - `.github/ISSUE_TEMPLATE/bug_report.yml` now lists `transformers`, `openai`,
+    and `local`, matching the supported provider set and putting the default
+    first.
+  - `tests/scripts/public-docs-drift.test.ts` now guards that option list.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`28` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1803` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned npm package metadata with the pluggable vector-backend docs:
   - `package.json#description` now describes Postgres-backed storage with
     Qdrant or pgvector search instead of implying Qdrant-only operation.

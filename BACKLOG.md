@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Bug report templates now include the default `transformers` embedding
+  provider option, guarded by public-docs drift coverage.
 - npm package metadata now describes Postgres-backed storage with Qdrant or
   pgvector search, and the package manifest test guards that wording.
 - Unreleased English/Korean changelog notes now record the npm package tarball

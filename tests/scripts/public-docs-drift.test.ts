@@ -232,6 +232,19 @@ describe("public documentation drift checks", () => {
     );
   });
 
+  it("keeps the bug report embedding-provider options aligned with supported providers", () => {
+    const template = read(".github/ISSUE_TEMPLATE/bug_report.yml");
+    const optionsBlock = /id: embedding-provider[\s\S]*?options:\n((?:        - .+\n)+)/.exec(
+      template,
+    )?.[1];
+
+    expect(optionsBlock).toBeDefined();
+    const options = [...(optionsBlock ?? "").matchAll(/^\s+- (.+)$/gm)].map(
+      (match) => match[1],
+    );
+    expect(options).toEqual(["transformers", "openai", "local"]);
+  });
+
   it("documents current embedding provider module filenames", () => {
     for (const modulePath of [
       "src/embedding/transformers-embedding.ts",
