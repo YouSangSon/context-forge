@@ -1,6 +1,7 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { resolveServiceConfig } from "../../src/config.js";
+import { DEFAULT_PG_POOL_OPTIONS } from "../../src/db/connection.js";
 
 const BASE_ENV = {
   DATABASE_URL: "postgres://memory:memory@postgres:5432/memory_os",
@@ -37,6 +38,7 @@ describe("resolveServiceConfig", () => {
     expect(config.host).toBe("127.0.0.1");
     expect(config.port).toBe(8787);
     expect(config.databaseUrl).toContain("postgres://memory:memory");
+    expect(config.postgres.pool).toEqual(DEFAULT_PG_POOL_OPTIONS);
     expect(config.qdrant.url).toBe("http://qdrant:6333");
     expect(config.openai.apiKey).toBe("test-openai-key");
     expect(config.embedding.provider).toBe("openai");
@@ -95,6 +97,17 @@ describe("resolveServiceConfig", () => {
       "DATABASE_URL",
       { DATABASE_URL: 123 },
       "Invalid DATABASE_URL: expected string",
+    ],
+    ["PG_POOL_MAX", { PG_POOL_MAX: 10 }, "Invalid PG_POOL_MAX: expected string"],
+    [
+      "PG_IDLE_TIMEOUT_MS",
+      { PG_IDLE_TIMEOUT_MS: 30_000 },
+      "Invalid PG_IDLE_TIMEOUT_MS: expected string",
+    ],
+    [
+      "PG_CONNECT_TIMEOUT_MS",
+      { PG_CONNECT_TIMEOUT_MS: 5_000 },
+      "Invalid PG_CONNECT_TIMEOUT_MS: expected string",
     ],
     ["QDRANT_URL", { QDRANT_URL: 123 }, "Invalid QDRANT_URL: expected string"],
     [
@@ -258,6 +271,49 @@ describe("resolveServiceConfig", () => {
     });
 
     expect(config.embedding.dimensions).toBe(512);
+  });
+
+  it("accepts plain decimal Postgres pool tuning values", () => {
+    const config = resolveServiceConfig({
+      env: {
+        ...BASE_ENV,
+        PG_POOL_MAX: "24",
+        PG_IDLE_TIMEOUT_MS: "45000",
+        PG_CONNECT_TIMEOUT_MS: "7500",
+      },
+    });
+
+    expect(config.postgres.pool).toEqual({
+      max: 24,
+      idleTimeoutMillis: 45_000,
+      connectionTimeoutMillis: 7_500,
+    });
+  });
+
+  it.each([
+    ["PG_POOL_MAX", { PG_POOL_MAX: "" }],
+    ["PG_POOL_MAX", { PG_POOL_MAX: "0" }],
+    ["PG_POOL_MAX", { PG_POOL_MAX: "1e3" }],
+    ["PG_POOL_MAX", { PG_POOL_MAX: "10.5" }],
+    ["PG_POOL_MAX", { PG_POOL_MAX: " 10 " }],
+    ["PG_IDLE_TIMEOUT_MS", { PG_IDLE_TIMEOUT_MS: "" }],
+    ["PG_IDLE_TIMEOUT_MS", { PG_IDLE_TIMEOUT_MS: "0" }],
+    ["PG_IDLE_TIMEOUT_MS", { PG_IDLE_TIMEOUT_MS: "30_000" }],
+    ["PG_CONNECT_TIMEOUT_MS", { PG_CONNECT_TIMEOUT_MS: "" }],
+    ["PG_CONNECT_TIMEOUT_MS", { PG_CONNECT_TIMEOUT_MS: "0" }],
+    ["PG_CONNECT_TIMEOUT_MS", { PG_CONNECT_TIMEOUT_MS: "+5000" }],
+  ])("rejects invalid Postgres pool %s value", (name, overrides) => {
+    const raw = Object.values(overrides)[0];
+    expect(() =>
+      resolveServiceConfig({
+        env: {
+          ...BASE_ENV,
+          ...overrides,
+        },
+      }),
+    ).toThrow(
+      `Invalid ${name}: expected positive integer, got "${String(raw)}"`,
+    );
   });
 
   it.each([

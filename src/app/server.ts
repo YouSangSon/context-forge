@@ -469,8 +469,12 @@ export function startOperatorServer(
   // Dedicated pool for /readyz dependency probes. Kept separate from
   // canonical-services so /readyz works before (or without) any tool call
   // bootstrapping the singleton. Only one `SELECT 1` is issued per probe, so
-  // it stays at a single live connection in practice (uses the pool default).
-  const probePool = createPgPool({ connectionString: config.databaseUrl });
+  // it stays at a single live connection in practice even when the pool's
+  // configured maximum is higher.
+  const probePool = createPgPool({
+    connectionString: config.databaseUrl,
+    ...config.postgres.pool,
+  });
   const dependencyProbes =
     options.dependencyProbes ?? selectDependencyProbes(config, probePool);
 
@@ -705,6 +709,17 @@ function assertOptionalServiceConfig(value: unknown): void {
   assertString(config.host, "config.host");
   assertNumber(config.port, "config.port");
   assertString(config.databaseUrl, "config.databaseUrl");
+  const postgres = assertObject(config.postgres, "config.postgres");
+  const pool = assertObject(postgres.pool, "config.postgres.pool");
+  assertNumber(pool.max, "config.postgres.pool.max");
+  assertNumber(
+    pool.idleTimeoutMillis,
+    "config.postgres.pool.idleTimeoutMillis",
+  );
+  assertNumber(
+    pool.connectionTimeoutMillis,
+    "config.postgres.pool.connectionTimeoutMillis",
+  );
   if (config.vectorBackend !== "qdrant" && config.vectorBackend !== "pgvector") {
     throw new Error('config.vectorBackend must be "qdrant" or "pgvector"');
   }

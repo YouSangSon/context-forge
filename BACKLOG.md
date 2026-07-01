@@ -18,6 +18,10 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Postgres pool configuration now supports documented `PG_POOL_MAX`,
+  `PG_IDLE_TIMEOUT_MS`, and `PG_CONNECT_TIMEOUT_MS` tuning, with config parsing,
+  pool construction, runtime startup, migrations, and focused tests using the
+  validated values.
 - Qdrant vector query coverage now guards payload projection, and the Qdrant
   adapter requests only `memory_record_id` plus no vectors for search
   hydration, avoiding unnecessary response payload transfer.

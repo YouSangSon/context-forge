@@ -31,6 +31,7 @@ export async function bootstrapCanonicalServices(): Promise<CanonicalServices> {
   const config = resolveServiceConfig();
   const pool = createPgPool({
     connectionString: config.databaseUrl,
+    ...config.postgres.pool,
   });
 
   try {

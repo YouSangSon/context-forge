@@ -1946,6 +1946,13 @@ describe("selectDependencyProbes", () => {
       host: "127.0.0.1",
       port: 8787,
       databaseUrl: "postgres://localhost/test",
+      postgres: {
+        pool: {
+          max: 10,
+          idleTimeoutMillis: 30_000,
+          connectionTimeoutMillis: 5_000,
+        },
+      },
       vectorBackend,
       qdrant: { url: "http://qdrant.local:6333", apiKey: "key-aaa", collectionName: "col" },
       openai: { apiKey: provider === "openai" ? "sk-test" : "" },

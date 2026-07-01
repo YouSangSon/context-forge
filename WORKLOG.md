@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Added Postgres pool tuning configuration:
+  - `src/db/connection.ts` now accepts validated `max`,
+    `idleTimeoutMillis`, and `connectionTimeoutMillis` options while keeping
+    the default pool size at 10.
+  - `src/config.ts` resolves `PG_POOL_MAX`, `PG_IDLE_TIMEOUT_MS`, and
+    `PG_CONNECT_TIMEOUT_MS` as plain decimal positive integers, then exposes
+    the values through `ServiceConfig`.
+  - `src/app/server.ts`, `src/mcp/canonical-services.ts`, and
+    `src/db/migrate.ts` pass the resolved pool options into `createPgPool`.
+  - `.env.example`, `docs/configuration.md`, and `docs/configuration.ko.md`
+    document the new variables and accepted value format.
+  - Source checked: internal performance audit finding 9 documents the
+    hardcoded Postgres pool size and missing idle/connect timeout controls:
+    `docs/superpowers/audit/03-performance.md`.
+
+Verification plan:
+- `npx vitest run tests/db/connection.test.ts tests/config/service-config.test.ts tests/app/operator-server-boundary.test.ts tests/app/start-operator-server-metrics.test.ts tests/app/start-background-workers-server.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/db/connection.test.ts tests/config/service-config.test.ts tests/app/operator-server-boundary.test.ts tests/app/start-operator-server-metrics.test.ts tests/app/start-background-workers-server.test.ts`
+  (`119` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1906` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Added Qdrant query payload projection:
   - `src/vector/qdrant-index.ts` now calls Qdrant `query()` with
     `with_payload: ["memory_record_id"]` and `with_vector: false`.

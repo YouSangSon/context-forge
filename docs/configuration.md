@@ -57,11 +57,19 @@ at an external instance.
 | `POSTGRES_DB` | `memory_os` | |
 | `POSTGRES_HOST` | `127.0.0.1` (host process) / `postgres` (compose) | |
 | `POSTGRES_PORT` | `5432` | |
+| `PG_POOL_MAX` | `10` | Maximum connections per Node process pool. Increase only when Postgres has matching connection capacity. |
+| `PG_IDLE_TIMEOUT_MS` | `30000` | Milliseconds before an idle client is closed. |
+| `PG_CONNECT_TIMEOUT_MS` | `5000` | Milliseconds to wait for a new pool connection before failing. |
 
 When the compose-managed Postgres is used, `DATABASE_URL` is auto-built from
 the `POSTGRES_*` parts (with host=`postgres` inside the network). When running
 the migration script from the host, `install.sh` rewrites the host to
 `127.0.0.1:5432` for reachability.
+
+`PG_POOL_MAX`, `PG_IDLE_TIMEOUT_MS`, and `PG_CONNECT_TIMEOUT_MS` tune the
+Node Postgres client pool used by runtime services and migrations. They are
+plain decimal positive integers; whitespace, fractional, scientific, or
+prefixed number formats are rejected at startup.
 
 ## Vector backend
 

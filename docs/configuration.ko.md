@@ -54,10 +54,18 @@ compose 번들 Postgres가 기본. 외부 인스턴스를 가리키려면 `DATAB
 | `POSTGRES_DB` | `memory_os` | |
 | `POSTGRES_HOST` | `127.0.0.1` (호스트 프로세스) / `postgres` (compose) | |
 | `POSTGRES_PORT` | `5432` | |
+| `PG_POOL_MAX` | `10` | Node process pool당 최대 연결 수. Postgres connection 용량이 충분할 때만 늘리세요. |
+| `PG_IDLE_TIMEOUT_MS` | `30000` | idle client를 닫기 전 대기 시간(ms). |
+| `PG_CONNECT_TIMEOUT_MS` | `5000` | 새 pool connection을 얻기 전까지 기다리는 시간(ms). |
 
 compose 관리 Postgres 사용 시 `DATABASE_URL` 은 `POSTGRES_*` 부분에서
 자동 빌드됩니다 (네트워크 내부 host=`postgres`). 호스트에서 마이그레이션
 스크립트 실행 시 `install.sh` 가 host를 `127.0.0.1:5432` 로 다시 씁니다.
+
+`PG_POOL_MAX`, `PG_IDLE_TIMEOUT_MS`, `PG_CONNECT_TIMEOUT_MS` 는 runtime
+service와 migration이 사용하는 Node Postgres client pool을 조정합니다.
+일반 십진수 양의 정수만 허용하며, whitespace, 소수, scientific notation,
+prefix가 붙은 숫자 형식은 시작 시 거부됩니다.
 
 ## 벡터 백엔드
 

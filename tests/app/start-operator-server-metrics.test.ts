@@ -120,6 +120,13 @@ function buildTestConfig(): ServiceConfig {
     host: "127.0.0.1",
     port: 0,
     databaseUrl: "postgres://memory:memory@127.0.0.1:5432/memory_os",
+    postgres: {
+      pool: {
+        max: 10,
+        idleTimeoutMillis: 30_000,
+        connectionTimeoutMillis: 5_000,
+      },
+    },
     vectorBackend: "pgvector",
     qdrant: {
       url: "",
