@@ -2,6 +2,28 @@
 
 ## 2026-07-01
 
+- Guarded the eval harness package-exclusion invariant:
+  - `tests/scripts/package-manifest.test.ts` now scans tracked runtime source
+    files and fails if they import `src/eval/*`.
+  - This keeps the `!dist/src/eval/` package allowlist exclusion safe if future
+    runtime code starts depending on eval utilities.
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`5` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1833` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Excluded the compiled eval harness from npm tarballs:
   - `npm pack --dry-run --json` showed `dist/src/eval/*` in the package even
     though `src/eval/*` is imported only by tests.

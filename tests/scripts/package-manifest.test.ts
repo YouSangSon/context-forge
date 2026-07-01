@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 
@@ -56,6 +57,18 @@ function readPackageJson(): PackageJson {
   return JSON.parse(fs.readFileSync("package.json", "utf8")) as PackageJson;
 }
 
+function trackedRuntimeSourceFiles(): string[] {
+  return execFileSync("git", ["ls-files", "src"], { encoding: "utf8" })
+    .split(/\r?\n/)
+    .filter((path) => path.endsWith(".ts"))
+    .filter((path) => !path.startsWith("src/eval/"))
+    .sort();
+}
+
+function lineNumberAt(text: string, index: number): number {
+  return text.slice(0, index).split(/\r?\n/).length;
+}
+
 function packageFiles(packageJson: PackageJson): string[] {
   expect(packageJson.files).toBeInstanceOf(Array);
   return packageJson.files as string[];
@@ -110,5 +123,20 @@ describe("package manifest publish surface", () => {
     expect(packageJson.scripts?.prepack).toBe("npm run build");
     expect(packageJson.bin).toBeUndefined();
     expect(packageJson.exports).toBeUndefined();
+  });
+
+  it("keeps the excluded eval harness out of runtime imports", () => {
+    const violations: string[] = [];
+    const evalImportPattern =
+      /(?:from\s+|import\s*\()\s*["'][^"']*\/eval(?:\/|["'])/g;
+
+    for (const path of trackedRuntimeSourceFiles()) {
+      const text = fs.readFileSync(path, "utf8");
+      for (const match of text.matchAll(evalImportPattern)) {
+        violations.push(`${path}:${lineNumberAt(text, match.index ?? 0)}`);
+      }
+    }
+
+    expect(violations).toEqual([]);
   });
 });

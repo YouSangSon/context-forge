@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that runtime source files do not import
+  the excluded `src/eval/` harness.
 - npm package tarballs now exclude the compiled eval harness under
   `dist/src/eval/`, with manifest and changelog drift coverage.
 - Source catch bindings now follow the `catch (err: unknown)` convention, with

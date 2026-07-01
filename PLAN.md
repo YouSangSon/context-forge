@@ -4,19 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Eval Harness Exclusion
+## Current Loop — Eval Harness Runtime Import Guard
 
 Status:
-- `npm pack --dry-run` showed compiled eval-harness files under
-  `dist/src/eval/`, but those modules are imported only by tests.
-- The loop excludes the compiled eval harness from the npm package allowlist
-  and updates package/changelog drift coverage.
+- The package allowlist now excludes `dist/src/eval/`, which is correct only
+  while the eval harness stays test-only.
+- The loop adds package manifest coverage that scans runtime source files and
+  fails if they import the excluded eval harness.
 
 Verification:
-- Focused package manifest and public-docs drift coverage passed.
-- `npm pack --dry-run --json` confirmed no `dist/src/eval/` paths in the
-  tarball.
-- Typecheck, build, audit, full tests, and diff check passed.
+- Focused package manifest coverage, typecheck, build, audit, full tests, and
+  diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 
