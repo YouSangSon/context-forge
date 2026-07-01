@@ -5,7 +5,6 @@
 import type {
   AuditLogRepository,
   AuditOutcome,
-  StoredAuditLogEntry,
 } from "../audit/audit-log-repository.js";
 import type { ServiceConfig } from "../config.js";
 import type {
@@ -152,13 +151,6 @@ export type CompactMemoryToolResult = {
   // idempotency key; applyStats summarizes the destructive run.
   compactionRunId?: string;
   applyStats?: CompactionApplyStats;
-};
-
-export type CompactMemoryToolInput_v2Extension = {
-  // Records below this decay score are flagged for eviction (default 0.5).
-  decayThreshold?: number;
-  // Half-life in days for the decay curve (default 30).
-  halfLifeDays?: number;
 };
 
 export type ListMemoryToolInput = {
@@ -358,10 +350,6 @@ export type McpToolAuthorizationInput = {
 export type McpToolAuthorizer = (
   input: McpToolAuthorizationInput,
 ) => MaybePromise<void>;
-
-// Internal alias — kept as a structural-equivalence point so ToolRegistry stays
-// decoupled from the concrete StoredAuditLogEntry shape over time.
-export type _AuditLogEntryRef = StoredAuditLogEntry;
 
 export type StartGoalRunToolInput = {
   organizationId?: string;

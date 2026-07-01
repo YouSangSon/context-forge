@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- MCP type exports no longer include the unused
+  `CompactMemoryToolInput_v2Extension` and `_AuditLogEntryRef` aliases.
 - Shared DB row helpers now centralize `requireSingleRow`, `toNumber`, and
   `toIsoString` for repository modules that previously duplicated them.
 - Tool registry audit writes now keep their best-effort non-blocking behavior

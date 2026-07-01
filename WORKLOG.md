@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Removed dead MCP type exports:
+  - `src/mcp/types.ts` no longer exports the unused
+    `CompactMemoryToolInput_v2Extension` and `_AuditLogEntryRef` aliases.
+  - Removing `_AuditLogEntryRef` also drops the unused `StoredAuditLogEntry`
+    import from the MCP type surface; `StoredAuditLogEntry` remains in the
+    audit repository where it is used.
+  - Source checked: internal code-quality audit finding CQ-14 documents these
+    unused type exports:
+    `docs/superpowers/audit/04-code-quality.md`.
+
+Verification plan:
+- `npm run typecheck`
+- `npx vitest run tests/mcp/server.test.ts tests/mcp/tool-registry.test.ts`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npm run typecheck` (passed)
+- `npx vitest run tests/mcp/server.test.ts tests/mcp/tool-registry.test.ts`
+  (`148` tests passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1910` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Extracted shared DB row helpers:
   - `src/store/db-utils.ts` now owns `requireSingleRow`, `toNumber`, and
     `toIsoString`.
