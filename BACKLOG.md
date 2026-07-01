@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Korean README comparison copy now uses localized positioning language instead
+  of mixed English phrases, with public-docs drift coverage.
 - Korean backup guidance now keeps pgvector logical-data-path wording in Korean
   instead of inheriting the English README phrasing, with public-docs drift
   coverage split by language.

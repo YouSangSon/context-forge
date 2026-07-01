@@ -42,6 +42,8 @@ changes; CHANGELOG entries call those out explicitly.
   available.
 - Docs: Korean backup guidance now keeps pgvector logical-data-path wording in
   Korean instead of inheriting the English README phrasing.
+- Docs: Korean README comparison copy now uses localized positioning language
+  instead of mixed English phrases.
 
 Post-release audit cycle. v1.0.0 shipped with 0 OSS users, so this window
 was the safe time to tighten default-strict behavior on multi-tenancy

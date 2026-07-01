@@ -238,6 +238,27 @@ describe("public documentation drift checks", () => {
     expect(installer).not.toContain("NODE_MAJOR\" -lt 20");
   });
 
+  it("keeps Korean README comparison copy localized", () => {
+    const readmeKo = read("README.ko.md");
+
+    expect(readmeKo).toContain("무료/로컬 기본값");
+    expect(readmeKo).toContain("비용을 전면에 내세우고");
+    expect(readmeKo).toContain("한 단계 더 나아가는 지점");
+    expect(readmeKo).toContain("자체 호스팅 메모리 MCP 서버");
+
+    for (const stalePhrase of [
+      "MCP 메모리 생태계 norm",
+      "무료/로컬 default",
+      "cost 를 헤드라인",
+      "distinctively",
+      "peers 는 skip",
+      "hosted 메모리 제품",
+      "self-hosted 메모리 MCP 서버",
+    ]) {
+      expect(readmeKo).not.toContain(stalePhrase);
+    }
+  });
+
   it("documents transformers as a packaged runtime dependency", () => {
     const packageJson = readJson<{
       dependencies?: Record<string, string>;

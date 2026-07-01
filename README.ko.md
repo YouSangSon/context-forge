@@ -30,18 +30,18 @@ Claude Code, Codex CLI, 또는 어떤 MCP 클라이언트에든 붙이면 에이
 | **Postgres + vector 백엔드** | ✅ (Qdrant 기본; Postgres 단독 배포 옵션 pgvector) | SQLite-vec | Supabase + pgvector | varies | varies | proprietary |
 | **OSS 경로 active 유지** | ✅ | ✅ | ✅ (template repo) | ✅ | ✅ | ❌ (CE 2025 deprecated) |
 
-MCP 메모리 생태계 norm 은 *무료/로컬 default* — doobidoo (1.7k★) 가 `$0`
-cost 를 헤드라인으로 사용, 수렴 무료 임베딩 모델 (`all-MiniLM-L6-v2`)도
-Akasha 가 같이 채택. Akasha 가 distinctively 더 나아간 점:
+MCP 메모리 생태계에서는 *무료/로컬 기본값* 이 일반적입니다. doobidoo
+(1.7k★) 는 `$0` 비용을 전면에 내세우고, Akasha도 여러 도구가 채택한 무료 임베딩 모델
+(`all-MiniLM-L6-v2`)을 사용합니다. Akasha가 한 단계 더 나아가는 지점:
 **vector index 와 분리된 Postgres canonical store** (Qdrant collection 재구축
 시 데이터 손실 0, reindex 는 도구 1번 호출), **SQL + vector 양 계층의
-org-scoped 멀티테넌시** (peers 는 skip 하거나 upstream 프레임워크에 의존),
+org-scoped 멀티테넌시** (다른 도구들은 이를 생략하거나 상위 프레임워크에 의존),
 **wrapper 가 아닌 MCP-native** (프로토콜과 메모리 엔진 사이 shim 없음).
 두 번째 서비스가 번거로운 환경에서는 `VECTOR_BACKEND=pgvector` 로 벡터를
 Postgres 에 저장할 수 있습니다 — Qdrant 불필요.
 
-세련된 UI 가 있는 hosted 메모리 제품이 필요하면 Mem0 또는 Letta. **API
-키 불필요한 self-hosted 메모리 MCP 서버**가 필요하면 이것.
+세련된 UI 가 있는 호스팅형 메모리 제품이 필요하면 Mem0 또는 Letta. **API
+키가 필요 없는 자체 호스팅 메모리 MCP 서버**가 필요하면 이것.
 
 ## 주요 기능 (Features)
 

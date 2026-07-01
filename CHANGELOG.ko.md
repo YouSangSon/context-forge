@@ -41,6 +41,8 @@ CHANGELOG에서 명시적으로 표기합니다.
   (`*.ko.md`)로 연결되도록 정렬합니다.
 - 문서: 한국어 백업 안내에서 pgvector의 논리 데이터 경로 설명이 영어 README
   문구를 그대로 상속하지 않고 한국어 표현을 사용하도록 정리합니다.
+- 문서: 한국어 README 비교 문단이 영문 혼용 표현 대신 한국어 포지셔닝 문구를
+  사용하도록 정리합니다.
 
 릴리스 후 audit 사이클. v1.0.0이 OSS 사용자 0명 상태로 출시되어 — 멀티
 테넌시 boundary 의 default-strict 강화 + secret-scrubber surface 보강을

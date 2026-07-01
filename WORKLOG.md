@@ -2,6 +2,30 @@
 
 ## 2026-07-01
 
+- Localized Korean README comparison copy:
+  - `README.ko.md` now avoids mixed English positioning phrases such as
+    `무료/로컬 default`, `distinctively`, and `peers 는 skip` in the comparison
+    section.
+  - `tests/scripts/public-docs-drift.test.ts` now guards the localized Korean
+    comparison wording.
+  - `CHANGELOG.md` and `CHANGELOG.ko.md` record the public documentation polish.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`33` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1808` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned Korean backup guidance wording:
   - `README.ko.md`, `docs/operations.ko.md`, and
     `docs/self-hosted-operations.ko.md` now describe pgvector backup logical
