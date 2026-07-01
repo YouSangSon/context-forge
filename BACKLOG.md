@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that package `optionalDependencies`
+  stays absent in package and lockfile root metadata so runtime dependency
+  failure semantics cannot drift silently.
 - Package manifest coverage now guards that package `workspaces` stays absent
   so workspace install/symlink behavior cannot appear without an explicit repo
   architecture decision.

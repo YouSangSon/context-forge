@@ -4,13 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Workspaces Guard
+## Current Loop — Package Optional Dependencies Guard
 
 Status:
-- Package manifest coverage guards that package `workspaces` stays absent.
-- The loop catches metadata drift that would move Akasha from a single npm
-  package into workspace install/symlink behavior without an explicit repo
-  architecture decision.
+- Package manifest coverage guards that package `optionalDependencies` stays
+  absent in both `package.json` and the lockfile root metadata.
+- The loop catches dependency metadata drift that would make runtime dependency
+  install failures non-fatal or override normal dependency entries without an
+  explicit dependency policy decision.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

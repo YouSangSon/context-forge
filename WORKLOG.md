@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded package optional dependency metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package
+    `optionalDependencies` stays absent in both `package.json` and the
+    lockfile root metadata.
+  - This catches dependency metadata drift that would make runtime dependency
+    install failures non-fatal or override normal dependency entries without an
+    explicit dependency policy decision.
+  - Source checked: npm documents `optionalDependencies` as dependencies whose
+    build failures do not fail installation, and notes entries there override
+    same-name entries in `dependencies`:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`26` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1870` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package workspace metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package
     `workspaces` stays absent.

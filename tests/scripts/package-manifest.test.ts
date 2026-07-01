@@ -21,6 +21,7 @@ type PackageJson = {
   license?: unknown;
   main?: unknown;
   name?: unknown;
+  optionalDependencies?: Record<string, string>;
   overrides?: Record<string, string>;
   os?: unknown;
   private?: unknown;
@@ -226,6 +227,14 @@ describe("package manifest publish surface", () => {
     const packageJson = readPackageJson();
 
     expect(packageJson.workspaces).toBeUndefined();
+  });
+
+  it("does not declare optional runtime dependencies", () => {
+    const packageJson = readPackageJson();
+    const lockfileRoot = readPackageLock().packages[""];
+
+    expect(packageJson.optionalDependencies).toBeUndefined();
+    expect(lockfileRoot?.optionalDependencies).toBeUndefined();
   });
 
   it("keeps npm package support metadata pointed at the project", () => {
