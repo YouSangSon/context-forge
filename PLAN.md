@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Ranking Unit Score Validation
+## Current Loop - Ranking Candidate Score Validation
 
 Status:
-- `src/search/rank-results.ts` now validates normalized vector and lexical
-  scores as unit-interval values before ranking.
-- `tests/search/rank-results.test.ts` now covers negative and greater-than-one
-  score options so bad internal scoring inputs fail before ranking.
+- `src/search/rank-results.ts` now validates candidate score components before
+  sorting candidates.
+- `tests/search/rank-results.test.ts` now covers malformed required and
+  optional candidate score components.
 
 Verification:
 - Focused vector/search tests passed.

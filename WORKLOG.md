@@ -2,6 +2,26 @@
 
 ## 2026-07-02
 
+- Hardened ranking candidate score components:
+  - `src/search/rank-results.ts` now validates `vector`, `lexical`, `scope`,
+    `metadata`, `recency`, and `total` score components on candidates passed to
+    `rankCandidates`.
+  - Optional `vector` and `lexical` score components still remain optional, but
+    fail when present with malformed non-finite values.
+  - Required score components now fail before sorting when missing or malformed,
+    so returned candidates cannot carry invalid score details.
+  - `tests/search/rank-results.test.ts` covers malformed required and optional
+    candidate score components.
+
+Verification:
+- `npx vitest run tests/search/rank-results.test.ts tests/search/retrieve-memory.test.ts --reporter=dot`
+  (`2` files passed; `54` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2055` tests passed, `34` skipped)
+- `git diff --check`
+
 - Hardened ranking normalized score inputs:
   - `src/search/rank-results.ts` now validates `vectorScore` and `lexicalScore`
     as unit-interval values before ranking.

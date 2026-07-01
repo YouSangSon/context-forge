@@ -245,10 +245,13 @@ function assertRetrievedMemoryCandidates(
     const value = candidate as Record<string, unknown>;
     assertSearchMemoryResult(value.record, `${prefix}.record`);
     assertObject(value.scores, `${prefix}.scores`);
-    assertFiniteNumber(
-      (value.scores as Record<string, unknown>).total,
-      `${prefix}.scores.total`,
-    );
+    const scores = value.scores as Record<string, unknown>;
+    assertOptionalFiniteNumber(scores.vector, `${prefix}.scores.vector`);
+    assertOptionalFiniteNumber(scores.lexical, `${prefix}.scores.lexical`);
+    assertFiniteNumber(scores.scope, `${prefix}.scores.scope`);
+    assertFiniteNumber(scores.metadata, `${prefix}.scores.metadata`);
+    assertFiniteNumber(scores.recency, `${prefix}.scores.recency`);
+    assertFiniteNumber(scores.total, `${prefix}.scores.total`);
   }
 }
 
@@ -353,6 +356,14 @@ function assertOptionalUnitScore(value: unknown, fieldName: string): void {
   if (value < 0 || value > 1) {
     throw new Error(`${fieldName} must be between 0 and 1`);
   }
+}
+
+function assertOptionalFiniteNumber(value: unknown, fieldName: string): void {
+  if (value === undefined) {
+    return;
+  }
+
+  assertFiniteNumber(value, fieldName);
 }
 
 function assertFiniteNumber(

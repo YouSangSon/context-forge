@@ -371,5 +371,21 @@ describe("rankResults", () => {
         },
       ]),
     ).toThrow("candidates[0].scores.total must be a finite number");
+    expect(
+      callRankCandidates([
+        {
+          ...validCandidate,
+          scores: { ...validCandidate.scores, scope: undefined },
+        },
+      ]),
+    ).toThrow("candidates[0].scores.scope must be a finite number");
+    expect(
+      callRankCandidates([
+        {
+          ...validCandidate,
+          scores: { ...validCandidate.scores, vector: Number.NaN },
+        },
+      ]),
+    ).toThrow("candidates[0].scores.vector must be a finite number");
   });
 });

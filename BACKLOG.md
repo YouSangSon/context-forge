@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `rankCandidates` now validates candidate score components before sorting,
+  rejecting malformed required or optional score values instead of returning
+  candidates with invalid score details.
 - Ranking now rejects normalized vector and lexical score options outside the
   `0..1` range instead of silently clamping invalid internal scoring inputs.
 - Qdrant vector query row mapping now validates returned point IDs before
