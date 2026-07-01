@@ -2,6 +2,32 @@
 
 ## 2026-07-01
 
+- Added missing pgvector npm package metadata:
+  - `package.json#keywords` now includes `pgvector`, matching the package
+    description and public vector-backend docs.
+  - `tests/scripts/package-manifest.test.ts` now guards the backend metadata
+    keywords together with the package description.
+  - `CHANGELOG.md` and `CHANGELOG.ko.md` record the user-visible metadata fix.
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm pack --dry-run --json`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`4` tests passed)
+- `npm pack --dry-run --json` (passed; `prepack` rebuilt `dist/`, `115`
+  package entries)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1805` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned the bug report deployment dropdown with vector-backend support:
   - `.github/ISSUE_TEMPLATE/bug_report.yml` now describes custom deployments as
     external Postgres plus Qdrant or pgvector.

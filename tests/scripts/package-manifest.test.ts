@@ -6,6 +6,7 @@ type PackageJson = {
   description?: unknown;
   exports?: unknown;
   files?: unknown;
+  keywords?: unknown;
   scripts?: Record<string, string>;
 };
 
@@ -65,6 +66,10 @@ describe("package manifest publish surface", () => {
 
     expect(packageJson.description).toBe(
       "A persistent-memory MCP server for AI coding agents. Postgres-backed with Qdrant or pgvector search.",
+    );
+    expect(packageJson.keywords).toBeInstanceOf(Array);
+    expect(packageJson.keywords).toEqual(
+      expect.arrayContaining(["postgres", "qdrant", "pgvector"]),
     );
   });
 

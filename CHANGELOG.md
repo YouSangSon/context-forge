@@ -37,7 +37,7 @@ changes; CHANGELOG entries call those out explicitly.
   rebuilds a clean `dist/` before pack/publish.
 - npm package metadata: the package description now reflects Postgres-backed
   storage with Qdrant or pgvector search instead of implying Qdrant-only
-  operation.
+  operation, and npm keywords now include `pgvector`.
 
 Post-release audit cycle. v1.0.0 shipped with 0 OSS users, so this window
 was the safe time to tighten default-strict behavior on multi-tenancy

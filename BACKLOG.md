@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- npm package keywords now include `pgvector`, guarded alongside the package
+  description in manifest coverage.
 - Bug report templates now include the default `transformers` embedding
   provider option, pgvector-aware custom deployment wording, and
   repository-rooted security links, guarded by public-docs drift coverage.

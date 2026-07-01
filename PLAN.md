@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Bug Report Deployment Options
+## Current Loop — NPM Package Metadata Keywords
 
 Status:
-- `.github/ISSUE_TEMPLATE/bug_report.yml` now mentions both supported vector
-  backends in the custom deployment option: Qdrant or pgvector.
-- `tests/scripts/public-docs-drift.test.ts` now shares a dropdown-option helper
-  and guards both provider and deployment option drift.
+- `package.json#keywords` now includes `pgvector`, matching the package
+  description and documented Qdrant/pgvector vector-backend support.
+- `tests/scripts/package-manifest.test.ts` guards the package metadata keywords
+  alongside the description.
 
 Loop closeout:
-- Focused public docs drift coverage passed for the pgvector-aware deployment
-  option, and full typecheck, build, audit, test, and diff gates passed.
+- Focused package manifest coverage, `npm pack --dry-run --json`, typecheck,
+  build, audit, full tests, and diff check passed for this metadata update.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 
