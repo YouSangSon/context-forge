@@ -2,6 +2,31 @@
 
 ## 2026-07-01
 
+- Aligned Korean public-doc body links with Korean mirrors:
+  - `README.ko.md`, `CONTRIBUTING.ko.md`, `docs/configuration.ko.md`,
+    `docs/operations.ko.md`, `docs/security.ko.md`, and
+    `docs/troubleshooting.ko.md` now point body links at Korean mirror files
+    where those mirrors exist.
+  - Explicit language-switch links and `docs/README.ko.md` bilingual index
+    columns remain unchanged.
+  - `tests/scripts/public-docs-drift.test.ts` now guards these mirror links.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`32` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1807` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned the feature request scope dropdown with vector-backend support:
   - `.github/ISSUE_TEMPLATE/feature_request.yml` now uses `Vector backend
     (Qdrant / pgvector)` instead of Qdrant-only wording.

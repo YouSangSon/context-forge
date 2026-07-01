@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Korean public-doc body links now prefer Korean mirrors where available, with
+  focused public-docs drift coverage.
 - Feature request scope options now describe vector backend work as Qdrant or
   pgvector, guarded by public-docs drift coverage.
 - npm package keywords now include `pgvector`, guarded alongside the package

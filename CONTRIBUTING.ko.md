@@ -96,7 +96,7 @@ SQL 파일은 `src/db/migrations/NNN_*.sql` 에 있습니다. 현재 마이그�
 ## 버그 리포트 / 기능 요청
 
 `.github/ISSUE_TEMPLATE/` 의 issue 템플릿을 사용해주세요. 보안 이슈는
-[SECURITY.md](SECURITY.md) 를 따라주세요 — 공개 이슈로 열지 마세요.
+[SECURITY.ko.md](SECURITY.ko.md) 를 따라주세요 — 공개 이슈로 열지 마세요.
 
 ## 라이선스
 

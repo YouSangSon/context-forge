@@ -161,6 +161,36 @@ describe("public documentation drift checks", () => {
     }
   });
 
+  it("keeps Korean public-doc body links on Korean mirrors", () => {
+    const expectedKoreanLinks = [
+      ["README.ko.md", "docs/README.ko.md"],
+      ["CONTRIBUTING.ko.md", "SECURITY.ko.md"],
+      ["docs/configuration.ko.md", "operations.ko.md"],
+      ["docs/configuration.ko.md", "deployment.ko.md"],
+      ["docs/operations.ko.md", "self-hosted-operations.ko.md"],
+      ["docs/security.ko.md", "../SECURITY.ko.md"],
+      ["docs/troubleshooting.ko.md", "../SECURITY.ko.md"],
+    ] as const;
+
+    for (const [path, target] of expectedKoreanLinks) {
+      expect(markdownLinkTargets(read(path))).toContain(target);
+    }
+
+    const staleEnglishTargets = [
+      ["README.ko.md", "docs/README.md"],
+      ["CONTRIBUTING.ko.md", "SECURITY.md"],
+      ["docs/configuration.ko.md", "operations.md"],
+      ["docs/configuration.ko.md", "deployment.md"],
+      ["docs/operations.ko.md", "self-hosted-operations.md"],
+      ["docs/security.ko.md", "../SECURITY.md"],
+      ["docs/troubleshooting.ko.md", "../SECURITY.md"],
+    ] as const;
+
+    for (const [path, target] of staleEnglishTargets) {
+      expect(markdownLinkTargets(read(path))).not.toContain(target);
+    }
+  });
+
   it("documents Node 22 as the minimum supported runtime", () => {
     const packageJson = readJson<{ engines: { node: string } }>("package.json");
     const packageLock = readJson<{ packages: Record<string, { engines?: { node?: string } }> }>(

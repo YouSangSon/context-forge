@@ -38,6 +38,8 @@ changes; CHANGELOG entries call those out explicitly.
 - npm package metadata: the package description now reflects Postgres-backed
   storage with Qdrant or pgvector search instead of implying Qdrant-only
   operation, and npm keywords now include `pgvector`.
+- Docs: Korean public-document body links now point to Korean mirrors where
+  available.
 
 Post-release audit cycle. v1.0.0 shipped with 0 OSS users, so this window
 was the safe time to tighten default-strict behavior on multi-tenancy

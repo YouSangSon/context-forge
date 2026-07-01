@@ -37,6 +37,8 @@ CHANGELOG에서 명시적으로 표기합니다.
 - npm package metadata: package description이 Qdrant-only 동작처럼 보이지
   않도록, Postgres-backed storage와 Qdrant 또는 pgvector search를 반영하고
   npm keyword에 `pgvector` 를 추가합니다.
+- 문서: 한국어 공개 문서 본문 링크가 가능한 경우 한국어 mirror
+  (`*.ko.md`)로 연결되도록 정렬합니다.
 
 릴리스 후 audit 사이클. v1.0.0이 OSS 사용자 0명 상태로 출시되어 — 멀티
 테넌시 boundary 의 default-strict 강화 + secret-scrubber surface 보강을

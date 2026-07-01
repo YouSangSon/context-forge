@@ -302,7 +302,7 @@ ingest sweeper 는 write-ahead `markQdrantPending` 과 `markQdrantCompleted`
 | `BACKUP_ENCRYPTION_KEY_FILE` | unset | 32-byte AES key(hex, base64, raw bytes)를 담은 선택적 파일. 설정한다면 non-whitespace text가 필요합니다. 설정하면 off-host copy 전에 backup artifact를 AES-256-GCM으로 암호화. |
 | `BACKUP_ENCRYPTION_KEEP_PLAINTEXT` | `false` | 로컬 디버깅 때만 `true`; 앞뒤 공백을 제거한 뒤 대소문자 구분 없이 `true` 또는 `false` 만 허용. 그 외 설정값은 encryption 시작 전 실패. 기본값은 encrypted `.enc` artifact와 manifest checksum 작성 후 plaintext artifact 제거. |
 
-백업/복원 워크플로는 [docs/operations.md](operations.md) 참고.
+백업/복원 워크플로는 [docs/operations.ko.md](operations.ko.md) 참고.
 
 ## 로깅과 MCP identity
 
@@ -371,5 +371,5 @@ COMPACTION_SWEEP_ENABLED=true
 NODE_ENV=production
 ```
 
-reverse proxy 레이어에서 TLS와 같이 사용. [docs/deployment.md](deployment.md)
+reverse proxy 레이어에서 TLS와 같이 사용. [docs/deployment.ko.md](deployment.ko.md)
 참고.

@@ -4,7 +4,7 @@
 
 이 문서는 Akasha가 다루는 위협 surface, 현재 적용된 컨트롤, 잔여
 리스크를 요약합니다. 취약점 리포팅 정책 (어디로 보안 보고를 보낼지) 는
-[../SECURITY.md](../SECURITY.md) 참고.
+[../SECURITY.ko.md](../SECURITY.ko.md) 참고.
 
 ## 위협 surface
 

@@ -177,5 +177,5 @@ skip 되지만 hook timeout 자체가 보임. Postgres 띄우거나
 3. 다음 정보로 issue 열기: 에러 메시지, 버전 (`git rev-parse HEAD`), 재현
    단계, `EMBEDDING_PROVIDER`.
 
-보안 이슈는 **공개 이슈로 열지 마세요** — [../SECURITY.md](../SECURITY.md)
+보안 이슈는 **공개 이슈로 열지 마세요** — [../SECURITY.ko.md](../SECURITY.ko.md)
 참고.

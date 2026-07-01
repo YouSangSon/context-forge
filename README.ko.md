@@ -213,7 +213,7 @@ curl -sX POST http://localhost:8787/v1/memory/context-pack \
 
 ## 문서 (Documentation)
 
-운영자/기여자용 전체 문서는 [`docs/`](docs/README.md) 에 있습니다. 모든
+운영자/기여자용 전체 문서는 [`docs/`](docs/README.ko.md) 에 있습니다. 모든
 페이지에는 한국어 (`*.ko.md`) 미러가 있습니다.
 
 | 주제 | 설명 |

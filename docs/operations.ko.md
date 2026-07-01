@@ -34,7 +34,7 @@ cron 예시 (매일 03:00):
 ```
 
 systemd timer 대안 — 동작하는 unit 파일은
-[docs/self-hosted-operations.md](self-hosted-operations.md) 참고.
+[docs/self-hosted-operations.ko.md](self-hosted-operations.ko.md) 참고.
 
 ### 오프-호스트 복제
 
