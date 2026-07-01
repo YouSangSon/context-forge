@@ -298,7 +298,7 @@ export function createMemoryArchiveRepository(
       const row = result.rows[0]!;
       return {
         archived: true,
-        archiveId: toNumber(row.archive_id),
+        archiveId: toPositiveSafeInteger(row.archive_id, "memory archive id"),
         qdrantPointIds: row.qdrant_point_ids ?? [],
       };
     },
@@ -399,7 +399,7 @@ export function createMemoryArchiveRepository(
         [limit],
       );
       return result.rows.map((row) => ({
-        archiveId: toNumber(row.id),
+        archiveId: toPositiveSafeInteger(row.id, "memory archive id"),
         organizationId: row.organization_id,
         qdrantPointIds: row.qdrant_point_ids ?? [],
         attemptCount: toNumber(row.qdrant_attempt_count),
@@ -441,7 +441,7 @@ export function createMemoryArchiveRepository(
       );
 
       return result.rows.map((row) => ({
-        archiveId: toNumber(row.id),
+        archiveId: toPositiveSafeInteger(row.id, "memory archive id"),
         organizationId: row.organization_id,
         qdrantPointIds: row.qdrant_point_ids ?? [],
         attemptCount: toNumber(row.qdrant_attempt_count),
@@ -504,10 +504,19 @@ export function createMemoryArchiveRepository(
         [archiveIds, organizationId],
       );
       return result.rows.map((row) => ({
-        id: toNumber(row.id),
+        id: toPositiveSafeInteger(row.id, "memory archive id"),
         organizationId: row.organization_id,
-        sourceRecordId: toNumber(row.source_record_id),
-        sourceId: row.source_id === null ? null : toNumber(row.source_id),
+        sourceRecordId: toPositiveSafeInteger(
+          row.source_record_id,
+          "memory archive source_record_id",
+        ),
+        sourceId:
+          row.source_id === null
+            ? null
+            : toPositiveSafeInteger(
+                row.source_id,
+                "memory archive source_id",
+              ),
         scopeType: row.scope_type,
         scopeId: row.scope_id,
         projectKey: row.project_key,
@@ -665,6 +674,12 @@ function toRecentApplyRunCount(value: unknown): number {
     );
   }
   return count;
+}
+
+function toPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertPositiveSafeInteger(numberValue, fieldName);
+  return numberValue;
 }
 
 function mapRunRow(row: {

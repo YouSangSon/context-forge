@@ -2,6 +2,38 @@
 
 ## 2026-07-02
 
+- Guarded memory archive id row mapping:
+  - `src/store/memory-archive-repository.ts` now maps memory archive ids
+    returned by apply, cleanup listing, cleanup claiming, and archive lookup
+    rows through positive safe-integer validation.
+  - Archive lookup rows now also validate `source_record_id` and non-null
+    `source_id` as positive safe integers before returning unarchive inputs.
+  - `tests/store/memory-archive-repository.test.ts` now covers malformed
+    archive id rows across apply/list/claim/lookup paths, plus malformed
+    archived source id references.
+  - Source checked: `memory_archive.id` is `BIGSERIAL`,
+    `memory_archive.source_record_id` is `BIGINT`, and nullable
+    `memory_archive.source_id` is `BIGINT` in migrations
+    `005_add_compaction_archive.sql` and `006_add_archive_unarchive.sql`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/unarchive-compaction.test.ts tests/compact/outbox-sweeper.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/unarchive-compaction.test.ts tests/compact/outbox-sweeper.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`146` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2019` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded audit log numeric row mapping:
   - `src/audit/audit-log-repository.ts` now maps audit log `id` through
     positive safe-integer validation and `duration_ms` through non-negative

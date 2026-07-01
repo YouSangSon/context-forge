@@ -245,6 +245,23 @@ describe("MemoryArchiveRepository.applyCompactionRecord", () => {
     expect(result.archived).toBe(true);
     expect(result.qdrantPointIds).toEqual([]);
   });
+
+  it("rejects malformed returned archive id rows", async () => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [{ archive_id: "0", qdrant_point_ids: [] }],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.applyCompactionRecord({
+        runId: 7,
+        organizationId: "org-a",
+        recordId: 100,
+        reason: "decay",
+        planGeneratedAt: new Date(),
+      }),
+    ).rejects.toThrow("memory archive id must be a positive safe integer");
+  });
 });
 
 describe("MemoryArchiveRepository.markQdrantStatus", () => {
@@ -360,6 +377,24 @@ describe("MemoryArchiveRepository.findPendingQdrantCleanup", () => {
     ]);
   });
 
+  it.each(["0", "1.5"])("rejects malformed pending archive id rows: %s", async (id) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [
+        {
+          id,
+          organization_id: "org-a",
+          qdrant_point_ids: ["pa1"],
+          qdrant_attempt_count: "0",
+        },
+      ],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findPendingQdrantCleanup(50)).rejects.toThrow(
+      "memory archive id must be a positive safe integer",
+    );
+  });
+
   it("filters due pending rows without claiming locks", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -432,6 +467,27 @@ describe("MemoryArchiveRepository.claimPendingQdrantCleanup", () => {
     expect(params[1]).toBe(10);
     expect(params[2]).toBe("2026-06-25T00:01:00.000Z");
   });
+
+  it("rejects malformed claimed archive id rows", async () => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [
+        {
+          id: "1.5",
+          organization_id: "org-a",
+          qdrant_point_ids: ["pa1"],
+          qdrant_attempt_count: "2",
+        },
+      ],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.claimPendingQdrantCleanup({
+        limit: 10,
+        now: new Date("2026-06-25T00:00:00.000Z"),
+      }),
+    ).rejects.toThrow("memory archive id must be a positive safe integer");
+  });
 });
 
 describe("MemoryArchiveRepository.countRecentApplyRuns", () => {
@@ -480,6 +536,28 @@ describe("MemoryArchiveRepository.countRecentApplyRuns", () => {
 });
 
 describe("MemoryArchiveRepository.findArchiveByIds", () => {
+  function archiveRow(overrides: Record<string, unknown> = {}) {
+    return {
+      id: "50",
+      organization_id: "org-a",
+      source_record_id: "100",
+      source_id: "200",
+      scope_type: "project",
+      scope_id: "alpha",
+      project_key: "alpha",
+      kind: "decision",
+      title: null,
+      content: "Decision: ship Friday",
+      summary: null,
+      durability: "durable",
+      importance: "5",
+      original_created_at: new Date("2026-04-25T00:00:00.000Z"),
+      original_updated_at: "2026-04-25T01:00:00.000Z",
+      unarchived_at: null,
+      ...overrides,
+    };
+  }
+
   it("returns empty array when no ids supplied", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -516,26 +594,7 @@ describe("MemoryArchiveRepository.findArchiveByIds", () => {
 
   it("maps rows including null source_id and unarchived_at", async () => {
     const { pool } = makeMockPool(async () => ({
-      rows: [
-        {
-          id: "50",
-          organization_id: "org-a",
-          source_record_id: "100",
-          source_id: "200",
-          scope_type: "project",
-          scope_id: "alpha",
-          project_key: "alpha",
-          kind: "decision",
-          title: null,
-          content: "Decision: ship Friday",
-          summary: null,
-          durability: "durable",
-          importance: "5",
-          original_created_at: new Date("2026-04-25T00:00:00.000Z"),
-          original_updated_at: "2026-04-25T01:00:00.000Z",
-          unarchived_at: null,
-        },
-      ],
+      rows: [archiveRow()],
     }));
     const repo = createMemoryArchiveRepository(pool);
 
@@ -547,6 +606,32 @@ describe("MemoryArchiveRepository.findArchiveByIds", () => {
     expect(result[0]!.originalCreatedAt).toBe("2026-04-25T00:00:00.000Z");
     expect(result[0]!.originalUpdatedAt).toBe("2026-04-25T01:00:00.000Z");
     expect(result[0]!.unarchivedAt).toBeNull();
+  });
+
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "memory archive id must be a positive safe integer",
+    },
+    {
+      rowPatch: { source_record_id: "1.5" },
+      message: "memory archive source_record_id must be a positive safe integer",
+    },
+    {
+      rowPatch: { source_id: "0" },
+      message: "memory archive source_id must be a positive safe integer",
+    },
+    {
+      rowPatch: { source_id: "bad" },
+      message: "database number must be finite",
+    },
+  ])("rejects malformed archive record id rows %#", async ({ rowPatch, message }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [archiveRow(rowPatch)],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findArchiveByIds([50], "org-a")).rejects.toThrow(message);
   });
 });
 

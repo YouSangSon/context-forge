@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository row mapping now validates archive ids and archived
+  source id references before returning compaction, cleanup, claim, or
+  unarchive rows.
 - Audit log repository row mapping now validates audit ids and duration
   counters before returning listed audit entries.
 - Goal run repository row mapping now validates run and iteration ids before
