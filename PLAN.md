@@ -4,19 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — TypeScript Include Coverage Guard
+## Current Loop — CI Install Hygiene Guard
 
 Status:
-- Contributor guidance expects strict TypeScript without `any`, and the source
-  convention suite guards catch bindings, explicit `any` types, suppression
-  comments, and strict compiler options.
-- The loop keeps the `tsconfig.json` include set covering source, scripts,
-  tests, and root Vitest config files so the tsconfig-driven convention scanner
-  cannot silently narrow its checked surface.
+- CI install steps intentionally set `ONNXRUNTIME_NODE_INSTALL_CUDA=skip` before
+  `npm ci` so GitHub-hosted runners do not attempt flaky GPU binary downloads.
+- The loop adds a CI workflow hygiene guard that rejects raw `npm ci`,
+  `npm install`, or `npm i` commands without that CPU-only environment setting.
 
 Verification:
-- Focused source convention coverage, typecheck, build, audit, full tests, and
-  diff check passed.
+- Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,
+  and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

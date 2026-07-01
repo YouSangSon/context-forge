@@ -45,6 +45,18 @@ describe("CI workflow hygiene", () => {
     expect(installSteps).toHaveLength(3);
   });
 
+  it("rejects unguarded npm install commands in CI", () => {
+    const violations = ciWorkflow
+      .split(/\r?\n/)
+      .map((line, index) => ({ line: index + 1, text: line.trim() }))
+      .filter(({ text }) =>
+        /^(?:run:\s+)?npm (?:ci|i|install)\b/.test(text),
+      )
+      .map(({ line, text }) => `${line}: ${text}`);
+
+    expect(violations).toEqual([]);
+  });
+
   it("builds the package in the main Node matrix before running tests", () => {
     const typecheckStepIndex = ciWorkflow.indexOf("      - name: Typecheck\n");
     const buildStepIndex = ciWorkflow.indexOf("      - name: Build\n");

@@ -2,6 +2,29 @@
 
 ## 2026-07-02
 
+- Guarded CI install commands:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now rejects raw `npm ci`,
+    `npm install`, and `npm i` workflow commands.
+  - This keeps future CI install steps on the documented CPU-only
+    `ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci` path.
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`11` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1840` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded the TypeScript project include set:
   - `tests/scripts/source-conventions.test.ts` now checks that `tsconfig.json`
     continues to include `src/**/*.ts`, `scripts/**/*.ts`, `tests/**/*.ts`, and

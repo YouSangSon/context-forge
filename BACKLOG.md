@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now rejects unguarded `npm ci`, `npm install`,
+  and `npm i` commands so future install steps keep the CPU-only onnxruntime
+  workaround.
 - TypeScript source convention coverage now guards that `tsconfig.json` keeps
   source, scripts, tests, and root Vitest config files in the project include
   set.
