@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards npm package support metadata for
+  homepage, repository, issue tracker, and author.
 - Package manifest coverage now guards that the current `esbuild` npm override
   is reflected in lockfile package resolution.
 - Package manifest coverage now guards top-level `type: "module"` metadata

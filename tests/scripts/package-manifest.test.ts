@@ -3,17 +3,21 @@ import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 
 type PackageJson = {
+  author?: unknown;
   bin?: unknown;
+  bugs?: unknown;
   dependencies?: Record<string, string>;
   description?: unknown;
   devDependencies?: Record<string, string>;
   engines?: Record<string, string>;
   exports?: unknown;
   files?: unknown;
+  homepage?: unknown;
   keywords?: unknown;
   license?: unknown;
   name?: unknown;
   overrides?: Record<string, string>;
+  repository?: unknown;
   scripts?: Record<string, string>;
   type?: unknown;
   version?: unknown;
@@ -103,6 +107,18 @@ const EXPECTED_PACKAGE_OVERRIDES = {
 
 const EXPECTED_ESBUILD_LOCK_VERSION = "0.28.1";
 
+const EXPECTED_PACKAGE_SUPPORT_METADATA = {
+  author: "YouSangSon",
+  bugs: {
+    url: "https://github.com/YouSangSon/akasha/issues",
+  },
+  homepage: "https://github.com/YouSangSon/akasha#readme",
+  repository: {
+    type: "git",
+    url: "git+https://github.com/YouSangSon/akasha.git",
+  },
+} as const;
+
 function readPackageJson(): PackageJson {
   return JSON.parse(fs.readFileSync("package.json", "utf8")) as PackageJson;
 }
@@ -139,6 +155,17 @@ describe("package manifest publish surface", () => {
     expect(packageJson.keywords).toEqual(
       expect.arrayContaining(["postgres", "qdrant", "pgvector"]),
     );
+  });
+
+  it("keeps npm package support metadata pointed at the project", () => {
+    const packageJson = readPackageJson();
+
+    expect({
+      author: packageJson.author,
+      bugs: packageJson.bugs,
+      homepage: packageJson.homepage,
+      repository: packageJson.repository,
+    }).toEqual(EXPECTED_PACKAGE_SUPPORT_METADATA);
   });
 
   it("keeps the package and lockfile on the supported Node 22 runtime line", () => {

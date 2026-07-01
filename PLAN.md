@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Esbuild Lockfile Override Guard
+## Current Loop — Package Support Metadata Guard
 
 Status:
-- Package manifest coverage guards that the current `esbuild` npm override is
-  reflected in lockfile package resolution.
-- The loop catches package-lock drift where the root override remains present
-  but the resolved build tooling package tree moves to another version.
+- Package manifest coverage guards the npm package support metadata for
+  homepage, repository, issue tracker, and author.
+- The loop catches package metadata drift where published package links stop
+  pointing users and contributors at the canonical project surfaces.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

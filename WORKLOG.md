@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded npm package support metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package
+    `homepage`, `repository`, `bugs`, and `author` stay pointed at the Akasha
+    GitHub project surfaces.
+  - This catches package metadata drift where published npm metadata stops
+    routing users and contributors to the canonical README, source, or issue
+    tracker.
+  - Source checked: npm documents `homepage`, `bugs`, and `repository` as
+    package metadata used for the project homepage, issue reporting, and source
+    location:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`17` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1861` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded `esbuild` override lockfile resolution:
   - `tests/scripts/package-manifest.test.ts` now checks that
     `node_modules/esbuild` and its optional `@esbuild/*` platform packages stay
