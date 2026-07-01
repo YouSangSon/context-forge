@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded npm package identity metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package `name`
+    remains `akasha-mcp` and package `license` remains `MIT`.
+  - This catches package identity or license drift while intentionally avoiding
+    a fixed `version` assertion, because release versions should change during
+    normal publishing.
+  - Source checked: npm documents `name` as the package's identifier and
+    recommends SPDX identifiers such as `MIT` in the `license` field:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`18` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1862` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package entrypoint surface:
   - `tests/scripts/package-manifest.test.ts` now checks that package `main`
     remains absent alongside the existing `bin` and `exports` absence checks.

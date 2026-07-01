@@ -108,6 +108,11 @@ const EXPECTED_PACKAGE_OVERRIDES = {
 
 const EXPECTED_ESBUILD_LOCK_VERSION = "0.28.1";
 
+const EXPECTED_PACKAGE_IDENTITY = {
+  license: "MIT",
+  name: "akasha-mcp",
+} as const;
+
 const EXPECTED_PACKAGE_SUPPORT_METADATA = {
   author: "YouSangSon",
   bugs: {
@@ -156,6 +161,15 @@ describe("package manifest publish surface", () => {
     expect(packageJson.keywords).toEqual(
       expect.arrayContaining(["postgres", "qdrant", "pgvector"]),
     );
+  });
+
+  it("keeps npm package identity metadata stable", () => {
+    const packageJson = readPackageJson();
+
+    expect({
+      license: packageJson.license,
+      name: packageJson.name,
+    }).toEqual(EXPECTED_PACKAGE_IDENTITY);
   });
 
   it("keeps npm package support metadata pointed at the project", () => {
