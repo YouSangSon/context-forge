@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded metrics registry background queue backlog counts:
+  - `src/app/metrics.ts` now validates rendered background queue backlog row
+    counts as non-negative safe integers instead of clamping negative values
+    or truncating fractional values.
+  - `tests/app/metrics.test.ts` now covers `NaN`, negative, fractional, and
+    unsafe integer backlog count snapshots.
+  - Source checked: `createBackgroundQueueMetricsCollector` already maps
+    database `COUNT(*)` rows through non-negative safe-integer validation, so
+    the metrics registry now enforces the same contract at its render boundary.
+
+Verification plan:
+- `npx vitest run tests/app/metrics.test.ts tests/app/background-queue-metrics.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/metrics.test.ts tests/app/background-queue-metrics.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`55` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2041` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded pgvector memory record id row mapping:
   - `src/vector/pgvector-index.ts` now maps query payload
     `memory_record_id` through positive safe-integer validation while leaving

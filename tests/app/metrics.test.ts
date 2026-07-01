@@ -521,7 +521,7 @@ describe("createMetricsRegistry dependency metrics", () => {
 });
 
 describe("createMetricsRegistry background queue metrics", () => {
-  it("renders sanitized backlog gauges and collect success", () => {
+  it("renders backlog gauges and collect success", () => {
     const metrics = createMetricsRegistry();
 
     const text = metrics.render({
@@ -599,7 +599,38 @@ describe("createMetricsRegistry background queue metrics", () => {
         collectSuccess: true,
         rows: [{ queue: "ingest", state: "pending", count: Number.NaN }],
       },
-      message: "background queue backlog.rows[0].count must be a finite number",
+      message:
+        "background queue backlog.rows[0].count must be a non-negative safe integer",
+    },
+    {
+      input: {
+        collectSuccess: true,
+        rows: [{ queue: "ingest", state: "pending", count: -1 }],
+      },
+      message:
+        "background queue backlog.rows[0].count must be a non-negative safe integer",
+    },
+    {
+      input: {
+        collectSuccess: true,
+        rows: [{ queue: "ingest", state: "pending", count: 1.5 }],
+      },
+      message:
+        "background queue backlog.rows[0].count must be a non-negative safe integer",
+    },
+    {
+      input: {
+        collectSuccess: true,
+        rows: [
+          {
+            queue: "ingest",
+            state: "pending",
+            count: Number.MAX_SAFE_INTEGER + 1,
+          },
+        ],
+      },
+      message:
+        "background queue backlog.rows[0].count must be a non-negative safe integer",
     },
   ])("rejects malformed backlog snapshots", ({ input, message }) => {
     const metrics = createMetricsRegistry();

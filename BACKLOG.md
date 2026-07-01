@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Metrics registry rendering now validates background queue backlog snapshot
+  counts as non-negative safe integers instead of clamping or truncating bad
+  collector output.
 - Pgvector query row mapping now validates payload `memory_record_id` as a
   positive safe integer while preserving finite-float score mapping.
 - Background queue metrics now reject malformed `COUNT(*)` rows instead of

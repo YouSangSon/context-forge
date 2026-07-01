@@ -414,7 +414,7 @@ function appendBackgroundQueueMetrics(
       {
         queue: row.queue,
         state: row.state,
-        count: sanitizeGaugeValue(row.count),
+        count: row.count,
       },
     ];
   });
@@ -486,13 +486,6 @@ function formatNumber(value: number): string {
     return "0";
   }
   return String(Math.max(0, value));
-}
-
-function sanitizeGaugeValue(value: number): number {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-  return Math.max(0, Math.trunc(value));
 }
 
 function assertHttpRequestObservation(
@@ -568,7 +561,7 @@ function assertOptionalBackgroundQueueBacklog(
     const row = assertObject(rowValue, prefix);
     assertString(row.queue, `${prefix}.queue`);
     assertString(row.state, `${prefix}.state`);
-    assertFiniteNumber(row.count, `${prefix}.count`);
+    assertNonNegativeSafeInteger(row.count, `${prefix}.count`);
   }
 }
 
@@ -639,5 +632,14 @@ function assertFiniteNumber(
 ): asserts value is number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new Error(`${fieldName} must be a finite number`);
+  }
+}
+
+function assertNonNegativeSafeInteger(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
+    throw new Error(`${fieldName} must be a non-negative safe integer`);
   }
 }
