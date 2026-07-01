@@ -171,10 +171,11 @@ install`.
 
 ### Tests fail with `Hook timed out in 10000ms`
 
-The 3 PG-dependent test files time out trying to reach Postgres on
-5432. They skip without PG, but the hook timeout itself is what you're
-seeing. Bring up Postgres (`docker compose up -d postgres`) or accept
-those 3 files as expected-skip.
+The Postgres-backed repository/migration suites can time out trying to
+reach Postgres on 5432. They skip without PG, but the hook timeout itself is
+what you're seeing. Bring up Postgres (`docker compose up -d postgres`) or
+accept those suites as expected-skip. Pgvector adapter integration cases are
+also expected to skip unless `PGVECTOR_TEST_URL` is set.
 
 ### `vitest run` hangs
 

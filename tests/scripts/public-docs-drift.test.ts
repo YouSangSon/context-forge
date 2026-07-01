@@ -135,6 +135,8 @@ describe("public documentation drift checks", () => {
     const readmeKo = read("README.ko.md");
     const contributing = read("CONTRIBUTING.md");
     const contributingKo = read("CONTRIBUTING.ko.md");
+    const troubleshooting = read("docs/troubleshooting.md");
+    const troubleshootingKo = read("docs/troubleshooting.ko.md");
 
     for (const command of [
       "npm run typecheck",
@@ -163,8 +165,18 @@ describe("public documentation drift checks", () => {
     );
     expect(contributing).toContain("| Run all tests | `npm test` |");
     expect(contributingKo).toContain("| 모든 테스트 실행 | `npm test` |");
+    expect(contributing).toContain("tests/vector/pgvector-index.integration.test.ts");
+    expect(contributing).toContain("PGVECTOR_TEST_URL");
+    expect(contributingKo).toContain("tests/vector/pgvector-index.integration.test.ts");
+    expect(contributingKo).toContain("PGVECTOR_TEST_URL");
+    expect(troubleshooting).toContain("PGVECTOR_TEST_URL");
+    expect(troubleshootingKo).toContain("PGVECTOR_TEST_URL");
     expect(contributing).not.toContain("Tests + typecheck pass locally");
     expect(contributingKo).not.toContain("테스트 + 타입 체크 로컬 통과");
+    expect(contributing).not.toContain("The 3 PG-dependent test files");
+    expect(troubleshooting).not.toContain("The 3 PG-dependent test files");
+    expect(contributingKo).not.toContain("PG 의존 테스트 3개");
+    expect(troubleshootingKo).not.toContain("PG 의존 테스트 3개");
   });
 
   it("indexes every paired public docs page", () => {

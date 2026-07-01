@@ -50,6 +50,15 @@ describe("CI workflow hygiene", () => {
     expect(buildStepIndex).toBeLessThan(testStepIndex);
   });
 
+  it("documents backend-gated integration skips in the main Node matrix", () => {
+    expect(ciWorkflow).toContain(
+      "pgvector adapter cases skip without\n        # PGVECTOR_TEST_URL",
+    );
+    expect(ciWorkflow).toContain("  pg-integration:\n");
+    expect(ciWorkflow).toContain("  pgvector-integration:\n");
+    expect(ciWorkflow).not.toContain("The 3 PG-dependent test files");
+  });
+
   it("sets explicit job timeouts so hung CI runs do not use the default 360 minutes", () => {
     for (const jobId of [
       "typecheck-and-test",

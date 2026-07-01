@@ -2,6 +2,33 @@
 
 ## 2026-07-01
 
+- Aligned integration skip guidance:
+  - `CONTRIBUTING.md`, `CONTRIBUTING.ko.md`, `docs/troubleshooting.md`, and
+    `docs/troubleshooting.ko.md` now document both Postgres-backed
+    repository/migration skips and `PGVECTOR_TEST_URL`-gated pgvector adapter
+    skips.
+  - `.github/workflows/ci.yml` main-matrix test comment now reflects the same
+    split, with dedicated backend jobs below.
+  - `tests/scripts/public-docs-drift.test.ts` and
+    `tests/scripts/ci-workflow-hygiene.test.ts` now guard the current wording.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts tests/scripts/ci-workflow-hygiene.test.ts`
+  (`48` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1827` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Refreshed semantic compaction comments:
   - `src/compact/compact-memory.ts` now describes the semantic compaction
     orchestrator without the planning-era `P18.1` label.

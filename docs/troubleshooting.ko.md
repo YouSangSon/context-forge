@@ -159,9 +159,11 @@ dep bump 후 stale `node_modules`. `rm -rf node_modules && npm install`.
 
 ### Tests fail with `Hook timed out in 10000ms`
 
-PG 의존 테스트 3개가 5432의 Postgres에 도달 시도하다 timeout. PG 없으면
-skip 되지만 hook timeout 자체가 보임. Postgres 띄우거나
-(`docker compose up -d postgres`) 그 3개 파일을 expected-skip 으로 수용.
+Postgres 기반 repository/migration suite가 5432의 Postgres에 도달 시도하다
+timeout 날 수 있습니다. PG 없으면 skip 되지만 hook timeout 자체가 보임.
+Postgres를 띄우거나 (`docker compose up -d postgres`) 해당 suite를
+expected-skip 으로 수용하세요. pgvector adapter integration case도
+`PGVECTOR_TEST_URL` 이 없으면 skip 되는 것이 정상입니다.
 
 ### `vitest run` hang
 

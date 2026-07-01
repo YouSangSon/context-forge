@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Contributor, troubleshooting, and CI comments now document both
+  Postgres-backed suite skips and `PGVECTOR_TEST_URL`-gated pgvector adapter
+  skips, guarded by public-docs and CI workflow hygiene coverage.
 - Semantic compaction comments now describe the implemented semantic dedup flow
   without planning-era phase labels, guarded by public-docs drift coverage.
 - Compaction cleanup sweeper comments now describe current env-driven retry

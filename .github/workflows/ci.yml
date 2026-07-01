@@ -50,9 +50,9 @@ jobs:
         run: npm run build
 
       - name: Test (non-PG suites)
-        # The 3 PG-dependent test files skip gracefully without Postgres on
-        # 5432; the integration coverage runs in a separate job below where
-        # we actually bring up Postgres.
+        # The Postgres-backed repository/migration suites skip gracefully
+        # without Postgres on 5432, and pgvector adapter cases skip without
+        # PGVECTOR_TEST_URL. Dedicated jobs below bring up each backend.
         run: npm test
 
   pg-integration:

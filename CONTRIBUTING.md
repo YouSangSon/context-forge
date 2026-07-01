@@ -41,10 +41,14 @@ Daily commands:
 | Watch tests | `npm run test:watch` |
 | Apply migrations | `npm run db:migrate` |
 
-The 3 PG-dependent test files (`tests/store/memory-repository.test.ts`,
+The Postgres-backed repository/migration suites
+(`tests/store/memory-repository.test.ts`,
 `tests/jobs/ingest-job-repository.test.ts`, `tests/db/migrate.test.ts`) skip
 gracefully when Postgres on `127.0.0.1:5432` isn't reachable; bring it up via
-`docker compose up -d postgres` if you want them to run locally.
+`docker compose up -d postgres` if you want them to run locally. Pgvector
+adapter integration cases in `tests/vector/pgvector-index.integration.test.ts`
+skip unless `PGVECTOR_TEST_URL` is set; CI runs them in the
+`pgvector-integration` job.
 
 ## Code conventions
 

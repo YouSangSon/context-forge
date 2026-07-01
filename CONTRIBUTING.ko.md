@@ -40,10 +40,14 @@ ${EDITOR:-nano} .env       # MEMORY_API_TOKENS 설정 (OPENAI_API_KEY 는 EMBEDD
 | 테스트 watch | `npm run test:watch` |
 | 마이그레이션 적용 | `npm run db:migrate` |
 
-PG 의존 테스트 3개 (`tests/store/memory-repository.test.ts`,
+Postgres 기반 repository/migration suite
+(`tests/store/memory-repository.test.ts`,
 `tests/jobs/ingest-job-repository.test.ts`, `tests/db/migrate.test.ts`) 는
 `127.0.0.1:5432` 에 Postgres가 없으면 skip 됩니다. 로컬에서 돌리려면
 `docker compose up -d postgres` 로 실행하세요.
+`tests/vector/pgvector-index.integration.test.ts` 의 pgvector adapter integration
+case는 `PGVECTOR_TEST_URL` 이 없으면 skip 되며, CI는 `pgvector-integration`
+job에서 실행합니다.
 
 ## 코드 컨벤션
 
