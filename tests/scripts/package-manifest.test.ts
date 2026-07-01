@@ -13,6 +13,16 @@ type PackageJson = {
   scripts?: Record<string, string>;
 };
 
+type PackageLock = {
+  packages: Record<
+    string,
+    {
+      devDependencies?: Record<string, string>;
+      engines?: Record<string, string>;
+    }
+  >;
+};
+
 const EXPECTED_PACKAGE_FILES = [
   "dist/",
   "!dist/tests/",
@@ -59,6 +69,10 @@ function readPackageJson(): PackageJson {
   return JSON.parse(fs.readFileSync("package.json", "utf8")) as PackageJson;
 }
 
+function readPackageLock(): PackageLock {
+  return JSON.parse(fs.readFileSync("package-lock.json", "utf8")) as PackageLock;
+}
+
 function trackedRuntimeSourceFiles(): string[] {
   return execFileSync("git", ["ls-files", "src"], { encoding: "utf8" })
     .split(/\r?\n/)
@@ -89,11 +103,16 @@ describe("package manifest publish surface", () => {
     );
   });
 
-  it("keeps the package on the supported Node 22 runtime line", () => {
+  it("keeps the package and lockfile on the supported Node 22 runtime line", () => {
     const packageJson = readPackageJson();
+    const lockfileRoot = readPackageLock().packages[""];
 
     expect(packageJson.engines?.node).toBe(">=22");
     expect(packageJson.devDependencies?.["@types/node"]).toMatch(/^\^22\./);
+    expect(lockfileRoot?.engines?.node).toBe(packageJson.engines?.node);
+    expect(lockfileRoot?.devDependencies?.["@types/node"]).toBe(
+      packageJson.devDependencies?.["@types/node"],
+    );
   });
 
   it("uses an explicit package allowlist for runtime and public docs assets", () => {

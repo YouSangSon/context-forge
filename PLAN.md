@@ -4,12 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Node Runtime Guard
+## Current Loop — Package Lock Runtime Guard
 
 Status:
-- Package manifest coverage guards the minimum supported Node runtime policy.
-- The loop adds a package manifest guard that keeps `engines.node` on `>=22`
-  and root `@types/node` on the Node 22 type line.
+- Package manifest coverage guards the minimum supported Node runtime policy
+  across both `package.json` and the root lockfile package entry.
+- The loop extends the package guard so `package-lock.json` root metadata stays
+  aligned with `engines.node` and root `@types/node`.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

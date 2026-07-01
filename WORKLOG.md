@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded package lockfile runtime metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that
+    `package-lock.json` root metadata matches `package.json` for `engines.node`
+    and root `@types/node`.
+  - This catches lockfile drift when the package's supported Node runtime or
+    ambient Node type line changes.
+  - Source checked: npm documents `package-lock.json` as a committed
+    dependency-tree representation and `packages[""]` as the root project
+    entry whose package descriptor can include `engines`:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`6` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1850` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package Node runtime metadata:
   - `tests/scripts/package-manifest.test.ts` now checks `engines.node: >=22`
     and a root `@types/node` version on the Node 22 line.
