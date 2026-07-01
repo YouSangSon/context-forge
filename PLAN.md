@@ -4,18 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Korean Setup And Embedding Labels
+## Current Loop — Finder Metadata Hygiene
 
 Status:
-- Korean public setup, embedding, and backup snippets no longer carry mixed
-  English labels such as `default 그대로 동작`, `CI stub`, or
-  `backend-aware backup`.
-- `tests/scripts/public-docs-drift.test.ts` now guards the localized Korean
-  setup and embedding labels.
+- Removed an ignored `.github/.DS_Store` workspace artifact.
+- `tests/scripts/repo-secret-hygiene.test.ts` now guards against tracked
+  macOS Finder metadata files.
 
 Verification:
-- Focused public docs drift coverage, typecheck, build, audit, full tests, and
-  diff check passed for this Korean setup/embedding label update.
+- Focused repo hygiene coverage, typecheck, build, audit, full tests, and diff
+  check passed for this Finder metadata hygiene update.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

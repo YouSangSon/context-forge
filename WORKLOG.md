@@ -2,6 +2,27 @@
 
 ## 2026-07-01
 
+- Cleaned up Finder metadata hygiene:
+  - Removed ignored workspace artifact `.github/.DS_Store`.
+  - `tests/scripts/repo-secret-hygiene.test.ts` now guards against tracked
+    `.DS_Store` files.
+
+Verification plan:
+- `npx vitest run tests/scripts/repo-secret-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/repo-secret-hygiene.test.ts` (`3` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1811` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Localized Korean setup and embedding labels:
   - `README.ko.md`, `docs/configuration.ko.md`, `docs/security.ko.md`, and
     `docs/troubleshooting.ko.md` now avoid mixed English `default`/`stub`

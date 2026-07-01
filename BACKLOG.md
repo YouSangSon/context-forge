@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Removed ignored `.github/.DS_Store` workspace metadata and added a repo
+  hygiene guard against tracked Finder metadata files.
 - Korean setup, embedding, and backup snippets now localize `default`, `stub`,
   and backend-aware labels in public Korean docs, with public-docs drift
   coverage.

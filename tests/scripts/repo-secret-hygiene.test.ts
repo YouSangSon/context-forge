@@ -49,6 +49,12 @@ function hasOnlyPlaceholderDbCredentials(content: string): boolean {
 }
 
 describe("repo secret hygiene", () => {
+  it("keeps macOS Finder metadata out of tracked files", () => {
+    expect(
+      trackedFiles().filter((path) => path.split("/").includes(".DS_Store")),
+    ).toEqual([]);
+  });
+
   it("does not globally allow embedded database credentials", () => {
     const realDbUrl = [
       "postgres://app",
