@@ -3,7 +3,6 @@ import {
   loadBearerTokens,
   matchBearer,
   matchBearerFromRequest,
-  checkBearer,
 } from "../../src/app/middleware/bearer-auth.js";
 import type { IncomingMessage } from "node:http";
 
@@ -298,23 +297,5 @@ describe("matchBearerFromRequest", () => {
 
     // Assert
     expect(result).toBeNull();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// checkBearer — backward-compat boolean wrapper
-// ---------------------------------------------------------------------------
-
-describe("checkBearer", () => {
-  it("returns true for a valid bearer token", () => {
-    expect(checkBearer("Bearer alpha-secret", TOKENS)).toBe(true);
-  });
-
-  it("returns false for an invalid bearer token", () => {
-    expect(checkBearer("Bearer wrong", TOKENS)).toBe(false);
-  });
-
-  it("returns false when authHeader is undefined", () => {
-    expect(checkBearer(undefined, TOKENS)).toBe(false);
   });
 });

@@ -124,21 +124,6 @@ export function matchBearerFromRequest(
   return matchBearer(typeof header === "string" ? header : undefined, tokens);
 }
 
-// Backward-compatible boolean check used by older call sites.
-export function checkBearer(
-  authHeader: string | undefined,
-  tokens: readonly BearerToken[],
-): boolean {
-  return matchBearer(authHeader, tokens) !== null;
-}
-
-export function checkBearerFromRequest(
-  req: IncomingMessage,
-  tokens: readonly BearerToken[],
-): boolean {
-  return matchBearerFromRequest(req, tokens) !== null;
-}
-
 function extractBearerValue(authHeader: string | undefined): string | null {
   if (!authHeader) {
     return null;

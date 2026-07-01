@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Removed dead bearer-auth compatibility exports:
+  - `src/app/middleware/bearer-auth.ts` no longer exports `checkBearer` or
+    `checkBearerFromRequest`; the active runtime path uses `authenticateBearer`
+    plus `matchBearer`.
+  - `tests/app/bearer-auth.test.ts` drops the wrapper-only `checkBearer` cases
+    and keeps coverage for token parsing, timing-safe matching, and
+    request-header extraction.
+  - Source checked: internal code-quality audit finding CQ-13 documents these
+    dead security-module exports:
+    `docs/superpowers/audit/04-code-quality.md`.
+
+Verification plan:
+- `npx vitest run tests/app/bearer-auth.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/bearer-auth.test.ts --reporter=dot`
+  (`27` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1908` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Reused parsed source metadata during memory updates:
   - `src/store/memory-repository.ts` now calls
     `parseStoredPostgresSourceRef(currentRow.source_ref)` once in

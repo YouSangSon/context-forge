@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Bearer auth no longer exports the unused `checkBearer` and
+  `checkBearerFromRequest` boolean compatibility wrappers; tests now focus on
+  the active token-loading and token-matching API.
 - `updateMemoryRecord` now reuses parsed source metadata while rebuilding entity
   graph provenance, avoiding duplicate `source_ref` JSON parsing and duplicate
   malformed-source warnings.
