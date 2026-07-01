@@ -293,8 +293,11 @@ function serializeError(error: unknown): string {
 
 function mapJob(row: IngestJobRow): IngestJob {
   return {
-    id: toNumber(row.id),
-    memoryRecordId: toNumber(row.memory_record_id),
+    id: toPositiveSafeInteger(row.id, "ingest job id"),
+    memoryRecordId: toPositiveSafeInteger(
+      row.memory_record_id,
+      "ingest job memory_record_id",
+    ),
     organizationId: row.organization_id,
     status: row.status,
     attempts: toNonNegativeSafeInteger(row.attempts, "ingest job attempts"),
@@ -317,6 +320,12 @@ function mapJob(row: IngestJobRow): IngestJob {
 function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
   const numberValue = toNumber(value);
   assertNonNegativeSafeInteger(numberValue, fieldName);
+  return numberValue;
+}
+
+function toPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertPositiveSafeInteger(numberValue, fieldName);
   return numberValue;
 }
 

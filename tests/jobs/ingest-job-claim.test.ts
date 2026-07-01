@@ -199,6 +199,16 @@ describe("claimPendingForRetry SQL shape", () => {
 
   it.each([
     {
+      field: "id",
+      rowPatch: { id: "0" },
+      message: "ingest job id must be a positive safe integer",
+    },
+    {
+      field: "memory_record_id",
+      rowPatch: { memory_record_id: "1.5" },
+      message: "ingest job memory_record_id must be a positive safe integer",
+    },
+    {
       field: "attempts",
       rowPatch: { attempts: "-1" },
       message: "ingest job attempts must be a non-negative safe integer",
@@ -214,7 +224,7 @@ describe("claimPendingForRetry SQL shape", () => {
       message: "database number must be finite",
     },
   ])(
-    "rejects malformed mapped counter rows: $field",
+    "rejects malformed mapped numeric rows: $field",
     async ({ rowPatch, message }) => {
       const row = {
         id: "7",

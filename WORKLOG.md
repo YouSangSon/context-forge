@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded ingest job id row mapping:
+  - `src/jobs/ingest-job-repository.ts` now maps ingest job `id` and
+    `memory_record_id` rows through positive safe-integer validation before
+    returning mapped ingest jobs.
+  - `tests/jobs/ingest-job-claim.test.ts` now covers malformed mapped job id
+    and memory record id rows through mock-pool claim coverage.
+  - Source checked: `ingest_jobs.id` is `BIGSERIAL` and
+    `ingest_jobs.memory_record_id` is a `BIGINT` reference in migration
+    `001_initial.sql`.
+
+Verification plan:
+- `npx vitest run tests/jobs/ingest-job-claim.test.ts tests/jobs/serialize-error.test.ts tests/store/db-utils.test.ts tests/compact/ingest-sweeper.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/jobs/ingest-job-claim.test.ts tests/jobs/serialize-error.test.ts tests/store/db-utils.test.ts tests/compact/ingest-sweeper.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`92` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2001` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded pending ingest job row mapping:
   - `src/store/canonical-indexing.ts` now maps pending ingest job `id` as a
     positive safe integer and `qdrant_attempts` as a non-negative safe integer
