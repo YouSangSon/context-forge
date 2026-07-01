@@ -134,6 +134,8 @@ const EXPECTED_DEVELOPMENT_DEPENDENCIES = [
   "vitest",
 ] as const;
 
+const EXPECTED_DIRECT_DEV_ONLY_LOCKFILE_PACKAGES = ["tsx", "vitest"] as const;
+
 const EXPECTED_PACKAGE_OVERRIDES = {
   esbuild: "^0.28.1",
 } as const;
@@ -460,6 +462,34 @@ describe("package manifest publish surface", () => {
 
     expect(missingRuntimePackages).toEqual([]);
     expect(nonRuntimePackages).toEqual([]);
+  });
+
+  it("keeps direct development lockfile package flags explicit", () => {
+    const packageLock = readPackageLock();
+    const missingDevelopmentPackages = [...EXPECTED_DEVELOPMENT_DEPENDENCIES]
+      .filter((dependencyName) => {
+        const metadata = packageLock.packages[`node_modules/${dependencyName}`];
+        return metadata === undefined;
+      })
+      .sort();
+    const optionalDevelopmentPackages = [...EXPECTED_DEVELOPMENT_DEPENDENCIES]
+      .filter((dependencyName) => {
+        const metadata = packageLock.packages[`node_modules/${dependencyName}`];
+        return metadata?.optional === true || metadata?.devOptional === true;
+      })
+      .sort();
+    const devOnlyPackages = [...EXPECTED_DEVELOPMENT_DEPENDENCIES]
+      .filter((dependencyName) => {
+        const metadata = packageLock.packages[`node_modules/${dependencyName}`];
+        return metadata?.dev === true;
+      })
+      .sort();
+
+    expect(missingDevelopmentPackages).toEqual([]);
+    expect(optionalDevelopmentPackages).toEqual([]);
+    expect(devOnlyPackages).toEqual([
+      ...EXPECTED_DIRECT_DEV_ONLY_LOCKFILE_PACKAGES,
+    ].sort());
   });
 
   it("keeps package overrides scoped to the current build tooling override", () => {

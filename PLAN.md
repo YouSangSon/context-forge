@@ -4,15 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Lockfile Runtime Flag Guard
+## Current Loop — Lockfile Development Flag Guard
 
 Status:
-- Package manifest coverage guards that direct runtime dependencies exist in
-  lockfile package descriptors without `dev`, `optional`, or `devOptional`
-  runtime classification flags.
-- The loop catches dependency tree drift that would move a runtime dependency
-  into a dev-only or optional install path without an explicit dependency
-  review.
+- Package manifest coverage guards that direct development dependencies exist
+  in lockfile package descriptors without `optional` or `devOptional`
+  classification flags.
+- The exact direct dev-only lockfile package set remains explicit for the
+  current development tooling while shared dev dependencies may stay
+  non-dev-only.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

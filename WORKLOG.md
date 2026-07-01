@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded development dependency lockfile flags:
+  - `tests/scripts/package-manifest.test.ts` now checks that direct development
+    dependencies exist in package-lock package descriptors without `optional`
+    or `devOptional` flags.
+  - The current direct dev-only lockfile package set remains explicit, while
+    shared dev dependencies may stay non-dev-only when npm's dependency tree
+    classification requires it.
+  - Source checked: npm documents package-lock package descriptor `dev`,
+    `optional`, and `devOptional` flags as dependency-tree classification
+    markers for dev-only, optional-only, or combined dev/optional paths:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`39` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1883` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded runtime dependency lockfile flags:
   - `tests/scripts/package-manifest.test.ts` now checks that direct runtime
     dependencies exist in package-lock package descriptors without `dev`,

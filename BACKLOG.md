@@ -18,6 +18,10 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that direct development dependencies
+  exist in lockfile package descriptors without `optional` or `devOptional`
+  flags, while keeping the current direct dev-only lockfile package set
+  explicit for review.
 - Package manifest coverage now guards that direct runtime dependencies exist
   in lockfile package descriptors without `dev`, `optional`, or `devOptional`
   flags so runtime packages cannot drift into dev-only or optional install
