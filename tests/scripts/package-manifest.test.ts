@@ -14,6 +14,7 @@ const EXPECTED_PACKAGE_FILES = [
   "dist/",
   "!dist/tests/",
   "!dist/vitest.config.js",
+  "!dist/src/eval/",
   "scripts/*.sh",
   ".env.example",
   "docs/",
@@ -92,6 +93,7 @@ describe("package manifest publish surface", () => {
     expect(files.filter((entry) => entry.startsWith("!"))).toEqual([
       "!dist/tests/",
       "!dist/vitest.config.js",
+      "!dist/src/eval/",
       "!docs/_internal/",
       "!docs/skills/",
       "!docs/superpowers/",

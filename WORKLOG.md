@@ -2,6 +2,34 @@
 
 ## 2026-07-01
 
+- Excluded the compiled eval harness from npm tarballs:
+  - `npm pack --dry-run --json` showed `dist/src/eval/*` in the package even
+    though `src/eval/*` is imported only by tests.
+  - `package.json` now excludes `!dist/src/eval/`, and
+    `tests/scripts/package-manifest.test.ts` guards the allowlist.
+  - English/Korean Unreleased changelog tarball-surface notes and
+    `tests/scripts/public-docs-drift.test.ts` now mention the compiled eval
+    harness exclusion.
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts tests/scripts/public-docs-drift.test.ts`
+- `npm pack --dry-run --json` parsed for `dist/src/eval/`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts tests/scripts/public-docs-drift.test.ts`
+  (`45` tests passed)
+- `npm pack --dry-run --json` (`entryCount: 113`, no `dist/src/eval/` paths)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1832` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Guarded source catch binding conventions:
   - `src/mcp/canonical-services.ts`, `src/vector/pgvector-index.ts`,
     `src/embedding/transformers-embedding.ts`, and

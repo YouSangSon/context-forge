@@ -733,6 +733,7 @@ describe("public documentation drift checks", () => {
     expect(english).toContain("source-checkout-only");
     expect(english).toContain("Docker/Compose");
     expect(english).toContain("`dist/`");
+    expect(english).toMatch(/compiled\s+eval\s+harness/);
     expect(english).toContain("`prepack`");
     expect(english).toContain("clean `dist/`");
     expect(english).toContain("`install.sh`");
@@ -746,6 +747,7 @@ describe("public documentation drift checks", () => {
     expect(korean).toContain("source-checkout-only");
     expect(korean).toContain("Docker/Compose");
     expect(korean).toContain("`dist/`");
+    expect(korean).toMatch(/compiled\s+eval\s+harness/);
     expect(korean).toContain("`prepack`");
     expect(korean).toContain("clean `dist/`");
     expect(korean).toContain("`install.sh`");

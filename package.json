@@ -42,6 +42,7 @@
     "dist/",
     "!dist/tests/",
     "!dist/vitest.config.js",
+    "!dist/src/eval/",
     "scripts/*.sh",
     ".env.example",
     "docs/",

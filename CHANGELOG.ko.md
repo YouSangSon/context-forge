@@ -32,8 +32,9 @@ CHANGELOG에서 명시적으로 표기합니다.
   정렬되었고, 현재 동작과 맞지 않던 pgvector reindex follow-up 주석을 제거함.
 - npm package tarball surface: 게시되는 패키지가 이제 `dist/` 아래 built
   runtime output을 포함하고, root source/tests/CI/internal work tracking 문서와
-  source-checkout-only `install.sh`, Docker/Compose asset은 제외하며, `prepack`
-  이 pack/publish 전에 clean `dist/` 를 다시 빌드합니다.
+  source-checkout-only `install.sh`, Docker/Compose asset, compiled eval
+  harness는 제외하며, `prepack` 이 pack/publish 전에 clean `dist/` 를 다시
+  빌드합니다.
 - npm package metadata: package description이 Qdrant-only 동작처럼 보이지
   않도록, Postgres-backed storage와 Qdrant 또는 pgvector search를 반영하고
   npm keyword에 `pgvector` 를 추가합니다.

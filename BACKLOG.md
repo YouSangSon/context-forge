@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- npm package tarballs now exclude the compiled eval harness under
+  `dist/src/eval/`, with manifest and changelog drift coverage.
 - Source catch bindings now follow the `catch (err: unknown)` convention, with
   script coverage guarding source files against untyped catch bindings.
 - Docker build context hygiene now excludes local agent artifacts and internal

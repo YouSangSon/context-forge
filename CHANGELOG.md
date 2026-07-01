@@ -33,8 +33,8 @@ changes; CHANGELOG entries call those out explicitly.
   removed to match current behavior.
 - npm package tarball surface: published packages now include built runtime
   output under `dist/`, exclude root source/tests/CI/internal work tracking plus
-  source-checkout-only `install.sh` and Docker/Compose assets, and `prepack`
-  rebuilds a clean `dist/` before pack/publish.
+  source-checkout-only `install.sh`, Docker/Compose assets, and the compiled
+  eval harness, and `prepack` rebuilds a clean `dist/` before pack/publish.
 - npm package metadata: the package description now reflects Postgres-backed
   storage with Qdrant or pgvector search instead of implying Qdrant-only
   operation, and npm keywords now include `pgvector`.
