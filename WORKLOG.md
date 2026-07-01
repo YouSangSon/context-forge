@@ -2,6 +2,30 @@
 
 ## 2026-07-01
 
+- Aligned PR verification checklist:
+  - `.github/PULL_REQUEST_TEMPLATE.md` now asks contributors to include
+    `npm run typecheck`, `npm run build`, `npm audit --audit-level=moderate`,
+    and `npm test` results for non-trivial changes.
+  - `tests/scripts/public-docs-drift.test.ts` now guards the PR test-plan
+    checklist so it stays aligned with the local verification loop and CI audit
+    coverage.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`37` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1820` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Documented `MEMORY_API_TOKENS` colon restrictions:
   - `.env.example`, `docs/configuration.md`, and `docs/configuration.ko.md`
     now state that token values cannot contain `:` because it is reserved for

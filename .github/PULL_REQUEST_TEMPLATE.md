@@ -21,11 +21,12 @@ For details on conventions and the dev environment, see CONTRIBUTING.md.
 
 <!--
 What did you test? Include commands run and observed outcomes. For
-non-trivial changes, also include `npm run typecheck` + `npm test`
-output.
+non-trivial changes, also include typecheck, build, audit, and test output.
 -->
 
 - [ ] `npm run typecheck` passes
+- [ ] `npm run build` passes
+- [ ] `npm audit --audit-level=moderate` reports 0 vulnerabilities
 - [ ] `npm test` passes (or expected skips noted)
 - [ ] Manual test of the affected path
 

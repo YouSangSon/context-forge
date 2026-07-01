@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- PR template test-plan guidance now asks for typecheck, build, moderate-level
+  npm audit, and test output, with public-docs drift coverage.
 - `MEMORY_API_TOKENS` configuration docs and `.env.example` now document that
   token values cannot contain `:`, with public-docs drift coverage.
 - CI now runs `npm audit --audit-level=moderate` before typecheck/test, with

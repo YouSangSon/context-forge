@@ -129,6 +129,17 @@ function issueTemplateDropdownOptions(templatePath: string, fieldId: string): st
 }
 
 describe("public documentation drift checks", () => {
+  it("keeps the PR test plan aligned with verification commands", () => {
+    const prTemplate = read(".github/PULL_REQUEST_TEMPLATE.md");
+
+    expect(prTemplate).toContain("`npm run typecheck` passes");
+    expect(prTemplate).toContain("`npm run build` passes");
+    expect(prTemplate).toContain(
+      "`npm audit --audit-level=moderate` reports 0 vulnerabilities",
+    );
+    expect(prTemplate).toContain("`npm test` passes");
+  });
+
   it("indexes every paired public docs page", () => {
     const publicDocs = publicDocsMarkdownPaths();
     const englishDocs = publicDocs.filter((docPath) => !isKoreanDocPath(docPath));
