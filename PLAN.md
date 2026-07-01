@@ -4,17 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Memory Importance Row Mapping
+## Current Loop — Goal Run Counter Row Mapping
 
 Status:
-- `src/store/memory-repository.ts` now maps `memory_records.importance` DB row
-  values through numeric validation plus Postgres integer range checks before
-  returning hydrated memory records or rebuilding entity graph inputs.
-- `tests/store/memory-repository.test.ts` now covers string numeric hydrated
-  importance rows and malformed row values.
+- `src/goal-run/goal-run-repository.ts` now maps `goal_runs.iteration_count`
+  and `goal_run_iterations.iteration_index` through safe-integer row helpers.
+- `tests/goal-run/goal-run-repository.test.ts` now covers string numeric run
+  counters plus malformed run/iteration counter rows.
 
 Verification:
-- Focused memory-repository/db-utils/search/MCP/convention tests passed.
+- Focused goal-run repository/context/handler/convention tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

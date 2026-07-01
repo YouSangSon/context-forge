@@ -8,7 +8,7 @@ type SqlQueryCall = { sql: string; params: unknown[] };
 
 function runRow(overrides: Record<string, unknown> = {}) {
   return {
-    id: 7,
+    id: "7",
     organization_id: "org-a",
     scope_type: "project",
     scope_id: "proj-x",
@@ -16,7 +16,7 @@ function runRow(overrides: Record<string, unknown> = {}) {
     goal: "ship phase 1",
     termination_criteria: "tests pass",
     status: "active",
-    iteration_count: 0,
+    iteration_count: "0",
     created_at: "2026-06-27T00:00:00.000Z",
     updated_at: "2026-06-27T00:00:00.000Z",
     closed_at: null,
@@ -145,6 +145,38 @@ describe("createGoalRunRepository", () => {
     ]);
   });
 
+  it.each([
+    {
+      row: runRow({ iteration_count: "-1" }),
+      message: "goal run iteration_count must be a non-negative safe integer",
+    },
+    {
+      row: runRow({ iteration_count: "1.5" }),
+      message: "goal run iteration_count must be a non-negative safe integer",
+    },
+    {
+      row: runRow({ iteration_count: "bad" }),
+      message: "database number must be finite",
+    },
+  ])("start rejects malformed run counter rows %#", async ({ row, message }) => {
+    const pool = {
+      query: vi.fn(() => Promise.resolve({ rows: [row] })),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.start({
+        organizationId: "org-a",
+        scopeType: "project",
+        scopeId: "proj-x",
+        projectKey: "proj-x",
+        goal: "ship phase 1",
+        terminationCriteria: "tests pass",
+      }),
+    ).rejects.toThrow(message);
+  });
+
   it("recordIteration rejects whitespace-only organizationId before opening a transaction", async () => {
     const pool = { query: vi.fn(), connect: vi.fn() };
     const repo = createGoalRunRepository(pool as never);
@@ -219,16 +251,16 @@ describe("createGoalRunRepository", () => {
       query: vi.fn((sql: string, params?: unknown[]) => {
         calls.push({ sql, params: params ?? [] });
         if (sql.includes("UPDATE goal_runs")) {
-          return Promise.resolve({ rows: [{ iteration_count: 1 }] });
+          return Promise.resolve({ rows: [{ iteration_count: "1" }] });
         }
         if (sql.includes("INSERT INTO goal_run_iterations")) {
           return Promise.resolve({
             rows: [
               {
-                id: 11,
-                goal_run_id: 7,
+                id: "11",
+                goal_run_id: "7",
                 organization_id: "org-a",
-                iteration_index: 1,
+                iteration_index: "1",
                 attempt: "try A",
                 outcome: "failure",
                 summary: null,
@@ -262,6 +294,36 @@ describe("createGoalRunRepository", () => {
     expect(sqls.some((s) => s.includes("UPDATE memory_records"))).toBe(true);
     const linkCall = calls.find((c) => c.sql.includes("UPDATE memory_records"));
     expect(linkCall?.params).toEqual([7, [101, 102], "org-a"]);
+  });
+
+  it("recordIteration rolls back on malformed bumped iteration count", async () => {
+    const calls: SqlQueryCall[] = [];
+    const client = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        if (sql.includes("UPDATE goal_runs")) {
+          return Promise.resolve({ rows: [{ iteration_count: "1.5" }] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const pool = { query: vi.fn(), connect: vi.fn().mockResolvedValue(client) };
+
+    const repo = createGoalRunRepository(pool as never);
+    await expect(
+      repo.recordIteration({
+        organizationId: "org-a",
+        goalRunId: 7,
+        attempt: "try A",
+        outcome: "failure",
+      }),
+    ).rejects.toThrow("goal run iteration_count must be a positive safe integer");
+
+    expect(calls.some((c) => c.sql === "ROLLBACK")).toBe(true);
+    expect(calls.some((c) => c.sql.includes("INSERT INTO goal_run_iterations"))).toBe(
+      false,
+    );
   });
 
   it("recordIteration on a closed/unknown run rolls back and throws", async () => {
@@ -300,16 +362,16 @@ describe("createGoalRunRepository", () => {
       query: vi.fn((sql: string) => {
         calls.push({ sql, params: [] });
         if (sql.includes("UPDATE goal_runs")) {
-          return Promise.resolve({ rows: [{ iteration_count: 1 }] });
+          return Promise.resolve({ rows: [{ iteration_count: "1" }] });
         }
         if (sql.includes("INSERT INTO goal_run_iterations")) {
           return Promise.resolve({
             rows: [
               {
-                id: 12,
-                goal_run_id: 7,
+                id: "12",
+                goal_run_id: "7",
                 organization_id: "org-a",
-                iteration_index: 1,
+                iteration_index: "1",
                 attempt: "try",
                 outcome: "success",
                 summary: null,
@@ -378,15 +440,15 @@ describe("createGoalRunRepository", () => {
     const pool = {
       query: vi.fn((sql: string) => {
         if (sql.includes("FROM goal_runs")) {
-          return Promise.resolve({ rows: [runRow({ iteration_count: 2 })] });
+          return Promise.resolve({ rows: [runRow({ iteration_count: "2" })] });
         }
         return Promise.resolve({
           rows: [
             {
-              id: 1,
-              goal_run_id: 7,
+              id: "1",
+              goal_run_id: "7",
               organization_id: "org-a",
-              iteration_index: 1,
+              iteration_index: "1",
               attempt: "a",
               outcome: "failure",
               summary: null,
@@ -402,6 +464,37 @@ describe("createGoalRunRepository", () => {
     const result = await repo.get({ organizationId: "org-a", goalRunId: 7 });
     expect(result?.iterations).toHaveLength(1);
     expect(result?.iterations[0]?.outcome).toBe("failure");
+  });
+
+  it("get rejects malformed iteration index rows", async () => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow({ iteration_count: "1" })] });
+        }
+        return Promise.resolve({
+          rows: [
+            {
+              id: "1",
+              goal_run_id: "7",
+              organization_id: "org-a",
+              iteration_index: "0",
+              attempt: "a",
+              outcome: "failure",
+              summary: null,
+              error: "e",
+              created_at: "2026-06-27T00:01:00.000Z",
+            },
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.get({ organizationId: "org-a", goalRunId: 7 }),
+    ).rejects.toThrow("goal run iteration_index must be a positive safe integer");
   });
 
   it("list rejects whitespace-only organizationId before querying", async () => {

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Goal run repository row mapping now validates `iteration_count` and
+  `iteration_index` counter rows before returning runs or iterations.
 - Memory repository row mapping now validates `memory_records.importance` from
   hydrated DB rows before returning search/list results or rebuilding entity
   graph inputs.

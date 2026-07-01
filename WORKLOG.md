@@ -2,6 +2,38 @@
 
 ## 2026-07-02
 
+- Guarded goal run counter row mapping:
+  - `src/goal-run/goal-run-repository.ts` now maps
+    `goal_runs.iteration_count` through a non-negative safe-integer row helper
+    when returning runs.
+  - `recordIteration` now validates the bumped `iteration_count` as a positive
+    safe integer before inserting the iteration row, and
+    `goal_run_iterations.iteration_index` is validated the same way when
+    mapping iterations.
+  - `tests/goal-run/goal-run-repository.test.ts` now covers string numeric run
+    and iteration row values plus malformed run/iteration counter rows.
+  - Source checked: `goal_runs.iteration_count` and
+    `goal_run_iterations.iteration_index` are `INTEGER` counters in migration
+    `013_add_goal_runs.sql`.
+
+Verification plan:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/build-goal-context.test.ts tests/goal-run/goal-run-handlers.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/build-goal-context.test.ts tests/goal-run/goal-run-handlers.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`86` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1969` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded memory importance row mapping:
   - `src/store/memory-repository.ts` now maps `memory_records.importance` row
     values through shared numeric conversion plus Postgres integer range checks

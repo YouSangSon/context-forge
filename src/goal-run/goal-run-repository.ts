@@ -142,7 +142,10 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           throw new GoalRunNotActiveError(input.goalRunId);
         }
 
-        const iterationIndex = toNumber(bumped.iteration_count);
+        const iterationIndex = toPositiveSafeInteger(
+          bumped.iteration_count,
+          "goal run iteration_count",
+        );
 
         const inserted = await client.query<GoalRunIterationRow>(
           `
@@ -303,7 +306,10 @@ function mapRun(row: GoalRunRow): GoalRun {
     goal: row.goal,
     terminationCriteria: row.termination_criteria,
     status: row.status,
-    iterationCount: toNumber(row.iteration_count),
+    iterationCount: toNonNegativeSafeInteger(
+      row.iteration_count,
+      "goal run iteration_count",
+    ),
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
     closedAt: row.closed_at === null ? null : toIsoString(row.closed_at),
@@ -316,7 +322,10 @@ function mapIteration(row: GoalRunIterationRow): GoalRunIteration {
     id: toNumber(row.id),
     goalRunId: toNumber(row.goal_run_id),
     organizationId: row.organization_id,
-    iterationIndex: toNumber(row.iteration_index),
+    iterationIndex: toPositiveSafeInteger(
+      row.iteration_index,
+      "goal run iteration_index",
+    ),
     attempt: row.attempt,
     outcome: row.outcome,
     summary: row.summary,
@@ -325,6 +334,19 @@ function mapIteration(row: GoalRunIterationRow): GoalRunIteration {
   };
 }
 
+function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue < 0) {
+    throw new Error(`${fieldName} must be a non-negative safe integer`);
+  }
+  return numberValue;
+}
+
+function toPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertPositiveSafeInteger(numberValue, fieldName);
+  return numberValue;
+}
 
 function assertGoalRunPool(value: unknown): asserts value is PgPool {
   const candidate = assertObject(value, "goal run pool");
