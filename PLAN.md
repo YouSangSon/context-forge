@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — NPM Package Metadata Keywords
+## Current Loop — Feature Request Vector Scope
 
 Status:
-- `package.json#keywords` now includes `pgvector`, matching the package
-  description and documented Qdrant/pgvector vector-backend support.
-- `tests/scripts/package-manifest.test.ts` guards the package metadata keywords
-  alongside the description.
+- `.github/ISSUE_TEMPLATE/feature_request.yml` now describes vector-related
+  scope as `Vector backend (Qdrant / pgvector)`.
+- `tests/scripts/public-docs-drift.test.ts` now uses a shared issue-template
+  dropdown helper and guards the feature-request scope option.
 
 Loop closeout:
-- Focused package manifest coverage, `npm pack --dry-run --json`, typecheck,
-  build, audit, full tests, and diff check passed for this metadata update.
+- Focused public docs drift coverage, typecheck, build, audit, full tests, and
+  diff check passed for this issue-template update.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

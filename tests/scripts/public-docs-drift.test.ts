@@ -116,8 +116,8 @@ function migrationRanges(markdown: string): string[] {
   return [...markdown.matchAll(/\b\d{3}-\d{3}\b/g)].map((match) => match[0]);
 }
 
-function bugReportDropdownOptions(fieldId: string): string[] {
-  const template = read(".github/ISSUE_TEMPLATE/bug_report.yml");
+function issueTemplateDropdownOptions(templatePath: string, fieldId: string): string[] {
+  const template = read(templatePath);
   const optionsBlock = new RegExp(
     `id: ${fieldId}[\\s\\S]*?options:\\n((?:        - .+\\n)+)`,
   ).exec(template)?.[1];
@@ -245,7 +245,9 @@ describe("public documentation drift checks", () => {
   });
 
   it("keeps the bug report embedding-provider options aligned with supported providers", () => {
-    expect(bugReportDropdownOptions("embedding-provider")).toEqual([
+    expect(
+      issueTemplateDropdownOptions(".github/ISSUE_TEMPLATE/bug_report.yml", "embedding-provider"),
+    ).toEqual([
       "transformers",
       "openai",
       "local",
@@ -253,9 +255,15 @@ describe("public documentation drift checks", () => {
   });
 
   it("keeps the bug report deployment options aligned with vector backends", () => {
-    expect(bugReportDropdownOptions("deployment")).toContain(
-      "Custom (external Postgres / Qdrant or pgvector)",
-    );
+    expect(
+      issueTemplateDropdownOptions(".github/ISSUE_TEMPLATE/bug_report.yml", "deployment"),
+    ).toContain("Custom (external Postgres / Qdrant or pgvector)");
+  });
+
+  it("keeps the feature request scope options aligned with vector backends", () => {
+    expect(
+      issueTemplateDropdownOptions(".github/ISSUE_TEMPLATE/feature_request.yml", "scope"),
+    ).toContain("Vector backend (Qdrant / pgvector)");
   });
 
   it("keeps bug report security links rooted at the repository", () => {

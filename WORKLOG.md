@@ -2,6 +2,28 @@
 
 ## 2026-07-01
 
+- Aligned the feature request scope dropdown with vector-backend support:
+  - `.github/ISSUE_TEMPLATE/feature_request.yml` now uses `Vector backend
+    (Qdrant / pgvector)` instead of Qdrant-only wording.
+  - `tests/scripts/public-docs-drift.test.ts` now uses a shared issue-template
+    dropdown helper and guards the feature-request scope option.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`31` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1806` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Added missing pgvector npm package metadata:
   - `package.json#keywords` now includes `pgvector`, matching the package
     description and public vector-backend docs.
