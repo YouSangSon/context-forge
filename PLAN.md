@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Graph Relationship Confidence Row Mapping
+## Current Loop — Memory Chunk Id Row Mapping
 
 Status:
-- `src/store/memory-repository.ts` now maps graph relationship `confidence`
-  rows through finite numeric conversion plus a 0..1 range check before
-  returning graph relationships.
-- `tests/store/memory-repository.test.ts` now covers malformed graph
-  relationship confidence rows through mock-pool `inspectMemoryGraph` coverage.
+- `src/store/canonical-indexing.ts` now maps `memory_chunks.id` and
+  `memory_record_id` rows as positive safe integers before returning stored or
+  reindexable chunks.
+- `tests/store/canonical-indexing.test.ts` now covers malformed chunk id rows
+  through mock-pool insert chunk coverage.
 
 Verification:
-- Focused memory-repository/db-utils/MCP/search/convention tests passed.
+- Focused canonical-indexing/db-utils/search/vector/convention tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from

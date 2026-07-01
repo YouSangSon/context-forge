@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded memory chunk id row mapping:
+  - `src/store/canonical-indexing.ts` now maps `memory_chunks.id` and
+    `memory_record_id` rows through positive safe-integer validation before
+    returning stored or reindexable chunks.
+  - `tests/store/canonical-indexing.test.ts` now covers malformed chunk id rows
+    through mock-pool insert chunk coverage.
+  - Source checked: `memory_chunks.id` is `BIGSERIAL` and
+    `memory_chunks.memory_record_id` is a `BIGINT` reference in migration
+    `001_initial.sql`.
+
+Verification plan:
+- `npx vitest run tests/store/canonical-indexing.test.ts tests/store/db-utils.test.ts tests/search/retrieve-memory.test.ts tests/vector/point-builder.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/canonical-indexing.test.ts tests/store/db-utils.test.ts tests/search/retrieve-memory.test.ts tests/vector/point-builder.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`132` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1996` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded graph relationship confidence row mapping:
   - `src/store/memory-repository.ts` now maps graph relationship `confidence`
     rows through finite numeric conversion plus a 0..1 range check before

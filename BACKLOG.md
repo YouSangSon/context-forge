@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory chunk row mapping now validates chunk and memory-record ids before
+  returning stored or reindexable chunks.
 - Memory graph relationship row mapping now validates confidence values before
   returning graph relationships.
 - Memory graph entity row mapping now validates graph entity ids before

@@ -844,8 +844,11 @@ function mapStoredMemoryChunkRow(row: StoredMemoryChunkRow): StoredMemoryChunk {
   }
 
   return {
-    id: toNumber(row.id),
-    memoryRecordId: toNumber(row.memory_record_id),
+    id: toPositiveSafeInteger(row.id, "memory chunk id"),
+    memoryRecordId: toPositiveSafeInteger(
+      row.memory_record_id,
+      "memory chunk memory_record_id",
+    ),
     chunkIndex: toNonNegativeSafeInteger(
       row.chunk_index,
       "memory chunk chunk_index",
@@ -878,6 +881,12 @@ function mapReindexableMemoryChunkRow(
 function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
   const numberValue = toNumber(value);
   assertNonNegativeSafeInteger(numberValue, fieldName);
+  return numberValue;
+}
+
+function toPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertPositiveSafeInteger(numberValue, fieldName);
   return numberValue;
 }
 

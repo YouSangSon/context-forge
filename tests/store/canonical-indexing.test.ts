@@ -1161,6 +1161,18 @@ describe("canonical indexing", () => {
 
   it.each([
     {
+      rowPatch: { id: "0" },
+      message: "memory chunk id must be a positive safe integer",
+    },
+    {
+      rowPatch: { id: "bad" },
+      message: "database number must be finite",
+    },
+    {
+      rowPatch: { memory_record_id: "1.5" },
+      message: "memory chunk memory_record_id must be a positive safe integer",
+    },
+    {
       rowPatch: { chunk_index: "1.5" },
       message: "memory chunk chunk_index must be a non-negative safe integer",
     },
