@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Compaction recent-apply count mapping now rejects malformed `COUNT(*)` rows
+  instead of accepting `Number.parseInt` partial numeric strings.
 - Pgvector query row mapping now rejects malformed `score` and
   `memory_record_id` values before returning vector hits.
 - Audit log listing now reuses shared DB row helpers for numeric and timestamp

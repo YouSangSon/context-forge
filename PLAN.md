@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Pgvector Query Row Number Guard
+## Current Loop — Compaction Count Row Guard
 
 Status:
-- `src/vector/pgvector-index.ts` now maps query rows through a guarded
-  pgvector row mapper before committing the query transaction.
-- `tests/vector/pgvector-index.integration.test.ts` covers numeric string
-  `score`/`memory_record_id` rows and malformed row numeric values with mocked
-  pgvector clients.
+- `src/store/memory-archive-repository.ts` now maps
+  `countRecentApplyRuns` count rows through shared numeric validation instead
+  of `Number.parseInt`.
+- `tests/store/memory-archive-repository.test.ts` covers numeric count strings,
+  no-row fallback, and malformed count values.
 
 Verification:
-- Focused vector/search tests passed.
+- Focused archive/convention tests passed.
 - Typecheck, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

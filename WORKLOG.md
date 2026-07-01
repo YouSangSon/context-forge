@@ -2,6 +2,41 @@
 
 ## 2026-07-02
 
+- Guarded compaction recent-apply count mapping:
+  - `src/store/memory-archive-repository.ts` now maps
+    `countRecentApplyRuns` count rows through shared `toNumber` validation plus
+    a non-negative safe-integer check instead of `Number.parseInt`.
+  - Missing count rows still fall back to `0`, while malformed present values
+    such as partial numeric strings, blank strings, fractions, negatives,
+    `null`, and booleans now fail closed.
+  - `tests/store/memory-archive-repository.test.ts` covers numeric count rows,
+    no-row fallback, and malformed count rows.
+  - Source checked: `COUNT(*)` can arrive as a string, and the prior
+    `Number.parseInt(raw, 10)` path could accept partial numeric strings.
+
+Verification plan:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/apply-compaction.test.ts --reporter=dot`
+- `npx vitest run tests/scripts/source-conventions.test.ts tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/apply-compaction.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/apply-compaction.test.ts --reporter=dot`
+  (`113` tests passed)
+- Initial `npm test` exposed a new catch-binding convention violation in
+  `src/store/memory-archive-repository.ts`; fixed with `catch (_err: unknown)`.
+- `npx vitest run tests/scripts/source-conventions.test.ts tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/apply-compaction.test.ts --reporter=dot`
+  (`119` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1952` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded pgvector query row number mapping:
   - `src/vector/pgvector-index.ts` now maps SELECT rows through
     `mapPgVectorQueryRow` and validates `score` plus `memory_record_id` before

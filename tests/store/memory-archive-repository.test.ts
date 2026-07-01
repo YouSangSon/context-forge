@@ -445,6 +445,38 @@ describe("MemoryArchiveRepository.countRecentApplyRuns", () => {
 
     expect(query).not.toHaveBeenCalled();
   });
+
+  it.each([
+    { count: 0, expected: 0 },
+    { count: "0", expected: 0 },
+    { count: "42", expected: 42 },
+  ])("maps count rows without coercion drift: $count", async ({ count, expected }) => {
+    const { pool } = makeMockPool(async () => ({ rows: [{ count }] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.countRecentApplyRuns("org-a", 60_000)).resolves.toBe(
+      expected,
+    );
+  });
+
+  it("returns zero when the count query returns no row", async () => {
+    const { pool } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.countRecentApplyRuns("org-a", 60_000)).resolves.toBe(0);
+  });
+
+  it.each(["1abc", "1.5", "", " \n\t ", Number.NaN, -1, 1.5, null, false])(
+    "rejects malformed count rows: %s",
+    async (count) => {
+      const { pool } = makeMockPool(async () => ({ rows: [{ count }] }));
+      const repo = createMemoryArchiveRepository(pool);
+
+      await expect(repo.countRecentApplyRuns("org-a", 60_000)).rejects.toThrow(
+        "recent apply run count must be a non-negative safe integer",
+      );
+    },
+  );
 });
 
 describe("MemoryArchiveRepository.findArchiveByIds", () => {

@@ -12,6 +12,7 @@
 //   6. findRunByIdempotencyKey  — replay defense
 
 import type { PgPool } from "../db/connection.js";
+import { toNumber } from "./db-utils.js";
 import { assertNonBlankText } from "./memory-content.js";
 
 const QDRANT_CLEANUP_VISIBILITY_TIMEOUT_MS = 60_000;
@@ -465,8 +466,8 @@ export function createMemoryArchiveRepository(
         `,
         [organizationId, windowSeconds],
       );
-      const raw = result.rows[0]?.count ?? 0;
-      return typeof raw === "string" ? Number.parseInt(raw, 10) : raw;
+      const raw = result.rows[0]?.count;
+      return raw === undefined ? 0 : toRecentApplyRunCount(raw);
     },
 
     async findArchiveByIds(archiveIds, organizationId) {
@@ -650,6 +651,23 @@ function assertQdrantCleanupClaimInput(value: unknown): asserts value is {
 
 function toIso(value: string | Date): string {
   return value instanceof Date ? value.toISOString() : value;
+}
+
+function toRecentApplyRunCount(value: unknown): number {
+  let count: number;
+  try {
+    count = toNumber(value);
+  } catch (_err: unknown) {
+    throw new Error(
+      "recent apply run count must be a non-negative safe integer",
+    );
+  }
+  if (!Number.isSafeInteger(count) || count < 0) {
+    throw new Error(
+      "recent apply run count must be a non-negative safe integer",
+    );
+  }
+  return count;
 }
 
 function mapRunRow(row: {
