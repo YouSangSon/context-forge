@@ -3,7 +3,14 @@ export function toIsoString(value: string | Date): string {
 }
 
 export function toNumber(value: number | string): number {
-  return typeof value === "number" ? value : Number(value);
+  const numberValue = typeof value === "number" ? value : Number(value);
+  if (
+    !Number.isFinite(numberValue) ||
+    (typeof value === "string" && value.trim().length === 0)
+  ) {
+    throw new Error("database number must be finite");
+  }
+  return numberValue;
 }
 
 export function requireSingleRow<TRow>(

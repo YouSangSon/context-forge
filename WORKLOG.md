@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded DB row number mapping:
+  - `src/store/db-utils.ts` now rejects non-finite or blank numeric values in
+    `toNumber` instead of silently mapping them to `NaN` or `0`.
+  - `tests/store/db-utils.test.ts` covers finite numbers, numeric strings, and
+    malformed database values.
+  - `tests/jobs/serialize-error.test.ts` now returns a DB-shaped ingest job row
+    from its fake repository query, matching the real `RETURNING` mapper.
+  - Source checked: `toNumber` is shared by memory, canonical indexing,
+    ingest-job, and goal-run repositories.
+
+Verification plan:
+- `npx vitest run tests/store/db-utils.test.ts tests/jobs/serialize-error.test.ts tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts tests/jobs/ingest-job-repository.test.ts tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/db-utils.test.ts tests/jobs/serialize-error.test.ts tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts tests/jobs/ingest-job-repository.test.ts tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`162` tests passed, `13` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1920` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Added code-quality audit triage notes:
   - The tracked continuation docs now record current-branch evidence for
     addressed CQ findings without force-adding ignored `docs/superpowers`

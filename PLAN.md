@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Code Quality Audit Triage Notes
+## Current Loop — DB Number Mapping Guard
 
 Status:
-- The tracked continuation docs now record which code-quality audit findings
-  have current-branch evidence, without force-adding ignored audit snapshots.
-- Evidence was checked for CQ-01, CQ-02, CQ-03, CQ-04, CQ-05, CQ-06, CQ-07,
-  CQ-10, CQ-12, CQ-13, CQ-14, and CQ-15.
+- `toNumber` now rejects malformed database numeric values instead of silently
+  returning `NaN` or accepting blank strings.
+- `tests/store/db-utils.test.ts` covers finite numeric values and malformed DB
+  number inputs; the ingest-job serialization fixture now uses DB row shape.
 
 Verification:
-- Focused evidence tests passed.
-- Diff check passed.
+- Focused repository mapping tests passed.
+- Typecheck, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 
