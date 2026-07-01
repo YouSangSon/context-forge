@@ -2,6 +2,29 @@
 
 ## 2026-07-01
 
+- Guarded the focused pgvector CI job:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks the
+    `pgvector-integration` job sets `PGVECTOR_TEST_URL` and runs only
+    `tests/vector/pgvector-index.integration.test.ts`.
+  - This complements the Postgres integration job guard and keeps both
+    backend-gated CI jobs focused.
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`9` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1829` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Focused the Postgres integration CI job:
   - `.github/workflows/ci.yml` now runs only
     `tests/store/memory-repository.test.ts`,

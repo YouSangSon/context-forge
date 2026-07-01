@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now guards the pgvector integration job's
+  focused suite command and required `PGVECTOR_TEST_URL`.
 - The Postgres integration CI job now runs only the three Postgres-backed test
   files instead of duplicating the full `npm test` matrix, guarded by CI
   workflow hygiene coverage.

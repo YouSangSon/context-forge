@@ -72,6 +72,20 @@ describe("CI workflow hygiene", () => {
     expect(pgJob).not.toContain("        run: npm test\n");
   });
 
+  it("keeps the pgvector integration job focused on the pgvector suite", () => {
+    const pgvectorJobStart = ciWorkflow.indexOf("  pgvector-integration:\n");
+    const pgvectorJob = ciWorkflow.slice(pgvectorJobStart);
+
+    expect(pgvectorJob).toContain("      - name: Run pgvector integration suite\n");
+    expect(pgvectorJob).toContain(
+      "          PGVECTOR_TEST_URL: postgres://memory:memory@127.0.0.1:5433/memory_pgv\n",
+    );
+    expect(pgvectorJob).toContain(
+      "        run: npx vitest run tests/vector/pgvector-index.integration.test.ts\n",
+    );
+    expect(pgvectorJob).not.toContain("        run: npm test\n");
+  });
+
   it("sets explicit job timeouts so hung CI runs do not use the default 360 minutes", () => {
     for (const jobId of [
       "typecheck-and-test",

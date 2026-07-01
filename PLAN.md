@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Focused Postgres CI Job
+## Current Loop — Focused Pgvector CI Guard
 
 Status:
-- The `pg-integration` job is named for PG-dependent suites but currently runs
-  the full `npm test` suite after the main Node matrix already ran it.
-- The loop narrows that job to the three Postgres-backed suites and guards the
-  command shape in CI workflow hygiene coverage.
+- The pgvector integration job already runs the focused pgvector suite with
+  `PGVECTOR_TEST_URL`, but CI workflow hygiene coverage did not guard that
+  command/env contract directly.
+- The loop adds that guard beside the Postgres integration job coverage.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,
