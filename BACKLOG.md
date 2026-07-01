@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Ingest job repository row mapping now validates `attempts` and
+  `qdrant_attempts` as non-negative safe integers from DB row values, with
+  mock-pool coverage for string and malformed counter rows.
 - Memory archive repository row mapping now handles node-postgres string
   `BIGSERIAL`/`BIGINT` values for archive/run/cleanup/restore IDs.
 - Compaction recent-apply count mapping now rejects malformed `COUNT(*)` rows

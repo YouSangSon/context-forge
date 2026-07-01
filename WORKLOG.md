@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded ingest job counter row mapping:
+  - `src/jobs/ingest-job-repository.ts` now maps `attempts` and
+    `qdrant_attempts` through shared `toNumber` validation plus a non-negative
+    safe-integer check instead of returning raw DB row values.
+  - `tests/jobs/ingest-job-claim.test.ts` now covers string row values for
+    `id`, `memory_record_id`, `attempts`, and `qdrant_attempts`, plus malformed
+    counter rows, without requiring a live Postgres instance.
+  - Source checked: `ingest_jobs.id` and `memory_record_id` are
+    `BIGSERIAL`/`BIGINT`, while `attempts` and `qdrant_attempts` are
+    `INTEGER` counters in migrations.
+
+Verification plan:
+- `npx vitest run tests/jobs/ingest-job-claim.test.ts tests/jobs/serialize-error.test.ts tests/store/db-utils.test.ts tests/compact/ingest-sweeper.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/jobs/ingest-job-claim.test.ts tests/jobs/serialize-error.test.ts tests/store/db-utils.test.ts tests/compact/ingest-sweeper.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`90` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1955` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Reused DB helpers across memory archive row mappers:
   - `src/store/memory-archive-repository.ts` now maps compaction run rows,
     archive insert rows, pending cleanup rows, archive lookup rows, and restore

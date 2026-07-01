@@ -18,14 +18,14 @@ import type { IngestJob, IngestJobRepository } from "../types.js";
 const CLAIM_VISIBILITY_TIMEOUT_MS = 5 * 60 * 1_000; // 5 minutes
 
 type IngestJobRow = {
-  id: number;
-  memory_record_id: number;
+  id: number | string;
+  memory_record_id: number | string;
   organization_id: string;
   status: IngestJob["status"];
-  attempts: number;
+  attempts: number | string;
   last_error: string | null;
   qdrant_status: IngestJob["qdrantStatus"];
-  qdrant_attempts: number;
+  qdrant_attempts: number | string;
   qdrant_next_retry_at: string | Date | null;
   qdrant_last_error: string | null;
   created_at: string | Date;
@@ -297,10 +297,13 @@ function mapJob(row: IngestJobRow): IngestJob {
     memoryRecordId: toNumber(row.memory_record_id),
     organizationId: row.organization_id,
     status: row.status,
-    attempts: row.attempts,
+    attempts: toNonNegativeSafeInteger(row.attempts, "ingest job attempts"),
     lastError: row.last_error,
     qdrantStatus: row.qdrant_status,
-    qdrantAttempts: row.qdrant_attempts,
+    qdrantAttempts: toNonNegativeSafeInteger(
+      row.qdrant_attempts,
+      "ingest job qdrant_attempts",
+    ),
     qdrantNextRetryAt:
       row.qdrant_next_retry_at === null
         ? null
@@ -309,6 +312,12 @@ function mapJob(row: IngestJobRow): IngestJob {
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
   };
+}
+
+function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertNonNegativeSafeInteger(numberValue, fieldName);
+  return numberValue;
 }
 
 function assertObject(
