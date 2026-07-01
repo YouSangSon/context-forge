@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Derived TypeScript convention coverage from `tsconfig.json`:
+  - `tests/scripts/source-conventions.test.ts` now parses `tsconfig.json` with
+    the TypeScript compiler API before applying catch binding, explicit `any`,
+    and suppression guards.
+  - The guard filters that project file set through `git ls-files` so generated
+    or untracked local files do not affect source convention checks.
+  - Source checked: TypeScript's TSConfig documentation describes
+    `tsconfig.json` as the place that specifies project root files and compiler
+    options.
+
+Verification plan:
+- `npx vitest run tests/scripts/source-conventions.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/source-conventions.test.ts` (`4` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1838` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Covered root TypeScript config files:
   - `tests/scripts/source-conventions.test.ts` now includes `vitest.config.ts`
     when scanning tracked TypeScript files.

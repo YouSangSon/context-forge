@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
@@ -11,14 +12,42 @@ type TsConfig = {
   };
 };
 
+function parseTsConfig(): ts.ParsedCommandLine {
+  const config = ts.readConfigFile("tsconfig.json", ts.sys.readFile);
+  if (config.error) {
+    throw new Error(
+      ts.flattenDiagnosticMessageText(config.error.messageText, "\n"),
+    );
+  }
+
+  const parsed = ts.parseJsonConfigFileContent(
+    config.config as TsConfig,
+    ts.sys,
+    process.cwd(),
+  );
+  if (parsed.errors.length > 0) {
+    throw new Error(
+      parsed.errors
+        .map((error) => ts.flattenDiagnosticMessageText(error.messageText, "\n"))
+        .join("\n"),
+    );
+  }
+  return parsed;
+}
+
 function trackedTypeScriptFiles(): string[] {
-  return execFileSync(
-    "git",
-    ["ls-files", "src", "tests", "scripts", "vitest.config.ts"],
-    { encoding: "utf8" },
-  )
-    .split(/\r?\n/)
-    .filter((path) => path.endsWith(".ts"))
+  const tracked = new Set(
+    execFileSync("git", ["ls-files"], { encoding: "utf8" })
+      .split(/\r?\n/)
+      .filter(Boolean),
+  );
+
+  return parseTsConfig()
+    .fileNames.map((fileName) =>
+      path.relative(process.cwd(), fileName).split(path.sep).join("/"),
+    )
+    .filter((fileName) => fileName.endsWith(".ts"))
+    .filter((fileName) => tracked.has(fileName))
     .sort();
 }
 
