@@ -2,6 +2,29 @@
 
 ## 2026-07-01
 
+- Guarded source catch binding conventions:
+  - `src/mcp/canonical-services.ts`, `src/vector/pgvector-index.ts`,
+    `src/embedding/transformers-embedding.ts`, and
+    `src/store/memory-repository.ts` now type catch bindings as `unknown`.
+  - `tests/scripts/source-conventions.test.ts` scans tracked source files so
+    future `catch (err)` drift fails in the script test suite.
+
+Verification plan:
+- `npx vitest run tests/scripts/source-conventions.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/source-conventions.test.ts` (`1` test passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1832` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Tightened Docker build context hygiene:
   - `.dockerignore` now excludes local agent/workflow artifacts, internal docs,
     and common desktop/editor metadata from Docker build contexts.

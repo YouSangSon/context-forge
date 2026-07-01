@@ -1604,7 +1604,7 @@ export function parseStoredPostgresSourceRef(
         uri: typeof metadata.uri === "string" ? metadata.uri : null,
       };
     }
-  } catch (err) {
+  } catch (err: unknown) {
     rootLogger.warn(
       { err, valueLength: value.length },
       "parseStoredPostgresSourceRef: failed to parse source_ref JSON; falling back to raw value",
