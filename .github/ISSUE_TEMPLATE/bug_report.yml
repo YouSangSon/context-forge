@@ -80,7 +80,7 @@ body:
       options:
         - "Local dev (./install.sh + docker compose)"
         - "Compose on a remote host"
-        - "Custom (external Postgres / Qdrant)"
+        - "Custom (external Postgres / Qdrant or pgvector)"
         - "MCP only (no HTTP server)"
     validations:
       required: true

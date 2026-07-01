@@ -2,6 +2,31 @@
 
 ## 2026-07-01
 
+- Aligned the bug report deployment dropdown with vector-backend support:
+  - `.github/ISSUE_TEMPLATE/bug_report.yml` now describes custom deployments as
+    external Postgres plus Qdrant or pgvector.
+  - `tests/scripts/public-docs-drift.test.ts` now uses a shared dropdown-option
+    helper and guards the deployment option alongside provider options.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`30` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1805` tests passed, `34` skipped)
+  - A previous full-suite attempt hit a transient 5s timeout in
+    `tests/scripts/backup-verify.test.ts`; rerunning that file passed (`60`
+    tests) before the final full-suite pass.
+- `git diff --check` (passed)
+
 - Fixed bug report template drift:
   - `.github/ISSUE_TEMPLATE/bug_report.yml` now lists `transformers`, `openai`,
     and `local`, matching the supported provider set and putting the default

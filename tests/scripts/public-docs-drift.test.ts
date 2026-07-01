@@ -116,6 +116,18 @@ function migrationRanges(markdown: string): string[] {
   return [...markdown.matchAll(/\b\d{3}-\d{3}\b/g)].map((match) => match[0]);
 }
 
+function bugReportDropdownOptions(fieldId: string): string[] {
+  const template = read(".github/ISSUE_TEMPLATE/bug_report.yml");
+  const optionsBlock = new RegExp(
+    `id: ${fieldId}[\\s\\S]*?options:\\n((?:        - .+\\n)+)`,
+  ).exec(template)?.[1];
+
+  expect(optionsBlock).toBeDefined();
+  return [...(optionsBlock ?? "").matchAll(/^\s+- "?(.+?)"?$/gm)].map(
+    (match) => match[1],
+  );
+}
+
 describe("public documentation drift checks", () => {
   it("indexes every paired public docs page", () => {
     const publicDocs = publicDocsMarkdownPaths();
@@ -233,16 +245,17 @@ describe("public documentation drift checks", () => {
   });
 
   it("keeps the bug report embedding-provider options aligned with supported providers", () => {
-    const template = read(".github/ISSUE_TEMPLATE/bug_report.yml");
-    const optionsBlock = /id: embedding-provider[\s\S]*?options:\n((?:        - .+\n)+)/.exec(
-      template,
-    )?.[1];
+    expect(bugReportDropdownOptions("embedding-provider")).toEqual([
+      "transformers",
+      "openai",
+      "local",
+    ]);
+  });
 
-    expect(optionsBlock).toBeDefined();
-    const options = [...(optionsBlock ?? "").matchAll(/^\s+- (.+)$/gm)].map(
-      (match) => match[1],
+  it("keeps the bug report deployment options aligned with vector backends", () => {
+    expect(bugReportDropdownOptions("deployment")).toContain(
+      "Custom (external Postgres / Qdrant or pgvector)",
     );
-    expect(options).toEqual(["transformers", "openai", "local"]);
   });
 
   it("keeps bug report security links rooted at the repository", () => {
