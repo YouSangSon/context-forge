@@ -57,12 +57,14 @@ type PackageLock = {
       hasInstallScript?: boolean;
       hasShrinkwrap?: boolean;
       inBundle?: boolean;
+      integrity?: string;
       license?: unknown;
       link?: boolean;
       name?: unknown;
       optionalDependencies?: Record<string, string>;
       peerDependencies?: Record<string, string>;
       peerDependenciesMeta?: unknown;
+      resolved?: string;
       version?: unknown;
     }
   >;
@@ -391,6 +393,26 @@ describe("package manifest publish surface", () => {
       .sort();
 
     expect(shrinkwrappedPackages).toEqual([]);
+  });
+
+  it("keeps lockfile package sources on npm registry tarballs", () => {
+    const packageLock = readPackageLock();
+    const packageEntries = Object.entries(packageLock.packages).filter(
+      ([path]) => path !== "",
+    );
+    const nonRegistryPackages = packageEntries
+      .filter(([, metadata]) => {
+        return !metadata.resolved?.startsWith("https://registry.npmjs.org/");
+      })
+      .map(([path]) => path)
+      .sort();
+    const nonSha512Packages = packageEntries
+      .filter(([, metadata]) => !metadata.integrity?.startsWith("sha512-"))
+      .map(([path]) => path)
+      .sort();
+
+    expect(nonRegistryPackages).toEqual([]);
+    expect(nonSha512Packages).toEqual([]);
   });
 
   it("keeps package-lock as the active npm lockfile", () => {

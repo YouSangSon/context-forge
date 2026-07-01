@@ -18,6 +18,10 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that non-root lockfile package
+  descriptors resolve from `https://registry.npmjs.org/` and carry `sha512-`
+  integrity metadata so git, file, link, local tarball, or non-registry HTTP
+  package sources cannot appear without review.
 - Package manifest coverage now guards that lockfile package descriptors do not
   declare `hasShrinkwrap` metadata so nested package-scoped shrinkwrap
   lockfiles cannot appear without review.
