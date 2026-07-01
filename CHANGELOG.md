@@ -47,6 +47,8 @@ changes; CHANGELOG entries call those out explicitly.
 - Docs: Korean README comparison table now localizes non-code status labels.
 - Docs: Korean setup, embedding, and backup snippets now localize `default`,
   `stub`, and backend-aware labels in public Korean docs.
+- Docs: configuration guidance now states that `MEMORY_API_TOKENS` token values
+  cannot contain colons because `:` is reserved for `token:org` binding.
 
 Post-release audit cycle. v1.0.0 shipped with 0 OSS users, so this window
 was the safe time to tighten default-strict behavior on multi-tenancy

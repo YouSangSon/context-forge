@@ -137,6 +137,10 @@ Chroma와 txtai가 default로 채택한 동일 모델. CPU 추론으로 충분
 `MEMORY_API_TOKENS` 는 콤마 구분 bearer 토큰 리스트. 각 토큰은 `:` 문법으로
 organization에 옵션 바인딩 가능:
 
+토큰 값 자체에는 `:` 를 넣지 마세요. Akasha는 단일 콜론을 옵션
+`token:org` 구분자로 처리하며, `:` 가 두 개 이상인 entry는 시작 시
+거부합니다.
+
 ```bash
 # 단일 토큰, 어느 org든:
 MEMORY_API_TOKENS=dev-token

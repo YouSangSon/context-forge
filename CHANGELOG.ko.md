@@ -46,6 +46,8 @@ CHANGELOG에서 명시적으로 표기합니다.
 - 문서: 한국어 README 비교 표의 비코드 상태 라벨을 한국어로 정리합니다.
 - 문서: 한국어 공개 문서의 시작, 임베딩, 백업 예시에서 `default`, `stub`,
   backend-aware 라벨을 한국어 표현으로 정리합니다.
+- 문서: `MEMORY_API_TOKENS` 의 토큰 값에는 콜론을 넣을 수 없고, `:` 는
+  `token:org` 바인딩 구분자로 예약되어 있음을 configuration 안내에 명시합니다.
 
 릴리스 후 audit 사이클. v1.0.0이 OSS 사용자 0명 상태로 출시되어 — 멀티
 테넌시 boundary 의 default-strict 강화 + secret-scrubber surface 보강을

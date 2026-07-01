@@ -316,6 +316,20 @@ describe("public documentation drift checks", () => {
     expect(securityKo).toContain("CI/오프라인 스텁");
   });
 
+  it("documents MEMORY_API_TOKENS colon restrictions", () => {
+    const envExample = read(".env.example");
+    const configuration = read("docs/configuration.md");
+    const configurationKo = read("docs/configuration.ko.md");
+
+    expect(envExample).toContain('Token values themselves must not contain ":"');
+    expect(configuration).toContain("The token value itself must not contain `:`");
+    expect(configuration).toContain(
+      "rejects entries with more than one\ncolon at startup",
+    );
+    expect(configurationKo).toContain("토큰 값 자체에는 `:` 를 넣지 마세요");
+    expect(configurationKo).toContain("`:` 가 두 개 이상인 entry는 시작 시");
+  });
+
   it("documents transformers as a packaged runtime dependency", () => {
     const packageJson = readJson<{
       dependencies?: Record<string, string>;

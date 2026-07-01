@@ -143,6 +143,10 @@ dimension).
 `MEMORY_API_TOKENS` is a comma-separated list of bearer tokens. Each token may
 optionally be bound to an organization with `:` syntax:
 
+The token value itself must not contain `:`. Akasha treats a single colon as
+the optional `token:org` separator and rejects entries with more than one
+colon at startup.
+
 ```bash
 # Single token, any org:
 MEMORY_API_TOKENS=dev-token

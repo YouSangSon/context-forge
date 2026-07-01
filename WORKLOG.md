@@ -2,6 +2,34 @@
 
 ## 2026-07-01
 
+- Documented `MEMORY_API_TOKENS` colon restrictions:
+  - `.env.example`, `docs/configuration.md`, and `docs/configuration.ko.md`
+    now state that token values cannot contain `:` because it is reserved for
+    the optional `token:org` binding separator.
+  - `tests/scripts/public-docs-drift.test.ts` now guards the env-template and
+    English/Korean configuration wording.
+  - `CHANGELOG.md` and `CHANGELOG.ko.md` record the public configuration docs
+    clarification.
+  - Source checked: `docs/superpowers/audit/02-security.md` finding 11 asked
+    for the colon restriction to be explicit in config docs and the env var
+    comment. Runtime parsing and tests already reject multiple-colon entries.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`36` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1819` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Added CI dependency audit coverage:
   - `.github/workflows/ci.yml` now runs
     `npm audit --audit-level=moderate` in the `typecheck-and-test` job after

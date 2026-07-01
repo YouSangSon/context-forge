@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `MEMORY_API_TOKENS` configuration docs and `.env.example` now document that
+  token values cannot contain `:`, with public-docs drift coverage.
 - CI now runs `npm audit --audit-level=moderate` before typecheck/test, with
   focused workflow hygiene coverage to keep dependency auditing in the
   pipeline.
