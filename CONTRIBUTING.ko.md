@@ -36,7 +36,7 @@ ${EDITOR:-nano} .env       # MEMORY_API_TOKENS 설정 (OPENAI_API_KEY 는 EMBEDD
 | 타입 체크 | `npm run typecheck` |
 | 빌드 | `npm run build` |
 | 의존성 감사 | `npm audit --audit-level=moderate` |
-| 모든 테스트 실행 | `npm run test` |
+| 모든 테스트 실행 | `npm test` |
 | 테스트 watch | `npm run test:watch` |
 | 마이그레이션 적용 | `npm run db:migrate` |
 

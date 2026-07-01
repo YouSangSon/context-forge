@@ -37,7 +37,7 @@ Daily commands:
 | Type-check | `npm run typecheck` |
 | Build | `npm run build` |
 | Dependency audit | `npm audit --audit-level=moderate` |
-| Run all tests | `npm run test` |
+| Run all tests | `npm test` |
 | Watch tests | `npm run test:watch` |
 | Apply migrations | `npm run db:migrate` |
 

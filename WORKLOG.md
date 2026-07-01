@@ -2,6 +2,28 @@
 
 ## 2026-07-01
 
+- Aligned contributor test command spelling:
+  - `CONTRIBUTING.md` and `CONTRIBUTING.ko.md` now use `npm test` in the daily
+    command tables, matching README common commands and PR verification.
+  - `tests/scripts/public-docs-drift.test.ts` now guards the exact English and
+    Korean table rows so the docs do not drift back to mixed spellings.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`41` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1826` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned README common commands:
   - `README.md` and `README.ko.md` now list `npm run build` and
     `npm audit --audit-level=moderate` alongside typecheck/test in the common

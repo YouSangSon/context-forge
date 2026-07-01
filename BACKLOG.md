@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CONTRIBUTING daily command tables now use the same `npm test` spelling as
+  README and PR verification guidance, guarded by public-docs drift coverage.
 - README common command lists now include build and moderate-level dependency
   audit commands, guarded by public-docs drift coverage.
 - CI now runs `npm run build` in the main Node matrix after typecheck and before

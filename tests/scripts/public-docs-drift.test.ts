@@ -161,6 +161,8 @@ describe("public documentation drift checks", () => {
     expect(contributingKo).toContain(
       "| 의존성 감사 | `npm audit --audit-level=moderate` |",
     );
+    expect(contributing).toContain("| Run all tests | `npm test` |");
+    expect(contributingKo).toContain("| 모든 테스트 실행 | `npm test` |");
     expect(contributing).not.toContain("Tests + typecheck pass locally");
     expect(contributingKo).not.toContain("테스트 + 타입 체크 로컬 통과");
   });

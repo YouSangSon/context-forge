@@ -4,14 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — README Command Alignment
+## Current Loop — Contributor Test Command Alignment
 
 Status:
-- `README.md` and `README.ko.md` common command lists included typecheck and
-  test but not the build and dependency audit commands now required by
-  contributor, PR, and CI verification.
-- The loop adds those commands to both README files and extends public-docs
-  drift coverage.
+- README common commands and PR verification checklist use `npm test`, while
+  the CONTRIBUTING daily command tables still listed `npm run test`.
+- The loop aligns the contributor tables and extends public-docs drift coverage
+  to pin the exact table rows.
 
 Verification:
 - Focused public-docs drift coverage, typecheck, build, audit, full tests, and
