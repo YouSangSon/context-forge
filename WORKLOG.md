@@ -2,6 +2,36 @@
 
 ## 2026-07-02
 
+- Guarded memory graph relationship row mapping:
+  - `src/store/memory-repository.ts` now maps graph relationship `id`,
+    `from_entity_id`, `to_entity_id`, and `evidence_memory_record_id` through
+    positive safe-integer row helpers before returning graph relationships.
+  - `confidence` remains a finite numeric row mapping in this loop; this
+    change is scoped to BIGSERIAL/BIGINT id references.
+  - `tests/store/memory-repository.test.ts` now covers malformed graph
+    relationship id rows through mock-pool `inspectMemoryGraph` coverage.
+  - Source checked: `entity_relationships.id`, `from_entity_id`,
+    `to_entity_id`, and `evidence_memory_record_id` are `BIGSERIAL`/`BIGINT`
+    fields in migration `011_entity_temporal_graph.sql`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/mcp/server.test.ts tests/search/retrieve-memory.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/mcp/server.test.ts tests/search/retrieve-memory.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`272` tests passed, `7` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1976` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded memory graph entity row mapping:
   - `src/store/memory-repository.ts` now maps graph entity `mention_count`
     through a non-negative safe-integer row helper and maps `memory_ids` as

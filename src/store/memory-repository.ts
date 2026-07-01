@@ -919,11 +919,17 @@ function mapPostgresGraphEntity(row: PostgresGraphEntityRow): MemoryGraphEntity 
 function mapPostgresGraphRelationship(
   row: PostgresGraphRelationshipRow,
 ): MemoryGraphRelationship {
-  const fromEntityId = toNumber(row.from_entity_id);
-  const toEntityId = toNumber(row.to_entity_id);
+  const fromEntityId = mapPositiveSafeInteger(
+    row.from_entity_id,
+    "graph relationship from_entity_id",
+  );
+  const toEntityId = mapPositiveSafeInteger(
+    row.to_entity_id,
+    "graph relationship to_entity_id",
+  );
 
   return {
-    id: toNumber(row.id),
+    id: mapPositiveSafeInteger(row.id, "graph relationship id"),
     organizationId: row.organization_id,
     fromEntityId,
     toEntityId,
@@ -940,7 +946,10 @@ function mapPostgresGraphRelationship(
       displayText: row.to_display_text,
     },
     relationType: row.relation_type,
-    evidenceMemoryRecordId: toNumber(row.evidence_memory_record_id),
+    evidenceMemoryRecordId: mapPositiveSafeInteger(
+      row.evidence_memory_record_id,
+      "graph relationship evidence_memory_record_id",
+    ),
     validFrom: row.valid_from,
     validTo: row.valid_to,
     confidence: toNumber(row.confidence),

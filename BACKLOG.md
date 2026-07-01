@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory graph relationship row mapping now validates relationship ids and
+  entity/evidence record id references before returning graph relationships.
 - Memory graph entity row mapping now validates `mention_count` and
   `memory_ids` before returning graph entities or querying relationships.
 - Goal run repository row mapping now validates `iteration_count` and

@@ -1000,6 +1000,83 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(queryCalls).toHaveLength(1);
   });
 
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "graph relationship id must be a positive safe integer",
+    },
+    {
+      rowPatch: { from_entity_id: "1.5" },
+      message:
+        "graph relationship from_entity_id must be a positive safe integer",
+    },
+    {
+      rowPatch: { evidence_memory_record_id: "bad" },
+      message: "database number must be finite",
+    },
+  ])("inspectMemoryGraph rejects malformed graph relationship rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        if (sql.includes("FROM entities e")) {
+          return Promise.resolve({
+            rows: [
+              {
+                id: "91",
+                organization_id: "org-a",
+                kind: "code_symbol",
+                normalized: "qdrant_snapshot_timeout",
+                display_text: "QDRANT_SNAPSHOT_TIMEOUT",
+                first_seen_at: "2026-06-26T00:00:00.000Z",
+                last_seen_at: "2026-06-27T00:00:00.000Z",
+                mention_count: "2",
+                memory_ids: ["42", "41"],
+              },
+            ],
+          });
+        }
+
+        return Promise.resolve({
+          rows: [
+            {
+              id: "701",
+              organization_id: "org-a",
+              from_entity_id: "91",
+              to_entity_id: "92",
+              relation_type: "temporal_context",
+              evidence_memory_record_id: "42",
+              valid_from: "2026-06-26",
+              valid_to: null,
+              confidence: "0.8",
+              created_at: "2026-06-27T00:00:00.000Z",
+              from_kind: "code_symbol",
+              from_normalized: "qdrant_snapshot_timeout",
+              from_display_text: "QDRANT_SNAPSHOT_TIMEOUT",
+              to_kind: "date",
+              to_normalized: "2026-06-26",
+              to_display_text: "2026-06-26",
+              ...rowPatch,
+            },
+          ],
+        });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.inspectMemoryGraph(
+        { scopeType: "project", scopeId: "proj-x" },
+        { organizationId: "org-a" },
+      ),
+    ).rejects.toThrow(message);
+
+    expect(queryCalls).toHaveLength(2);
+  });
+
   it("inspectMemoryGraph rejects whitespace-only organization IDs before querying", async () => {
     const mockPool = { query: vi.fn() };
     const repo = createMemoryRepository(mockPool as never);
