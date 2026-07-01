@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `runOutboxSweep` now batches pending Qdrant cleanup deletes by organization,
+  reducing vector backend delete calls while preserving row-level status
+  accounting.
 - Bearer auth unit coverage now directly guards `authenticateBearer` static
   token precedence, OAuth fallback, and null-result behavior on the active API.
 - Bearer auth no longer exports the unused `matchBearerFromRequest` request

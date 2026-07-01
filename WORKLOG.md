@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Batched outbox sweeper vector deletes:
+  - `src/compact/outbox-sweeper.ts` now groups claimed
+    `memory_archive` cleanup rows by `organizationId` and calls
+    `vectorIndex.delete` once per org with the combined point IDs.
+  - `tests/compact/outbox-sweeper.test.ts` guards same-org batching, multi-org
+    grouping, and row-level retry or failed counts when a batched delete fails.
+  - Source checked: internal performance audit finding 10 documents sequential
+    Qdrant deletes in `outbox-sweeper`; `VectorIndex` is backend-neutral, so
+    batching uses `organizationId` rather than `collectionName`:
+    `docs/superpowers/audit/03-performance.md`, `src/vector/vector-index.ts`.
+
+Verification plan:
+- `npx vitest run tests/compact/outbox-sweeper.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/compact/outbox-sweeper.test.ts --reporter=dot`
+  (`32` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1911` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Added direct coverage for the active bearer-auth API:
   - `tests/app/bearer-auth.test.ts` now imports `authenticateBearer` and checks
     static-token precedence over OAuth verification, OAuth fallback when no
