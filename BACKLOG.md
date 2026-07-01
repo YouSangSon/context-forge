@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that package `devEngines` stays absent
+  in package and lockfile root metadata so npm-managed dev-time gates cannot
+  appear without an explicit tooling policy decision.
 - Package manifest coverage now guards that package `peerDependencies` and
   `peerDependenciesMeta` stay absent in package and lockfile root metadata so
   host/plugin dependency contracts cannot drift in silently.

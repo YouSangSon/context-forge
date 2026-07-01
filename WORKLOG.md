@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded package devEngines metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package
+    `devEngines` stays absent in both `package.json` and the lockfile root
+    metadata.
+  - This catches metadata drift that would add npm-managed dev-time gates
+    before install, ci, or run commands without an explicit tooling policy
+    decision.
+  - Source checked: npm documents `devEngines` as a field that runs before
+    `install`, `ci`, and `run` commands, with runtime/package manager gate
+    support separate from package `engines`:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`28` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1872` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package peer dependency metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package
     `peerDependencies` and `peerDependenciesMeta` stay absent in both

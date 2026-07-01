@@ -11,6 +11,7 @@ type PackageJson = {
   cpu?: unknown;
   dependencies?: Record<string, string>;
   description?: unknown;
+  devEngines?: unknown;
   devDependencies?: Record<string, string>;
   engines?: Record<string, string>;
   exports?: unknown;
@@ -42,6 +43,7 @@ type PackageLock = {
     string,
     {
       dependencies?: Record<string, string>;
+      devEngines?: unknown;
       devDependencies?: Record<string, string>;
       engines?: Record<string, string>;
       license?: unknown;
@@ -249,6 +251,14 @@ describe("package manifest publish surface", () => {
     expect(packageJson.peerDependenciesMeta).toBeUndefined();
     expect(lockfileRoot?.peerDependencies).toBeUndefined();
     expect(lockfileRoot?.peerDependenciesMeta).toBeUndefined();
+  });
+
+  it("does not declare npm devEngines gates", () => {
+    const packageJson = readPackageJson();
+    const lockfileRoot = readPackageLock().packages[""];
+
+    expect(packageJson.devEngines).toBeUndefined();
+    expect(lockfileRoot?.devEngines).toBeUndefined();
   });
 
   it("keeps npm package support metadata pointed at the project", () => {
