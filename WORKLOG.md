@@ -2,6 +2,38 @@
 
 ## 2026-07-02
 
+- Guarded memory importance row mapping:
+  - `src/store/memory-repository.ts` now maps `memory_records.importance` row
+    values through shared numeric conversion plus Postgres integer range checks
+    before returning hydrated memory records.
+  - The update flow now maps both the existing row fallback importance and the
+    update `RETURNING` importance before using them for persistence and entity
+    graph rebuild inputs.
+  - `tests/store/memory-repository.test.ts` now covers string numeric hydrated
+    row values and malformed importance rows through mock-pool listMemory
+    coverage.
+  - Source checked: `memory_records.importance` is an `INTEGER` field in the
+    active migrations and was the remaining raw numeric field in
+    `mapPostgresSearchResult`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/search/retrieve-memory.test.ts tests/mcp/server.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/search/retrieve-memory.test.ts tests/mcp/server.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`265` tests passed, `7` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1964` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded memory chunk row mapping:
   - `src/store/canonical-indexing.ts` now maps `memory_chunks` row ids,
     chunk indexes, and offsets through a shared chunk row mapper. `chunk_index`,

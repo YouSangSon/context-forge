@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Memory Chunk Row Mapping
+## Current Loop — Memory Importance Row Mapping
 
 Status:
-- `src/store/canonical-indexing.ts` now maps `memory_chunks` index and offset
-  row values through shared numeric validation plus non-negative safe-integer
-  checks.
-- `tests/store/canonical-indexing.test.ts` now covers string numeric chunk rows
-  and malformed returned chunk rows across insert/list/get paths.
+- `src/store/memory-repository.ts` now maps `memory_records.importance` DB row
+  values through numeric validation plus Postgres integer range checks before
+  returning hydrated memory records or rebuilding entity graph inputs.
+- `tests/store/memory-repository.test.ts` now covers string numeric hydrated
+  importance rows and malformed row values.
 
 Verification:
-- Focused canonical-indexing/db-utils/search/vector/convention tests passed.
+- Focused memory-repository/db-utils/search/MCP/convention tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

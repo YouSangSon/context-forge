@@ -677,6 +677,70 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(queryCalls[0]?.sql).toContain("mr.durability <> 'archived'");
   });
 
+  it("listMemory maps string numeric hydrated row values", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          ...hydratedMemoryRow(),
+          id: "42",
+          source_id: "9",
+          source_id_joined: "9",
+          importance: "4",
+        }],
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    const records = await repo.listMemory(
+      { scopeType: "project", scopeId: "proj-x" },
+      { organizationId: "org-a" },
+    );
+
+    expect(records).toEqual([
+      expect.objectContaining({
+        id: 42,
+        sourceId: 9,
+        importance: 4,
+        source: expect.objectContaining({ id: 9 }),
+      }),
+    ]);
+  });
+
+  it.each([
+    {
+      importance: "1.5",
+      message: "importance must be a Postgres integer",
+    },
+    {
+      importance: "2147483648",
+      message: "importance must be a Postgres integer",
+    },
+    {
+      importance: "bad",
+      message: "database number must be finite",
+    },
+  ])("listMemory rejects malformed hydrated importance rows %#", async ({
+    importance,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          ...hydratedMemoryRow(),
+          importance,
+        }],
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.listMemory(
+        { scopeType: "project", scopeId: "proj-x" },
+        { organizationId: "org-a" },
+      ),
+    ).rejects.toThrow(message);
+  });
+
   it("getMemoryRecordsByIds excludes archived rows during public hydration", async () => {
     const queryCalls: SqlQueryCall[] = [];
     const mockPool = {

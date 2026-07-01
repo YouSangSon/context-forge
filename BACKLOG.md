@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory repository row mapping now validates `memory_records.importance` from
+  hydrated DB rows before returning search/list results or rebuilding entity
+  graph inputs.
 - Memory chunk row mapping now validates `chunk_index`, `start_offset`, and
   `end_offset` from `memory_chunks` DB rows before returning stored or
   reindexable chunks.

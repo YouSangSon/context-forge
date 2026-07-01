@@ -32,7 +32,7 @@ const POSTGRES_INTEGER_MIN = -2147483648;
 const POSTGRES_INTEGER_MAX = 2147483647;
 
 type PostgresMemoryRow = {
-  id: number;
+  id: number | string;
   organization_id: string;
   scope_type: SearchMemoryResult["scopeType"];
   scope_id: string;
@@ -42,14 +42,14 @@ type PostgresMemoryRow = {
   content: string;
   summary: string | null;
   durability: NonNullable<SearchMemoryResult["durability"]>;
-  importance: number;
-  source_id: number;
+  importance: number | string;
+  source_id: number | string;
   created_at: string | Date;
   updated_at: string | Date;
 };
 
 type PostgresSourceRow = {
-  source_id_joined: number;
+  source_id_joined: number | string;
   source_organization_id: string;
   source_scope_type: MemorySource["scopeType"];
   source_scope_id: string;
@@ -521,9 +521,13 @@ export function createMemoryRepository(
           input.durability,
           currentRow.durability,
         );
+        const currentImportance = mapPostgresInteger(
+          currentRow.importance,
+          "importance",
+        );
         const nextImportance = normalizePostgresInteger(
           input.importance,
-          currentRow.importance,
+          currentImportance,
         );
         assertNoSecretsInMemoryFields({
           title: nextTitle,
@@ -594,7 +598,7 @@ export function createMemoryRepository(
             content: updatedRow.content,
             summary: updatedRow.summary ?? undefined,
             durability: updatedRow.durability,
-            importance: updatedRow.importance,
+            importance: mapPostgresInteger(updatedRow.importance, "importance"),
             source: {
               scopeType: currentRow.source_scope_type,
               scopeId: currentRow.source_scope_id,
@@ -711,7 +715,7 @@ function mapPostgresSearchResult(row: PostgresHydratedRow): SearchMemoryResult {
     content: row.content,
     summary: row.summary,
     durability: row.durability,
-    importance: row.importance,
+    importance: mapPostgresInteger(row.importance, "importance"),
     tags: row.tags ?? [],
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
@@ -1033,6 +1037,18 @@ function normalizePostgresInteger(
     throw new Error("importance must be a Postgres integer");
   }
   return value;
+}
+
+function mapPostgresInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (
+    !Number.isInteger(numberValue) ||
+    numberValue < POSTGRES_INTEGER_MIN ||
+    numberValue > POSTGRES_INTEGER_MAX
+  ) {
+    throw new Error(`${fieldName} must be a Postgres integer`);
+  }
+  return numberValue;
 }
 
 function orderRecordsByIds(
