@@ -68,6 +68,7 @@ function collectTypeScriptSuppressionViolations(path: string): string[] {
   const suppressions = [
     ["@", "ts-ignore"].join(""),
     ["@", "ts-expect-error"].join(""),
+    ["@", "ts-nocheck"].join(""),
   ];
 
   for (const suppression of suppressions) {

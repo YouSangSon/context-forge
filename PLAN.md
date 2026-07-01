@@ -4,13 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — TypeScript Suppression Comment Guard
+## Current Loop — TypeScript Nocheck Comment Guard
 
 Status:
 - Contributor guidance expects strict TypeScript without `any`, and the source
-  convention suite already guards catch bindings and explicit `any` types.
-- The loop adds coverage to keep tracked TypeScript files free of
-  `@ts-ignore` and `@ts-expect-error` suppression comments.
+  convention suite already guards catch bindings, explicit `any` types, and
+  line-level TypeScript suppression comments.
+- The loop extends coverage to keep tracked TypeScript files free of file-wide
+  `@ts-nocheck` comments.
 
 Verification:
 - Focused source convention coverage, typecheck, build, audit, full tests, and

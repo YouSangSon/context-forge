@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- TypeScript source convention coverage now rejects file-wide `@ts-nocheck`
+  comments in tracked source, script, and test files.
 - TypeScript source convention coverage now rejects `@ts-ignore` and
   `@ts-expect-error` suppression comments in tracked source, script, and test
   files.
