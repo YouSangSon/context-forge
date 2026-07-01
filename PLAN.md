@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Test Catch Binding Convention
+## Current Loop — AST Catch Binding Guard
 
 Status:
-- Source catch bindings were guarded, but several test files still used
-  untyped `catch (err)`/`catch (error)` bindings.
-- The loop annotates those test catch bindings and widens source convention
-  coverage across tracked `src/`, `tests/`, and `scripts/` TypeScript files.
+- The catch binding convention guard used regex matching, which can flag
+  strings or comments instead of real TypeScript catch clauses.
+- The loop switches the guard to TypeScript AST traversal so only actual
+  `CatchClause` bindings are checked.
 
 Verification:
 - Focused source convention coverage, typecheck, build, audit, full tests, and

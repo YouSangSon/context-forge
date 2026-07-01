@@ -1,12 +1,7 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
-
-const excludedCatchBindingFiles = new Set([
-  // Contains browser-side JavaScript embedded in a template string; TypeScript
-  // catch annotations are not valid inside that emitted script.
-  "src/app/admin-memory-page.ts",
-]);
 
 function trackedTypeScriptFiles(): string[] {
   return execFileSync("git", ["ls-files", "src", "tests", "scripts"], {
@@ -14,29 +9,40 @@ function trackedTypeScriptFiles(): string[] {
   })
     .split(/\r?\n/)
     .filter((path) => path.endsWith(".ts"))
-    .filter((path) => !excludedCatchBindingFiles.has(path))
     .sort();
 }
 
-function lineNumberAt(text: string, index: number): number {
-  return text.slice(0, index).split(/\r?\n/).length;
+function lineNumberAt(sourceFile: ts.SourceFile, position: number): number {
+  return sourceFile.getLineAndCharacterOfPosition(position).line + 1;
+}
+
+function collectCatchBindingViolations(path: string): string[] {
+  const text = fs.readFileSync(path, "utf8");
+  const sourceFile = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
+  const violations: string[] = [];
+
+  function visit(node: ts.Node): void {
+    if (ts.isCatchClause(node) && node.variableDeclaration !== undefined) {
+      const typeNode = node.variableDeclaration.type;
+      if (typeNode?.kind !== ts.SyntaxKind.UnknownKeyword) {
+        const binding = node.variableDeclaration.name.getText(sourceFile);
+        violations.push(
+          `${path}:${lineNumberAt(sourceFile, node.getStart(sourceFile))} catch binding ${binding}`,
+        );
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return violations;
 }
 
 describe("source code conventions", () => {
   it("keeps source catch bindings explicitly typed as unknown", () => {
-    const violations: string[] = [];
-    const catchBindingPattern = /(^|[^.\w$])catch\s*\(([^)]*)\)/g;
-    const typedUnknownBindingPattern = /^[A-Za-z_$][\w$]*:\s*unknown$/;
-
-    for (const path of trackedTypeScriptFiles()) {
-      const text = fs.readFileSync(path, "utf8");
-      for (const match of text.matchAll(catchBindingPattern)) {
-        const binding = match[2]?.trim() ?? "";
-        if (!typedUnknownBindingPattern.test(binding)) {
-          violations.push(`${path}:${lineNumberAt(text, match.index ?? 0)} catch binding ${binding}`);
-        }
-      }
-    }
+    const violations = trackedTypeScriptFiles().flatMap((path) =>
+      collectCatchBindingViolations(path),
+    );
 
     expect(violations).toEqual([]);
   });

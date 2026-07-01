@@ -2,6 +2,29 @@
 
 ## 2026-07-01
 
+- Replaced the catch binding convention regex with AST traversal:
+  - `tests/scripts/source-conventions.test.ts` now parses tracked TypeScript
+    files with the TypeScript compiler API and inspects real `CatchClause`
+    nodes.
+  - This keeps the catch binding convention guard from flagging strings,
+    comments, or diagnostic messages that only contain `catch (...)` text.
+
+Verification plan:
+- `npx vitest run tests/scripts/source-conventions.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/source-conventions.test.ts` (`1` test passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1833` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Extended catch binding convention coverage to tests and scripts:
   - `tests/scripts/source-conventions.test.ts` now scans tracked TypeScript
     under `src/`, `tests/`, and `scripts/`.
