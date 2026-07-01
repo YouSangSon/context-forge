@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Admin Shell Action Error Fallback
+## Current Loop — Admin Shell Numeric Payload Guard
 
 Status:
-- The static `/admin/memory` shell now stringifies caught load errors safely,
-  but save/tag/archive action handlers still let rejected promises escape.
-- The loop catches those action handler failures and routes them through the
-  same status error fallback.
+- The static `/admin/memory` shell used `Number(...)` for numeric form fields,
+  allowing non-finite values to serialize as JSON `null`.
+- The loop routes limit and importance inputs through a small finite-number
+  helper before building API payloads.
 
 Verification:
 - Focused server coverage, typecheck, build, audit, full tests, and diff check

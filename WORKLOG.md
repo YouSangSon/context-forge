@@ -2,6 +2,28 @@
 
 ## 2026-07-01
 
+- Guarded admin shell numeric payloads:
+  - `src/app/admin-memory-page.ts` now reads `limit` and `importance` through a
+    finite-number helper so `NaN`/`Infinity` do not serialize as JSON `null`.
+  - `tests/app/server.test.ts` guards the rendered `/admin/memory` shell for
+    the helper and the updated numeric payload construction.
+
+Verification plan:
+- `npx vitest run tests/app/server.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/server.test.ts` (`67` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1835` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Covered admin shell action failures:
   - `src/app/admin-memory-page.ts` now catches save, tag, and archive action
     handler failures and reports them through `errorMessage`.

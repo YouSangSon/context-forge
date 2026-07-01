@@ -224,6 +224,10 @@ describe("createOperatorServer", () => {
     expect(html).toContain("/v1/memory/delete");
     expect(html).toContain("/v1/memory/tag");
     expect(html).toContain("function errorMessage(error)");
+    expect(html).toContain("function numberInputValue(input, fallback)");
+    expect(html).toContain("return Number.isFinite(value) ? value : fallback;");
+    expect(html).toContain('limit: numberInputValue($("limit"), 50)');
+    expect(html).toContain("numberInputValue(form.elements.importance, null)");
     expect(html).toContain("setStatus(errorMessage(error), true)");
     expect(html).not.toContain("setStatus(error.message, true)");
     expect(html).toContain(

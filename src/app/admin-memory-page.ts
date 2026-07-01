@@ -301,6 +301,11 @@ export function renderMemoryAdminPage(): string {
       return $(id).value.trim();
     }
 
+    function numberInputValue(input, fallback) {
+      const value = input.valueAsNumber;
+      return Number.isFinite(value) ? value : fallback;
+    }
+
     function baseHeaders() {
       const token = inputValue("token");
       const headers = { "content-type": "application/json" };
@@ -315,7 +320,7 @@ export function renderMemoryAdminPage(): string {
     function scopePayload() {
       const payload = {
         scope: inputValue("scope"),
-        limit: Number(inputValue("limit") || "50")
+        limit: numberInputValue($("limit"), 50)
       };
       const organizationId = inputValue("organizationId");
       const projectKey = inputValue("projectKey");
@@ -471,8 +476,8 @@ export function renderMemoryAdminPage(): string {
       if (!form.elements.durability.disabled) {
         payload.durability = form.elements.durability.value;
       }
-      const importance = form.elements.importance.value;
-      if (importance) payload.importance = Number(importance);
+      const importance = numberInputValue(form.elements.importance, null);
+      if (importance !== null) payload.importance = importance;
       await post("/v1/memory/update", payload);
       await loadMemories();
       setStatus("Saved");
