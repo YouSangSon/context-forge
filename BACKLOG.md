@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory graph relationship row mapping now validates confidence values before
+  returning graph relationships.
 - Memory graph entity row mapping now validates graph entity ids before
   returning graph entities.
 - Add-memory write path now validates returned source and memory record ids

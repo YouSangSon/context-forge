@@ -1327,6 +1327,18 @@ describe("createMemoryRepository (unit — no PG required)", () => {
       rowPatch: { evidence_memory_record_id: "bad" },
       message: "database number must be finite",
     },
+    {
+      rowPatch: { confidence: "-0.1" },
+      message: "graph relationship confidence must be between 0 and 1",
+    },
+    {
+      rowPatch: { confidence: "1.1" },
+      message: "graph relationship confidence must be between 0 and 1",
+    },
+    {
+      rowPatch: { confidence: "bad" },
+      message: "database number must be finite",
+    },
   ])("inspectMemoryGraph rejects malformed graph relationship rows %#", async ({
     rowPatch,
     message,

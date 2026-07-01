@@ -4,13 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Graph Entity Id Row Mapping
+## Current Loop — Graph Relationship Confidence Row Mapping
 
 Status:
-- `src/store/memory-repository.ts` now maps graph entity `id` rows as positive
-  safe integers before returning graph entities.
-- `tests/store/memory-repository.test.ts` now covers malformed graph entity id
-  rows through mock-pool `inspectMemoryGraph` coverage.
+- `src/store/memory-repository.ts` now maps graph relationship `confidence`
+  rows through finite numeric conversion plus a 0..1 range check before
+  returning graph relationships.
+- `tests/store/memory-repository.test.ts` now covers malformed graph
+  relationship confidence rows through mock-pool `inspectMemoryGraph` coverage.
 
 Verification:
 - Focused memory-repository/db-utils/MCP/search/convention tests passed.

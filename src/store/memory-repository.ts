@@ -960,7 +960,7 @@ function mapPostgresGraphRelationship(
     ),
     validFrom: row.valid_from,
     validTo: row.valid_to,
-    confidence: toNumber(row.confidence),
+    confidence: mapConfidence(row.confidence, "graph relationship confidence"),
     createdAt: toIsoString(row.created_at),
   };
 }
@@ -1091,6 +1091,14 @@ function mapPositiveSafeInteger(value: unknown, fieldName: string): number {
   const numberValue = toNumber(value);
   if (!Number.isSafeInteger(numberValue) || numberValue <= 0) {
     throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+  return numberValue;
+}
+
+function mapConfidence(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (numberValue < 0 || numberValue > 1) {
+    throw new Error(`${fieldName} must be between 0 and 1`);
   }
   return numberValue;
 }
