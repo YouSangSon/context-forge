@@ -130,7 +130,7 @@ org 를 전혀 의식할 필요가 없습니다 —
 git clone https://github.com/YouSangSon/akasha.git
 cd akasha
 
-# 1. env 템플릿 복사 (default 그대로 동작 — OPENAI_API_KEY 는
+# 1. env 템플릿 복사 (기본값 그대로 동작 — OPENAI_API_KEY 는
 #    EMBEDDING_PROVIDER=openai 로 바꿀 때만 필요)
 cp .env.example .env
 ${EDITOR:-nano} .env
@@ -188,7 +188,7 @@ curl -sX POST http://localhost:8787/v1/memory/context-pack \
 | Canonical store (`src/store/memory-repository.ts`) | Postgres — 레코드, 소스, ingest job, entity graph, 감사 |
 | Vector index (`src/vector/`) | Qdrant (기본) 또는 pgvector — 청크 임베딩 + 유사도 검색. `VECTOR_BACKEND=pgvector` 로 Postgres 단독 배포 가능. |
 | Compaction (`src/compact/`) | 중복 제거 (exact + 시맨틱), decay, archive, unarchive, sweeper |
-| Embeddings (`src/embedding/`) | `transformers` (무료 로컬 ONNX, 기본), `openai` (`text-embedding-3-small`), 또는 `local` (CI용 결정론적 stub) |
+| Embeddings (`src/embedding/`) | `transformers` (무료 로컬 ONNX, 기본), `openai` (`text-embedding-3-small`), 또는 `local` (CI용 결정론적 스텁) |
 
 데이터 흐름: 호출자가 `add_memory` → 레코드는 Postgres에 저장, entity mention
 연결, 청크 분할 + 임베딩 + 활성 벡터 백엔드 upsert. `search_memory` → 쿼리
@@ -203,7 +203,7 @@ curl -sX POST http://localhost:8787/v1/memory/context-pack \
 | 변수 | 기본값 | 용도 |
 |------|--------|------|
 | `MEMORY_API_TOKENS` | _(OAuth JWT 검증 미설정 시 필수)_ | HTTP API 용 static bearer 토큰; `token:org` 로 토큰을 org 에 바인딩 |
-| `EMBEDDING_PROVIDER` | `transformers` | `transformers` (무료 로컬 ONNX), `openai`, 또는 `local` (CI stub) |
+| `EMBEDDING_PROVIDER` | `transformers` | `transformers` (무료 로컬 ONNX), `openai`, 또는 `local` (CI 스텁) |
 | `VECTOR_BACKEND` | `qdrant` | `qdrant`, 또는 Postgres 단독 배포용 `pgvector` |
 
 `OPENAI_API_KEY` 는 선택 사항 — `EMBEDDING_PROVIDER=openai` 일 때만 필요합니다.
@@ -239,8 +239,8 @@ npm run lifecycle:init -- --project my-project --organization-id default
 npm run typecheck     # tsc --noEmit
 npm run test          # vitest run
 npm run db:migrate    # 미적용 마이그레이션 실행
-npm run backup:create # VECTOR_BACKEND 기준 backend-aware backup
-npm run backup:create:pgvector # 명시적 Postgres-only pgvector backup
+npm run backup:create # VECTOR_BACKEND 기준 백업
+npm run backup:create:pgvector # 명시적 Postgres 단독 pgvector 백업
 ```
 
 `VECTOR_BACKEND=qdrant` 에서는 `backup:create` 가 Postgres와 Qdrant snapshot을

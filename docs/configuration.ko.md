@@ -105,10 +105,10 @@ compose 기본 자격증명은 로컬 개발 전용입니다. production 운영�
 
 | 변수 | 기본값 | 메모 |
 |---|---|---|
-| `EMBEDDING_PROVIDER` | `transformers` | `transformers` (무료 로컬 ONNX, default), `openai` (유료 API), 또는 `local` (CI용 결정론적 stub). |
+| `EMBEDDING_PROVIDER` | `transformers` | `transformers` (무료 로컬 ONNX, 기본값), `openai` (유료 API), 또는 `local` (CI용 결정론적 스텁). |
 | `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | 1536-dim. 변경 시 reindex 필요. |
 | `TRANSFORMERS_EMBEDDING_MODEL` | `Xenova/all-MiniLM-L6-v2` | Hugging Face ONNX 모델 id. 384-dim. `EMBEDDING_PROVIDER=transformers` 일 때만 의미. |
-| `EMBEDDING_DIMENSIONS` | `384` | `transformers` / `local` provider의 plain decimal positive integer 벡터 크기. |
+| `EMBEDDING_DIMENSIONS` | `384` | `transformers` / `local` provider의 일반 십진수 양의 정수 벡터 크기. |
 | `EMBEDDING_MODEL` | `local-deterministic-v1` | `EMBEDDING_PROVIDER=local` 일 때만 의미. |
 
 ### Provider 선택 — 비용 vs. 품질 vs. 셋업

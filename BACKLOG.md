@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Korean setup, embedding, and backup snippets now localize `default`, `stub`,
+  and backend-aware labels in public Korean docs, with public-docs drift
+  coverage.
 - Korean README comparison table now localizes non-code status labels, with
   public-docs drift coverage.
 - Korean README comparison copy now uses localized positioning language instead

@@ -283,6 +283,39 @@ describe("public documentation drift checks", () => {
     }
   });
 
+  it("keeps Korean embedding and setup labels localized", () => {
+    for (const path of [
+      "README.ko.md",
+      "docs/configuration.ko.md",
+      "docs/security.ko.md",
+      "docs/troubleshooting.ko.md",
+    ]) {
+      const text = read(path);
+      expect(text).not.toContain("결정론적 stub");
+      expect(text).not.toContain("CI stub");
+      expect(text).not.toContain("CI/offline stub");
+    }
+
+    const readmeKo = read("README.ko.md");
+    expect(readmeKo).toContain("기본값 그대로 동작");
+    expect(readmeKo).toContain("CI용 결정론적 스텁");
+    expect(readmeKo).toContain("CI 스텁");
+    expect(readmeKo).toContain("VECTOR_BACKEND 기준 백업");
+    expect(readmeKo).toContain("Postgres 단독 pgvector 백업");
+    expect(readmeKo).not.toContain("default 그대로 동작");
+    expect(readmeKo).not.toContain("backend-aware backup");
+    expect(readmeKo).not.toContain("Postgres-only pgvector backup");
+
+    const configurationKo = read("docs/configuration.ko.md");
+    expect(configurationKo).toContain("무료 로컬 ONNX, 기본값");
+    expect(configurationKo).toContain("일반 십진수 양의 정수 벡터 크기");
+    expect(configurationKo).not.toContain("무료 로컬 ONNX, default");
+    expect(configurationKo).not.toContain("plain decimal positive integer");
+
+    const securityKo = read("docs/security.ko.md");
+    expect(securityKo).toContain("CI/오프라인 스텁");
+  });
+
   it("documents transformers as a packaged runtime dependency", () => {
     const packageJson = readJson<{
       dependencies?: Record<string, string>;

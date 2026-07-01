@@ -44,6 +44,8 @@ CHANGELOG에서 명시적으로 표기합니다.
 - 문서: 한국어 README 비교 문단이 영문 혼용 표현 대신 한국어 포지셔닝 문구를
   사용하도록 정리합니다.
 - 문서: 한국어 README 비교 표의 비코드 상태 라벨을 한국어로 정리합니다.
+- 문서: 한국어 공개 문서의 시작, 임베딩, 백업 예시에서 `default`, `stub`,
+  backend-aware 라벨을 한국어 표현으로 정리합니다.
 
 릴리스 후 audit 사이클. v1.0.0이 OSS 사용자 0명 상태로 출시되어 — 멀티
 테넌시 boundary 의 default-strict 강화 + secret-scrubber surface 보강을

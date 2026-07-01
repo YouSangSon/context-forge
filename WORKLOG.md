@@ -2,6 +2,30 @@
 
 ## 2026-07-01
 
+- Localized Korean setup and embedding labels:
+  - `README.ko.md`, `docs/configuration.ko.md`, `docs/security.ko.md`, and
+    `docs/troubleshooting.ko.md` now avoid mixed English `default`/`stub`
+    labels in setup, embedding, and backup snippets.
+  - `tests/scripts/public-docs-drift.test.ts` now guards those localized Korean
+    setup and embedding labels.
+  - `CHANGELOG.md` and `CHANGELOG.ko.md` record the public documentation polish.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`35` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1810` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Localized Korean README comparison-table labels:
   - `README.ko.md` now uses Korean labels for non-code comparison-table status
     cells such as OpenAI default, hosted, wrapper-only, varies, proprietary,

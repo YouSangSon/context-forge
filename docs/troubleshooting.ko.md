@@ -26,7 +26,7 @@
 키가 필요 없는 프로바이더를 사용하려면:
 ```bash
 EMBEDDING_PROVIDER=transformers   # 기본값 — 무료 로컬 ONNX (권장)
-EMBEDDING_PROVIDER=local          # CI / 오프라인 결정론적 stub
+EMBEDDING_PROVIDER=local          # CI / 오프라인 결정론적 스텁
 ```
 
 ### `Node.js ≥ 22 required`
@@ -57,7 +57,7 @@ Fail-closed startup gate. 둘 중 하나:
 ```bash
 EMBEDDING_PROVIDER=transformers   # 기본값 — 무료 로컬 ONNX
 # 또는
-EMBEDDING_PROVIDER=local          # CI / 오프라인 stub
+EMBEDDING_PROVIDER=local          # CI / 오프라인 스텁
 ```
 
 ### `Unsupported EMBEDDING_PROVIDER: <value>`

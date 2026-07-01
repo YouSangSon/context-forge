@@ -15,7 +15,7 @@
 | MCP stdio | 로컬 전용 (parent process가 binary 실행); parent의 identity 상속 |
 | Postgres | 직접 DB 접근은 모든 앱 레이어 컨트롤 우회; 백업 + 제한 |
 | Qdrant | vector 접근은 scope/auth 필터 우회; 별도 백업, 네트워크 격리 |
-| OpenAI 호출 | embedding용 컨텐츠가 네트워크 외부로; `EMBEDDING_PROVIDER=transformers` 는 의미 있는 semantic embedding을 on-box 유지 (`local` 은 결정론적 CI/offline stub) |
+| OpenAI 호출 | embedding용 컨텐츠가 네트워크 외부로; `EMBEDDING_PROVIDER=transformers` 는 의미 있는 semantic embedding을 on-box 유지 (`local` 은 결정론적 CI/오프라인 스텁) |
 
 ## 컨트롤
 
@@ -156,7 +156,7 @@ plan 계산 후 레코드가 수정되었으면 DELETE는 0 rows 반환, 오케�
 - **Embedding provider가 컨텐츠를 봄.** `EMBEDDING_PROVIDER=openai` 시 모든
   레코드 컨텐츠가 OpenAI에 전송. 컴플라이언스가 금지하면 의미 있는 로컬 semantic
   embedding에는 `transformers` 를 사용. `local` 은 retrieval 품질이 중요하지
-  않은 결정론적 CI/offline stub 용도.
+  않은 결정론적 CI/오프라인 스텁 용도.
 - **at-rest 토큰 저장** 은 앱 사이드 (env, .env 파일). KMS 연동은 Akasha 외부에서
   수행합니다.
 - **백업에는 memory content 포함.** `BACKUP_ENCRYPTION_KEY_FILE` 을 설정하면
