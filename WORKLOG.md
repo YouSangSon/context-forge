@@ -2,6 +2,32 @@
 
 ## 2026-07-01
 
+- Added explicit CI job timeouts:
+  - `.github/workflows/ci.yml` now sets `timeout-minutes: 30` on
+    `typecheck-and-test`, `pg-integration`, and `pgvector-integration`.
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now guards those timeouts so
+    hung jobs do not fall back to GitHub Actions' default 360-minute limit.
+  - Source checked: GitHub Actions workflow syntax documents
+    `jobs.<job_id>.timeout-minutes` and says the default job timeout is 360
+    minutes:
+    https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`5` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1825` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Refreshed compaction apply and MCP type comments:
   - `src/compact/apply-compaction.ts` now describes the destructive apply path,
     advisory-lock scope choice, and rate limit without internal phase labels.

@@ -19,6 +19,7 @@ jobs:
   typecheck-and-test:
     name: typecheck + test (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -54,6 +55,7 @@ jobs:
   pg-integration:
     name: pg integration tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16-alpine
@@ -97,6 +99,7 @@ jobs:
   pgvector-integration:
     name: pgvector integration tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       pgvector:
         image: pgvector/pgvector:pg16

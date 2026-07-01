@@ -36,4 +36,19 @@ describe("CI workflow hygiene", () => {
     );
     expect(auditStepIndex).toBeLessThan(typecheckStepIndex);
   });
+
+  it("sets explicit job timeouts so hung CI runs do not use the default 360 minutes", () => {
+    for (const jobId of [
+      "typecheck-and-test",
+      "pg-integration",
+      "pgvector-integration",
+    ]) {
+      expect(ciWorkflow).toMatch(
+        new RegExp(
+          `^  ${jobId}:\\n(?:    [^\\n]+\\n)*    timeout-minutes: 30\\n`,
+          "m",
+        ),
+      );
+    }
+  });
 });

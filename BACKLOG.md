@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI jobs now set explicit 30-minute job timeouts instead of relying on the
+  GitHub Actions 360-minute default, guarded by workflow hygiene coverage.
 - Compaction apply and MCP type comments now describe current apply/unarchive
   behavior without internal phase labels, guarded by public-docs drift
   coverage.
