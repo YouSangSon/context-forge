@@ -122,7 +122,7 @@ entity mention도 추출합니다. 그래서 `QDRANT_SNAPSHOT_TIMEOUT` 또는
 matching 옆에서 이 persistent entity graph를 exact-match rescue/boost 경로로
 사용합니다.
 
-## 데이터 흐름: compact apply (P17)
+## 데이터 흐름: compact apply
 
 ```
 compact_memory dryRun=false
@@ -156,7 +156,7 @@ visibility window로 밀어둡니다. claim 이후 worker가 크래시되어도 
 `npm run start:worker` 프로세스로 실행할 수 있으며, 두 경로 모두 같은 sweeper
 lifecycle을 사용합니다.
 
-## 데이터 흐름: unarchive (P19.1)
+## 데이터 흐름: unarchive
 
 ```
 unarchive_memory
@@ -164,7 +164,7 @@ unarchive_memory
 unarchiveCompaction (src/compact/unarchive-compaction.ts)
   ├─ findArchiveByIds         (org-scoped)
   ├─ archive 행별:
-  │    ├─ already_unarchived / org mismatch / pre-P19.1 (no source_id) 시 skip
+  │    ├─ already_unarchived / org mismatch / source_id 없음 시 skip
   │    ├─ restoreToCanonical  (원본 timestamp + source_id 보존하며
   │    │                       memory_records INSERT; 새 BIGSERIAL id)
   │    ├─ chunkText + insertChunks

@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Public architecture data-flow docs no longer expose internal `(P17)`,
+  `(P19.1)`, or `pre-P19.1` phase labels, guarded by public-docs drift
+  coverage.
 - Ingest job retry monitoring comments now describe the implemented
   `claimPendingForRetry` path instead of a future sweeper PR, guarded by
   public-docs drift coverage.

@@ -483,6 +483,15 @@ describe("public documentation drift checks", () => {
     );
   });
 
+  it("keeps public architecture data-flow docs free of internal phase labels", () => {
+    for (const path of ["docs/architecture.md", "docs/architecture.ko.md"]) {
+      const text = read(path);
+      expect(text).not.toContain("(P17)");
+      expect(text).not.toContain("(P19.1)");
+      expect(text).not.toContain("pre-P19.1");
+    }
+  });
+
   it("documents descriptor-driven tool validation in API docs", () => {
     expect(read("docs/api-reference.md")).toContain("shared tool schema");
     expect(read("docs/api-reference.ko.md")).toContain("공유 tool schema");

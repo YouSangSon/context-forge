@@ -2,6 +2,31 @@
 
 ## 2026-07-01
 
+- Cleaned up public architecture phase labels:
+  - `docs/architecture.md` and `docs/architecture.ko.md` now use feature
+    names for the compact apply and unarchive data-flow sections instead of
+    internal phase labels.
+  - The unarchive skip path now describes rows with missing `source_id`
+    directly instead of referring to `pre-P19.1`.
+  - `tests/scripts/public-docs-drift.test.ts` now guards against `(P17)`,
+    `(P19.1)`, and `pre-P19.1` returning to public architecture docs.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`39` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1822` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Refreshed ingest sweeper repository comments:
   - `src/jobs/ingest-job-repository.ts` now describes `listPendingForRetry` as
     a read-only monitoring/manual replay query and points production sweepers
