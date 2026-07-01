@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Contributor Test Command Alignment
+## Current Loop — Compaction Sweeper Comment Refresh
 
 Status:
-- README common commands and PR verification checklist use `npm test`, while
-  the CONTRIBUTING daily command tables still listed `npm run test`.
-- The loop aligns the contributor tables and extends public-docs drift coverage
-  to pin the exact table rows.
+- `.env.example` and `src/compact/sweeper-loop.ts` still had planning-era
+  `P17`/`P19` wording around the current compaction cleanup sweeper.
+- The loop refreshes those comments and extends public-docs drift coverage for
+  the exact stale phrases.
 
 Verification:
 - Focused public-docs drift coverage, typecheck, build, audit, full tests, and

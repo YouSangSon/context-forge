@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Compaction cleanup sweeper comments now describe current env-driven retry
+  behavior without planning-era phase labels, guarded by public-docs drift
+  coverage.
 - CONTRIBUTING daily command tables now use the same `npm test` spelling as
   README and PR verification guidance, guarded by public-docs drift coverage.
 - README common command lists now include build and moderate-level dependency

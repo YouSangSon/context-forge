@@ -506,13 +506,17 @@ describe("public documentation drift checks", () => {
     expect(text).not.toContain("pre-P19.1 archive row");
   });
 
-  it("keeps compaction apply and MCP type comments current", () => {
+  it("keeps compaction apply, sweeper, and MCP type comments current", () => {
+    const envExample = read(".env.example");
     const applyCompaction = read("src/compact/apply-compaction.ts");
+    const sweeperLoop = read("src/compact/sweeper-loop.ts");
     const mcpTypes = read("src/mcp/types.ts");
 
+    expect(envExample).not.toContain("P17 compaction-apply");
     expect(applyCompaction).not.toContain("destructive P17 apply path");
     expect(applyCompaction).not.toContain("scoped out for P17");
     expect(applyCompaction).not.toContain("P17 step 6");
+    expect(sweeperLoop).not.toContain("P19 ships");
     expect(mcpTypes).not.toContain("P17: populated when dryRun=false");
     expect(mcpTypes).not.toContain("P19.1 — unarchive recovery flow");
   });

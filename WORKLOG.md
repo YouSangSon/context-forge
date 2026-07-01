@@ -2,6 +2,30 @@
 
 ## 2026-07-01
 
+- Refreshed compaction cleanup sweeper comments:
+  - `.env.example` now describes compaction-apply Qdrant cleanup retries
+    without the planning-era `P17` label.
+  - `src/compact/sweeper-loop.ts` now describes the default-disabled
+    env-driven opt-in behavior without saying the machinery ships in `P19`.
+  - `tests/scripts/public-docs-drift.test.ts` now guards those exact stale
+    phrases alongside the existing compaction comment checks.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`41` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1826` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned contributor test command spelling:
   - `CONTRIBUTING.md` and `CONTRIBUTING.ko.md` now use `npm test` in the daily
     command tables, matching README common commands and PR verification.
