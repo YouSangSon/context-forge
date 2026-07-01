@@ -10,12 +10,25 @@ describe("toNumber", () => {
     expect(toNumber(input)).toBe(expected);
   });
 
-  it.each([Number.NaN, Number.POSITIVE_INFINITY, "", " \n\t ", "not-a-number"])(
-    "rejects malformed database number values: %s",
+  const malformedValues: unknown[] = [
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    "",
+    " \n\t ",
+    "not-a-number",
+    null,
+    undefined,
+    false,
+    true,
+    [],
+    [1],
+    { value: "1" },
+  ];
+
+  it.each(malformedValues.map((input) => [input]))(
+    "rejects malformed database number values: %#",
     (input) => {
-      expect(() => toNumber(input as number | string)).toThrow(
-        "database number must be finite",
-      );
+      expect(() => toNumber(input)).toThrow("database number must be finite");
     },
   );
 });

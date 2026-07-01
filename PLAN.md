@@ -4,13 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — DB Number Mapping Guard
+## Current Loop — DB Number Runtime Type Guard
 
 Status:
-- `toNumber` now rejects malformed database numeric values instead of silently
-  returning `NaN` or accepting blank strings.
-- `tests/store/db-utils.test.ts` covers finite numeric values and malformed DB
-  number inputs; the ingest-job serialization fixture now uses DB row shape.
+- `toNumber` now accepts `unknown` at the runtime boundary and rejects
+  non-number/string values before JavaScript numeric coercion can turn them into
+  `0` or `1`.
+- `tests/store/db-utils.test.ts` covers `null`, booleans, arrays, objects,
+  non-finite numbers, blank strings, and non-numeric strings.
 
 Verification:
 - Focused repository mapping tests passed.

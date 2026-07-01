@@ -2,7 +2,11 @@ export function toIsoString(value: string | Date): string {
   return value instanceof Date ? value.toISOString() : value;
 }
 
-export function toNumber(value: number | string): number {
+export function toNumber(value: unknown): number {
+  if (typeof value !== "number" && typeof value !== "string") {
+    throw new Error("database number must be finite");
+  }
+
   const numberValue = typeof value === "number" ? value : Number(value);
   if (
     !Number.isFinite(numberValue) ||

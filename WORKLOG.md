@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Tightened DB row number runtime typing:
+  - `src/store/db-utils.ts` now treats `toNumber` as an `unknown` runtime
+    boundary and rejects non-number/string inputs before JavaScript coercion can
+    turn values like `null`, `false`, or arrays into finite numbers.
+  - `tests/store/db-utils.test.ts` covers non-finite numbers, blank strings,
+    non-numeric strings, `null`, `undefined`, booleans, arrays, and objects.
+  - Source checked: `toNumber` callers are repository row mappers in memory,
+    canonical indexing, ingest-job, and goal-run storage paths.
+
+Verification plan:
+- `npx vitest run tests/store/db-utils.test.ts tests/jobs/serialize-error.test.ts tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts tests/jobs/ingest-job-repository.test.ts tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/db-utils.test.ts tests/jobs/serialize-error.test.ts tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts tests/jobs/ingest-job-repository.test.ts tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`169` tests passed, `13` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1927` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded DB row number mapping:
   - `src/store/db-utils.ts` now rejects non-finite or blank numeric values in
     `toNumber` instead of silently mapping them to `NaN` or `0`.

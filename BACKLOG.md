@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Shared DB number mapping now rejects non-number/string runtime values before
+  JavaScript coercion can turn `null`, booleans, or arrays into numeric values.
 - Shared DB number mapping now rejects malformed finite-number values before
   repository row mapping can silently propagate `NaN`.
 - Code-quality audit triage notes now record current-branch resolution evidence
