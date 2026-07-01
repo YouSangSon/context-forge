@@ -706,13 +706,25 @@ function mapRunRow(row: {
   qdrant_failed: number | string;
 }): CompactionRunRow {
   return {
-    id: toNumber(row.id),
+    id: toPositiveSafeInteger(row.id, "compaction run id"),
     organizationId: row.organization_id,
     status: row.status,
-    archivedCount: toNumber(row.archived_count),
-    duplicateCount: toNumber(row.duplicate_count),
-    decayCount: toNumber(row.decay_count),
-    qdrantFailed: toNumber(row.qdrant_failed),
+    archivedCount: toNonNegativeSafeInteger(
+      row.archived_count,
+      "compaction run archived_count",
+    ),
+    duplicateCount: toNonNegativeSafeInteger(
+      row.duplicate_count,
+      "compaction run duplicate_count",
+    ),
+    decayCount: toNonNegativeSafeInteger(
+      row.decay_count,
+      "compaction run decay_count",
+    ),
+    qdrantFailed: toNonNegativeSafeInteger(
+      row.qdrant_failed,
+      "compaction run qdrant_failed",
+    ),
   };
 }
 

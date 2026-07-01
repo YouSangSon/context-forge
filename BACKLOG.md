@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository run row mapping now validates compaction run ids
+  and outcome counters before returning create/find run records.
 - Memory archive repository restore row mapping now validates restored
   `memory_records.id` values before returning unarchive results.
 - Memory archive repository row mapping now validates Qdrant cleanup attempt

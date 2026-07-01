@@ -4,17 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Restored Memory ID Row Mapping
+## Current Loop — Compaction Run Row Mapping
 
 Status:
-- `src/store/memory-archive-repository.ts` now maps the `memory_records.id`
-  returned by `restoreToCanonical` as a positive safe integer before returning
-  restored record ids to the unarchive flow.
-- `tests/store/memory-archive-repository.test.ts` now covers malformed restored
-  id rows through mock-pool restore coverage.
+- `src/store/memory-archive-repository.ts` now maps compaction run ids as
+  positive safe integers and run outcome counters as non-negative safe
+  integers before returning create/find run rows.
+- `tests/store/memory-archive-repository.test.ts` now covers malformed
+  existing run id and counter rows through mock-pool idempotency lookup
+  coverage.
 
 Verification:
-- Focused archive/unarchive/db-utils/convention tests passed.
+- Focused archive/db-utils/apply/convention tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from

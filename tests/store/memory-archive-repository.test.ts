@@ -24,6 +24,10 @@ const RUN_ROW = {
   qdrant_failed: "0",
 };
 
+function runRow(overrides: Record<string, unknown> = {}) {
+  return { ...RUN_ROW, ...overrides };
+}
+
 describe("createMemoryArchiveRepository", () => {
   it.each([
     {
@@ -90,6 +94,36 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
     expect(result.status).toBe("completed");
     expect(result.archivedCount).toBe(5);
     expect(call).toBe(2);
+  });
+
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "compaction run id must be a positive safe integer",
+    },
+    {
+      rowPatch: { archived_count: "-1" },
+      message: "compaction run archived_count must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { duplicate_count: "1.5" },
+      message: "compaction run duplicate_count must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { decay_count: "bad" },
+      message: "database number must be finite",
+    },
+    {
+      rowPatch: { qdrant_failed: "-1" },
+      message: "compaction run qdrant_failed must be a non-negative safe integer",
+    },
+  ])("rejects malformed existing run row values %#", async ({ rowPatch, message }) => {
+    const { pool } = makeMockPool(async () => ({ rows: [runRow(rowPatch)] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.findRunByIdempotencyKey("00000000-0000-0000-0000-000000000007"),
+    ).rejects.toThrow(message);
   });
 
   it("throws when insert returns 0 rows AND no existing row found", async () => {

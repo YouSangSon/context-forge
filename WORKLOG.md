@@ -2,6 +2,36 @@
 
 ## 2026-07-02
 
+- Guarded compaction run row mapping:
+  - `src/store/memory-archive-repository.ts` now maps compaction run ids
+    through positive safe-integer validation and run outcome counters through
+    non-negative safe-integer validation before returning create/find run rows.
+  - `tests/store/memory-archive-repository.test.ts` now covers malformed
+    existing run id, `archived_count`, `duplicate_count`, `decay_count`, and
+    `qdrant_failed` rows through mock-pool idempotency lookup coverage.
+  - Source checked: `compaction_runs.id` is `BIGSERIAL`, while
+    `archived_count`, `duplicate_count`, `decay_count`, and `qdrant_failed`
+    are `INTEGER DEFAULT 0` columns in migration
+    `005_add_compaction_archive.sql`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/apply-compaction.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/apply-compaction.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`138` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2030` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded restored memory id row mapping:
   - `src/store/memory-archive-repository.ts` now maps the
     `memory_records.id` returned by `restoreToCanonical` through positive
