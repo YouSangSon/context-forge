@@ -30,6 +30,7 @@ type PackageLock = {
       engines?: Record<string, string>;
       license?: unknown;
       name?: unknown;
+      optionalDependencies?: Record<string, string>;
       version?: unknown;
     }
   >;
@@ -99,6 +100,8 @@ const EXPECTED_DEVELOPMENT_DEPENDENCIES = [
 const EXPECTED_PACKAGE_OVERRIDES = {
   esbuild: "^0.28.1",
 } as const;
+
+const EXPECTED_ESBUILD_LOCK_VERSION = "0.28.1";
 
 function readPackageJson(): PackageJson {
   return JSON.parse(fs.readFileSync("package.json", "utf8")) as PackageJson;
@@ -192,6 +195,25 @@ describe("package manifest publish surface", () => {
     const packageJson = readPackageJson();
 
     expect(packageJson.overrides).toEqual(EXPECTED_PACKAGE_OVERRIDES);
+  });
+
+  it("keeps the esbuild override reflected in lockfile packages", () => {
+    const packageLock = readPackageLock();
+    const esbuildPackage = packageLock.packages["node_modules/esbuild"];
+    const optionalDependencies = esbuildPackage?.optionalDependencies ?? {};
+    const optionalDependencyNames = Object.keys(optionalDependencies).sort();
+
+    expect(esbuildPackage?.version).toBe(EXPECTED_ESBUILD_LOCK_VERSION);
+    expect(optionalDependencyNames.length).toBeGreaterThan(0);
+
+    for (const packageName of optionalDependencyNames) {
+      expect(optionalDependencies[packageName]).toBe(
+        EXPECTED_ESBUILD_LOCK_VERSION,
+      );
+      expect(packageLock.packages[`node_modules/${packageName}`]?.version).toBe(
+        EXPECTED_ESBUILD_LOCK_VERSION,
+      );
+    }
   });
 
   it("uses an explicit package allowlist for runtime and public docs assets", () => {

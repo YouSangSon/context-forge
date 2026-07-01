@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Module Type Guard
+## Current Loop — Esbuild Lockfile Override Guard
 
 Status:
-- Package manifest coverage guards the top-level `type: "module"` metadata
-  that keeps generated `.js` files on ESM module resolution.
-- The loop catches package metadata drift where built NodeNext output would be
-  interpreted with the wrong module system.
+- Package manifest coverage guards that the current `esbuild` npm override is
+  reflected in lockfile package resolution.
+- The loop catches package-lock drift where the root override remains present
+  but the resolved build tooling package tree moves to another version.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

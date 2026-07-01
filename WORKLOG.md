@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded `esbuild` override lockfile resolution:
+  - `tests/scripts/package-manifest.test.ts` now checks that
+    `node_modules/esbuild` and its optional `@esbuild/*` platform packages stay
+    resolved to `0.28.1` in `package-lock.json`.
+  - This catches lockfile drift when the package override remains present but
+    the resolved build tooling package tree moves to another version.
+  - Source checked: npm documents `overrides` as a root `package.json` field
+    that changes dependency tree resolution, and `package-lock.json` as the
+    committed dependency tree representation:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/#overrides
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`16` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1860` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package module type metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that top-level
     `type` stays `module` for generated `.js` files.
