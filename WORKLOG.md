@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded package script config metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package `config`
+    stays absent in both `package.json` and the lockfile root metadata.
+  - This catches metadata drift that would add npm-managed package script
+    configuration/env behavior without an explicit tooling policy decision.
+  - Source checked: npm documents `config` as package script configuration
+    parameters that persist across upgrades and can be referenced from scripts
+    through `npm_package_config_*` environment variables:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`29` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1873` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package devEngines metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package
     `devEngines` stays absent in both `package.json` and the lockfile root

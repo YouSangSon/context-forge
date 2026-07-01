@@ -8,6 +8,7 @@ type PackageJson = {
   bundledDependencies?: unknown;
   bundleDependencies?: unknown;
   bugs?: unknown;
+  config?: unknown;
   cpu?: unknown;
   dependencies?: Record<string, string>;
   description?: unknown;
@@ -42,6 +43,7 @@ type PackageLock = {
   packages: Record<
     string,
     {
+      config?: unknown;
       dependencies?: Record<string, string>;
       devEngines?: unknown;
       devDependencies?: Record<string, string>;
@@ -259,6 +261,14 @@ describe("package manifest publish surface", () => {
 
     expect(packageJson.devEngines).toBeUndefined();
     expect(lockfileRoot?.devEngines).toBeUndefined();
+  });
+
+  it("does not declare npm package script config", () => {
+    const packageJson = readPackageJson();
+    const lockfileRoot = readPackageLock().packages[""];
+
+    expect(packageJson.config).toBeUndefined();
+    expect(lockfileRoot?.config).toBeUndefined();
   });
 
   it("keeps npm package support metadata pointed at the project", () => {
