@@ -150,7 +150,7 @@ describe("assertNoSecrets", () => {
         "AWS key AKIAIOSFODNN7EXAMPLE and GitHub ghp_AAAA1111BBBB2222CCCC3333DDDD4444EEEE.",
       );
       throw new Error("expected assertNoSecrets to throw");
-    } catch (error) {
+    } catch (error: unknown) {
       expect(error).toBeInstanceOf(SecretDetectedError);
       const detected = (error as SecretDetectedError).categories;
       expect(detected).toContain("aws-access-key");

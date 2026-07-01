@@ -8,8 +8,10 @@ const excludedCatchBindingFiles = new Set([
   "src/app/admin-memory-page.ts",
 ]);
 
-function trackedSourceFiles(): string[] {
-  return execFileSync("git", ["ls-files", "src"], { encoding: "utf8" })
+function trackedTypeScriptFiles(): string[] {
+  return execFileSync("git", ["ls-files", "src", "tests", "scripts"], {
+    encoding: "utf8",
+  })
     .split(/\r?\n/)
     .filter((path) => path.endsWith(".ts"))
     .filter((path) => !excludedCatchBindingFiles.has(path))
@@ -26,12 +28,12 @@ describe("source code conventions", () => {
     const catchBindingPattern = /(^|[^.\w$])catch\s*\(([^)]*)\)/g;
     const typedUnknownBindingPattern = /^[A-Za-z_$][\w$]*:\s*unknown$/;
 
-    for (const path of trackedSourceFiles()) {
+    for (const path of trackedTypeScriptFiles()) {
       const text = fs.readFileSync(path, "utf8");
       for (const match of text.matchAll(catchBindingPattern)) {
         const binding = match[2]?.trim() ?? "";
         if (!typedUnknownBindingPattern.test(binding)) {
-          violations.push(`${path}:${lineNumberAt(text, match.index ?? 0)} catch (${binding})`);
+          violations.push(`${path}:${lineNumberAt(text, match.index ?? 0)} catch binding ${binding}`);
         }
       }
     }

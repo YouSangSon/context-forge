@@ -409,7 +409,7 @@ describe("retrieveMemory", () => {
         projectKey: "project-alpha",
         limit: 5,
       });
-    } catch (err) {
+    } catch (err: unknown) {
       caught = err;
     }
 

@@ -244,7 +244,7 @@ describe.skipIf(!HAS_TEST_URL)("pgvector adapter — integration against real pg
         await pool.query("SELECT 1");
         lastErr = undefined;
         break;
-      } catch (err) {
+      } catch (err: unknown) {
         lastErr = err;
         await new Promise((r) => setTimeout(r, 1000));
       }
@@ -688,7 +688,7 @@ describe.skipIf(!HAS_TEST_URL)("ingest sweeper recovery — integration against 
         await pool.query("SELECT 1");
         lastErr = undefined;
         break;
-      } catch (err) {
+      } catch (err: unknown) {
         lastErr = err;
         await new Promise((r) => setTimeout(r, 1000));
       }
@@ -840,7 +840,7 @@ describe.skipIf(!HAS_TEST_URL)("pgvector adapter — deleteByRecordIds prevents 
         await pool.query("SELECT 1");
         lastErr = undefined;
         break;
-      } catch (err) {
+      } catch (err: unknown) {
         lastErr = err;
         await new Promise((r) => setTimeout(r, 1000));
       }

@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Eval Harness Runtime Import Guard
+## Current Loop — Test Catch Binding Convention
 
 Status:
-- The package allowlist now excludes `dist/src/eval/`, which is correct only
-  while the eval harness stays test-only.
-- The loop adds package manifest coverage that scans runtime source files and
-  fails if they import the excluded eval harness.
+- Source catch bindings were guarded, but several test files still used
+  untyped `catch (err)`/`catch (error)` bindings.
+- The loop annotates those test catch bindings and widens source convention
+  coverage across tracked `src/`, `tests/`, and `scripts/` TypeScript files.
 
 Verification:
-- Focused package manifest coverage, typecheck, build, audit, full tests, and
+- Focused source convention coverage, typecheck, build, audit, full tests, and
   diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

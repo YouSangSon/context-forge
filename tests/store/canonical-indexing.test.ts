@@ -827,7 +827,7 @@ describe("canonical indexing", () => {
           },
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
       caught = error;
     }
 

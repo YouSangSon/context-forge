@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- TypeScript catch binding convention coverage now spans tracked source,
+  script, and test files, with remaining test catch bindings typed as
+  `unknown`.
 - Package manifest coverage now guards that runtime source files do not import
   the excluded `src/eval/` harness.
 - npm package tarballs now exclude the compiled eval harness under
