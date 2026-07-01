@@ -2,6 +2,24 @@
 
 ## 2026-07-02
 
+- Hardened Qdrant vector score mapping:
+  - `src/vector/qdrant-index.ts` now validates each Qdrant query result score
+    as a finite number before returning a `VectorHit`.
+  - `tests/vector/qdrant-index.test.ts` now covers malformed non-finite scores,
+    keeping invalid vector backend responses from reaching search ranking.
+  - The pgvector adapter already validates query row scores; this aligns the
+    Qdrant adapter with that fail-closed boundary without changing score range
+    semantics.
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/search/rank-results.test.ts --reporter=dot`
+  (`4` files passed; `101` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2053` tests passed, `34` skipped)
+- `git diff --check`
+
 - Switched dependency probe durations to monotonic time:
   - `src/health/check-dependencies.ts` now measures probe durations with
     `process.hrtime.bigint()` instead of `Date.now()` differences, preventing

@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant vector query row mapping now validates returned scores as finite
+  numbers before returning `VectorHit[]`, matching the pgvector adapter's
+  fail-closed score boundary.
 - Dependency readiness probe durations now use monotonic `hrtime` deltas
   instead of wall-clock `Date.now()` differences, keeping `/readyz` metrics
   non-negative during clock adjustments.

@@ -84,7 +84,7 @@ export function createQdrantVectorIndex(
 
       return response.points.map((point) => ({
         id: typeof point.id === "string" ? point.id : String(point.id),
-        score: point.score,
+        score: toQdrantFiniteNumber(point.score, "score"),
         payload: point.payload && typeof point.payload === "object"
           ? (point.payload as Record<string, unknown>)
           : {},
@@ -144,4 +144,11 @@ export function createQdrantVectorIndex(
       await client.delete(collectionName, selector);
     },
   };
+}
+
+function toQdrantFiniteNumber(value: unknown, fieldName: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${fieldName} must be a finite number`);
+  }
+  return value;
 }

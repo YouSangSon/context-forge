@@ -179,6 +179,28 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     expect(hits[0]).toEqual({ id: "chunk:15", score: 0.92, payload: { memory_record_id: 15, chunk_id: 100 } });
     expect(hits[1]).toEqual({ id: "chunk:16", score: 0.85, payload: { memory_record_id: 16, chunk_id: 101 } });
   });
+
+  it("rejects non-finite Qdrant scores before returning VectorHit[]", async () => {
+    const client = makeClient();
+    client.query.mockResolvedValue({
+      points: [
+        { id: "chunk:15", score: Number.NaN, payload: { memory_record_id: 15 } },
+      ],
+    });
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.query(
+        [0.1],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "p" }],
+          projectKey: "p",
+        },
+        10,
+      ),
+    ).rejects.toThrow("score must be a finite number");
+  });
 });
 
 describe("createQdrantVectorIndex — point building (upsert)", () => {
