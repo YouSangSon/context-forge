@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Private Publish Guard
+## Current Loop — Package Lockfile Precedence Guard
 
 Status:
-- Package manifest coverage guards that the npm package is not marked
-  `private: true`.
-- The loop catches metadata drift that would make npm refuse publication while
-  leaving normal release metadata changes alone.
+- Package manifest coverage guards that tracked `npm-shrinkwrap.json` stays
+  absent so `package-lock.json` remains the active npm lockfile.
+- The loop catches lockfile precedence drift that would make npm ignore the
+  repository's existing package-lock contract.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

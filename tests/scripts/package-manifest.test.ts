@@ -229,6 +229,16 @@ describe("package manifest publish surface", () => {
     expect(packageLock.packages[""]).toBeDefined();
   });
 
+  it("keeps package-lock as the active npm lockfile", () => {
+    const trackedShrinkwrap = execFileSync(
+      "git",
+      ["ls-files", "npm-shrinkwrap.json"],
+      { encoding: "utf8" },
+    ).trim();
+
+    expect(trackedShrinkwrap).toBe("");
+  });
+
   it("keeps runtime dependencies separate from development tooling", () => {
     const packageJson = readPackageJson();
 

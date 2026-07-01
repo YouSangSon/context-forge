@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that tracked `npm-shrinkwrap.json` stays
+  absent so `package-lock.json` remains the active npm lockfile.
 - Package manifest coverage now guards that the npm package is not marked
   `private: true`, avoiding accidental publish refusal.
 - Package manifest coverage now guards stable npm package identity metadata for

@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- Guarded package lockfile precedence:
+  - `tests/scripts/package-manifest.test.ts` now checks that tracked
+    `npm-shrinkwrap.json` stays absent.
+  - This catches lockfile precedence drift where npm would ignore the
+    repository's `package-lock.json` contract in favor of shrinkwrap metadata.
+  - Source checked: npm documents that root `npm-shrinkwrap.json` takes
+    precedence over `package-lock.json` when both are present:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`20` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1864` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded npm private publish metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package `private`
     is not `true`.
