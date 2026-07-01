@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded lockfile root bin metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that the package-lock
+    root descriptor does not declare `bin` executable metadata.
+  - This keeps npm-installed executable entrypoint surface absent unless a
+    future packaging decision intentionally adds a CLI entrypoint.
+  - Sources checked: npm documents package-lock package descriptors as carrying
+    package metadata including `bin`, and documents package `bin` as
+    executable files npm links into PATH on install:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`39` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1883` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded lockfile root platform metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that the package-lock
     root descriptor does not declare `os`, `cpu`, or `libc` platform

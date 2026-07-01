@@ -49,6 +49,7 @@ type PackageLock = {
   packages: Record<
     string,
     {
+      bin?: unknown;
       config?: unknown;
       cpu?: unknown;
       dependencies?: Record<string, string>;
@@ -552,6 +553,7 @@ describe("package manifest publish surface", () => {
 
   it("builds clean dist output before npm pack and does not add new package entrypoint surface", () => {
     const packageJson = readPackageJson();
+    const lockfileRoot = readPackageLock().packages[""];
 
     expect(packageJson.scripts?.clean).toBe(
       "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
@@ -559,6 +561,7 @@ describe("package manifest publish surface", () => {
     expect(packageJson.scripts?.build).toBe("npm run clean && tsc -p tsconfig.json");
     expect(packageJson.scripts?.prepack).toBe("npm run build");
     expect(packageJson.bin).toBeUndefined();
+    expect(lockfileRoot?.bin).toBeUndefined();
     expect(packageJson.exports).toBeUndefined();
     expect(packageJson.main).toBeUndefined();
   });
