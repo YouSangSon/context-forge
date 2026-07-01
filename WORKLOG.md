@@ -2,6 +2,34 @@
 
 ## 2026-07-01
 
+- Guarded local secret/generated artifact ignore patterns:
+  - `.gitignore` now ignores local `.env` variants, `.envrc`, and generated
+    `.akasha/` client/hook artifacts while keeping `.env.example` tracked.
+  - `tests/scripts/repo-secret-hygiene.test.ts` now verifies those ignore
+    patterns stay present and those local artifacts stay out of tracked files.
+
+Verification plan:
+- `npx vitest run tests/scripts/repo-secret-hygiene.test.ts`
+- `git check-ignore -v .env .env.local .envrc .akasha/mcp/codex.toml`
+- `git check-ignore -v .env.example` (expected no match)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/repo-secret-hygiene.test.ts` (`6` tests passed)
+- `git check-ignore -v .env .env.local .envrc .akasha/mcp/codex.toml`
+  (all ignored by `.gitignore`)
+- `git check-ignore -v .env.example` (no match; tracked template remains
+  available)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1814` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Added generated metadata ignore-pattern coverage:
   - `tests/scripts/repo-secret-hygiene.test.ts` now verifies `.gitignore`
     keeps the desktop/editor metadata patterns that the tracked-file hygiene

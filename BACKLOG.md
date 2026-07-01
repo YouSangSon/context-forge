@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `.gitignore` now ignores local `.env` variants, `.envrc`, and generated
+  `.akasha/` artifacts while keeping `.env.example` tracked, with repo hygiene
+  coverage for ignore patterns and tracked-file exclusions.
 - Repo hygiene coverage now guards the `.gitignore` patterns for common
   desktop/editor metadata files.
 - Removed ignored desktop metadata artifacts from the workspace and broadened

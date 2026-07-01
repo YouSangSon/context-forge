@@ -8,6 +8,12 @@ desktop.ini
 *.rej
 *~
 
+.env
+.env.*
+!.env.example
+.envrc
+.akasha/
+
 .worktrees/
 dist/
 node_modules/

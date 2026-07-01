@@ -44,6 +44,13 @@ const generatedMetadataIgnorePatterns = [
   "*.rej",
   "*~",
 ];
+const localSecretArtifactIgnorePatterns = [
+  ".env",
+  ".env.*",
+  "!.env.example",
+  ".envrc",
+  ".akasha/",
+];
 
 function trackedFiles(): string[] {
   return execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
@@ -64,6 +71,15 @@ function isGeneratedMetadataPath(path: string): boolean {
   );
 }
 
+function isLocalSecretArtifactPath(path: string): boolean {
+  return (
+    path === ".env" ||
+    (path.startsWith(".env.") && path !== ".env.example") ||
+    path === ".envrc" ||
+    path.startsWith(".akasha/")
+  );
+}
+
 function hasOnlyPlaceholderDbCredentials(content: string): boolean {
   const contentWithoutEnvPlaceholders = content.replaceAll(
     POSTGRES_ENV_USERINFO_RE,
@@ -78,14 +94,22 @@ function hasOnlyPlaceholderDbCredentials(content: string): boolean {
 }
 
 describe("repo secret hygiene", () => {
+  it("keeps local secret and generated config artifacts ignored", () => {
+    const ignoredPatterns = gitIgnorePatterns();
+
+    expect(
+      localSecretArtifactIgnorePatterns.filter(
+        (pattern) => !ignoredPatterns.has(pattern),
+      ),
+    ).toEqual([]);
+  });
+
+  it("keeps local secret and generated config artifacts out of tracked files", () => {
+    expect(trackedFiles().filter(isLocalSecretArtifactPath)).toEqual([]);
+  });
+
   it("keeps generated metadata files ignored", () => {
-    const ignoredPatterns = new Set(
-      fs
-        .readFileSync(".gitignore", "utf8")
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter((line) => line && !line.startsWith("#")),
-    );
+    const ignoredPatterns = gitIgnorePatterns();
 
     expect(
       generatedMetadataIgnorePatterns.filter(
@@ -174,3 +198,13 @@ describe("repo secret hygiene", () => {
     expect(findings).toEqual([]);
   });
 });
+
+function gitIgnorePatterns(): Set<string> {
+  return new Set(
+    fs
+      .readFileSync(".gitignore", "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#")),
+  );
+}
