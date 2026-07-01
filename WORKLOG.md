@@ -2,6 +2,37 @@
 
 ## 2026-07-02
 
+- Reused parsed source metadata during memory updates:
+  - `src/store/memory-repository.ts` now calls
+    `parseStoredPostgresSourceRef(currentRow.source_ref)` once in
+    `updateMemoryRecord` before rebuilding entity graph provenance.
+  - The parsed `sourceRef` and `uri` are reused for
+    `persistPostgresEntityGraph`, so malformed legacy `source_ref` values do
+    not trigger duplicate warning logs during a single update.
+  - Source checked: CQ-07 had already introduced warning behavior for malformed
+    stored `source_ref`; this follow-up keeps that warning path single-shot in
+    the update flow:
+    `docs/superpowers/audit/04-code-quality.md`,
+    `tests/store/parse-source-ref.test.ts`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/parse-source-ref.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/parse-source-ref.test.ts --reporter=dot`
+  (`84` tests passed, `7` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1911` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Aligned public secret-scrubber coverage docs:
   - `README.md`, `docs/architecture.md`, and `docs/api-reference.md` now state
     that provider API keys, PEM blocks, bearer/JWT tokens, and credentialed

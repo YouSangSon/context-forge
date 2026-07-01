@@ -580,6 +580,9 @@ export function createMemoryRepository(
         }
 
         await deletePostgresEntityGraphForMemory(client, input.id, input.organizationId);
+        const currentSourceMetadata = parseStoredPostgresSourceRef(
+          currentRow.source_ref,
+        );
         await persistPostgresEntityGraph(client, {
           input: {
             organizationId: input.organizationId,
@@ -596,10 +599,9 @@ export function createMemoryRepository(
               scopeType: currentRow.source_scope_type,
               scopeId: currentRow.source_scope_id,
               sourceType: currentRow.source_type,
-              sourceRef:
-                parseStoredPostgresSourceRef(currentRow.source_ref).sourceRef,
+              sourceRef: currentSourceMetadata.sourceRef,
               title: currentRow.source_title ?? undefined,
-              uri: parseStoredPostgresSourceRef(currentRow.source_ref).uri ?? undefined,
+              uri: currentSourceMetadata.uri ?? undefined,
             },
           },
           organizationId: input.organizationId,

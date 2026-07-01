@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `updateMemoryRecord` now reuses parsed source metadata while rebuilding entity
+  graph provenance, avoiding duplicate `source_ref` JSON parsing and duplicate
+  malformed-source warnings.
 - Public docs drift coverage now keeps README, architecture, and API reference
   secret scrubber summaries aligned with the implemented provider-key,
   bearer/JWT, PEM, and credentialed database URL categories.
