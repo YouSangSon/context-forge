@@ -245,6 +245,16 @@ describe("public documentation drift checks", () => {
     expect(options).toEqual(["transformers", "openai", "local"]);
   });
 
+  it("keeps bug report security links rooted at the repository", () => {
+    const template = read(".github/ISSUE_TEMPLATE/bug_report.yml");
+
+    expect(template).not.toContain("](../SECURITY.md)");
+    expect(snippetsAround(template, "[SECURITY.md]")).toHaveLength(2);
+    for (const snippet of snippetsAround(template, "[SECURITY.md]")) {
+      expect(snippet).toContain("[SECURITY.md](../../SECURITY.md)");
+    }
+  });
+
   it("documents current embedding provider module filenames", () => {
     for (const modulePath of [
       "src/embedding/transformers-embedding.ts",
