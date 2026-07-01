@@ -15,6 +15,7 @@ type PackageJson = {
   name?: unknown;
   overrides?: Record<string, string>;
   scripts?: Record<string, string>;
+  type?: unknown;
   version?: unknown;
 };
 
@@ -147,6 +148,12 @@ describe("package manifest publish surface", () => {
     expect(lockfileRoot?.devDependencies?.["@types/node"]).toBe(
       packageJson.devDependencies?.["@types/node"],
     );
+  });
+
+  it("keeps generated JavaScript on ESM module resolution", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.type).toBe("module");
   });
 
   it("keeps lockfile root package metadata aligned with package.json", () => {

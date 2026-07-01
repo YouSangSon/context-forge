@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- Guarded package module type metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that top-level
+    `type` stays `module` for generated `.js` files.
+  - This catches package metadata drift where NodeNext build output could be
+    interpreted with the wrong module system.
+  - Source checked: Node.js documents `.js` files as ES modules when the
+    nearest parent `package.json` has top-level `"type": "module"`:
+    https://nodejs.org/api/packages.html#determining-module-system
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`15` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1859` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package override metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that
     `overrides.esbuild` stays on the current `^0.28.1` build tooling override.
