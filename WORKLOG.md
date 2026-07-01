@@ -2,6 +2,37 @@
 
 ## 2026-07-02
 
+- Guarded memory graph entity row mapping:
+  - `src/store/memory-repository.ts` now maps graph entity `mention_count`
+    through a non-negative safe-integer row helper and maps `memory_ids` as
+    positive safe integers.
+  - Malformed graph entity counts or memory ids now fail before relationship
+    lookup runs, avoiding graph responses built from invalid entity rows.
+  - `tests/store/memory-repository.test.ts` now covers malformed
+    `mention_count` and `memory_ids` rows through mock-pool
+    `inspectMemoryGraph` coverage.
+  - Source checked: graph entity rows compute `mention_count` with
+    `COUNT(DISTINCT mem.memory_record_id)::int` and `memory_ids` with
+    `array_agg(DISTINCT mem.memory_record_id)`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/mcp/server.test.ts tests/search/retrieve-memory.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/mcp/server.test.ts tests/search/retrieve-memory.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`269` tests passed, `7` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1973` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded goal run counter row mapping:
   - `src/goal-run/goal-run-repository.ts` now maps
     `goal_runs.iteration_count` through a non-negative safe-integer row helper

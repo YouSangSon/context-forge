@@ -945,6 +945,61 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     ]);
   });
 
+  it.each([
+    {
+      rowPatch: { mention_count: "-1" },
+      message: "graph entity mention_count must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { mention_count: "1.5" },
+      message: "graph entity mention_count must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { memory_ids: ["42", "0"] },
+      message: "graph entity memory_ids[1] must be a positive safe integer",
+    },
+    {
+      rowPatch: { memory_ids: ["bad"] },
+      message: "database number must be finite",
+    },
+  ])("inspectMemoryGraph rejects malformed graph entity rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({
+          rows: [
+            {
+              id: "91",
+              organization_id: "org-a",
+              kind: "code_symbol",
+              normalized: "qdrant_snapshot_timeout",
+              display_text: "QDRANT_SNAPSHOT_TIMEOUT",
+              first_seen_at: "2026-06-26T00:00:00.000Z",
+              last_seen_at: "2026-06-27T00:00:00.000Z",
+              mention_count: "2",
+              memory_ids: ["42", "41"],
+              ...rowPatch,
+            },
+          ],
+        });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.inspectMemoryGraph(
+        { scopeType: "project", scopeId: "proj-x" },
+        { organizationId: "org-a" },
+      ),
+    ).rejects.toThrow(message);
+
+    expect(queryCalls).toHaveLength(1);
+  });
+
   it("inspectMemoryGraph rejects whitespace-only organization IDs before querying", async () => {
     const mockPool = { query: vi.fn() };
     const repo = createMemoryRepository(mockPool as never);

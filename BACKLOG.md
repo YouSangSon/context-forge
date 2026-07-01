@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory graph entity row mapping now validates `mention_count` and
+  `memory_ids` before returning graph entities or querying relationships.
 - Goal run repository row mapping now validates `iteration_count` and
   `iteration_index` counter rows before returning runs or iterations.
 - Memory repository row mapping now validates `memory_records.importance` from

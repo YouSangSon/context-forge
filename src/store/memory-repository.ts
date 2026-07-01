@@ -905,8 +905,14 @@ function mapPostgresGraphEntity(row: PostgresGraphEntityRow): MemoryGraphEntity 
     displayText: row.display_text,
     firstSeenAt: toIsoString(row.first_seen_at),
     lastSeenAt: toIsoString(row.last_seen_at),
-    mentionCount: toNumber(row.mention_count),
-    memoryIds: toNumberArray(row.memory_ids),
+    mentionCount: mapNonNegativeSafeInteger(
+      row.mention_count,
+      "graph entity mention_count",
+    ),
+    memoryIds: toPositiveSafeIntegerArray(
+      row.memory_ids,
+      "graph entity memory_ids",
+    ),
   };
 }
 
@@ -958,8 +964,13 @@ function summarize(content: string): string {
   return content.length <= 180 ? content : `${content.slice(0, 177)}...`;
 }
 
-function toNumberArray(values: readonly (number | string)[] | null): number[] {
-  return (values ?? []).map((value) => toNumber(value));
+function toPositiveSafeIntegerArray(
+  values: readonly (number | string)[] | null,
+  fieldName: string,
+): number[] {
+  return (values ?? []).map((value, index) =>
+    mapPositiveSafeInteger(value, `${fieldName}[${index}]`),
+  );
 }
 
 function likeContainsPattern(value: string): string {
@@ -1047,6 +1058,22 @@ function mapPostgresInteger(value: unknown, fieldName: string): number {
     numberValue > POSTGRES_INTEGER_MAX
   ) {
     throw new Error(`${fieldName} must be a Postgres integer`);
+  }
+  return numberValue;
+}
+
+function mapNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue < 0) {
+    throw new Error(`${fieldName} must be a non-negative safe integer`);
+  }
+  return numberValue;
+}
+
+function mapPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue <= 0) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
   }
   return numberValue;
 }
