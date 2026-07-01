@@ -279,6 +279,7 @@ function maxVectorScoresByRecordId(hits: VectorHit[]): Map<number, number> {
     if (!isPositiveSafeInteger(id)) {
       continue;
     }
+    assertFiniteNumber(hit.score, "vector hit score");
 
     const existing = scores.get(id);
     if (existing === undefined || hit.score > existing) {
@@ -295,6 +296,12 @@ function isPositiveSafeInteger(value: unknown): value is number {
     Number.isSafeInteger(value) &&
     value > 0
   );
+}
+
+function assertFiniteNumber(value: unknown, fieldName: string): asserts value is number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${fieldName} must be a finite number`);
+  }
 }
 
 function scoreLexicalRecords(

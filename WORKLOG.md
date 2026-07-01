@@ -2,6 +2,24 @@
 
 ## 2026-07-02
 
+- Hardened vector hit score handling in retrieval:
+  - `src/search/retrieve-memory.ts` now validates vector hit scores as finite
+    numbers before building vector score maps for ranking.
+  - Invalid memory record IDs still get ignored before hydration, preserving
+    the existing bad-payload behavior.
+  - Valid vector hit payloads with malformed scores now fail before ranking
+    instead of being hidden by later score clamping.
+  - `tests/search/retrieve-memory.test.ts` covers non-finite vector hit scores.
+
+Verification:
+- `npx vitest run tests/search/retrieve-memory.test.ts tests/search/rank-results.test.ts tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`4` files passed; `104` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2056` tests passed, `34` skipped)
+- `git diff --check`
+
 - Hardened ranking candidate source and reasons:
   - `src/search/rank-results.ts` now validates candidate `source` before
     sorting candidates passed to `rankCandidates`.

@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `retrieveMemory` now validates vector hit scores as finite numbers before
+  ranking hydrated records, so malformed vector-index implementations cannot
+  hide invalid scores behind ranking clamps.
 - `rankCandidates` now validates candidate `source` and `reasons` fields before
   sorting, rejecting malformed candidate shape instead of returning invalid
   ranking metadata.

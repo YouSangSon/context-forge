@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Ranking Candidate Shape Validation
+## Current Loop - Vector Hit Score Validation
 
 Status:
-- `src/search/rank-results.ts` now validates candidate `source` and `reasons`
-  before sorting candidates.
-- `tests/search/rank-results.test.ts` now covers malformed candidate source and
-  reason values.
+- `src/search/retrieve-memory.ts` now validates vector hit scores as finite
+  numbers before ranking hydrated results.
+- `tests/search/retrieve-memory.test.ts` now covers a valid vector hit payload
+  with a malformed non-finite score.
 
 Verification:
 - Focused vector/search tests passed.

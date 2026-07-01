@@ -355,6 +355,54 @@ describe("retrieveMemory", () => {
     expect(results.map((result) => result.id)).toEqual([12]);
   });
 
+  it("rejects non-finite vector hit scores before ranking", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([
+        { id: "chunk:12", score: Number.NaN, payload: { memory_record_id: 12 } },
+      ]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+
+    const repository = {
+      getMemoryRecordsByIds: vi.fn().mockResolvedValue([
+        {
+          id: 12,
+          sourceId: 202,
+          scopeType: "project",
+          scopeId: "project-alpha",
+          memoryType: "decision",
+          content: "Malformed vector scores should fail before ranking.",
+          createdAt: "2026-04-25T00:00:00.000Z",
+          updatedAt: "2026-04-25T00:00:00.000Z",
+          source: {
+            id: 302,
+            scopeType: "project",
+            scopeId: "project-alpha",
+            sourceType: "decision",
+            externalId: "adr-1",
+            title: "ADR 1",
+            uri: "file:///tmp/adr-1.md",
+            createdAt: "2026-04-25T00:00:00.000Z",
+          },
+        },
+      ]),
+    };
+
+    await expect(
+      retrieveMemory({
+        vectorIndex: vectorIndex as never,
+        repository: repository as never,
+        vector: [0.1, 0.2, 0.3],
+        organizationId: "dev-team",
+        projectKey: "project-alpha",
+        limit: 5,
+      }),
+    ).rejects.toThrow("vector hit score must be a finite number");
+  });
+
   it("throws when organizationId is missing and the legacy anonymous escape hatch is not opted into", async () => {
     const vectorIndex = { query: vi.fn(), upsert: vi.fn(), delete: vi.fn(), deleteByRecordIds: vi.fn().mockResolvedValue(undefined), ensureCollection: vi.fn() };
     const repository = { getMemoryRecordsByIds: vi.fn() };
