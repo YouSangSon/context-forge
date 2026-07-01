@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Matrix Fail-Fast Guard
+## Current Loop — CI Integration Runtime Guard
 
 Status:
-- CI's Node matrix keeps `fail-fast: false` so one runtime failure does not
-  cancel the sibling Node runtime job before it reports.
-- The loop adds a CI workflow hygiene guard that keeps the matrix fail-fast
-  setting and supported Node matrix together.
+- CI's Postgres and pgvector integration jobs run on Node 22, the minimum
+  supported runtime in `package.json`.
+- The loop adds a CI workflow hygiene guard that keeps both backend integration
+  jobs pinned to the minimum supported Node version.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

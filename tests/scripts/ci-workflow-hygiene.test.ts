@@ -79,6 +79,24 @@ describe("CI workflow hygiene", () => {
     ).toHaveLength(3);
   });
 
+  it("runs backend integration jobs on the minimum supported Node version", () => {
+    for (const [jobId, nextJobId] of [
+      ["pg-integration", "pgvector-integration"],
+      ["pgvector-integration", undefined],
+    ] as const) {
+      const jobStart = ciWorkflow.indexOf(`  ${jobId}:\n`);
+      const nextJobStart =
+        nextJobId === undefined ? -1 : ciWorkflow.indexOf(`\n  ${nextJobId}:\n`);
+      const job = ciWorkflow.slice(
+        jobStart,
+        nextJobStart === -1 ? undefined : nextJobStart,
+      );
+
+      expect(jobStart).toBeGreaterThanOrEqual(0);
+      expect(job).toContain('          node-version: "22"\n');
+    }
+  });
+
   it("rejects unguarded npm install commands in CI", () => {
     const violations = ciWorkflow
       .split(/\r?\n/)

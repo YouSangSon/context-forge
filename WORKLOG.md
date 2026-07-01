@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- Guarded backend integration CI runtime:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that the Postgres
+    and pgvector integration jobs use `node-version: "22"`.
+  - This keeps backend integration coverage on Akasha's minimum supported
+    runtime while the main matrix still covers Node 22 and Node 24.
+  - Source checked: GitHub Actions' Node.js guide documents that `setup-node`
+    takes a Node version input and configures that version on the runner:
+    https://docs.github.com/actions/guides/building-and-testing-nodejs
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`18` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1847` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded CI Node matrix fail-fast behavior:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that the Node
     matrix keeps `fail-fast: false` next to the supported Node 22/24 matrix.
