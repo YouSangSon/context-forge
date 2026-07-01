@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   buildRetrievedMemoryCandidate,
   newestUpdatedAtFor,
@@ -137,6 +137,31 @@ describe("rankResults", () => {
     ]);
 
     expect(ranked.map((record) => record.id)).toEqual([22, 21]);
+  });
+
+  it("parses each updatedAt once while ranking records", () => {
+    const records = [
+      createResult({
+        id: 31,
+        updatedAt: "2026-03-26T10:00:00.000Z",
+      }),
+      createResult({
+        id: 32,
+        updatedAt: "2026-03-27T10:00:00.000Z",
+      }),
+      createResult({
+        id: 33,
+        updatedAt: "2026-03-28T10:00:00.000Z",
+      }),
+    ];
+    const parseSpy = vi.spyOn(Date, "parse");
+
+    try {
+      rankResults(records);
+      expect(parseSpy).toHaveBeenCalledTimes(records.length);
+    } finally {
+      parseSpy.mockRestore();
+    }
   });
 
   it.each([

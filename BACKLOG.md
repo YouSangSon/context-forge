@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `rankResults` now parses canonical `updatedAt` timestamps once per record and
+  reuses them through recency scoring and tie-break sorting.
 - `runOutboxSweep` now batches pending Qdrant cleanup deletes by organization,
   reducing vector backend delete calls while preserving row-level status
   accounting.

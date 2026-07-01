@@ -2,6 +2,36 @@
 
 ## 2026-07-02
 
+- Reused parsed ranking timestamps:
+  - `src/search/rank-results.ts` now timestamps records once in `rankResults`
+    and reuses that value for newest-record detection, recency scoring, and
+    tie-break sorting.
+  - `rankCandidates` keeps validating external candidate timestamps before
+    sorting, but shares the same timestamped candidate sorter.
+  - `tests/search/rank-results.test.ts` now guards that `rankResults` calls
+    `Date.parse` once per record while preserving the existing ranking rules.
+  - Source checked: internal performance audit finding 12 documents redundant
+    timestamp parsing in ranking:
+    `docs/superpowers/audit/03-performance.md`.
+
+Verification plan:
+- `npx vitest run tests/search/rank-results.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/search/rank-results.test.ts --reporter=dot`
+  (`23` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1912` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Batched outbox sweeper vector deletes:
   - `src/compact/outbox-sweeper.ts` now groups claimed
     `memory_archive` cleanup rows by `organizationId` and calls
