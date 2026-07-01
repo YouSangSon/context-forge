@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Tool registry audit writes now keep their best-effort non-blocking behavior
+  while logging `warn` events when audit persistence fails.
 - TypeScript source convention coverage now rejects unsafe `any` and `never`
   type-erasure assertions in runtime and script sources while leaving test-only
   malformed-input casts available.

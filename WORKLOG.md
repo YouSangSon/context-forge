@@ -2,6 +2,36 @@
 
 ## 2026-07-02
 
+- Logged best-effort audit write failures:
+  - `src/mcp/tool-registry.ts` still lets tool calls continue when
+    `auditLog.record` rejects, but now emits a request-scoped `warn` with
+    `event: "audit.record_failed"`, the tool name, the audit outcome, and the
+    rejection error.
+  - `tests/audit/audit-write.test.ts` now verifies both successful tool calls
+    and tool-error paths keep the primary result/error contract while logging
+    the audit persistence failure.
+  - Source checked: internal code-quality audit finding CQ-12 documents that
+    best-effort audit writes should preserve non-blocking behavior while making
+    audit infrastructure failures visible:
+    `docs/superpowers/audit/04-code-quality.md`.
+
+Verification plan:
+- `npx vitest run tests/audit/audit-write.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/audit/audit-write.test.ts` (`7` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1910` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded runtime TypeScript files against unsafe type-erasure assertions:
   - `tests/scripts/source-conventions.test.ts` now scans tracked runtime and
     script TypeScript files with the TypeScript AST and rejects `as any`,

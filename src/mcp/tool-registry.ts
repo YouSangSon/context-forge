@@ -71,6 +71,21 @@ function instrumentToolRegistry(input: {
       projectKey,
       scope: toolInput.scope,
     });
+    const warnAuditFailure = (
+      err: unknown,
+      auditOutcome: "ok" | "error",
+    ): void => {
+      log.warn(
+        {
+          event: "audit.record_failed",
+          auditOutcome,
+          err,
+          tool: toolName,
+        },
+        "audit record failed; continuing without blocking tool result",
+      );
+    };
+
     log.info({ event: "tool.start" }, "tool invoked");
     try {
       const result = await run();
@@ -89,7 +104,7 @@ function instrumentToolRegistry(input: {
           durationMs,
           requestId,
         })
-        .catch(() => undefined);
+        .catch((err: unknown) => warnAuditFailure(err, "ok"));
 
       return result;
     } catch (error: unknown) {
@@ -113,7 +128,7 @@ function instrumentToolRegistry(input: {
           durationMs,
           requestId,
         })
-        .catch(() => undefined);
+        .catch((err: unknown) => warnAuditFailure(err, "error"));
 
       throw error;
     }
