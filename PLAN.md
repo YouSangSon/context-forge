@@ -4,14 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Memory Graph Relationship Row Mapping
+## Current Loop — Memory Search Result Id Row Mapping
 
 Status:
-- `src/store/memory-repository.ts` now maps graph relationship `id`,
-  `from_entity_id`, `to_entity_id`, and `evidence_memory_record_id` as
-  positive safe integers before returning graph relationships.
-- `tests/store/memory-repository.test.ts` now covers malformed graph
-  relationship id/reference rows after a valid entity lookup.
+- `src/store/memory-repository.ts` now maps hydrated memory result `id`,
+  `source_id`, and joined source `id` as positive safe integers before
+  returning search/list results.
+- `tests/store/memory-repository.test.ts` now covers malformed hydrated
+  memory/source id rows through mock-pool `listMemory` coverage.
 
 Verification:
 - Focused memory-repository/db-utils/MCP/search/convention tests passed.

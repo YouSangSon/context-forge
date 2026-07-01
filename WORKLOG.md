@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded memory search result id row mapping:
+  - `src/store/memory-repository.ts` now maps hydrated memory result `id`,
+    `source_id`, and joined source `id` through positive safe-integer row
+    helpers before returning search/list results.
+  - `tests/store/memory-repository.test.ts` now covers malformed hydrated
+    memory/source id rows through mock-pool `listMemory` coverage.
+  - Source checked: `sources.id` and `memory_records.id` are `BIGSERIAL`
+    fields, and `memory_records.source_id` is a `BIGINT` reference to
+    `sources.id` in migration `001_initial.sql`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/mcp/server.test.ts tests/search/retrieve-memory.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/mcp/server.test.ts tests/search/retrieve-memory.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`275` tests passed, `7` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1979` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded memory graph relationship row mapping:
   - `src/store/memory-repository.ts` now maps graph relationship `id`,
     `from_entity_id`, `to_entity_id`, and `evidence_memory_record_id` through

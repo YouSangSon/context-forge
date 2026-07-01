@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory search result row mapping now validates hydrated memory/source ids
+  before returning search/list result records.
 - Memory graph relationship row mapping now validates relationship ids and
   entity/evidence record id references before returning graph relationships.
 - Memory graph entity row mapping now validates `mention_count` and

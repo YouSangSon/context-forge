@@ -704,9 +704,9 @@ function mapPostgresSearchResult(row: PostgresHydratedRow): SearchMemoryResult {
   const sourceMetadata = parseStoredPostgresSourceRef(row.source_ref);
 
   return {
-    id: toNumber(row.id),
+    id: mapPositiveSafeInteger(row.id, "memory id"),
     organizationId: row.organization_id,
-    sourceId: toNumber(row.source_id),
+    sourceId: mapPositiveSafeInteger(row.source_id, "memory source_id"),
     scopeType: row.scope_type,
     scopeId: row.scope_id,
     projectKey: row.project_key,
@@ -720,7 +720,7 @@ function mapPostgresSearchResult(row: PostgresHydratedRow): SearchMemoryResult {
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
     source: {
-      id: toNumber(row.source_id_joined),
+      id: mapPositiveSafeInteger(row.source_id_joined, "memory source.id"),
       organizationId: row.source_organization_id,
       scopeType: row.source_scope_type,
       scopeId: row.source_scope_id,

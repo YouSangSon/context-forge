@@ -708,6 +708,41 @@ describe("createMemoryRepository (unit — no PG required)", () => {
 
   it.each([
     {
+      rowPatch: { id: "0" },
+      message: "memory id must be a positive safe integer",
+    },
+    {
+      rowPatch: { source_id: "1.5" },
+      message: "memory source_id must be a positive safe integer",
+    },
+    {
+      rowPatch: { source_id_joined: "bad" },
+      message: "database number must be finite",
+    },
+  ])("listMemory rejects malformed hydrated id rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          ...hydratedMemoryRow(),
+          ...rowPatch,
+        }],
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.listMemory(
+        { scopeType: "project", scopeId: "proj-x" },
+        { organizationId: "org-a" },
+      ),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
       importance: "1.5",
       message: "importance must be a Postgres integer",
     },
