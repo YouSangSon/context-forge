@@ -2,6 +2,29 @@
 
 ## 2026-07-01
 
+- Added generated metadata ignore-pattern coverage:
+  - `tests/scripts/repo-secret-hygiene.test.ts` now verifies `.gitignore`
+    keeps the desktop/editor metadata patterns that the tracked-file hygiene
+    guard expects.
+
+Verification plan:
+- `npx vitest run tests/scripts/repo-secret-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/repo-secret-hygiene.test.ts` (`4` tests passed)
+- Generated-metadata workspace scan excluding `node_modules`, `.git`, and
+  `.worktrees` (no matches)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1812` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Broadened generated metadata hygiene:
   - Removed ignored desktop metadata artifacts from the workspace.
   - `.gitignore` now covers common desktop/editor metadata files.

@@ -36,6 +36,14 @@ const generatedMetadataSuffixes = [
   ".rej",
   "~",
 ];
+const generatedMetadataIgnorePatterns = [
+  ...generatedMetadataFileNames,
+  "*.swp",
+  "*.swo",
+  "*.orig",
+  "*.rej",
+  "*~",
+];
 
 function trackedFiles(): string[] {
   return execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
@@ -70,6 +78,22 @@ function hasOnlyPlaceholderDbCredentials(content: string): boolean {
 }
 
 describe("repo secret hygiene", () => {
+  it("keeps generated metadata files ignored", () => {
+    const ignoredPatterns = new Set(
+      fs
+        .readFileSync(".gitignore", "utf8")
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line && !line.startsWith("#")),
+    );
+
+    expect(
+      generatedMetadataIgnorePatterns.filter(
+        (pattern) => !ignoredPatterns.has(pattern),
+      ),
+    ).toEqual([]);
+  });
+
   it("keeps desktop and editor metadata out of tracked files", () => {
     expect(trackedFiles().filter(isGeneratedMetadataPath)).toEqual([]);
   });

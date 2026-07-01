@@ -4,17 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Generated Metadata Hygiene
+## Current Loop — Generated Metadata Ignore Guard
 
 Status:
-- Removed ignored desktop metadata artifacts from the workspace.
-- `.gitignore` and `tests/scripts/repo-secret-hygiene.test.ts` now cover common
-  desktop/editor metadata files, not only `.DS_Store`.
+- `tests/scripts/repo-secret-hygiene.test.ts` now guards that `.gitignore`
+  keeps the common desktop/editor metadata patterns it expects.
 
 Verification:
 - Focused repo hygiene coverage, generated-metadata workspace scan, typecheck,
   build, audit, full tests, and diff check passed for this generated metadata
-  hygiene update.
+  ignore-pattern guard.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

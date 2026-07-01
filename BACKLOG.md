@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Repo hygiene coverage now guards the `.gitignore` patterns for common
+  desktop/editor metadata files.
 - Removed ignored desktop metadata artifacts from the workspace and broadened
   `.gitignore` plus repo hygiene coverage for common desktop/editor metadata.
 - Removed ignored `.github/.DS_Store` workspace metadata and added a repo
