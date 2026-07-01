@@ -244,8 +244,8 @@ npm run backup:create:pgvector # 명시적 Postgres-only pgvector backup
 ```
 
 `VECTOR_BACKEND=qdrant` 에서는 `backup:create` 가 Postgres와 Qdrant snapshot을
-함께 캡처합니다. `VECTOR_BACKEND=pgvector` 에서는 logical vector data lives in
-Postgres 이므로 `backup:create` 는 `scripts/snapshot-qdrant.sh` 를 건너뛰며
+함께 캡처합니다. `VECTOR_BACKEND=pgvector` 에서는 논리 벡터 데이터가
+Postgres에 저장되므로 `backup:create` 는 `scripts/snapshot-qdrant.sh` 를 건너뛰며
 `QDRANT_URL` 을 요구하지 않습니다. `BACKUP_ENCRYPTION_KEY_FILE` 을 설정하면
 off-host copy 전에 backup artifact를 AES-256-GCM으로 암호화합니다.
 

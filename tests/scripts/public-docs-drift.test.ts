@@ -713,7 +713,12 @@ describe("public documentation drift checks", () => {
       expect(text).toContain("QDRANT_URL");
       expect(text).toContain("VECTOR_BACKEND=pgvector");
       expect(text).toContain("BACKUP_ENCRYPTION_KEY_FILE");
-      expect(text).toMatch(/logical vector data lives in\s+Postgres/);
+      if (path.endsWith(".ko.md")) {
+        expect(text).toContain("논리 벡터 데이터가");
+        expect(text).not.toContain("logical vector data lives in");
+      } else {
+        expect(text).toMatch(/logical vector data lives in\s+Postgres/);
+      }
       expect(/skips|건너뛰/.test(text)).toBe(true);
       expect(text).not.toContain("later script split");
       expect(text).not.toContain("Qdrant-oriented until");
@@ -732,7 +737,12 @@ describe("public documentation drift checks", () => {
       expect(text).toContain("Qdrant");
       expect(text).toContain("scripts/snapshot-qdrant.sh");
       expect(text).toContain("QDRANT_URL");
-      expect(text).toContain("logical data path");
+      if (path.endsWith(".ko.md")) {
+        expect(text).toContain("논리 데이터 경로");
+        expect(text).not.toContain("logical data path");
+      } else {
+        expect(text).toContain("logical data path");
+      }
       expect(text).toContain("backup:create:pgvector");
       expect(text).not.toContain("later script split");
       expect(text).not.toContain("still invokes");

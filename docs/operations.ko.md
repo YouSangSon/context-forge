@@ -18,8 +18,8 @@ npm run backup:create
 `qdrant-memory_chunks_v1-YYYYMMDD-HHMM.json` (metadata sidecar),
 `manifest-YYYYMMDD-HHMM.json`.
 
-`VECTOR_BACKEND=pgvector` 에서는 벡터가 Postgres 안에 있으므로 Qdrant snapshot
-data는 logical data path의 일부가 아닙니다. `npm run backup:create` 는 pgvector
+`VECTOR_BACKEND=pgvector` 에서는 벡터가 Postgres 안에 있으므로 Qdrant 스냅샷
+데이터는 논리 데이터 경로의 일부가 아닙니다. `npm run backup:create` 는 pgvector
 manifest에서 `scripts/snapshot-qdrant.sh` 를 건너뛰므로 pgvector backup에는
 `DATABASE_URL`, `BACKUP_DIR` 만 필요하고 `QDRANT_URL` 은 필요하지 않습니다.
 환경 기본값과 무관하게 backend를 고정하려면 `npm run backup:create:qdrant` 또는

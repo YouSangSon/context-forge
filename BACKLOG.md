@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Korean backup guidance now keeps pgvector logical-data-path wording in Korean
+  instead of inheriting the English README phrasing, with public-docs drift
+  coverage split by language.
 - Korean public-doc body links now prefer Korean mirrors where available, with
   focused public-docs drift coverage.
 - Feature request scope options now describe vector backend work as Qdrant or

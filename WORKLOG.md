@@ -2,6 +2,30 @@
 
 ## 2026-07-01
 
+- Aligned Korean backup guidance wording:
+  - `README.ko.md`, `docs/operations.ko.md`, and
+    `docs/self-hosted-operations.ko.md` now describe pgvector backup logical
+    data paths in Korean instead of inheriting English README phrasing.
+  - `tests/scripts/public-docs-drift.test.ts` now validates English and Korean
+    backup wording separately.
+  - `CHANGELOG.md` and `CHANGELOG.ko.md` record the public documentation polish.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`32` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1807` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned Korean public-doc body links with Korean mirrors:
   - `README.ko.md`, `CONTRIBUTING.ko.md`, `docs/configuration.ko.md`,
     `docs/operations.ko.md`, `docs/security.ko.md`, and

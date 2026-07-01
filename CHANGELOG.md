@@ -40,6 +40,8 @@ changes; CHANGELOG entries call those out explicitly.
   operation, and npm keywords now include `pgvector`.
 - Docs: Korean public-document body links now point to Korean mirrors where
   available.
+- Docs: Korean backup guidance now keeps pgvector logical-data-path wording in
+  Korean instead of inheriting the English README phrasing.
 
 Post-release audit cycle. v1.0.0 shipped with 0 OSS users, so this window
 was the safe time to tighten default-strict behavior on multi-tenancy
