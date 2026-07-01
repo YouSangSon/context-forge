@@ -2,6 +2,35 @@
 
 ## 2026-07-01
 
+- Restricted CI workflow token permissions:
+  - `.github/workflows/ci.yml` now sets top-level `permissions:
+    contents: read` for the default `GITHUB_TOKEN`.
+  - `tests/scripts/ci-workflow-hygiene.test.ts` guards the least-privilege
+    workflow permission block and prevents broad write grants from creeping in.
+  - Source checked: GitHub Actions secure-use guidance recommends minimum
+    required `GITHUB_TOKEN` permissions and read-only repository contents by
+    default:
+    https://docs.github.com/en/actions/reference/security/secure-use
+  - Source checked: GitHub workflow syntax documents top-level `permissions`
+    and that unspecified permissions become `none` when a permission is set:
+    https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`3` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1817` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Guarded local secret/generated artifact ignore patterns:
   - `.gitignore` now ignores local `.env` variants, `.envrc`, and generated
     `.akasha/` client/hook artifacts while keeping `.env.example` tracked.

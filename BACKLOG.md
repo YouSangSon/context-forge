@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow `GITHUB_TOKEN` permissions are now restricted to top-level
+  `contents: read`, with focused workflow hygiene coverage to prevent broad or
+  contents-write grants.
 - `.gitignore` now ignores local `.env` variants, `.envrc`, and generated
   `.akasha/` artifacts while keeping `.env.example` tracked, with repo hygiene
   coverage for ignore patterns and tracked-file exclusions.
