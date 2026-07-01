@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded package entrypoint surface:
+  - `tests/scripts/package-manifest.test.ts` now checks that package `main`
+    remains absent alongside the existing `bin` and `exports` absence checks.
+  - This catches package metadata drift where npm consumers could get an
+    unintended module entrypoint instead of using the documented package
+    scripts.
+  - Source checked: npm documents `main` as the primary module entrypoint,
+    `exports` as a package entrypoint definition surface, and `bin` as
+    executable command surface:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`17` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1861` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded npm package support metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package
     `homepage`, `repository`, `bugs`, and `author` stay pointed at the Akasha

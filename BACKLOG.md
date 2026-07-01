@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that the package does not add a
+  top-level `main` entrypoint alongside the existing `bin` and `exports`
+  absence checks.
 - Package manifest coverage now guards npm package support metadata for
   homepage, repository, issue tracker, and author.
 - Package manifest coverage now guards that the current `esbuild` npm override

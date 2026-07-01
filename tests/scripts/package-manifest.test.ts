@@ -15,6 +15,7 @@ type PackageJson = {
   homepage?: unknown;
   keywords?: unknown;
   license?: unknown;
+  main?: unknown;
   name?: unknown;
   overrides?: Record<string, string>;
   repository?: unknown;
@@ -269,7 +270,7 @@ describe("package manifest publish surface", () => {
     ]);
   });
 
-  it("builds clean dist output before npm pack and does not add new CLI surface", () => {
+  it("builds clean dist output before npm pack and does not add new package entrypoint surface", () => {
     const packageJson = readPackageJson();
 
     expect(packageJson.scripts?.clean).toBe(
@@ -279,6 +280,7 @@ describe("package manifest publish surface", () => {
     expect(packageJson.scripts?.prepack).toBe("npm run build");
     expect(packageJson.bin).toBeUndefined();
     expect(packageJson.exports).toBeUndefined();
+    expect(packageJson.main).toBeUndefined();
   });
 
   it("keeps contributor verification scripts stable", () => {
