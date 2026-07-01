@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Guarded the multi-replica rate-limit boundary:
+  - `docs/configuration.md`, `docs/configuration.ko.md`, `docs/security.md`,
+    `docs/security.ko.md`, `docs/deployment.md`, and
+    `docs/deployment.ko.md` now state that `RATE_LIMIT_PER_MINUTE` is an
+    in-memory, process-local bucket.
+  - The docs now point operators who need a strict deployment-wide quota toward
+    a shared reverse-proxy or edge limiter instead of implying app replicas
+    share limiter state.
+  - `tests/scripts/public-docs-drift.test.ts` guards the compose default and
+    English/Korean public-doc wording for this boundary.
+  - Sources checked: NGINX documents request-rate limiting via
+    `limit_req_zone`/`limit_req`, and Cloudflare documents rate limiting rules
+    for matching requests and taking an action when limits are reached:
+    https://nginx.org/en/docs/http/ngx_http_limit_req_module.html
+    https://developers.cloudflare.com/waf/rate-limiting-rules/
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`44` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1885` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded CI job-level token permission overrides:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that individual CI
     jobs do not declare their own `permissions:` block.

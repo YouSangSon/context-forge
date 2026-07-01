@@ -273,6 +273,12 @@ layers handles the rest.
 |---|---|---|
 | `RATE_LIMIT_PER_MINUTE` | unset → no limit (compose deployments default to **60**) | Positive integer token-bucket cap, keyed per token. Recommended in production. |
 
+This limiter is in-memory and process-local. In multi-replica deployments,
+each app replica has its own bucket, so the effective limit can scale with
+replica count. Put a shared reverse-proxy or edge limiter in front of Akasha
+(for example NGINX `limit_req_zone`/`limit_req` or Cloudflare rate limiting
+rules) when you need a deployment-wide quota.
+
 The compaction-apply path has a separate, stricter limit (1 per hour per
 org by default) hard-coded in `applyCompaction` deps. It can be tuned by
 constructing the orchestrator differently in custom integrations.

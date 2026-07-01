@@ -121,8 +121,11 @@ secret 마운트나 Docker socket 마운트는 피하세요.
 
 ### Rate limit
 
-`RATE_LIMIT_PER_MINUTE` 의 토큰별 글로벌 bucket (token-bucket). Apply 경로는
-추가로 org당 1회/시간 제한 (기본, `applyCompaction` deps에서 설정 가능).
+`RATE_LIMIT_PER_MINUTE` 의 토큰별 bucket (token-bucket). 이 bucket은
+in-memory이고 프로세스-local입니다. 다중 replica 배포에서는 app replica마다
+bucket이 하나씩 생기므로, 배포 전체의 엄격한 quota가 필요하면 공유
+reverse-proxy 또는 edge limiter를 사용하세요. Apply 경로는 추가로 org당
+1회/시간 제한 (기본, `applyCompaction` deps에서 설정 가능).
 
 ### Audit log
 

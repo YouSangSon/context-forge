@@ -261,6 +261,12 @@ SaaS 형으로 서빙) 가 필요하면 각 사용자에게 `token:org` 쌍을 �
 |---|---|---|
 | `RATE_LIMIT_PER_MINUTE` | unset → 제한 없음 (compose 배포 기본값 **60**) | 토큰별 양의 정수 token-bucket 캡. production 권장. |
 
+이 limiter는 in-memory이며 프로세스-local입니다. 다중 replica 배포에서는 각
+app replica가 자체 bucket을 가지므로 유효 limit이 replica 수만큼 커질 수
+있습니다. 배포 전체 quota가 필요하면 Akasha 앞단에 공유 reverse-proxy 또는
+edge limiter를 두세요(예: NGINX `limit_req_zone`/`limit_req`, Cloudflare
+rate limiting rules).
+
 Compaction-apply 경로에는 별도 더 엄격한 limit (org당 1회/시간 기본) 이
 `applyCompaction` deps에 하드코딩되어 있습니다. 커스텀 통합에서는 다르게
 구성 가능.

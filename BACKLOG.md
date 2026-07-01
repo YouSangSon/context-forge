@@ -18,6 +18,10 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Public docs drift coverage now guards that rate-limit docs describe
+  `RATE_LIMIT_PER_MINUTE` as process-local in-memory state, with multi-replica
+  deployments requiring a shared proxy or edge limiter for strict
+  deployment-wide quotas.
 - CI workflow hygiene coverage now guards that individual jobs do not override
   the workflow-level `contents: read` token permissions, keeping CI token
   access centralized and read-only unless reviewed.

@@ -380,6 +380,44 @@ describe("public documentation drift checks", () => {
     expect(configurationKo).toContain("`:` 가 두 개 이상인 entry는 시작 시");
   });
 
+  it("documents rate-limit replica boundaries", () => {
+    const compose = read("compose.yaml");
+    const configuration = read("docs/configuration.md");
+    const configurationKo = read("docs/configuration.ko.md");
+    const security = read("docs/security.md");
+    const securityKo = read("docs/security.ko.md");
+    const deployment = read("docs/deployment.md");
+    const deploymentKo = read("docs/deployment.ko.md");
+
+    expect(compose).toContain(
+      "RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-60}",
+    );
+
+    for (const text of [configuration, security, deployment]) {
+      expect(text).toContain("in-memory");
+      expect(text).toContain("process-local");
+    }
+    expect(configuration).toContain("each app replica has its own bucket");
+    expect(configuration).toContain("deployment-wide quota");
+    expect(configuration).toContain("NGINX `limit_req_zone`/`limit_req`");
+    expect(configuration).toContain("Cloudflare rate limiting");
+    expect(security).toContain("one bucket per app replica");
+    expect(security).toContain("strict deployment-wide quota");
+    expect(deployment).toContain("each replica has its own bucket");
+    expect(deployment).toContain("shared reverse proxy or edge layer");
+
+    for (const text of [configurationKo, securityKo, deploymentKo]) {
+      expect(text).toContain("프로세스-local");
+      expect(text).toContain("replica");
+      expect(text).toContain("bucket");
+    }
+    expect(configurationKo).toContain("배포 전체 quota");
+    expect(configurationKo).toContain("NGINX `limit_req_zone`/`limit_req`");
+    expect(configurationKo).toContain("Cloudflare\nrate limiting rules");
+    expect(securityKo).toContain("배포 전체의 엄격한 quota");
+    expect(deploymentKo).toContain("edge 계층");
+  });
+
   it("documents transformers as a packaged runtime dependency", () => {
     const packageJson = readJson<{
       dependencies?: Record<string, string>;

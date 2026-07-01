@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Job Permissions Guard
+## Current Loop — Multi-Replica Rate Limit Boundary
 
 Status:
-- CI workflow hygiene coverage guards that individual jobs do not override the
-  workflow-level `contents: read` token permissions.
-- The loop keeps GitHub Actions token permissions centralized and read-only
-  unless a future CI job explicitly needs a scoped exception.
+- Configuration, security, and deployment docs now state that
+  `RATE_LIMIT_PER_MINUTE` is a process-local in-memory bucket.
+- Public docs drift coverage guards the multi-replica boundary so future docs
+  do not imply a strict deployment-wide quota from the app-local limiter alone.
 
 Verification:
-- Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,
-  and diff check passed.
+- Focused public-docs drift coverage passed.
+- Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 
