@@ -2,6 +2,25 @@
 
 ## 2026-07-02
 
+- Hardened Qdrant vector point ID mapping:
+  - `src/vector/qdrant-index.ts` now validates Qdrant query result point IDs
+    before returning `VectorHit[]`.
+  - Numeric Qdrant point IDs still coerce to strings for the existing
+    backend-neutral `VectorHit.id` contract.
+  - Malformed missing or invalid point IDs now fail at the vector adapter
+    boundary instead of becoming strings like `"undefined"`.
+  - `tests/vector/qdrant-index.test.ts` covers numeric-ID coercion and malformed
+    ID rejection.
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `84` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2055` tests passed, `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant vector score mapping:
   - `src/vector/qdrant-index.ts` now validates each Qdrant query result score
     as a finite number before returning a `VectorHit`.

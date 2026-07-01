@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Qdrant Vector Score Validation
+## Current Loop - Qdrant Vector ID Validation
 
 Status:
-- `src/vector/qdrant-index.ts` now validates Qdrant query result scores as
-  finite numbers before returning `VectorHit[]`.
-- `tests/vector/qdrant-index.test.ts` now covers malformed non-finite Qdrant
-  scores so bad remote/client responses fail at the vector adapter boundary.
+- `src/vector/qdrant-index.ts` now validates Qdrant query result point IDs
+  before returning `VectorHit[]`, while preserving numeric-ID string coercion.
+- `tests/vector/qdrant-index.test.ts` now covers numeric point IDs and malformed
+  IDs so bad remote/client responses fail at the vector adapter boundary.
 
 Verification:
 - Focused vector/search tests passed.

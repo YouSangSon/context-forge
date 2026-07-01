@@ -83,7 +83,7 @@ export function createQdrantVectorIndex(
       });
 
       return response.points.map((point) => ({
-        id: typeof point.id === "string" ? point.id : String(point.id),
+        id: toQdrantPointId(point.id, "id"),
         score: toQdrantFiniteNumber(point.score, "score"),
         payload: point.payload && typeof point.payload === "object"
           ? (point.payload as Record<string, unknown>)
@@ -144,6 +144,16 @@ export function createQdrantVectorIndex(
       await client.delete(collectionName, selector);
     },
   };
+}
+
+function toQdrantPointId(value: unknown, fieldName: string): string {
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value;
+  }
+  if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) {
+    return String(value);
+  }
+  throw new Error(`${fieldName} must be a non-empty string or non-negative safe integer`);
 }
 
 function toQdrantFiniteNumber(value: unknown, fieldName: string): number {

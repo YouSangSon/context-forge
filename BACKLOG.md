@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant vector query row mapping now validates returned point IDs before
+  returning `VectorHit[]`, preserving numeric-ID coercion while rejecting
+  malformed missing or invalid IDs.
 - Qdrant vector query row mapping now validates returned scores as finite
   numbers before returning `VectorHit[]`, matching the pgvector adapter's
   fail-closed score boundary.

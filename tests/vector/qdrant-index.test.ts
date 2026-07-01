@@ -180,6 +180,50 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     expect(hits[1]).toEqual({ id: "chunk:16", score: 0.85, payload: { memory_record_id: 16, chunk_id: 101 } });
   });
 
+  it("coerces numeric Qdrant point ids to VectorHit string ids", async () => {
+    const client = makeClient();
+    client.query.mockResolvedValue({
+      points: [
+        { id: 15, score: 0.92, payload: { memory_record_id: 15 } },
+      ],
+    });
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    const hits = await index.query(
+      [0.1],
+      {
+        organizationId: "org-a",
+        scopes: [{ scopeType: "project", scopeId: "p" }],
+        projectKey: "p",
+      },
+      10,
+    );
+
+    expect(hits[0]).toEqual({ id: "15", score: 0.92, payload: { memory_record_id: 15 } });
+  });
+
+  it("rejects malformed Qdrant point ids before returning VectorHit[]", async () => {
+    const client = makeClient();
+    client.query.mockResolvedValue({
+      points: [
+        { id: undefined, score: 0.92, payload: { memory_record_id: 15 } },
+      ],
+    });
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.query(
+        [0.1],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "p" }],
+          projectKey: "p",
+        },
+        10,
+      ),
+    ).rejects.toThrow("id must be a non-empty string or non-negative safe integer");
+  });
+
   it("rejects non-finite Qdrant scores before returning VectorHit[]", async () => {
     const client = makeClient();
     client.query.mockResolvedValue({
