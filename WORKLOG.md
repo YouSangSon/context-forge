@@ -2,6 +2,36 @@
 
 ## 2026-07-01
 
+- Added CI dependency audit coverage:
+  - `.github/workflows/ci.yml` now runs
+    `npm audit --audit-level=moderate` in the `typecheck-and-test` job after
+    dependency installation and before typecheck/test.
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now guards that the audit step
+    remains in the CI workflow.
+  - Source checked: repo security audit notes called for running `npm audit`
+    as part of CI (`docs/superpowers/audit/02-security.md`).
+  - Source checked: npm docs recommend adding `npm audit` to continuous
+    integration and document `--audit-level=moderate` as the CI failure
+    threshold for moderate-or-higher vulnerabilities:
+    https://docs.npmjs.com/auditing-package-dependencies-for-security-vulnerabilities/
+    https://docs.npmjs.com/cli/v8/commands/npm-audit/
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`4` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1818` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Restricted CI workflow token permissions:
   - `.github/workflows/ci.yml` now sets top-level `permissions:
     contents: read` for the default `GITHUB_TOKEN`.

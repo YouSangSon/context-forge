@@ -23,4 +23,17 @@ describe("CI workflow hygiene", () => {
     expect(ciWorkflow).not.toMatch(/^\s*permissions:\s+write-all\b/m);
     expect(ciWorkflow).not.toMatch(/^\s*contents:\s+write\b/m);
   });
+
+  it("runs a moderate-or-higher dependency audit in CI", () => {
+    const auditStepIndex = ciWorkflow.indexOf(
+      "      - name: Audit dependencies\n",
+    );
+    const typecheckStepIndex = ciWorkflow.indexOf("      - name: Typecheck\n");
+
+    expect(ciWorkflow).toContain("      - name: Audit dependencies\n");
+    expect(ciWorkflow).toContain(
+      "        run: npm audit --audit-level=moderate\n",
+    );
+    expect(auditStepIndex).toBeLessThan(typecheckStepIndex);
+  });
 });

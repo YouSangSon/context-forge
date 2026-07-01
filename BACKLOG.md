@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI now runs `npm audit --audit-level=moderate` before typecheck/test, with
+  focused workflow hygiene coverage to keep dependency auditing in the
+  pipeline.
 - CI workflow `GITHUB_TOKEN` permissions are now restricted to top-level
   `contents: read`, with focused workflow hygiene coverage to prevent broad or
   contents-write grants.

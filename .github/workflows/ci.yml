@@ -39,6 +39,9 @@ jobs:
         # and that download hits GitHub releases (flaky — has 500'd mid-run).
         run: ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci
 
+      - name: Audit dependencies
+        run: npm audit --audit-level=moderate
+
       - name: Typecheck
         run: npm run typecheck
 
