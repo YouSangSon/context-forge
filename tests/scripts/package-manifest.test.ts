@@ -4,21 +4,29 @@ import { describe, expect, it } from "vitest";
 
 type PackageJson = {
   bin?: unknown;
+  dependencies?: Record<string, string>;
   description?: unknown;
   devDependencies?: Record<string, string>;
   engines?: Record<string, string>;
   exports?: unknown;
   files?: unknown;
   keywords?: unknown;
+  license?: unknown;
+  name?: unknown;
   scripts?: Record<string, string>;
+  version?: unknown;
 };
 
 type PackageLock = {
   packages: Record<
     string,
     {
+      dependencies?: Record<string, string>;
       devDependencies?: Record<string, string>;
       engines?: Record<string, string>;
+      license?: unknown;
+      name?: unknown;
+      version?: unknown;
     }
   >;
 };
@@ -113,6 +121,17 @@ describe("package manifest publish surface", () => {
     expect(lockfileRoot?.devDependencies?.["@types/node"]).toBe(
       packageJson.devDependencies?.["@types/node"],
     );
+  });
+
+  it("keeps lockfile root package metadata aligned with package.json", () => {
+    const packageJson = readPackageJson();
+    const lockfileRoot = readPackageLock().packages[""];
+
+    expect(lockfileRoot?.name).toBe(packageJson.name);
+    expect(lockfileRoot?.version).toBe(packageJson.version);
+    expect(lockfileRoot?.license).toBe(packageJson.license);
+    expect(lockfileRoot?.dependencies).toEqual(packageJson.dependencies);
+    expect(lockfileRoot?.devDependencies).toEqual(packageJson.devDependencies);
   });
 
   it("uses an explicit package allowlist for runtime and public docs assets", () => {

@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Lock Runtime Guard
+## Current Loop — Package Lock Metadata Guard
 
 Status:
-- Package manifest coverage guards the minimum supported Node runtime policy
-  across both `package.json` and the root lockfile package entry.
-- The loop extends the package guard so `package-lock.json` root metadata stays
-  aligned with `engines.node` and root `@types/node`.
+- Package manifest coverage guards `package-lock.json` root identity,
+  license, dependency, and dev-dependency metadata against `package.json`.
+- The loop keeps lockfile package metadata drift visible before publish or CI
+  installs depend on stale root package data.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

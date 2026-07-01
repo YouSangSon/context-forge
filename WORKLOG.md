@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded package lockfile root package metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that
+    `package-lock.json` root metadata matches `package.json` for package
+    identity, license, dependencies, and dev dependencies.
+  - This catches manual lockfile drift when package identity or dependency
+    surface changes.
+  - Source checked: npm documents `package-lock.json` as a committed
+    dependency-tree representation and `packages[""]` as the root project
+    entry whose package descriptor can include package metadata:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`7` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1851` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package lockfile runtime metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that
     `package-lock.json` root metadata matches `package.json` for `engines.node`

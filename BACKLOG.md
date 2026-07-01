@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that `package-lock.json` root package
+  identity and dependency metadata stays aligned with `package.json`.
 - Package manifest coverage now guards that `package-lock.json` root runtime
   metadata stays aligned with `package.json`.
 - Package manifest coverage now guards that the package stays on the supported
