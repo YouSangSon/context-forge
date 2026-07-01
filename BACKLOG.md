@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that lockfile package descriptors do not
+  declare `inBundle` or `link` metadata so bundled dependency extraction or
+  local/symlink package resolution cannot appear without review.
 - Package manifest coverage now guards the lockfile package descriptors that
   declare `hasInstallScript: true` so dependency tree drift cannot add new
   preinstall/install/postinstall package scripts without review.

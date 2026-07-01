@@ -4,14 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Lockfile Install Script Guard
+## Current Loop — Lockfile Bundled/Linked Package Guard
 
 Status:
-- Package manifest coverage guards the current lockfile package descriptors
-  with `hasInstallScript: true`.
-- The loop catches dependency tree drift that would introduce a new
-  preinstall/install/postinstall package script without an explicit dependency
-  review.
+- Package manifest coverage guards that lockfile package descriptors do not
+  declare bundled or linked package metadata.
+- The loop catches dependency tree drift that would introduce bundled
+  dependency extraction or local/symlink package resolution without an explicit
+  dependency review.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded lockfile bundled/linked package descriptors:
+  - `tests/scripts/package-manifest.test.ts` now checks that package-lock
+    package descriptors do not declare `inBundle` or `link` metadata.
+  - This catches dependency tree drift that would introduce bundled dependency
+    extraction or local/symlink package resolution without an explicit
+    dependency review.
+  - Source checked: npm documents `inBundle` as a package-lock package
+    descriptor flag for bundled dependencies and `link` as a flag for symbolic
+    links where the link target is included in the lockfile:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`35` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1879` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded lockfile install-script packages:
   - `tests/scripts/package-manifest.test.ts` now checks the exact package-lock
     package paths that declare `hasInstallScript: true`.

@@ -55,7 +55,9 @@ type PackageLock = {
       devDependencies?: Record<string, string>;
       engines?: Record<string, string>;
       hasInstallScript?: boolean;
+      inBundle?: boolean;
       license?: unknown;
+      link?: boolean;
       name?: unknown;
       optionalDependencies?: Record<string, string>;
       peerDependencies?: Record<string, string>;
@@ -366,6 +368,18 @@ describe("package manifest publish surface", () => {
     expect(installScriptPackages).toEqual([
       ...EXPECTED_LOCKFILE_INSTALL_SCRIPT_PACKAGES,
     ].sort());
+  });
+
+  it("does not declare bundled or linked lockfile packages", () => {
+    const packageLock = readPackageLock();
+    const bundledOrLinkedPackages = Object.entries(packageLock.packages)
+      .filter(
+        ([, metadata]) => metadata.inBundle === true || metadata.link === true,
+      )
+      .map(([path]) => path)
+      .sort();
+
+    expect(bundledOrLinkedPackages).toEqual([]);
   });
 
   it("keeps package-lock as the active npm lockfile", () => {
