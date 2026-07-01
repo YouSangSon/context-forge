@@ -2407,7 +2407,7 @@ describe("createToolRegistry", () => {
     ).not.toHaveBeenCalled();
   });
 
-  it("applies semantic dedup (P18) when semanticDedupThreshold is set", async () => {
+  it("applies semantic dedup when semanticDedupThreshold is set", async () => {
     const services = createCanonicalServices();
 
     // Three records — two are paraphrases of each other; one is unrelated.

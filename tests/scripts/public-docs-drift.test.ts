@@ -522,6 +522,7 @@ describe("public documentation drift checks", () => {
     const envExample = read(".env.example");
     const applyCompaction = read("src/compact/apply-compaction.ts");
     const compactMemory = read("src/compact/compact-memory.ts");
+    const mcpServerTest = read("tests/mcp/server.test.ts");
     const sweeperLoop = read("src/compact/sweeper-loop.ts");
     const mcpTypes = read("src/mcp/types.ts");
 
@@ -530,6 +531,7 @@ describe("public documentation drift checks", () => {
     expect(applyCompaction).not.toContain("scoped out for P17");
     expect(applyCompaction).not.toContain("P17 step 6");
     expect(compactMemory).not.toContain("orchestrator (P18.1)");
+    expect(mcpServerTest).not.toContain("semantic dedup (P18)");
     expect(sweeperLoop).not.toContain("P19 ships");
     expect(mcpTypes).not.toContain("P18: opt-in semantic dedup");
     expect(mcpTypes).not.toContain("P17: populated when dryRun=false");

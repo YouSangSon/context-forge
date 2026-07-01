@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Semantic dedup MCP server test names now describe current behavior without
+  planning-era phase labels, guarded by public-docs drift coverage.
 - CI workflow hygiene coverage now asserts backend job section existence and
   ordering before checking focused Postgres/pgvector commands.
 - CI workflow hygiene coverage now guards the pgvector integration job's

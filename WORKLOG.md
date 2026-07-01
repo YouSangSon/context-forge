@@ -2,6 +2,29 @@
 
 ## 2026-07-01
 
+- Refreshed semantic dedup MCP test naming:
+  - `tests/mcp/server.test.ts` now names the `semanticDedupThreshold` behavior
+    without the planning-era `(P18)` label.
+  - `tests/scripts/public-docs-drift.test.ts` now guards that stale phrase
+    alongside the existing compaction drift checks.
+
+Verification plan:
+- `npx vitest run tests/mcp/server.test.ts tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/mcp/server.test.ts tests/scripts/public-docs-drift.test.ts`
+  (`172` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1829` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Hardened CI workflow job-section tests:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now asserts the
     `pg-integration` and `pgvector-integration` job headings exist, and that

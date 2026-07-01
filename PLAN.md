@@ -4,16 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Workflow Job Section Guards
+## Current Loop — Semantic Dedup Test Name Refresh
 
 Status:
-- CI workflow hygiene tests slice backend job sections with `indexOf`.
-- The loop adds explicit job existence/order assertions so a missing or
-  reordered backend job fails clearly before section-specific checks run.
+- `tests/mcp/server.test.ts` still used a planning-era `(P18)` label in the
+  semantic dedup test name.
+- The loop refreshes that test name and extends public-docs drift coverage for
+  the stale phrase.
 
 Verification:
-- Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,
-  and diff check passed.
+- Focused MCP server/public-docs drift coverage, typecheck, build, audit, full
+  tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 
