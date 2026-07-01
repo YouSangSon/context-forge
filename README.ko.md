@@ -56,8 +56,9 @@ Postgres 에 저장할 수 있습니다 — Qdrant 불필요.
   intent 를 먼저 기록하고, 중간에 실패한 upsert 는 백그라운드 sweeper 가
   재시도합니다 (visibility-timeout claim, `FOR UPDATE SKIP LOCKED`). 인덱스가
   조용히 어긋나는 일이 없습니다.
-- **쓰기 시점 시크릿 스크러빙.** 콘텐츠는 저장되기 전에 스캔됩니다 — API 키,
-  PEM 블록, bearer 토큰, JWT 는 저장 대신 거부됩니다 (`SecretDetectedError`).
+- **쓰기 시점 시크릿 스크러빙.** 콘텐츠는 저장되기 전에 스캔됩니다 — provider
+  API 키, PEM 블록, bearer/JWT 토큰, 자격증명이 포함된 데이터베이스 URL 은 저장
+  대신 거부됩니다 (`SecretDetectedError`).
 - **dry-run 이 기본인 컴팩션.** exact + 시맨틱 중복 제거와 time-decay 아카이빙은
   기본적으로 미리보기 (`dryRun: true`)로 동작하며, apply 는 idempotent + rate-limited.
   아카이빙된 레코드는 `unarchive_memory` 로 복원 가능합니다.

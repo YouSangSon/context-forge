@@ -7,6 +7,10 @@ function read(path: string): string {
   return fs.readFileSync(path, "utf8");
 }
 
+function collapseWhitespace(text: string): string {
+  return text.replace(/\s+/g, " ");
+}
+
 function readJson<T>(path: string): T {
   return JSON.parse(read(path)) as T;
 }
@@ -364,6 +368,58 @@ describe("public documentation drift checks", () => {
 
     const securityKo = read("docs/security.ko.md");
     expect(securityKo).toContain("CI/오프라인 스텁");
+  });
+
+  it("documents current secret scrubber coverage in public docs", () => {
+    const scrubber = read("src/store/secret-scrub.ts");
+    for (const category of [
+      "aws-access-key",
+      "github-token",
+      "openai-key",
+      "anthropic-key",
+      "gcp-api-key",
+      "stripe-key",
+      "slack-token",
+      "db-connection-string",
+      "private-key-block",
+      "bearer-token",
+      "jwt",
+    ]) {
+      expect(scrubber).toContain(`category: "${category}"`);
+    }
+
+    for (const path of [
+      "README.md",
+      "docs/architecture.md",
+      "docs/api-reference.md",
+    ]) {
+      const text = collapseWhitespace(read(path));
+      expect(text).toContain("provider API key");
+      expect(text).toContain("PEM");
+      expect(text).toContain("bearer/JWT");
+      expect(text).toContain("credentialed database URL");
+    }
+
+    for (const path of [
+      "README.ko.md",
+      "docs/architecture.ko.md",
+      "docs/api-reference.ko.md",
+    ]) {
+      const text = collapseWhitespace(read(path));
+      expect(text).toMatch(/provider API (?:key|키)/);
+      expect(text).toContain("PEM");
+      expect(text).toContain("bearer/JWT");
+      expect(text).toContain("자격증명이 포함된 데이터베이스 URL");
+    }
+
+    const security = read("docs/security.md");
+    for (const term of ["GCP", "Stripe", "Slack", "Database connection"]) {
+      expect(security).toContain(term);
+    }
+    const securityKo = read("docs/security.ko.md");
+    for (const term of ["GCP", "Stripe", "Slack", "DB 연결 문자열"]) {
+      expect(securityKo).toContain(term);
+    }
   });
 
   it("documents MEMORY_API_TOKENS colon restrictions", () => {

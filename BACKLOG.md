@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Public docs drift coverage now keeps README, architecture, and API reference
+  secret scrubber summaries aligned with the implemented provider-key,
+  bearer/JWT, PEM, and credentialed database URL categories.
 - MCP type exports no longer include the unused
   `CompactMemoryToolInput_v2Extension` and `_AuditLogEntryRef` aliases.
 - Shared DB row helpers now centralize `requireSingleRow`, `toNumber`, and

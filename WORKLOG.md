@@ -2,6 +2,37 @@
 
 ## 2026-07-02
 
+- Aligned public secret-scrubber coverage docs:
+  - `README.md`, `docs/architecture.md`, and `docs/api-reference.md` now state
+    that provider API keys, PEM blocks, bearer/JWT tokens, and credentialed
+    database URLs are rejected before persistence.
+  - Korean mirrors carry the same scope while preserving localized wording.
+  - `tests/scripts/public-docs-drift.test.ts` now checks the implemented
+    `src/store/secret-scrub.ts` categories against README, architecture, API
+    reference, and detailed security docs.
+  - Source checked: internal security audit finding SEC-6 documents the missing
+    GCP / Stripe / Slack / DB-connection-string secret patterns, and the current
+    scrubber implementation now includes those categories:
+    `docs/superpowers/audit/02-security.md`, `src/store/secret-scrub.ts`.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`45` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1911` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Removed dead MCP type exports:
   - `src/mcp/types.ts` no longer exports the unused
     `CompactMemoryToolInput_v2Extension` and `_AuditLogEntryRef` aliases.

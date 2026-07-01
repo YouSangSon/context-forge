@@ -93,8 +93,9 @@ catch 블록(option-A 삭제: CASCADE가 레코드·chunk·job을 제거, 고아
 통해 처리되므로 `add_memory` 의 성공/실패 의미는 변경되지 않습니다.
 
 쓰기 전: `src/store/secret-scrub.ts` 의 `assertNoSecrets(content)` —
-API key / PEM / bearer / JWT 패턴 매칭 시 거부. `writeCanonicalMemory` 의
-어떤 store touch보다도 앞에서 실행 → 매칭 시 사이드 이펙트 없이 short-circuit.
+provider API key / PEM / bearer/JWT / 자격증명이 포함된 데이터베이스 URL 패턴
+매칭 시 거부. `writeCanonicalMemory` 의 어떤 store touch보다도 앞에서 실행 →
+매칭 시 사이드 이펙트 없이 short-circuit.
 
 ## 데이터 흐름: 읽기
 

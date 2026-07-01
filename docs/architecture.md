@@ -94,10 +94,10 @@ catch block (option-A delete: CASCADE removes record + chunks + job + no orphan)
 so `add_memory` success/failure semantics are unchanged.
 
 Pre-write: `assertNoSecrets(content)` runs in
-`src/store/secret-scrub.ts` — refuses to persist content matching API key /
-PEM / bearer / JWT patterns. The check happens in `writeCanonicalMemory`
-before any store touch, so a positive detection short-circuits with no
-side effects.
+`src/store/secret-scrub.ts` — refuses to persist content matching provider
+API key, PEM, bearer/JWT, or credentialed database URL patterns. The check
+happens in `writeCanonicalMemory` before any store touch, so a positive
+detection short-circuits with no side effects.
 
 ## Data flow: read
 

@@ -56,8 +56,8 @@ operated in production:
   vector store; a background sweeper retries any upsert that failed mid-flight
   (visibility-timeout claim, `FOR UPDATE SKIP LOCKED`). No silent index drift.
 - **Secrets scrubbed at write.** Content is scanned before it ever lands —
-  API keys, PEM blocks, bearer tokens, and JWTs are rejected (`SecretDetectedError`)
-  rather than persisted.
+  provider API keys, PEM blocks, bearer/JWT tokens, and credentialed database
+  URLs are rejected (`SecretDetectedError`) rather than persisted.
 - **Compaction with a dry run.** Exact + semantic dedup and time-decay archival
   are previewed by default (`dryRun: true`); apply is idempotent and
   rate-limited. Archived records are restorable via `unarchive_memory`.
