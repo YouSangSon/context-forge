@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now guards the workflow-level concurrency group
+  and stale-run cancellation setting.
 - CI workflow hygiene coverage now guards that all `actions/setup-node` steps
   keep npm dependency caching enabled.
 - CI workflow hygiene coverage now guards that the workflow runs on pushes to

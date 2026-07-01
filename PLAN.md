@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Setup-Node Cache Guard
+## Current Loop — CI Concurrency Guard
 
 Status:
-- CI uses `actions/setup-node` with npm caching in every Node setup step to
-  keep dependency installs consistent and faster.
-- The loop adds a CI workflow hygiene guard that keeps `cache: npm` present on
-  all three `setup-node` steps.
+- CI uses a workflow-level concurrency group to cancel stale runs for the same
+  branch or pull request when a newer commit arrives.
+- The loop adds a CI workflow hygiene guard that keeps the concurrency group
+  expression and `cancel-in-progress: true` contract in place.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

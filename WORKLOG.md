@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded CI stale-run cancellation:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that CI keeps the
+    workflow-level concurrency group based on workflow name and branch/PR ref.
+  - The same guard requires `cancel-in-progress: true` so newer commits cancel
+    stale runs for the same branch or pull request.
+  - Source checked: GitHub Actions workflow syntax documents
+    `cancel-in-progress: true` for canceling running jobs or workflows in the
+    same concurrency group:
+    https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`15` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1844` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded setup-node dependency caching:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that all three
     `actions/setup-node` steps keep `cache: npm`.

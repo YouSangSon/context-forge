@@ -10,6 +10,12 @@ describe("CI workflow hygiene", () => {
     );
   });
 
+  it("cancels stale workflow runs for the same branch or pull request", () => {
+    expect(ciWorkflow).toContain(
+      "concurrency:\n  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}\n  cancel-in-progress: true\n",
+    );
+  });
+
   it("keeps the default GitHub token permissions read-only", () => {
     const permissionsBlock = ciWorkflow.match(
       /^permissions:\n((?:  [^\n]+\n)+)/m,
