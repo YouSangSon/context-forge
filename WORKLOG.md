@@ -2,6 +2,28 @@
 
 ## 2026-07-02
 
+- Added code-quality audit triage notes:
+  - The tracked continuation docs now record current-branch evidence for
+    addressed CQ findings without force-adding ignored `docs/superpowers`
+    audit snapshots.
+  - The evidence covers CQ-01, CQ-02, CQ-03, CQ-04, CQ-05, CQ-06, CQ-07,
+    CQ-10, CQ-12, CQ-13, CQ-14, and CQ-15 so future loops do not repeat
+    already-settled investigations.
+  - Source checked: `src/app/routes/memory.ts`, `tests/app/server.test.ts`,
+    `tests/mcp/resolve-org.test.ts`, `tests/app/rate-limit.test.ts`,
+    `tests/app/bearer-auth.test.ts`, `tests/store/parse-source-ref.test.ts`,
+    `src/store/db-utils.ts`, `src/mcp/types.ts`, and current `rg` evidence for
+    `@ts-ignore`.
+
+Verification plan:
+- `npx vitest run tests/app/server.test.ts tests/mcp/resolve-org.test.ts tests/app/rate-limit.test.ts tests/app/bearer-auth.test.ts tests/store/parse-source-ref.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/server.test.ts tests/mcp/resolve-org.test.ts tests/app/rate-limit.test.ts tests/app/bearer-auth.test.ts tests/store/parse-source-ref.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`152` tests passed)
+- `git diff --check` (passed)
+
 - Reused parsed ranking timestamps:
   - `src/search/rank-results.ts` now timestamps records once in `rankResults`
     and reuses that value for newest-record detection, recency scoring, and

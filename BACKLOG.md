@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Code-quality audit triage notes now record current-branch resolution evidence
+  for addressed CQ findings without force-adding ignored audit snapshots.
 - `rankResults` now parses canonical `updatedAt` timestamps once per record and
   reuses them through recency scoring and tie-break sorting.
 - `runOutboxSweep` now batches pending Qdrant cleanup deletes by organization,
