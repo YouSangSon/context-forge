@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Docker build context hygiene now excludes local agent artifacts and internal
+  docs from `.dockerignore`, guarded by Docker hardening coverage.
 - CI workflow hygiene coverage now guards that all CI install steps use
   `ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci`, preserving the CPU-only runner
   workaround for flaky GPU binary downloads.

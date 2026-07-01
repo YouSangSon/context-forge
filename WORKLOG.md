@@ -2,6 +2,29 @@
 
 ## 2026-07-01
 
+- Tightened Docker build context hygiene:
+  - `.dockerignore` now excludes local agent/workflow artifacts, internal docs,
+    and common desktop/editor metadata from Docker build contexts.
+  - `tests/scripts/dockerfile-hardening.test.ts` now guards the internal
+    artifact exclusions so the builder-stage `COPY . .` path does not
+    accidentally absorb them later.
+
+Verification plan:
+- `npx vitest run tests/scripts/dockerfile-hardening.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/dockerfile-hardening.test.ts` (`6` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1831` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Guarded CPU-only CI install steps:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now asserts all three CI
     `Install` steps keep using `ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci`.

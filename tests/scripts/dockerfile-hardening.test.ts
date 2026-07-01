@@ -3,8 +3,15 @@ import { describe, expect, it } from "vitest";
 
 describe("docker/app.Dockerfile hardening", () => {
   const dockerfile = fs.readFileSync("docker/app.Dockerfile", "utf8");
+  const dockerignore = fs.readFileSync(".dockerignore", "utf8");
   const ciWorkflow = fs.readFileSync(".github/workflows/ci.yml", "utf8");
   const installScript = fs.readFileSync("install.sh", "utf8");
+  const dockerIgnorePatterns = new Set(
+    dockerignore
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#")),
+  );
   const npmCiCommands = dockerfile
     .split("\n")
     .map((line) => line.trim())
@@ -54,5 +61,23 @@ describe("docker/app.Dockerfile hardening", () => {
       "ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm install",
     ]);
     expect(installScript).not.toContain("--onnxruntime-node-install-cuda=skip");
+  });
+
+  it("keeps internal agent artifacts out of the Docker build context", () => {
+    for (const pattern of [
+      ".envrc",
+      ".akasha",
+      ".worktrees",
+      ".omc",
+      ".dmux",
+      ".dmux-hooks",
+      ".vibe",
+      ".superpowers",
+      "docs/_internal",
+      "docs/skills",
+      "docs/superpowers",
+    ]) {
+      expect(dockerIgnorePatterns).toContain(pattern);
+    }
   });
 });
