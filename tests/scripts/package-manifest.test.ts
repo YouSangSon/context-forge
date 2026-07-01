@@ -29,6 +29,7 @@ type PackageJson = {
   scripts?: Record<string, string>;
   type?: unknown;
   version?: unknown;
+  workspaces?: unknown;
 };
 
 type PackageLock = {
@@ -219,6 +220,12 @@ describe("package manifest publish surface", () => {
 
     expect(packageJson.bundleDependencies).toBeUndefined();
     expect(packageJson.bundledDependencies).toBeUndefined();
+  });
+
+  it("does not declare npm workspaces", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.workspaces).toBeUndefined();
   });
 
   it("keeps npm package support metadata pointed at the project", () => {

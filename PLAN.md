@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Bundle Dependencies Guard
+## Current Loop — Package Workspaces Guard
 
 Status:
-- Package manifest coverage guards that package `bundleDependencies` and
-  `bundledDependencies` stay absent.
-- The loop catches metadata drift that would bundle dependency contents into
-  npm pack/publish tarballs without an explicit packaging decision.
+- Package manifest coverage guards that package `workspaces` stays absent.
+- The loop catches metadata drift that would move Akasha from a single npm
+  package into workspace install/symlink behavior without an explicit repo
+  architecture decision.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

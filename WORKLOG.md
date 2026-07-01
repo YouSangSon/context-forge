@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded package workspace metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package
+    `workspaces` stays absent.
+  - This catches package metadata drift that would move Akasha from a single
+    npm package into workspace install/symlink behavior without an explicit
+    repo architecture decision.
+  - Source checked: npm documents `workspaces` as local file-system patterns
+    the install client uses to find packages that need symlinking into the
+    top-level `node_modules` folder:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`25` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1869` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package bundled dependency metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package
     `bundleDependencies` and `bundledDependencies` stay absent.

@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that package `workspaces` stays absent
+  so workspace install/symlink behavior cannot appear without an explicit repo
+  architecture decision.
 - Package manifest coverage now guards that package `bundleDependencies` and
   `bundledDependencies` stay absent so npm tarballs cannot silently bundle
   dependency contents.
