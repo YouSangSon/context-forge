@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that the package-lock root descriptor
+  does not declare `os`, `cpu`, or `libc` platform restriction metadata, keeping
+  the self-hosted npm install surface platform-neutral unless reviewed.
 - Package manifest coverage now guards that direct development dependencies
   exist in lockfile package descriptors without `optional` or `devOptional`
   flags, while keeping the current direct dev-only lockfile package set

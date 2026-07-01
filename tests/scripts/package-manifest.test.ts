@@ -50,6 +50,7 @@ type PackageLock = {
     string,
     {
       config?: unknown;
+      cpu?: unknown;
       dependencies?: Record<string, string>;
       dev?: boolean;
       devEngines?: unknown;
@@ -61,10 +62,12 @@ type PackageLock = {
       inBundle?: boolean;
       integrity?: string;
       license?: unknown;
+      libc?: unknown;
       link?: boolean;
       name?: unknown;
       optional?: boolean;
       optionalDependencies?: Record<string, string>;
+      os?: unknown;
       peerDependencies?: Record<string, string>;
       peerDependenciesMeta?: unknown;
       resolved?: string;
@@ -237,10 +240,14 @@ describe("package manifest publish surface", () => {
 
   it("does not restrict supported install platforms", () => {
     const packageJson = readPackageJson();
+    const lockfileRoot = readPackageLock().packages[""];
 
     expect(packageJson.os).toBeUndefined();
     expect(packageJson.cpu).toBeUndefined();
     expect(packageJson.libc).toBeUndefined();
+    expect(lockfileRoot?.os).toBeUndefined();
+    expect(lockfileRoot?.cpu).toBeUndefined();
+    expect(lockfileRoot?.libc).toBeUndefined();
   });
 
   it("does not override npm publish configuration", () => {
