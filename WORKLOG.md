@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Extracted shared DB row helpers:
+  - `src/store/db-utils.ts` now owns `requireSingleRow`, `toNumber`, and
+    `toIsoString`.
+  - `src/store/memory-repository.ts`, `src/store/canonical-indexing.ts`,
+    `src/jobs/ingest-job-repository.ts`, and
+    `src/goal-run/goal-run-repository.ts` import the shared helpers instead of
+    carrying local copies.
+  - Source checked: internal code-quality audit finding CQ-10 documents
+    duplicated DB row helpers across repository files:
+    `docs/superpowers/audit/04-code-quality.md`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts tests/jobs/ingest-job-claim.test.ts tests/goal-run/goal-run-repository.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts tests/jobs/ingest-job-claim.test.ts tests/goal-run/goal-run-repository.test.ts`
+  (`167` tests passed, `7` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1910` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Logged best-effort audit write failures:
   - `src/mcp/tool-registry.ts` still lets tool calls continue when
     `auditLog.record` rejects, but now emits a request-scoped `warn` with

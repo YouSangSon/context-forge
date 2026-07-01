@@ -1,5 +1,6 @@
 import { chunkText, type TextChunk } from "../chunk/chunk-text.js";
 import type { PgPool, PgQueryable } from "../db/connection.js";
+import { requireSingleRow, toIsoString, toNumber } from "./db-utils.js";
 import {
   assertNonBlankMemoryContent,
   assertNonBlankText,
@@ -785,14 +786,6 @@ function normalizeReindexBatchSize(batchSize: number | undefined): number {
   return Math.min(batchSize, 5_000);
 }
 
-function requireSingleRow<TRow>(row: TRow | undefined, label: string): TRow {
-  if (!row) {
-    throw new Error(`Expected ${label} row to be returned`);
-  }
-
-  return row;
-}
-
 async function insertPostgresChunks(
   queryable: PgQueryable,
   input: {
@@ -1132,12 +1125,4 @@ function assertFunction(value: unknown, fieldName: string): void {
   if (typeof value !== "function") {
     throw new Error(`${fieldName} must be a function`);
   }
-}
-
-function toNumber(value: number | string): number {
-  return typeof value === "number" ? value : Number(value);
-}
-
-function toIsoString(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : value;
 }

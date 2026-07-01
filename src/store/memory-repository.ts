@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { PgPool, PgQueryable } from "../db/connection.js";
+import { requireSingleRow, toIsoString, toNumber } from "./db-utils.js";
 import {
   extractEntityMentions,
   type EntityMention,
@@ -951,28 +952,12 @@ function summarize(content: string): string {
   return content.length <= 180 ? content : `${content.slice(0, 177)}...`;
 }
 
-function toIsoString(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : value;
-}
-
-function toNumber(value: number | string): number {
-  return typeof value === "number" ? value : Number(value);
-}
-
 function toNumberArray(values: readonly (number | string)[] | null): number[] {
   return (values ?? []).map((value) => toNumber(value));
 }
 
 function likeContainsPattern(value: string): string {
   return `%${value.replace(/[\\%_]/g, (match) => `\\${match}`)}%`;
-}
-
-function requireSingleRow<TRow>(row: TRow | undefined, label: string): TRow {
-  if (!row) {
-    throw new Error(`Expected ${label} row to be returned`);
-  }
-
-  return row;
 }
 
 function assertNoSecretsInMemoryFields(input: {

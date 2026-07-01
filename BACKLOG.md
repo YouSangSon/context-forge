@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Shared DB row helpers now centralize `requireSingleRow`, `toNumber`, and
+  `toIsoString` for repository modules that previously duplicated them.
 - Tool registry audit writes now keep their best-effort non-blocking behavior
   while logging `warn` events when audit persistence fails.
 - TypeScript source convention coverage now rejects unsafe `any` and `never`

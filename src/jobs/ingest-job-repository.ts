@@ -1,5 +1,6 @@
 import type { PgPool } from "../db/connection.js";
 import { rootLogger } from "../logger.js";
+import { requireSingleRow, toIsoString, toNumber } from "../store/db-utils.js";
 import { assertNonBlankText } from "../store/memory-content.js";
 import type { IngestJob, IngestJobRepository } from "../types.js";
 
@@ -308,22 +309,6 @@ function mapJob(row: IngestJobRow): IngestJob {
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
   };
-}
-
-function toIsoString(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : value;
-}
-
-function toNumber(value: number | string): number {
-  return typeof value === "number" ? value : Number(value);
-}
-
-function requireSingleRow<TRow>(row: TRow | undefined, label: string): TRow {
-  if (!row) {
-    throw new Error(`Expected ${label} row to be returned`);
-  }
-
-  return row;
 }
 
 function assertObject(

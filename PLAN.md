@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Best-Effort Audit Failure Logging
+## Current Loop — Shared DB Row Utilities
 
 Status:
-- Tool registry audit writes remain best-effort, but async audit write failures
-  now emit `warn` logs with the tool name and audit outcome.
-- Focused audit-write coverage checks both successful tool calls and tool-error
-  paths when audit persistence fails.
+- `requireSingleRow`, `toNumber`, and `toIsoString` now live in
+  `src/store/db-utils.ts` instead of being duplicated across repository files.
+- Memory, canonical chunking, ingest-job, and goal-run repositories import the
+  shared helpers with no behavior changes intended.
 
 Verification:
-- Focused audit-write coverage and typecheck passed.
+- Focused repository coverage and typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

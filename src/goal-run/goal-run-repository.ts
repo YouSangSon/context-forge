@@ -1,4 +1,5 @@
 import type { PgPool } from "../db/connection.js";
+import { requireSingleRow, toIsoString, toNumber } from "../store/db-utils.js";
 import type {
   CloseGoalRunInput,
   GoalRun,
@@ -324,21 +325,6 @@ function mapIteration(row: GoalRunIterationRow): GoalRunIteration {
   };
 }
 
-function toIsoString(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : value;
-}
-
-function toNumber(value: number | string): number {
-  return typeof value === "number" ? value : Number(value);
-}
-
-function requireSingleRow<TRow>(row: TRow | undefined, label: string): TRow {
-  if (!row) {
-    throw new Error(`Expected ${label} row to be returned`);
-  }
-
-  return row;
-}
 
 function assertGoalRunPool(value: unknown): asserts value is PgPool {
   const candidate = assertObject(value, "goal run pool");
