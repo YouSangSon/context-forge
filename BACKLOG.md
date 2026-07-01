@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Bearer auth unit coverage now directly guards `authenticateBearer` static
+  token precedence, OAuth fallback, and null-result behavior on the active API.
 - Bearer auth no longer exports the unused `matchBearerFromRequest` request
   wrapper; active HTTP and MCP callers pass authorization header strings
   directly to `authenticateBearer`.

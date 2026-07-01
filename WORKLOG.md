@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Added direct coverage for the active bearer-auth API:
+  - `tests/app/bearer-auth.test.ts` now imports `authenticateBearer` and checks
+    static-token precedence over OAuth verification, OAuth fallback when no
+    static token matches, and null results when neither auth path can match.
+  - This keeps unit coverage centered on the active API after removing request
+    and boolean wrapper exports from `src/app/middleware/bearer-auth.ts`.
+  - Source checked: `authenticateBearer` is the helper used by both
+    `src/app/server.ts` and `src/app/mcp-http.ts`.
+
+Verification plan:
+- `npx vitest run tests/app/bearer-auth.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/bearer-auth.test.ts --reporter=dot`
+  (`28` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1909` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Removed the unused bearer-auth request wrapper:
   - `src/app/middleware/bearer-auth.ts` no longer imports
     `IncomingMessage` or exports `matchBearerFromRequest`.

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  authenticateBearer,
   loadBearerTokens,
   matchBearer,
 } from "../../src/app/middleware/bearer-auth.js";
@@ -149,6 +150,59 @@ describe("matchBearer", () => {
       expect(result).toEqual({ token: "legacy-token" });
       expect(timingSafeEqualSpy).toHaveBeenCalledTimes(TOKENS.length);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// authenticateBearer — static tokens first, OAuth fallback second
+// ---------------------------------------------------------------------------
+
+describe("authenticateBearer", () => {
+  it("returns a static auth match without calling the OAuth verifier", async () => {
+    const oauthVerifier = { verify: vi.fn() };
+
+    const result = await authenticateBearer(
+      "Bearer alpha-secret",
+      TOKENS,
+      oauthVerifier,
+    );
+
+    expect(result).toEqual({
+      token: "alpha-secret",
+      organizationId: "dev-team",
+      authType: "static",
+    });
+    expect(oauthVerifier.verify).not.toHaveBeenCalled();
+  });
+
+  it("uses the OAuth verifier when no static token matches", async () => {
+    const oauthVerifier = {
+      verify: vi.fn().mockResolvedValue({
+        token: "verifier-token",
+        organizationId: "oauth-team",
+        scopes: ["akasha:read"],
+      }),
+    };
+
+    const result = await authenticateBearer(
+      "Bearer oauth-token",
+      TOKENS,
+      oauthVerifier,
+    );
+
+    expect(oauthVerifier.verify).toHaveBeenCalledWith("oauth-token");
+    expect(result).toEqual({
+      token: "oauth-token",
+      organizationId: "oauth-team",
+      scopes: ["akasha:read"],
+      authType: "oauth",
+    });
+  });
+
+  it("returns null when neither static nor OAuth auth can match", async () => {
+    await expect(
+      authenticateBearer("Bearer unknown-token", TOKENS, null),
+    ).resolves.toBeNull();
   });
 });
 
