@@ -4,12 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Publish Config Guard
+## Current Loop — Package Bundle Dependencies Guard
 
 Status:
-- Package manifest coverage guards that package `publishConfig` stays absent.
-- The loop catches metadata drift that would change npm publish-time registry,
-  tag, or access behavior without an explicit release decision.
+- Package manifest coverage guards that package `bundleDependencies` and
+  `bundledDependencies` stay absent.
+- The loop catches metadata drift that would bundle dependency contents into
+  npm pack/publish tarballs without an explicit packaging decision.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

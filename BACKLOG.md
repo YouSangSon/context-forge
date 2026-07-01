@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that package `bundleDependencies` and
+  `bundledDependencies` stay absent so npm tarballs cannot silently bundle
+  dependency contents.
 - Package manifest coverage now guards that package `publishConfig` stays absent
   so publish-time registry, tag, and access behavior cannot drift silently.
 - Package manifest coverage now guards that package `os`, `cpu`, and `libc`

@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 type PackageJson = {
   author?: unknown;
   bin?: unknown;
+  bundledDependencies?: unknown;
+  bundleDependencies?: unknown;
   bugs?: unknown;
   cpu?: unknown;
   dependencies?: Record<string, string>;
@@ -210,6 +212,13 @@ describe("package manifest publish surface", () => {
     const packageJson = readPackageJson();
 
     expect(packageJson.publishConfig).toBeUndefined();
+  });
+
+  it("does not bundle dependencies into the package tarball", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.bundleDependencies).toBeUndefined();
+    expect(packageJson.bundledDependencies).toBeUndefined();
   });
 
   it("keeps npm package support metadata pointed at the project", () => {

@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded package bundled dependency metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package
+    `bundleDependencies` and `bundledDependencies` stay absent.
+  - This catches package metadata drift that would bundle dependency contents
+    into npm pack/publish tarballs without an explicit packaging decision.
+  - Source checked: npm documents `bundleDependencies` as package names bundled
+    when publishing, and notes the `bundledDependencies` spelling is also
+    honored:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`24` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1868` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package publish configuration:
   - `tests/scripts/package-manifest.test.ts` now checks that package
     `publishConfig` stays absent.
