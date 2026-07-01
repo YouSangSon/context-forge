@@ -2,6 +2,28 @@
 
 ## 2026-07-01
 
+- Added an explicit `any` type convention guard:
+  - `tests/scripts/source-conventions.test.ts` now scans tracked TypeScript ASTs
+    for `AnyKeyword` nodes.
+  - This guards the contributor rule that untrusted input should use `unknown`,
+    not `any`, without flagging ordinary identifiers like `expect.any(...)`.
+
+Verification plan:
+- `npx vitest run tests/scripts/source-conventions.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/source-conventions.test.ts` (`2` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1834` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Replaced the catch binding convention regex with AST traversal:
   - `tests/scripts/source-conventions.test.ts` now parses tracked TypeScript
     files with the TypeScript compiler API and inspects real `CatchClause`

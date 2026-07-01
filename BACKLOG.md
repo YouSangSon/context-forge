@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- TypeScript source convention coverage now guards tracked source, script, and
+  test files against explicit `any` type keywords.
 - TypeScript catch binding convention coverage now uses AST traversal instead
   of regex matching, avoiding string/comment false positives.
 - TypeScript catch binding convention coverage now spans tracked source,

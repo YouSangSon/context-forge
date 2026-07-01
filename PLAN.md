@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — AST Catch Binding Guard
+## Current Loop — Explicit Any Type Guard
 
 Status:
-- The catch binding convention guard used regex matching, which can flag
-  strings or comments instead of real TypeScript catch clauses.
-- The loop switches the guard to TypeScript AST traversal so only actual
-  `CatchClause` bindings are checked.
+- Contributor guidance says strict TypeScript with no `any`, but the source
+  convention suite only guarded catch bindings.
+- The loop adds AST coverage for explicit `any` type keywords across tracked
+  `src/`, `tests/`, and `scripts/` TypeScript files.
 
 Verification:
 - Focused source convention coverage, typecheck, build, audit, full tests, and
