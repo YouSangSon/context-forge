@@ -113,8 +113,8 @@ export type CompactMemoryToolInput = {
   // v2 additions for the dry-run plan output.
   decayThreshold?: number;
   halfLifeDays?: number;
-  // P18: opt-in semantic dedup (paraphrases via cosine). When set,
-  // REPLACES exact-match dedup. Recommended 0.95 for paraphrases.
+  // Opt-in semantic dedup (paraphrases via cosine). When set, REPLACES
+  // exact-match dedup. Recommended 0.95 for paraphrases.
   // Threshold ∈ (0, 1]. Out: groups appear in CompactMemoryToolResult.
   // duplicateGroups identical to the exact-match path.
   semanticDedupThreshold?: number;

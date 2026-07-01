@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Semantic compaction comments now describe the implemented semantic dedup flow
+  without planning-era phase labels, guarded by public-docs drift coverage.
 - Compaction cleanup sweeper comments now describe current env-driven retry
   behavior without planning-era phase labels, guarded by public-docs drift
   coverage.

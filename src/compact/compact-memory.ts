@@ -30,7 +30,7 @@ export type BuildCompactionPlanInput = {
   decayThreshold?: number;
   halfLifeDays?: number;
   // When provided, REPLACES exact-match dedup with this set. Computed by
-  // the orchestrator (P18.1) which embeds records and runs
+  // the semantic compaction orchestrator, which embeds records and runs
   // findSemanticDuplicates. Semantic with threshold ≤ 1.0 subsumes exact
   // match — running both would just produce overlapping groups that the
   // apply-path orchestrator dedups by id anyway.

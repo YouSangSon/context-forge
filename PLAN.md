@@ -4,11 +4,11 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Compaction Sweeper Comment Refresh
+## Current Loop — Semantic Compaction Comment Refresh
 
 Status:
-- `.env.example` and `src/compact/sweeper-loop.ts` still had planning-era
-  `P17`/`P19` wording around the current compaction cleanup sweeper.
+- `src/compact/compact-memory.ts` and `src/mcp/types.ts` still had
+  planning-era `P18`/`P18.1` wording around implemented semantic dedup.
 - The loop refreshes those comments and extends public-docs drift coverage for
   the exact stale phrases.
 

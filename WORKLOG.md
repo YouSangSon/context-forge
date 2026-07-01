@@ -2,6 +2,30 @@
 
 ## 2026-07-01
 
+- Refreshed semantic compaction comments:
+  - `src/compact/compact-memory.ts` now describes the semantic compaction
+    orchestrator without the planning-era `P18.1` label.
+  - `src/mcp/types.ts` now describes opt-in semantic dedup without the
+    planning-era `P18` label.
+  - `tests/scripts/public-docs-drift.test.ts` now guards those exact stale
+    phrases alongside the existing compaction comment checks.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`41` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1826` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Refreshed compaction cleanup sweeper comments:
   - `.env.example` now describes compaction-apply Qdrant cleanup retries
     without the planning-era `P17` label.
