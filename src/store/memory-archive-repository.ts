@@ -589,7 +589,9 @@ export function createMemoryArchiveRepository(
           `restoreToCanonical: INSERT returned no id for archive ${archive.id}`,
         );
       }
-      return { restoredRecordId: toNumber(newId) };
+      return {
+        restoredRecordId: toPositiveSafeInteger(newId, "restored memory id"),
+      };
     },
 
     async deleteRestoredCanonicalRecord(recordId, organizationId) {

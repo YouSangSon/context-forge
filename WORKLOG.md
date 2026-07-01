@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded restored memory id row mapping:
+  - `src/store/memory-archive-repository.ts` now maps the
+    `memory_records.id` returned by `restoreToCanonical` through positive
+    safe-integer validation before returning unarchive results.
+  - `tests/store/memory-archive-repository.test.ts` now covers malformed
+    restored id rows through mock-pool restore coverage.
+  - Source checked: `memory_records.id` is `BIGSERIAL` in migration
+    `001_initial.sql`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/unarchive-compaction.test.ts tests/store/db-utils.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/unarchive-compaction.test.ts tests/store/db-utils.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`120` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2025` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded memory archive cleanup attempt counter row mapping:
   - `src/store/memory-archive-repository.ts` now maps
     `qdrant_attempt_count` through non-negative safe-integer validation before

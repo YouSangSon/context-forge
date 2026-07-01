@@ -730,6 +730,18 @@ describe("MemoryArchiveRepository.restoreToCanonical", () => {
     expect(params).toContain(200); // source_id
   });
 
+  it.each(["0", "1.5"])(
+    "rejects malformed restored memory id rows: %s",
+    async (id) => {
+      const { pool } = makeMockPool(async () => ({ rows: [{ id }] }));
+      const repo = createMemoryArchiveRepository(pool);
+
+      await expect(
+        repo.restoreToCanonical(makeArchive(), "org-a"),
+      ).rejects.toThrow("restored memory id must be a positive safe integer");
+    },
+  );
+
   it("rejects when archive.organizationId disagrees with caller org (cross-tenant guard)", async () => {
     const { pool } = makeMockPool(async () => ({ rows: [{ id: 1 }] }));
     const repo = createMemoryArchiveRepository(pool);

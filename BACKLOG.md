@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository restore row mapping now validates restored
+  `memory_records.id` values before returning unarchive results.
 - Memory archive repository row mapping now validates Qdrant cleanup attempt
   counters before returning pending or claimed cleanup records.
 - Memory archive repository row mapping now validates archive ids and archived
