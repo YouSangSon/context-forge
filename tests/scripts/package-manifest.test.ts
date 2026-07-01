@@ -51,8 +51,10 @@ type PackageLock = {
     {
       config?: unknown;
       dependencies?: Record<string, string>;
+      dev?: boolean;
       devEngines?: unknown;
       devDependencies?: Record<string, string>;
+      devOptional?: boolean;
       engines?: Record<string, string>;
       hasInstallScript?: boolean;
       hasShrinkwrap?: boolean;
@@ -61,6 +63,7 @@ type PackageLock = {
       license?: unknown;
       link?: boolean;
       name?: unknown;
+      optional?: boolean;
       optionalDependencies?: Record<string, string>;
       peerDependencies?: Record<string, string>;
       peerDependenciesMeta?: unknown;
@@ -434,6 +437,29 @@ describe("package manifest publish surface", () => {
     expect(Object.keys(packageJson.devDependencies ?? {}).sort()).toEqual([
       ...EXPECTED_DEVELOPMENT_DEPENDENCIES,
     ].sort());
+  });
+
+  it("keeps direct runtime lockfile packages out of dev and optional flags", () => {
+    const packageLock = readPackageLock();
+    const missingRuntimePackages = [...EXPECTED_RUNTIME_DEPENDENCIES]
+      .filter((dependencyName) => {
+        const metadata = packageLock.packages[`node_modules/${dependencyName}`];
+        return metadata === undefined;
+      })
+      .sort();
+    const nonRuntimePackages = [...EXPECTED_RUNTIME_DEPENDENCIES]
+      .filter((dependencyName) => {
+        const metadata = packageLock.packages[`node_modules/${dependencyName}`];
+        return (
+          metadata?.dev === true ||
+          metadata?.optional === true ||
+          metadata?.devOptional === true
+        );
+      })
+      .sort();
+
+    expect(missingRuntimePackages).toEqual([]);
+    expect(nonRuntimePackages).toEqual([]);
   });
 
   it("keeps package overrides scoped to the current build tooling override", () => {

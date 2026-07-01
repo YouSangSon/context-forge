@@ -18,6 +18,10 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that direct runtime dependencies exist
+  in lockfile package descriptors without `dev`, `optional`, or `devOptional`
+  flags so runtime packages cannot drift into dev-only or optional install
+  paths without review.
 - Package manifest coverage now guards that non-root lockfile package
   descriptors resolve from `https://registry.npmjs.org/` and carry `sha512-`
   integrity metadata so git, file, link, local tarball, or non-registry HTTP

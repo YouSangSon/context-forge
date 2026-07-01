@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded runtime dependency lockfile flags:
+  - `tests/scripts/package-manifest.test.ts` now checks that direct runtime
+    dependencies exist in package-lock package descriptors without `dev`,
+    `optional`, or `devOptional` flags.
+  - This catches dependency tree drift that would move a runtime dependency
+    into a dev-only or optional install path without an explicit dependency
+    review.
+  - Source checked: npm documents package-lock package descriptor `dev`,
+    `optional`, and `devOptional` flags as dependency-tree classification
+    markers for dev-only, optional-only, or combined dev/optional paths:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`38` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1882` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded lockfile package source resolution:
   - `tests/scripts/package-manifest.test.ts` now checks that every non-root
     package-lock package descriptor resolves from `https://registry.npmjs.org/`

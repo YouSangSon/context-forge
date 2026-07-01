@@ -4,15 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Lockfile Registry Source Guard
+## Current Loop — Lockfile Runtime Flag Guard
 
 Status:
-- Package manifest coverage guards that every non-root lockfile package
-  descriptor resolves from the public npm registry and carries SHA-512
-  integrity metadata.
-- The loop catches dependency tree drift that would introduce git, file, link,
-  local tarball, or non-registry HTTP package sources without an explicit
-  dependency review.
+- Package manifest coverage guards that direct runtime dependencies exist in
+  lockfile package descriptors without `dev`, `optional`, or `devOptional`
+  runtime classification flags.
+- The loop catches dependency tree drift that would move a runtime dependency
+  into a dev-only or optional install path without an explicit dependency
+  review.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,
