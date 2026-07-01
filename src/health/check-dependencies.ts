@@ -77,18 +77,22 @@ async function runProbe(
   name: string,
   probe: () => Promise<void>,
 ): Promise<DependencyCheck> {
-  const start = Date.now();
+  const start = process.hrtime.bigint();
   try {
     await probe();
-    return { name, status: "ok", durationMs: Date.now() - start };
+    return { name, status: "ok", durationMs: elapsedMs(start) };
   } catch (error: unknown) {
     return {
       name,
       status: "fail",
       message: error instanceof Error ? error.message : String(error),
-      durationMs: Date.now() - start,
+      durationMs: elapsedMs(start),
     };
   }
+}
+
+function elapsedMs(start: bigint): number {
+  return Number(process.hrtime.bigint() - start) / 1_000_000;
 }
 
 // Convenience builders that wrap a runtime client into a probe. Kept simple:

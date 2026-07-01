@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Switched dependency probe durations to monotonic time:
+  - `src/health/check-dependencies.ts` now measures probe durations with
+    `process.hrtime.bigint()` instead of `Date.now()` differences, preventing
+    negative `/readyz` dependency metric durations when wall-clock time moves
+    backward.
+  - `tests/health/check-dependencies.test.ts` now covers a backward
+    `Date.now()` sequence while asserting the reported probe duration remains
+    non-negative.
+  - Source checked: `/readyz` stores dependency reports in the metrics
+    registry, whose duration validation now rejects negative durations.
+
+Verification plan:
+- `npx vitest run tests/health/check-dependencies.test.ts tests/app/metrics.test.ts tests/app/server.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/health/check-dependencies.test.ts tests/app/metrics.test.ts tests/app/server.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`147` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2052` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded metrics registry duration observations:
   - `src/app/metrics.ts` now validates HTTP, sweeper, and dependency metric
     durations as non-negative finite numbers instead of clamping negative

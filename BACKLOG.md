@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Dependency readiness probe durations now use monotonic `hrtime` deltas
+  instead of wall-clock `Date.now()` differences, keeping `/readyz` metrics
+  non-negative during clock adjustments.
 - Metrics registry duration observations now validate HTTP, sweeper, and
   dependency durations as non-negative finite numbers instead of clamping
   negative values to zero.

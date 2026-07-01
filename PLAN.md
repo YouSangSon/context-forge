@@ -4,17 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Metrics Duration Validation
+## Current Loop — Monotonic Dependency Probe Durations
 
 Status:
-- `src/app/metrics.ts` now validates HTTP, sweeper, and dependency metric
-  durations as non-negative finite numbers instead of clamping negative values
-  to zero.
-- `tests/app/metrics.test.ts` now covers negative duration observations and
-  keeps non-integer positive durations valid.
+- `src/health/check-dependencies.ts` now measures dependency probe durations
+  with `process.hrtime.bigint()` instead of wall-clock `Date.now()` deltas.
+- `tests/health/check-dependencies.test.ts` now covers wall-clock time moving
+  backward while probe duration remains non-negative.
 
 Verification:
-- Focused metrics/server/health/sweeper/convention tests passed.
+- Focused health/metrics/server/convention tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
