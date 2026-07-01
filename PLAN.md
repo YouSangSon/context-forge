@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Manual Metadata Guard
+## Current Loop — Package Types Metadata Guard
 
 Status:
-- Package manifest coverage guards that package `man` and `directories`
-  metadata stay absent.
-- The loop catches metadata drift that would add npm-installed manual page or
-  directory-derived bin/man surfaces without an explicit packaging decision.
+- Package manifest coverage guards that package `types` and `typings` metadata
+  stay absent.
+- The loop catches metadata drift that would add a TypeScript declaration
+  entrypoint without an explicit public API packaging decision.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that package `types` and `typings`
+  metadata stay absent so TypeScript declaration entrypoints cannot appear
+  without an explicit public API packaging decision.
 - Package manifest coverage now guards that package `man` and `directories`
   metadata stay absent so npm-installed manual page or directory-derived
   bin/man surfaces cannot appear without an explicit packaging decision.

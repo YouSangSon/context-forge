@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded package types metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package `types`
+    and `typings` metadata stay absent.
+  - This catches metadata drift that would add a TypeScript declaration
+    entrypoint without an explicit public API packaging decision.
+  - Source checked: TypeScript's publishing guide documents package
+    `types` as the pointer to a bundled declaration file and notes `typings`
+    is synonymous with `types`:
+    https://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`33` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1877` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package manual metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package `man` and
     `directories` metadata stay absent.

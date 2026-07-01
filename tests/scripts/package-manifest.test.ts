@@ -37,6 +37,8 @@ type PackageJson = {
   repository?: unknown;
   scripts?: Record<string, string>;
   type?: unknown;
+  types?: unknown;
+  typings?: unknown;
   version?: unknown;
   workspaces?: unknown;
 };
@@ -315,6 +317,13 @@ describe("package manifest publish surface", () => {
 
     expect(packageJson.man).toBeUndefined();
     expect(packageJson.directories).toBeUndefined();
+  });
+
+  it("does not declare TypeScript declaration entrypoint metadata", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.types).toBeUndefined();
+    expect(packageJson.typings).toBeUndefined();
   });
 
   it("keeps lockfile root package metadata aligned with package.json", () => {
