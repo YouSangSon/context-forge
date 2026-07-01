@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Ingest Job Counter Row Mapping
+## Current Loop — Memory Chunk Row Mapping
 
 Status:
-- `src/jobs/ingest-job-repository.ts` now maps `attempts` and
-  `qdrant_attempts` database row values through shared numeric validation plus
-  non-negative safe-integer checks.
-- `tests/jobs/ingest-job-claim.test.ts` now covers string row values and
-  malformed counter rows without requiring a live Postgres instance.
+- `src/store/canonical-indexing.ts` now maps `memory_chunks` index and offset
+  row values through shared numeric validation plus non-negative safe-integer
+  checks.
+- `tests/store/canonical-indexing.test.ts` now covers string numeric chunk rows
+  and malformed returned chunk rows across insert/list/get paths.
 
 Verification:
-- Focused ingest-job/db-utils/ingest-sweeper/convention tests passed.
+- Focused canonical-indexing/db-utils/search/vector/convention tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

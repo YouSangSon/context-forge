@@ -2,6 +2,38 @@
 
 ## 2026-07-02
 
+- Guarded memory chunk row mapping:
+  - `src/store/canonical-indexing.ts` now maps `memory_chunks` row ids,
+    chunk indexes, and offsets through a shared chunk row mapper. `chunk_index`,
+    `start_offset`, and `end_offset` pass through shared `toNumber` validation
+    plus non-negative safe-integer checks before being returned.
+  - Insert RETURNING row reassembly now keys by the validated numeric
+    `chunk_index`, so string numeric DB row values still match the input chunk
+    order.
+  - `tests/store/canonical-indexing.test.ts` now covers string numeric rows for
+    insert/list/get chunk paths and malformed returned chunk rows.
+  - Source checked: `memory_chunks.id` and `memory_record_id` are
+    `BIGSERIAL`/`BIGINT`, while `chunk_index`, `start_offset`, and `end_offset`
+    are `INTEGER` fields in migrations.
+
+Verification plan:
+- `npx vitest run tests/store/canonical-indexing.test.ts tests/store/db-utils.test.ts tests/search/retrieve-memory.test.ts tests/vector/point-builder.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/canonical-indexing.test.ts tests/store/db-utils.test.ts tests/search/retrieve-memory.test.ts tests/vector/point-builder.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`129` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1960` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded ingest job counter row mapping:
   - `src/jobs/ingest-job-repository.ts` now maps `attempts` and
     `qdrant_attempts` through shared `toNumber` validation plus a non-negative

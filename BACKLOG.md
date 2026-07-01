@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory chunk row mapping now validates `chunk_index`, `start_offset`, and
+  `end_offset` from `memory_chunks` DB rows before returning stored or
+  reindexable chunks.
 - Ingest job repository row mapping now validates `attempts` and
   `qdrant_attempts` as non-negative safe integers from DB row values, with
   mock-pool coverage for string and malformed counter rows.

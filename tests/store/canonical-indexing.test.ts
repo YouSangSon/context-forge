@@ -1105,21 +1105,21 @@ describe("canonical indexing", () => {
         rows: [
           // reversed: chunk_index 1 before 0
           {
-            id: 2,
-            memory_record_id: 10,
-            chunk_index: 1,
+            id: "2",
+            memory_record_id: "10",
+            chunk_index: "1",
             content: "second chunk",
-            start_offset: 5,
-            end_offset: 11,
+            start_offset: "5",
+            end_offset: "11",
             embedding_version: "v1",
           },
           {
-            id: 1,
-            memory_record_id: 10,
-            chunk_index: 0,
+            id: "1",
+            memory_record_id: "10",
+            chunk_index: "0",
             content: "first chunk",
-            start_offset: 0,
-            end_offset: 5,
+            start_offset: "0",
+            end_offset: "5",
             embedding_version: "v1",
           },
         ],
@@ -1157,6 +1157,64 @@ describe("canonical indexing", () => {
     expect(result[0]!.id).toBe(1);
     expect(result[1]!.chunkIndex).toBe(1);
     expect(result[1]!.id).toBe(2);
+  });
+
+  it.each([
+    {
+      rowPatch: { chunk_index: "1.5" },
+      message: "memory chunk chunk_index must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { start_offset: "-1" },
+      message: "memory chunk start_offset must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { start_offset: "6", end_offset: "5" },
+      message:
+        "memory chunk end_offset must be greater than or equal to start_offset",
+    },
+  ])("insertChunks rejects malformed returned chunk rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "1",
+          memory_record_id: "10",
+          chunk_index: "0",
+          content: "first chunk",
+          start_offset: "0",
+          end_offset: "5",
+          embedding_version: "v1",
+          ...rowPatch,
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await expect(
+      repo.insertChunks({
+        record: createRecord({ id: 10, content: "first chunk" }),
+        chunks: [
+          {
+            chunkIndex: 0,
+            content: "first chunk",
+            startOffset: 0,
+            endOffset: 5,
+          },
+        ],
+        embedding: {
+          provider: "openai",
+          model: "text-embedding-3-small",
+          dimensions: 1536,
+          version: "v1",
+          targetTokens: 800,
+          overlapTokens: 120,
+        },
+      }),
+    ).rejects.toThrow(message);
   });
 
   it.each([
@@ -1500,12 +1558,12 @@ describe("canonical indexing", () => {
         if (sql.includes("INSERT INTO memory_chunks")) {
           return Promise.resolve({
             rows: [{
-              id: 701,
-              memory_record_id: 501,
-              chunk_index: 0,
+              id: "701",
+              memory_record_id: "501",
+              chunk_index: "0",
               content: "replacement chunk",
-              start_offset: 0,
-              end_offset: 17,
+              start_offset: "0",
+              end_offset: "17",
               embedding_version: "v1",
             }],
           });
@@ -1724,6 +1782,49 @@ describe("canonical indexing", () => {
     ]);
   });
 
+  it("listChunks maps string numeric chunk row values", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "701",
+          memory_record_id: "501",
+          chunk_index: "0",
+          content: "stored chunk",
+          start_offset: "0",
+          end_offset: "12",
+          embedding_version: "v1",
+          organization_id: "org-a",
+          scope_type: "project",
+          scope_id: "shared-project",
+          project_key: "shared-project",
+          durability: "durable",
+          kind: "summary",
+          title: null,
+          summary: null,
+          tags: null,
+          updated_at: "2026-01-01T00:00:00.000Z",
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    const chunks = await repo.listChunks("org-a", [
+      { scopeType: "project", scopeId: "shared-project" },
+    ]);
+
+    expect(chunks).toEqual([
+      expect.objectContaining({
+        id: 701,
+        memoryRecordId: 501,
+        chunkIndex: 0,
+        startOffset: 0,
+        endOffset: 12,
+        tags: [],
+      }),
+    ]);
+  });
+
   it("getChunksByRecordId rejects invalid recordId before querying", async () => {
     const mockPool = {
       query: vi.fn().mockResolvedValue({ rows: [] }),
@@ -1736,6 +1837,47 @@ describe("canonical indexing", () => {
     );
 
     expect(mockPool.query).not.toHaveBeenCalled();
+  });
+
+  it("getChunksByRecordId maps string numeric chunk row values", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "702",
+          memory_record_id: "502",
+          chunk_index: "1",
+          content: "stored chunk",
+          start_offset: "5",
+          end_offset: "17",
+          embedding_version: "v1",
+          organization_id: "org-a",
+          scope_type: "project",
+          scope_id: "shared-project",
+          project_key: null,
+          durability: "durable",
+          kind: "fact",
+          title: null,
+          summary: null,
+          tags: ["ops"],
+          updated_at: "2026-01-01T00:00:00.000Z",
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    const chunks = await repo.getChunksByRecordId(502);
+
+    expect(chunks).toEqual([
+      expect.objectContaining({
+        id: 702,
+        memoryRecordId: 502,
+        chunkIndex: 1,
+        startOffset: 5,
+        endOffset: 17,
+        tags: ["ops"],
+      }),
+    ]);
   });
 
   it("createContextPackRun rejects whitespace-only organizationId before querying", async () => {

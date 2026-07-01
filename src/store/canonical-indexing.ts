@@ -41,6 +41,29 @@ type PendingIngestJobRef = {
   qdrantAttempts: number;
 };
 
+type StoredMemoryChunkRow = {
+  id: number | string;
+  memory_record_id: number | string;
+  chunk_index: number | string;
+  content: string;
+  start_offset: number | string;
+  end_offset: number | string;
+  embedding_version: string;
+};
+
+type ReindexableMemoryChunkRow = StoredMemoryChunkRow & {
+  organization_id: string;
+  scope_type: SearchMemoryResult["scopeType"];
+  scope_id: string;
+  project_key: string | null;
+  durability: string;
+  kind: string;
+  title: string | null;
+  summary: string | null;
+  tags: string[] | null;
+  updated_at: string | Date;
+};
+
 export type ReindexableMemoryChunk = StoredMemoryChunk & {
   organizationId: string;
   scopeType: SearchMemoryResult["scopeType"];
@@ -254,25 +277,7 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
       const limitClause = listOptions.limit === undefined
         ? ""
         : `LIMIT $${params.push(listOptions.limit)}`;
-      const result = await pool.query<{
-        id: number;
-        memory_record_id: number;
-        chunk_index: number;
-        content: string;
-        start_offset: number;
-        end_offset: number;
-        embedding_version: string;
-        organization_id: string;
-        scope_type: SearchMemoryResult["scopeType"];
-        scope_id: string;
-        project_key: string | null;
-        durability: string;
-        kind: string;
-        title: string | null;
-        summary: string | null;
-        tags: string[] | null;
-        updated_at: string | Date;
-      }>(
+      const result = await pool.query<ReindexableMemoryChunkRow>(
         `
           SELECT
             mc.id,
@@ -308,49 +313,13 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
         params,
       );
 
-      return result.rows.map((row) => ({
-        id: toNumber(row.id),
-        memoryRecordId: toNumber(row.memory_record_id),
-        chunkIndex: row.chunk_index,
-        content: row.content,
-        startOffset: row.start_offset,
-        endOffset: row.end_offset,
-        embeddingVersion: row.embedding_version,
-        organizationId: row.organization_id,
-        scopeType: row.scope_type,
-        scopeId: row.scope_id,
-        projectKey: row.project_key,
-        durability: row.durability,
-        kind: row.kind,
-        title: row.title,
-        summary: row.summary,
-        tags: row.tags ?? [],
-        updatedAt: toIsoString(row.updated_at),
-      }));
+      return result.rows.map(mapReindexableMemoryChunkRow);
     },
 
     async getChunksByRecordId(recordId) {
       assertPositiveSafeInteger(recordId, "recordId");
 
-      const result = await pool.query<{
-        id: number;
-        memory_record_id: number;
-        chunk_index: number;
-        content: string;
-        start_offset: number;
-        end_offset: number;
-        embedding_version: string;
-        organization_id: string;
-        scope_type: SearchMemoryResult["scopeType"];
-        scope_id: string;
-        project_key: string | null;
-        durability: string;
-        kind: string;
-        title: string | null;
-        summary: string | null;
-        tags: string[] | null;
-        updated_at: string | Date;
-      }>(
+      const result = await pool.query<ReindexableMemoryChunkRow>(
         `
           SELECT
             mc.id,
@@ -384,25 +353,7 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
         [recordId],
       );
 
-      return result.rows.map((row) => ({
-        id: toNumber(row.id),
-        memoryRecordId: toNumber(row.memory_record_id),
-        chunkIndex: row.chunk_index,
-        content: row.content,
-        startOffset: row.start_offset,
-        endOffset: row.end_offset,
-        embeddingVersion: row.embedding_version,
-        organizationId: row.organization_id,
-        scopeType: row.scope_type,
-        scopeId: row.scope_id,
-        projectKey: row.project_key,
-        durability: row.durability,
-        kind: row.kind,
-        title: row.title,
-        summary: row.summary,
-        tags: row.tags ?? [],
-        updatedAt: toIsoString(row.updated_at),
-      }));
+      return result.rows.map(mapReindexableMemoryChunkRow);
     },
 
     async createContextPackRun(input) {
@@ -831,15 +782,7 @@ async function insertPostgresChunks(
     );
   }
 
-  const result = await queryable.query<{
-    id: number;
-    memory_record_id: number;
-    chunk_index: number;
-    content: string;
-    start_offset: number;
-    end_offset: number;
-    embedding_version: string;
-  }>(
+  const result = await queryable.query<StoredMemoryChunkRow>(
     `
       INSERT INTO memory_chunks (
         organization_id,
@@ -870,7 +813,10 @@ async function insertPostgresChunks(
   // order to guarantee the returned array matches input.chunks order.
   const byChunkIndex = new Map<number, (typeof result.rows)[number]>();
   for (const row of result.rows) {
-    byChunkIndex.set(row.chunk_index, row);
+    byChunkIndex.set(
+      toNonNegativeSafeInteger(row.chunk_index, "memory chunk chunk_index"),
+      row,
+    );
   }
 
   return input.chunks.map((chunk) => {
@@ -878,16 +824,61 @@ async function insertPostgresChunks(
       byChunkIndex.get(chunk.chunkIndex),
       "memory chunk",
     );
-    return {
-      id: toNumber(row.id),
-      memoryRecordId: toNumber(row.memory_record_id),
-      chunkIndex: row.chunk_index,
-      content: row.content,
-      startOffset: row.start_offset,
-      endOffset: row.end_offset,
-      embeddingVersion: row.embedding_version,
-    };
+    return mapStoredMemoryChunkRow(row);
   });
+}
+
+function mapStoredMemoryChunkRow(row: StoredMemoryChunkRow): StoredMemoryChunk {
+  const startOffset = toNonNegativeSafeInteger(
+    row.start_offset,
+    "memory chunk start_offset",
+  );
+  const endOffset = toNonNegativeSafeInteger(
+    row.end_offset,
+    "memory chunk end_offset",
+  );
+  if (endOffset < startOffset) {
+    throw new Error(
+      "memory chunk end_offset must be greater than or equal to start_offset",
+    );
+  }
+
+  return {
+    id: toNumber(row.id),
+    memoryRecordId: toNumber(row.memory_record_id),
+    chunkIndex: toNonNegativeSafeInteger(
+      row.chunk_index,
+      "memory chunk chunk_index",
+    ),
+    content: row.content,
+    startOffset,
+    endOffset,
+    embeddingVersion: row.embedding_version,
+  };
+}
+
+function mapReindexableMemoryChunkRow(
+  row: ReindexableMemoryChunkRow,
+): ReindexableMemoryChunk {
+  return {
+    ...mapStoredMemoryChunkRow(row),
+    organizationId: row.organization_id,
+    scopeType: row.scope_type,
+    scopeId: row.scope_id,
+    projectKey: row.project_key,
+    durability: row.durability,
+    kind: row.kind,
+    title: row.title,
+    summary: row.summary,
+    tags: row.tags ?? [],
+    updatedAt: toIsoString(row.updated_at),
+  };
+}
+
+function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertNonNegativeSafeInteger(numberValue, fieldName);
+  return numberValue;
 }
 
 async function replaceChunksForRecordFallback(
