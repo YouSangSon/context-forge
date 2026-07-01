@@ -59,6 +59,19 @@ describe("CI workflow hygiene", () => {
     expect(ciWorkflow).not.toContain("The 3 PG-dependent test files");
   });
 
+  it("keeps the Postgres integration job focused on Postgres-backed suites", () => {
+    const pgJobStart = ciWorkflow.indexOf("  pg-integration:\n");
+    const pgvectorJobStart = ciWorkflow.indexOf("  pgvector-integration:\n");
+    const pgJob = ciWorkflow.slice(pgJobStart, pgvectorJobStart);
+
+    expect(pgJob).toContain("      - name: Run PG-dependent suites\n");
+    expect(pgJob).toContain("        run: >\n          npx vitest run\n");
+    expect(pgJob).toContain("          tests/store/memory-repository.test.ts\n");
+    expect(pgJob).toContain("          tests/jobs/ingest-job-repository.test.ts\n");
+    expect(pgJob).toContain("          tests/db/migrate.test.ts\n");
+    expect(pgJob).not.toContain("        run: npm test\n");
+  });
+
   it("sets explicit job timeouts so hung CI runs do not use the default 360 minutes", () => {
     for (const jobId of [
       "typecheck-and-test",

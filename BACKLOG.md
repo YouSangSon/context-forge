@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- The Postgres integration CI job now runs only the three Postgres-backed test
+  files instead of duplicating the full `npm test` matrix, guarded by CI
+  workflow hygiene coverage.
 - Contributor, troubleshooting, and CI comments now document both
   Postgres-backed suite skips and `PGVECTOR_TEST_URL`-gated pgvector adapter
   skips, guarded by public-docs and CI workflow hygiene coverage.

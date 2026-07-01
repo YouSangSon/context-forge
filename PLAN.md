@@ -4,18 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Integration Skip Guidance
+## Current Loop — Focused Postgres CI Job
 
 Status:
-- CONTRIBUTING, troubleshooting docs, and the main CI test comment still
-  described only three Postgres-gated test files.
-- The current default `npm test` also includes pgvector adapter integration
-  cases that skip unless `PGVECTOR_TEST_URL` is set, with CI coverage in a
-  dedicated pgvector job.
+- The `pg-integration` job is named for PG-dependent suites but currently runs
+  the full `npm test` suite after the main Node matrix already ran it.
+- The loop narrows that job to the three Postgres-backed suites and guards the
+  command shape in CI workflow hygiene coverage.
 
 Verification:
-- Focused public-docs/CI workflow hygiene coverage, typecheck, build, audit,
-  full tests, and diff check passed.
+- Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,
+  and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

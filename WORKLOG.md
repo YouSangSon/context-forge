@@ -2,6 +2,31 @@
 
 ## 2026-07-01
 
+- Focused the Postgres integration CI job:
+  - `.github/workflows/ci.yml` now runs only
+    `tests/store/memory-repository.test.ts`,
+    `tests/jobs/ingest-job-repository.test.ts`, and
+    `tests/db/migrate.test.ts` in the `pg-integration` job.
+  - The main Node matrix still runs `npm test`; narrowing the Postgres job
+    avoids duplicating the full suite while keeping the backend-gated coverage.
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now guards the focused command.
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`8` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1828` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned integration skip guidance:
   - `CONTRIBUTING.md`, `CONTRIBUTING.ko.md`, `docs/troubleshooting.md`, and
     `docs/troubleshooting.ko.md` now document both Postgres-backed
