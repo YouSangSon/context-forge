@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded CI Node matrix fail-fast behavior:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that the Node
+    matrix keeps `fail-fast: false` next to the supported Node 22/24 matrix.
+  - This keeps a failure on one runtime from canceling the sibling runtime job
+    before it reports, preserving full runtime-support signal in CI.
+  - Source checked: GitHub Actions workflow syntax documents that
+    `strategy.fail-fast` defaults to true and cancels in-progress or queued
+    matrix jobs after a matrix job failure:
+    https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`17` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1846` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded database service health checks in CI:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that the Postgres
     and pgvector integration jobs keep `pg_isready` service health checks.

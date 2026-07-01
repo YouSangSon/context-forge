@@ -62,6 +62,12 @@ describe("CI workflow hygiene", () => {
     expect(ciWorkflow).toContain("          node-version: ${{ matrix.node }}\n");
   });
 
+  it("keeps the Node matrix from canceling sibling jobs on first failure", () => {
+    expect(ciWorkflow).toContain(
+      '    strategy:\n      fail-fast: false\n      matrix:\n        node: ["22", "24"]\n',
+    );
+  });
+
   it("keeps npm dependency caching enabled for setup-node steps", () => {
     const setupNodeSteps = ciWorkflow.match(
       /      - name: Setup Node\n        uses: actions\/setup-node@v4\n        with:\n(?:          [^\n]+\n)+/g,

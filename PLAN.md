@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Database Service Health Guard
+## Current Loop — CI Matrix Fail-Fast Guard
 
 Status:
-- CI Postgres and pgvector integration jobs use Docker health checks so tests
-  wait for database service containers before connecting.
-- The loop adds a CI workflow hygiene guard that keeps the `pg_isready` health
-  command, interval, timeout, and retry settings in place.
+- CI's Node matrix keeps `fail-fast: false` so one runtime failure does not
+  cancel the sibling Node runtime job before it reports.
+- The loop adds a CI workflow hygiene guard that keeps the matrix fail-fast
+  setting and supported Node matrix together.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

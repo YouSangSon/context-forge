@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now guards that the Node matrix keeps
+  `fail-fast: false` so one runtime failure does not cancel the sibling runtime.
 - CI workflow hygiene coverage now guards the Postgres and pgvector service
   container health checks that integration jobs rely on before connecting.
 - CI workflow hygiene coverage now guards the workflow-level concurrency group
