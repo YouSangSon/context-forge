@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Unreleased English/Korean changelogs now record the `/admin/memory` shell
+  reliability fixes, guarded by public-docs drift coverage.
 - The `/admin/memory` static shell now includes HTTP status details when
   non-JSON error responses fall back to generated status text.
 - The `/admin/memory` static shell now sends only finite numeric limit and

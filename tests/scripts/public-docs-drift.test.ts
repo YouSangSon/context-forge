@@ -765,6 +765,17 @@ describe("public documentation drift checks", () => {
     expect(korean).toContain("`install.sh`");
   });
 
+  it("records admin shell reliability fixes in Unreleased changelogs", () => {
+    for (const path of ["CHANGELOG.md", "CHANGELOG.ko.md"]) {
+      const bullet = unreleasedChangelogBulletContaining(path, "/admin/memory");
+      expect(bullet).toContain("load/save/tag/archive");
+      expect(bullet).toContain("status");
+      expect(bullet).toContain("non-JSON");
+      expect(bullet).toContain("HTTP status");
+      expect(bullet).toContain("JSON `null`");
+    }
+  });
+
   it("documents every service tool and JSON HTTP route in public docs", () => {
     const docs = [
       "README.md",

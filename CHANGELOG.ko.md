@@ -25,6 +25,10 @@ CHANGELOG에서 명시적으로 표기합니다.
 - 전용 sweeper worker: `npm run start:worker` / `npm run dev:worker` 로
   compaction/ingest sweeper를 request-serving replica 밖에서 실행할 수 있으며,
   기존 HTTP 서버 내부 opt-in 경로도 유지됩니다.
+- Memory governance UI: 정적 `/admin/memory` 셸이 load/save/tag/archive 실패를
+  화면의 status text로 표시하고, API error message를 우선 사용하며, non-JSON
+  실패에는 HTTP status를 포함하고, non-finite numeric form 값이 JSON `null` 로
+  전송되지 않게 합니다.
 - PR #19: `/mcp` 의 MCP Streamable HTTP, MCP resources, MCP prompts, typed
   result를 쓰는 클라이언트용 structured MCP tool output 추가.
 - 문서: 공개 문서가 descriptor 공유 검증, non-root 컨테이너 런타임 기본값,

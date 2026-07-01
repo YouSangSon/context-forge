@@ -25,6 +25,10 @@ changes; CHANGELOG entries call those out explicitly.
 - Dedicated sweeper worker: `npm run start:worker` / `npm run dev:worker` run
   the compaction and ingest sweepers outside request-serving replicas while
   preserving the existing opt-in HTTP-server path.
+- Memory governance UI: the static `/admin/memory` shell now reports
+  load/save/tag/archive failures through visible status text, keeps
+  API-provided errors, includes HTTP status details for non-JSON failures, and
+  avoids sending non-finite numeric form values as JSON `null`.
 - PR #19 added MCP Streamable HTTP at `/mcp`, MCP resources, MCP prompts, and
   structured MCP tool output for clients that consume typed results.
 - Docs: public docs now describe descriptor-shared validation, non-root

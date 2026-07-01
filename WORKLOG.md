@@ -2,6 +2,29 @@
 
 ## 2026-07-01
 
+- Recorded admin shell reliability fixes in changelogs:
+  - `CHANGELOG.md` and `CHANGELOG.ko.md` now note safer `/admin/memory`
+    load/save/tag/archive error reporting, API error preservation, non-JSON
+    HTTP status fallback text, and finite numeric payload handling.
+  - `tests/scripts/public-docs-drift.test.ts` guards the Unreleased changelog
+    entries.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`43` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1836` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Improved admin shell HTTP error fallback text:
   - `src/app/admin-memory-page.ts` now includes response status and status text
     when a failed request does not return a JSON API error message.
