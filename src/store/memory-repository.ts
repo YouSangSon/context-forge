@@ -199,6 +199,10 @@ export function createMemoryRepository(
           input,
           organizationId,
         );
+        const sourceId = mapPositiveSafeInteger(
+          sourceRow.source_id_joined,
+          "source id",
+        );
 
         const memoryResult = await client.query<PostgresMemoryRow>(
           `
@@ -242,21 +246,25 @@ export function createMemoryRepository(
             summary,
             durability,
             importance,
-            sourceRow.source_id_joined,
+            sourceId,
           ],
         );
 
         const memoryRow = requireSingleRow(memoryResult.rows[0], "memory");
+        const memoryRecordId = mapPositiveSafeInteger(
+          memoryRow.id,
+          "memory id",
+        );
         await persistPostgresEntityGraph(client, {
           input,
           organizationId,
-          memoryRecordId: toNumber(memoryRow.id),
+          memoryRecordId,
           sourceRow,
         });
 
         await client.query("COMMIT");
 
-      return mapPostgresSearchResult({
+        return mapPostgresSearchResult({
           ...memoryRow,
           ...sourceRow,
           tags: [],

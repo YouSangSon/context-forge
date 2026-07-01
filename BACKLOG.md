@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Add-memory write path now validates returned source and memory record ids
+  before using them in follow-up inserts or entity graph persistence.
 - Entity mention write-path row mapping now validates returned entity ids before
   inserting mention or relationship rows.
 - Memory search result row mapping now validates hydrated memory/source ids
