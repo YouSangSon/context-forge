@@ -1,5 +1,5 @@
-// MemoryArchiveRepository — repository pattern for the P17 compaction
-// apply path. SQL ownership of compaction_runs + memory_archive tables.
+// MemoryArchiveRepository — repository pattern for the compaction apply path.
+// SQL ownership of compaction_runs + memory_archive tables.
 //
 // The orchestrator (src/compact/apply-compaction.ts) consumes this to:
 //   1. createCompactionRun  — insert run row, returns numeric id
@@ -98,13 +98,13 @@ export type MemoryArchiveRepository = {
     scopeId: string;
   }): Promise<boolean>;
   // Counts dryRun=false runs for an org started within the given window.
-  // Used by the apply-path rate limit (P17 step 6) to refuse a new apply
-  // when an org has already run one recently.
+  // Used by the apply-path rate limit to refuse a new apply when an org has
+  // already run one recently.
   countRecentApplyRuns(
     organizationId: string,
     windowMs: number,
   ): Promise<number>;
-  // P19.1 — unarchive recovery flow.
+  // Unarchive recovery flow.
   findArchiveByIds(
     archiveIds: number[],
     organizationId: string,
@@ -537,7 +537,7 @@ export function createMemoryArchiveRepository(
       }
       if (archive.sourceId === null) {
         throw new Error(
-          `restoreToCanonical: archive ${archive.id} has no source_id (pre-P19.1 archive row); cannot restore until source is rebuilt`,
+          `restoreToCanonical: archive ${archive.id} has no source_id; cannot restore until the original source is rebuilt`,
         );
       }
       const result = await pool.query<{ id: number }>(

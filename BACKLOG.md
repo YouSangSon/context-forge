@@ -18,6 +18,10 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository comments and direct missing-`source_id` restore
+  errors now use current feature/error wording instead of internal phase
+  labels; the documented unarchive outcome reason remains stable for client
+  compatibility.
 - Public architecture data-flow docs no longer expose internal `(P17)`,
   `(P19.1)`, or `pre-P19.1` phase labels, guarded by public-docs drift
   coverage.

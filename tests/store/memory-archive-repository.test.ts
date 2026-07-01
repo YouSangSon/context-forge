@@ -447,7 +447,7 @@ describe("MemoryArchiveRepository.countRecentApplyRuns", () => {
   });
 });
 
-describe("MemoryArchiveRepository.findArchiveByIds (P19.1)", () => {
+describe("MemoryArchiveRepository.findArchiveByIds", () => {
   it("returns empty array when no ids supplied", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -518,7 +518,7 @@ describe("MemoryArchiveRepository.findArchiveByIds (P19.1)", () => {
   });
 });
 
-describe("MemoryArchiveRepository.restoreToCanonical (P19.1)", () => {
+describe("MemoryArchiveRepository.restoreToCanonical", () => {
   function makeArchive(overrides: Record<string, unknown> = {}) {
     return {
       id: 50,
@@ -579,7 +579,7 @@ describe("MemoryArchiveRepository.restoreToCanonical (P19.1)", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
-  it("rejects when archive predates P19.1 (sourceId is null)", async () => {
+  it("rejects when archive has no sourceId", async () => {
     const { pool } = makeMockPool(async () => ({ rows: [{ id: 1 }] }));
     const repo = createMemoryArchiveRepository(pool);
 
@@ -589,7 +589,7 @@ describe("MemoryArchiveRepository.restoreToCanonical (P19.1)", () => {
   });
 });
 
-describe("MemoryArchiveRepository.deleteRestoredCanonicalRecord (P19.1)", () => {
+describe("MemoryArchiveRepository.deleteRestoredCanonicalRecord", () => {
   it("deletes only the restored canonical record for the caller organization", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -627,7 +627,7 @@ describe("MemoryArchiveRepository.deleteRestoredCanonicalRecord (P19.1)", () => 
   });
 });
 
-describe("MemoryArchiveRepository.markUnarchived (P19.1)", () => {
+describe("MemoryArchiveRepository.markUnarchived", () => {
   it("sets unarchived_at = NOW() for the given archive id", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);

@@ -492,6 +492,14 @@ describe("public documentation drift checks", () => {
     }
   });
 
+  it("keeps memory archive repository comments current", () => {
+    const text = read("src/store/memory-archive-repository.ts");
+    expect(text).not.toContain("P17 compaction");
+    expect(text).not.toContain("P17 step 6");
+    expect(text).not.toContain("P19.1 — unarchive recovery flow");
+    expect(text).not.toContain("pre-P19.1 archive row");
+  });
+
   it("documents descriptor-driven tool validation in API docs", () => {
     expect(read("docs/api-reference.md")).toContain("shared tool schema");
     expect(read("docs/api-reference.ko.md")).toContain("공유 tool schema");

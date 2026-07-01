@@ -2,6 +2,35 @@
 
 ## 2026-07-01
 
+- Refreshed memory archive source labels:
+  - `src/store/memory-archive-repository.ts` no longer describes the
+    compaction apply path, rate-limit helper, or unarchive recovery flow with
+    internal phase labels.
+  - Direct `restoreToCanonical` calls now report missing `source_id` without a
+    `pre-P19.1` label.
+  - The documented `unarchive_memory` skipped outcome reason remains
+    `pre_p19.1_archive_missing_source_id` for client compatibility; changing
+    that API string is a separate compatibility decision, not a cleanup.
+  - `tests/scripts/public-docs-drift.test.ts` guards against the stale source
+    phrases returning.
+
+Verification plan:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/unarchive-compaction.test.ts tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/unarchive-compaction.test.ts tests/scripts/public-docs-drift.test.ts`
+  (`112` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1823` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Cleaned up public architecture phase labels:
   - `docs/architecture.md` and `docs/architecture.ko.md` now use feature
     names for the compact apply and unarchive data-flow sections instead of
