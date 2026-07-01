@@ -4,12 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Trigger Guard
+## Current Loop — CI Setup-Node Cache Guard
 
 Status:
-- CI should run for both pushes to `main` and pull requests targeting `main`.
-- The loop adds a CI workflow hygiene guard that keeps those workflow triggers
-  and branch filters from being removed silently.
+- CI uses `actions/setup-node` with npm caching in every Node setup step to
+  keep dependency installs consistent and faster.
+- The loop adds a CI workflow hygiene guard that keeps `cache: npm` present on
+  all three `setup-node` steps.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

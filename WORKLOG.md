@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- Guarded setup-node dependency caching:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that all three
+    `actions/setup-node` steps keep `cache: npm`.
+  - Source checked: `actions/setup-node` documents the `cache` input for npm
+    dependency caching:
+    https://github.com/actions/setup-node
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`14` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1843` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded CI workflow triggers:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that
     `.github/workflows/ci.yml` runs on pushes to `main` and pull requests

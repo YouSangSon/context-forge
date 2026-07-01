@@ -56,6 +56,17 @@ describe("CI workflow hygiene", () => {
     expect(ciWorkflow).toContain("          node-version: ${{ matrix.node }}\n");
   });
 
+  it("keeps npm dependency caching enabled for setup-node steps", () => {
+    const setupNodeSteps = ciWorkflow.match(
+      /      - name: Setup Node\n        uses: actions\/setup-node@v4\n        with:\n(?:          [^\n]+\n)+/g,
+    );
+
+    expect(setupNodeSteps).toHaveLength(3);
+    expect(
+      setupNodeSteps?.filter((step) => step.includes("          cache: npm\n")),
+    ).toHaveLength(3);
+  });
+
   it("rejects unguarded npm install commands in CI", () => {
     const violations = ciWorkflow
       .split(/\r?\n/)

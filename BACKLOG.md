@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now guards that all `actions/setup-node` steps
+  keep npm dependency caching enabled.
 - CI workflow hygiene coverage now guards that the workflow runs on pushes to
   `main` and pull requests targeting `main`.
 - CI workflow hygiene coverage now guards that the main Node matrix stays on
