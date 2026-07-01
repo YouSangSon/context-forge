@@ -2,6 +2,36 @@
 
 ## 2026-07-02
 
+- Guarded pgvector query row number mapping:
+  - `src/vector/pgvector-index.ts` now maps SELECT rows through
+    `mapPgVectorQueryRow` and validates `score` plus `memory_record_id` before
+    returning vector hits.
+  - Query row mapping now happens before `COMMIT`, so malformed rows follow the
+    existing rollback path instead of returning coerced hit values.
+  - `tests/vector/pgvector-index.integration.test.ts` covers numeric string
+    mapping, malformed row values, rollback behavior, and client release using
+    a mocked pgvector client.
+  - Source checked: pgvector adapter previously used direct `Number(row.score)`
+    and `Number(row.memory_record_id)` conversions in the query result mapper.
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts --reporter=dot`
+  (`75` tests passed, `12` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1939` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Reused DB helpers in audit row mapping:
   - `src/audit/audit-log-repository.ts` now maps `id`, `duration_ms`, and
     `created_at` through shared `toNumber` and `toIsoString` helpers instead of

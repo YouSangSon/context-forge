@@ -41,6 +41,47 @@ function makeMockPool(): { pool: PgPool; query: ReturnType<typeof vi.fn> } {
   return { pool, query };
 }
 
+function makeQueryPool(rows: Record<string, unknown>[]): {
+  pool: PgPool;
+  query: ReturnType<typeof vi.fn>;
+  client: { query: ReturnType<typeof vi.fn>; release: ReturnType<typeof vi.fn> };
+} {
+  const query = vi.fn().mockResolvedValue({ rows });
+  const client = {
+    query,
+    release: vi.fn(),
+  };
+  const pool = {
+    query: vi.fn(),
+    connect: vi.fn().mockResolvedValue(client),
+    end: vi.fn(),
+  } as unknown as PgPool;
+
+  return { pool, query, client };
+}
+
+function buildPgVectorQueryRow(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    point_id: "chunk:42",
+    memory_record_id: "42",
+    organization_id: "org-a",
+    scope_type: "project",
+    scope_id: "project-alpha",
+    project_key: "project-alpha",
+    kind: "fact",
+    durability: "durable",
+    title: "title",
+    summary: "summary",
+    tags: null,
+    updated_at: "2026-04-25T00:00:00.000Z",
+    embedding_version: "v1",
+    score: "0.875",
+    ...overrides,
+  };
+}
+
 // Helper: cosine similarity between two equal-length vectors.
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0;
@@ -146,6 +187,92 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     const [sql, params] = selectCall as [string, unknown[]];
     expect(sql).not.toContain("organization_id =");
     expect(params).toEqual(["[0.1,0.2,0.3]", "project", "project-alpha", 5]);
+  });
+
+  it("query maps numeric string row values through guarded pgvector helpers", async () => {
+    const { pool, query, client } = makeQueryPool([
+      buildPgVectorQueryRow({
+        memory_record_id: "42",
+        score: "0.875",
+      }),
+    ]);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        1,
+      ),
+    ).resolves.toEqual([
+      {
+        id: "chunk:42",
+        score: 0.875,
+        payload: {
+          memory_record_id: 42,
+          organization_id: "org-a",
+          scope_type: "project",
+          scope_id: "project-alpha",
+          project_key: "project-alpha",
+          kind: "fact",
+          durability: "durable",
+          title: "title",
+          summary: "summary",
+          tags: [],
+          updated_at: "2026-04-25T00:00:00.000Z",
+          embedding_version: "v1",
+        },
+      },
+    ]);
+
+    expect(query).toHaveBeenCalledWith("COMMIT");
+    expect(client.release).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    {
+      label: "score null",
+      row: buildPgVectorQueryRow({ score: null }),
+      message: "score must be a finite number",
+    },
+    {
+      label: "score blank",
+      row: buildPgVectorQueryRow({ score: " \n\t " }),
+      message: "score must be a finite number",
+    },
+    {
+      label: "memory_record_id boolean",
+      row: buildPgVectorQueryRow({ memory_record_id: false }),
+      message: "memory_record_id must be a finite number",
+    },
+    {
+      label: "memory_record_id array",
+      row: buildPgVectorQueryRow({ memory_record_id: [42] }),
+      message: "memory_record_id must be a finite number",
+    },
+  ])("query rejects malformed pgvector row numbers: $label", async ({ row, message }) => {
+    const { pool, query, client } = makeQueryPool([row]);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        1,
+      ),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalledWith("COMMIT");
+    expect(query).toHaveBeenCalledWith("ROLLBACK");
+    expect(client.release).toHaveBeenCalledOnce();
   });
 
   it("query rejects whitespace-only organizationId before opening a client", async () => {

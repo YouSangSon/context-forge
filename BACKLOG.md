@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query row mapping now rejects malformed `score` and
+  `memory_record_id` values before returning vector hits.
 - Audit log listing now reuses shared DB row helpers for numeric and timestamp
   mapping, so malformed audit row numeric values fail consistently.
 - Shared DB number mapping now rejects non-number/string runtime values before

@@ -72,6 +72,23 @@ export type CreatePgVectorIndexOptions = {
   tableName?: string;
 };
 
+type PgVectorQueryRow = {
+  point_id: string;
+  memory_record_id: number | string | null;
+  organization_id: string;
+  scope_type: string | null;
+  scope_id: string | null;
+  project_key: string | null;
+  kind: string | null;
+  durability: string | null;
+  title: string | null;
+  summary: string | null;
+  tags: string[] | null;
+  updated_at: string | null;
+  embedding_version: string | null;
+  score: number | string;
+};
+
 export function createPgVectorIndex(
   pool: PgPool,
   options: CreatePgVectorIndexOptions = {},
@@ -360,48 +377,11 @@ export function createPgVectorIndex(
           LIMIT ${limitPlaceholder}
         `;
 
-        type Row = {
-          point_id: string;
-          memory_record_id: string | null;
-          organization_id: string;
-          scope_type: string | null;
-          scope_id: string | null;
-          project_key: string | null;
-          kind: string | null;
-          durability: string | null;
-          title: string | null;
-          summary: string | null;
-          tags: string[] | null;
-          updated_at: string | null;
-          embedding_version: string | null;
-          score: number;
-        };
-
-        const result = await client.query<Row>(sql, params);
+        const result = await client.query<PgVectorQueryRow>(sql, params);
+        const hits = result.rows.map(mapPgVectorQueryRow);
         await client.query("COMMIT");
 
-        return result.rows.map((row) => ({
-          id: row.point_id,
-          score: Number(row.score),
-          payload: {
-            // node-postgres returns BIGINT (int8) as a string — coerce back to
-            // Number for parity with the Qdrant path (which sees it as a number).
-            memory_record_id: row.memory_record_id == null
-              ? null
-              : Number(row.memory_record_id),
-            organization_id: row.organization_id,
-            scope_type: row.scope_type,
-            scope_id: row.scope_id,
-            project_key: row.project_key,
-            kind: row.kind,
-            durability: row.durability,
-            title: row.title,
-            summary: row.summary,
-            tags: row.tags ?? [],
-            updated_at: row.updated_at,
-            embedding_version: row.embedding_version,
-          },
-        }));
+        return hits;
       } catch (err: unknown) {
         // Preserve and rethrow the original error even if ROLLBACK itself fails
         // (a dead/dropped connection must not mask the real failure).
@@ -450,4 +430,45 @@ export function createPgVectorIndex(
       );
     },
   };
+}
+
+function mapPgVectorQueryRow(row: PgVectorQueryRow): VectorHit {
+  return {
+    id: row.point_id,
+    score: toPgVectorFiniteNumber(row.score, "score"),
+    payload: {
+      // node-postgres returns BIGINT (int8) as a string — coerce back to
+      // Number for parity with the Qdrant path (which sees it as a number).
+      memory_record_id:
+        row.memory_record_id == null
+          ? null
+          : toPgVectorFiniteNumber(row.memory_record_id, "memory_record_id"),
+      organization_id: row.organization_id,
+      scope_type: row.scope_type,
+      scope_id: row.scope_id,
+      project_key: row.project_key,
+      kind: row.kind,
+      durability: row.durability,
+      title: row.title,
+      summary: row.summary,
+      tags: row.tags ?? [],
+      updated_at: row.updated_at,
+      embedding_version: row.embedding_version,
+    },
+  };
+}
+
+function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {
+  if (typeof value !== "number" && typeof value !== "string") {
+    throw new Error(`${fieldName} must be a finite number`);
+  }
+
+  const numberValue = typeof value === "number" ? value : Number(value);
+  if (
+    !Number.isFinite(numberValue) ||
+    (typeof value === "string" && value.trim().length === 0)
+  ) {
+    throw new Error(`${fieldName} must be a finite number`);
+  }
+  return numberValue;
 }

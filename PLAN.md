@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Audit Row DB Helper Reuse
+## Current Loop — Pgvector Query Row Number Guard
 
 Status:
-- `src/audit/audit-log-repository.ts` now maps audit row `id`,
-  `duration_ms`, and `created_at` through shared DB row helpers instead of local
-  coercion.
-- `tests/audit/audit-truncation.test.ts` covers numeric string mapping and
-  malformed audit row numeric values from `listByOrganization`.
+- `src/vector/pgvector-index.ts` now maps query rows through a guarded
+  pgvector row mapper before committing the query transaction.
+- `tests/vector/pgvector-index.integration.test.ts` covers numeric string
+  `score`/`memory_record_id` rows and malformed row numeric values with mocked
+  pgvector clients.
 
 Verification:
-- Focused audit/helper tests passed.
+- Focused vector/search tests passed.
 - Typecheck, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
