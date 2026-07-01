@@ -4,16 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Rate Limiter Bucket Eviction
+## Current Loop — Qdrant Payload Projection
 
 Status:
-- The in-memory token-bucket limiter now sweeps buckets that have been idle for
-  one full refill window.
-- Focused coverage verifies stale token buckets are evicted without changing
-  normal per-token isolation behavior.
+- Qdrant vector queries now request only the `memory_record_id` payload field
+  and explicitly keep vectors out of query responses.
+- Focused adapter coverage guards the projected payload request options.
 
 Verification:
-- Focused rate-limit coverage passed.
+- Focused Qdrant adapter coverage passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

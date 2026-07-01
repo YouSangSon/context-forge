@@ -91,6 +91,8 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
           { key: "project_key", match: { value: "project-alpha" } },
         ],
       },
+      with_payload: ["memory_record_id"],
+      with_vector: false,
     });
   });
 
@@ -115,6 +117,8 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
           { key: "scope_id", match: { value: "alice" } },
         ],
       },
+      with_payload: ["memory_record_id"],
+      with_vector: false,
     });
   });
 

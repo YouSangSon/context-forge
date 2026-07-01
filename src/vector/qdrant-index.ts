@@ -78,6 +78,8 @@ export function createQdrantVectorIndex(
         query: vector,
         limit,
         filter: { must },
+        with_payload: ["memory_record_id"],
+        with_vector: false,
       });
 
       return response.points.map((point) => ({

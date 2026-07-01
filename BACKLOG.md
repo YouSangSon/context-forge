@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant vector query coverage now guards payload projection, and the Qdrant
+  adapter requests only `memory_record_id` plus no vectors for search
+  hydration, avoiding unnecessary response payload transfer.
 - Rate limiter coverage now guards stale in-memory bucket eviction, and the
   token-bucket limiter drops buckets idle for a full refill window so rotated
   tokens or future wider key spaces do not accumulate forever.

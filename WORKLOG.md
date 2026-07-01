@@ -2,6 +2,36 @@
 
 ## 2026-07-02
 
+- Added Qdrant query payload projection:
+  - `src/vector/qdrant-index.ts` now calls Qdrant `query()` with
+    `with_payload: ["memory_record_id"]` and `with_vector: false`.
+  - The vector adapter still returns the same `VectorHit` shape, but Qdrant no
+    longer needs to send unused payload fields or vectors for retrieval
+    hydration.
+  - `tests/vector/qdrant-index.test.ts` now guards the projected payload
+    request options for project and user scoped Qdrant queries.
+  - Source checked: internal performance audit finding 11 documents that the
+    retrieval path only reads `payload.memory_record_id`, and local
+    `@qdrant/js-client-rest` type declarations confirm the query option names
+    are `with_payload` and `with_vector`.
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts` (`25` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1886` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Added stale bucket eviction to the app-local rate limiter:
   - `src/app/middleware/rate-limit.ts` now sweeps buckets that have been idle
     for one full refill window before handling a request.
