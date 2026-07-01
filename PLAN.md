@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Admin Shell Changelog Coverage
+## Current Loop — TypeScript Suppression Comment Guard
 
 Status:
-- Recent `/admin/memory` shell fixes are user-visible, but Unreleased
-  changelog notes did not mention the safer status/error handling.
-- The loop records the admin shell reliability fixes in English/Korean
-  changelogs and guards the note with public-docs drift coverage.
+- Contributor guidance expects strict TypeScript without `any`, and the source
+  convention suite already guards catch bindings and explicit `any` types.
+- The loop adds coverage to keep tracked TypeScript files free of
+  `@ts-ignore` and `@ts-expect-error` suppression comments.
 
 Verification:
-- Focused public-docs drift coverage, typecheck, build, audit, full tests, and
+- Focused source convention coverage, typecheck, build, audit, full tests, and
   diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

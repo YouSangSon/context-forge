@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- TypeScript source convention coverage now rejects `@ts-ignore` and
+  `@ts-expect-error` suppression comments in tracked source, script, and test
+  files.
 - Unreleased English/Korean changelogs now record the `/admin/memory` shell
   reliability fixes, guarded by public-docs drift coverage.
 - The `/admin/memory` static shell now includes HTTP status details when
