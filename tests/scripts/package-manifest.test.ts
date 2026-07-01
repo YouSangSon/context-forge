@@ -18,6 +18,8 @@ type PackageJson = {
 };
 
 type PackageLock = {
+  lockfileVersion?: unknown;
+  name?: unknown;
   packages: Record<
     string,
     {
@@ -29,6 +31,7 @@ type PackageLock = {
       version?: unknown;
     }
   >;
+  version?: unknown;
 };
 
 const EXPECTED_PACKAGE_FILES = [
@@ -132,6 +135,16 @@ describe("package manifest publish surface", () => {
     expect(lockfileRoot?.license).toBe(packageJson.license);
     expect(lockfileRoot?.dependencies).toEqual(packageJson.dependencies);
     expect(lockfileRoot?.devDependencies).toEqual(packageJson.devDependencies);
+  });
+
+  it("keeps lockfile top-level identity and format current", () => {
+    const packageJson = readPackageJson();
+    const packageLock = readPackageLock();
+
+    expect(packageLock.name).toBe(packageJson.name);
+    expect(packageLock.version).toBe(packageJson.version);
+    expect(packageLock.lockfileVersion).toBe(3);
+    expect(packageLock.packages[""]).toBeDefined();
   });
 
   it("uses an explicit package allowlist for runtime and public docs assets", () => {

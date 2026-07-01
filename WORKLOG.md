@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded package lockfile top-level format:
+  - `tests/scripts/package-manifest.test.ts` now checks that
+    `package-lock.json` top-level `name` and `version` match `package.json`.
+  - The same guard keeps the committed lockfile on `lockfileVersion: 3` and
+    requires an explicit root package entry in `packages[""]`.
+  - Source checked: npm documents top-level lockfile `name` and `version` as
+    matching `package.json`, `lockfileVersion: 3` as the npm v9+ format, and
+    `packages[""]` as the typical root project entry:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`8` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1852` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package lockfile root package metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that
     `package-lock.json` root metadata matches `package.json` for package
