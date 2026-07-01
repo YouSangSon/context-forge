@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- TypeScript source convention coverage now includes root `vitest.config.ts`,
+  matching the TypeScript project include set.
 - TypeScript source convention coverage now guards that `tsconfig.json` keeps
   strict mode enabled without disabling `noImplicitAny` or unknown catch
   variables.

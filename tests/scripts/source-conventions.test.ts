@@ -12,9 +12,11 @@ type TsConfig = {
 };
 
 function trackedTypeScriptFiles(): string[] {
-  return execFileSync("git", ["ls-files", "src", "tests", "scripts"], {
-    encoding: "utf8",
-  })
+  return execFileSync(
+    "git",
+    ["ls-files", "src", "tests", "scripts", "vitest.config.ts"],
+    { encoding: "utf8" },
+  )
     .split(/\r?\n/)
     .filter((path) => path.endsWith(".ts"))
     .sort();

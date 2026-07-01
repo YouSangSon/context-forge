@@ -2,6 +2,29 @@
 
 ## 2026-07-02
 
+- Covered root TypeScript config files:
+  - `tests/scripts/source-conventions.test.ts` now includes `vitest.config.ts`
+    when scanning tracked TypeScript files.
+  - This matches the `tsconfig.json` include set so the root Vitest config also
+    stays covered by catch binding, explicit `any`, and suppression guards.
+
+Verification plan:
+- `npx vitest run tests/scripts/source-conventions.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/source-conventions.test.ts` (`4` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1838` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded strict TypeScript config:
   - `tests/scripts/source-conventions.test.ts` now checks that `tsconfig.json`
     keeps `strict: true`.
