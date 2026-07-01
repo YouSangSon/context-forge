@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded package Node runtime metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks `engines.node: >=22`
+    and a root `@types/node` version on the Node 22 line.
+  - This keeps package metadata aligned with Akasha's minimum supported Node
+    runtime and its oldest supported TypeScript ambient types.
+  - Source checked: Node.js Release Working Group schedule marks Node 22 as a
+    supported maintenance LTS line through 2027-04-30 and Node 20 as
+    end-of-life on 2026-04-30:
+    https://github.com/nodejs/release#release-schedule
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`6` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1850` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded CI install ordering:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that every CI job
     runs the CPU-only `Install` step immediately after `actions/setup-node`.

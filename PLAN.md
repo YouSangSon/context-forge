@@ -4,16 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Install Ordering Guard
+## Current Loop — Package Node Runtime Guard
 
 Status:
-- CI jobs set up Node before installing dependencies with the CPU-only
-  `npm ci` command.
-- The loop adds a CI workflow hygiene guard that keeps every `Install` step
-  immediately after the matching `actions/setup-node` step.
+- Package manifest coverage guards the minimum supported Node runtime policy.
+- The loop adds a package manifest guard that keeps `engines.node` on `>=22`
+  and root `@types/node` on the Node 22 type line.
 
 Verification:
-- Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,
+- Focused package manifest coverage, typecheck, build, audit, full tests,
   and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 type PackageJson = {
   bin?: unknown;
   description?: unknown;
+  devDependencies?: Record<string, string>;
+  engines?: Record<string, string>;
   exports?: unknown;
   files?: unknown;
   keywords?: unknown;
@@ -85,6 +87,13 @@ describe("package manifest publish surface", () => {
     expect(packageJson.keywords).toEqual(
       expect.arrayContaining(["postgres", "qdrant", "pgvector"]),
     );
+  });
+
+  it("keeps the package on the supported Node 22 runtime line", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.engines?.node).toBe(">=22");
+    expect(packageJson.devDependencies?.["@types/node"]).toMatch(/^\^22\./);
   });
 
   it("uses an explicit package allowlist for runtime and public docs assets", () => {

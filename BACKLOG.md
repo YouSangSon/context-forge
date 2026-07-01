@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that the package stays on the supported
+  Node 22 runtime line and matching root `@types/node` line.
 - CI workflow hygiene coverage now guards that every CI job installs
   dependencies after setting up Node.
 - CI workflow hygiene coverage now guards that every CI job checks out the
