@@ -238,14 +238,18 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
           `,
           [input.record.id, organizationId, input.nextRetryAt],
         );
-        await client.query("COMMIT");
         const row = requireSingleRow(jobResult.rows[0], "ingest job");
+        const job = {
+          id: toPositiveSafeInteger(row.id, "ingest job id"),
+          qdrantAttempts: toNonNegativeSafeInteger(
+            row.qdrant_attempts,
+            "ingest job qdrant_attempts",
+          ),
+        };
+        await client.query("COMMIT");
         return {
           chunks,
-          job: {
-            id: toNumber(row.id),
-            qdrantAttempts: toNumber(row.qdrant_attempts),
-          },
+          job,
         };
       } catch (error: unknown) {
         await client.query("ROLLBACK").catch(() => undefined);

@@ -2,6 +2,38 @@
 
 ## 2026-07-02
 
+- Guarded pending ingest job row mapping:
+  - `src/store/canonical-indexing.ts` now maps pending ingest job `id` as a
+    positive safe integer and `qdrant_attempts` as a non-negative safe integer
+    before returning the job reference.
+  - Job row validation now happens before `COMMIT`, so malformed
+    `INSERT INTO ingest_jobs ... RETURNING` rows roll back the chunk
+    replacement transaction instead of failing after commit.
+  - `tests/store/canonical-indexing.test.ts` now covers string numeric job rows
+    and malformed job rows through mock-pool
+    `replaceChunksForRecordWithPendingIngest` coverage.
+  - Source checked: `ingest_jobs.id` is `BIGSERIAL` in migration
+    `001_initial.sql`, and `ingest_jobs.qdrant_attempts` is an `INTEGER`
+    counter added by migration `007_ingest_jobs_qdrant_outbox.sql`.
+
+Verification plan:
+- `npx vitest run tests/store/canonical-indexing.test.ts tests/store/db-utils.test.ts tests/search/retrieve-memory.test.ts tests/vector/point-builder.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/canonical-indexing.test.ts tests/store/db-utils.test.ts tests/search/retrieve-memory.test.ts tests/vector/point-builder.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`135` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1999` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded memory chunk id row mapping:
   - `src/store/canonical-indexing.ts` now maps `memory_chunks.id` and
     `memory_record_id` rows through positive safe-integer validation before

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pending ingest job row mapping now validates returned job id and Qdrant
+  attempt counters before committing chunk replacement transactions.
 - Memory chunk row mapping now validates chunk and memory-record ids before
   returning stored or reindexable chunks.
 - Memory graph relationship row mapping now validates confidence values before

@@ -4,14 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Memory Chunk Id Row Mapping
+## Current Loop — Pending Ingest Job Row Mapping
 
 Status:
-- `src/store/canonical-indexing.ts` now maps `memory_chunks.id` and
-  `memory_record_id` rows as positive safe integers before returning stored or
-  reindexable chunks.
-- `tests/store/canonical-indexing.test.ts` now covers malformed chunk id rows
-  through mock-pool insert chunk coverage.
+- `src/store/canonical-indexing.ts` now maps pending ingest job `id` and
+  `qdrant_attempts` rows before committing chunk replacement transactions.
+- `tests/store/canonical-indexing.test.ts` now covers malformed pending ingest
+  job rows and verifies rollback occurs before commit.
 
 Verification:
 - Focused canonical-indexing/db-utils/search/vector/convention tests passed.

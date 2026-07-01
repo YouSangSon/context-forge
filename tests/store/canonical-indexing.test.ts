@@ -1582,7 +1582,7 @@ describe("canonical indexing", () => {
         }
         if (sql.includes("INSERT INTO ingest_jobs")) {
           return Promise.resolve({
-            rows: [{ id: 801, qdrant_attempts: 0 }],
+            rows: [{ id: "801", qdrant_attempts: "0" }],
           });
         }
         return Promise.resolve({ rows: [] });
@@ -1650,6 +1650,105 @@ describe("canonical indexing", () => {
     );
     expect(ingestInsert?.sql).toContain("qdrant_next_retry_at");
     expect(ingestInsert?.params).toEqual([501, "org-a", retryAt]);
+    expect(mockClient.release).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "ingest job id must be a positive safe integer",
+    },
+    {
+      rowPatch: { id: "bad" },
+      message: "database number must be finite",
+    },
+    {
+      rowPatch: { qdrant_attempts: "-1" },
+      message: "ingest job qdrant_attempts must be a non-negative safe integer",
+    },
+  ])("replaceChunksForRecordWithPendingIngest rejects malformed job rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const clientQueryCalls: { sql: string; params: unknown[] }[] = [];
+    const retryAt = new Date("2026-06-26T00:00:01.000Z");
+    const mockClient = {
+      query: vi.fn().mockImplementation((sql: string, params?: unknown[]) => {
+        clientQueryCalls.push({ sql, params: params ?? [] });
+        if (sql === "BEGIN" || sql === "COMMIT" || sql === "ROLLBACK") {
+          return Promise.resolve({ rows: [] });
+        }
+        if (sql.includes("INSERT INTO memory_chunks")) {
+          return Promise.resolve({
+            rows: [{
+              id: "701",
+              memory_record_id: "501",
+              chunk_index: "0",
+              content: "replacement chunk",
+              start_offset: "0",
+              end_offset: "17",
+              embedding_version: "v1",
+            }],
+          });
+        }
+        if (sql.includes("INSERT INTO ingest_jobs")) {
+          return Promise.resolve({
+            rows: [{ id: "801", qdrant_attempts: "0", ...rowPatch }],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const mockPool = {
+      query: vi.fn(),
+      connect: vi.fn().mockResolvedValue(mockClient),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await expect(
+      repo.replaceChunksForRecordWithPendingIngest!({
+        record: {
+          id: 501,
+          organizationId: "org-a",
+          sourceId: 1,
+          scopeType: "project",
+          scopeId: "project-alpha",
+          projectKey: "project-alpha",
+          memoryType: "fact",
+          content: "replacement chunk",
+          createdAt: "2026-06-26T00:00:00.000Z",
+          updatedAt: "2026-06-26T00:00:00.000Z",
+          source: {
+            id: 1,
+            scopeType: "project",
+            scopeId: "project-alpha",
+            sourceType: "document",
+            title: null,
+            uri: null,
+            createdAt: "2026-06-26T00:00:00.000Z",
+          },
+        },
+        chunks: [{
+          chunkIndex: 0,
+          content: "replacement chunk",
+          startOffset: 0,
+          endOffset: 17,
+        }],
+        embedding: {
+          provider: "openai",
+          model: "text-embedding-3-small",
+          dimensions: 1536,
+          version: "v1",
+          targetTokens: 800,
+          overlapTokens: 120,
+        },
+        nextRetryAt: retryAt,
+      }),
+    ).rejects.toThrow(message);
+
+    expect(clientQueryCalls.some(({ sql }) => sql === "ROLLBACK")).toBe(true);
+    expect(clientQueryCalls.some(({ sql }) => sql === "COMMIT")).toBe(false);
     expect(mockClient.release).toHaveBeenCalledOnce();
   });
 
