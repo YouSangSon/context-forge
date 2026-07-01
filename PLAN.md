@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Compaction Plan Comment Refresh
+## Current Loop — Contributing Daily Commands Alignment
 
 Status:
-- `src/compact/compact-memory.ts` now describes its current shared dry-run and
-  destructive-apply planning role instead of a future P17 extension point.
-- `tests/scripts/public-docs-drift.test.ts` now guards that the stale P17
-  planning comment does not return.
+- `CONTRIBUTING.md` and `CONTRIBUTING.ko.md` now list `npm run build` and
+  `npm audit --audit-level=moderate` in the daily command tables.
+- `tests/scripts/public-docs-drift.test.ts` now guards those contributing
+  table entries alongside the shared verification command set.
 
 Verification:
-- Focused compaction/public-docs drift coverage, typecheck, build, audit, full
-  tests, and diff check passed for this comment refresh.
+- Focused public-docs drift coverage, typecheck, build, audit, full tests, and
+  diff check passed for this daily-command alignment.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

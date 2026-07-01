@@ -2,6 +2,28 @@
 
 ## 2026-07-01
 
+- Aligned contributing daily commands:
+  - `CONTRIBUTING.md` and `CONTRIBUTING.ko.md` now list `npm run build` and
+    `npm audit --audit-level=moderate` in the daily command tables.
+  - `tests/scripts/public-docs-drift.test.ts` now guards those table entries
+    alongside the shared verification command set.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`37` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1820` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Refreshed compaction plan comments:
   - `src/compact/compact-memory.ts` now describes the current shared dry-run
     and destructive-apply result-shape role instead of a future P17 extension

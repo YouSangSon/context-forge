@@ -35,6 +35,8 @@ Daily commands:
 | MCP server watch mode | `npm run dev:mcp` |
 | CLI watch mode | `npm run dev:cli` |
 | Type-check | `npm run typecheck` |
+| Build | `npm run build` |
+| Dependency audit | `npm audit --audit-level=moderate` |
 | Run all tests | `npm run test` |
 | Watch tests | `npm run test:watch` |
 | Apply migrations | `npm run db:migrate` |

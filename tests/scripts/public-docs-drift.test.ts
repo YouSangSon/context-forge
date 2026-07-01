@@ -151,6 +151,12 @@ describe("public documentation drift checks", () => {
       "`npm audit --audit-level=moderate` reports 0 vulnerabilities",
     );
     expect(prTemplate).toContain("`npm test` passes");
+    expect(contributing).toContain(
+      "| Dependency audit | `npm audit --audit-level=moderate` |",
+    );
+    expect(contributingKo).toContain(
+      "| 의존성 감사 | `npm audit --audit-level=moderate` |",
+    );
     expect(contributing).not.toContain("Tests + typecheck pass locally");
     expect(contributingKo).not.toContain("테스트 + 타입 체크 로컬 통과");
   });
