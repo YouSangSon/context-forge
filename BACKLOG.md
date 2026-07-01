@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Background queue metrics now reject malformed `COUNT(*)` rows instead of
+  truncating fractional values or clamping negatives to zero.
 - Memory archive repository lookup row mapping now validates archived
   `importance` as a Postgres integer before returning archive rows.
 - Memory archive repository run row mapping now validates compaction run ids

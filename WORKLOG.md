@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded background queue count row mapping:
+  - `src/app/background-queue-metrics.ts` now maps `COUNT(*)` rows as
+    non-negative safe integers instead of truncating fractional values or
+    clamping negatives to zero.
+  - `tests/app/background-queue-metrics.test.ts` now covers nonnumeric,
+    negative, fractional, and `NaN` count rows while preserving the existing
+    missing/null count fallback to zero.
+  - Source checked: background queue metrics read `COUNT(*)` from
+    `ingest_jobs` and `memory_archive`, with supporting indexes documented in
+    migration `015_background_queue_metrics_indexes.sql`.
+
+Verification plan:
+- `npx vitest run tests/app/background-queue-metrics.test.ts tests/app/metrics.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/background-queue-metrics.test.ts tests/app/metrics.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`52` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2036` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded memory archive importance row mapping:
   - `src/store/memory-archive-repository.ts` now maps archived memory
     `importance` through Postgres integer validation before returning archive

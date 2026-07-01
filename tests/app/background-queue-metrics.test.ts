@@ -173,15 +173,20 @@ describe("createBackgroundQueueMetricsCollector", () => {
     },
   );
 
-  it("rejects non-finite count values instead of reporting zero", async () => {
-    const { pool } = makeQueryable(async () => ({
-      rows: [{ count: "not-a-number" }],
-    }));
+  it.each(["not-a-number", "-1", "1.5", Number.NaN])(
+    "rejects malformed count values instead of reporting zero: %s",
+    async (count) => {
+      const { pool } = makeQueryable(async () => ({
+        rows: [{ count }],
+      }));
 
-    const collector = createBackgroundQueueMetricsCollector(pool);
+      const collector = createBackgroundQueueMetricsCollector(pool);
 
-    await expect(
-      collector.collect(new Date("2026-06-27T12:00:00.000Z")),
-    ).rejects.toThrow("background queue count must be a finite number");
-  });
+      await expect(
+        collector.collect(new Date("2026-06-27T12:00:00.000Z")),
+      ).rejects.toThrow(
+        "background queue count must be a non-negative safe integer",
+      );
+    },
+  );
 });

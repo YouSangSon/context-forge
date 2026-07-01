@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Memory Archive Importance Row Mapping
+## Current Loop — Background Queue Count Row Mapping
 
 Status:
-- `src/store/memory-archive-repository.ts` now maps archived memory
-  `importance` as a Postgres integer before returning archive lookup rows to
-  the unarchive flow.
-- `tests/store/memory-archive-repository.test.ts` now covers malformed archive
-  importance rows through mock-pool lookup coverage.
+- `src/app/background-queue-metrics.ts` now maps `COUNT(*)` rows as
+  non-negative safe integers instead of truncating fractional values or
+  clamping negatives to zero.
+- `tests/app/background-queue-metrics.test.ts` now covers nonnumeric,
+  negative, fractional, and `NaN` count rows.
 
 Verification:
-- Focused archive/memory/db-utils/convention tests passed.
+- Focused background queue/metrics/convention tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
