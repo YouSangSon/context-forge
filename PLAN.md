@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Postgres-Backed Test Wording
+## Current Loop — CI CPU-Only Install Guard
 
 Status:
-- The CI step and Postgres-gated test comments still used `PG-dependent`
-  wording while public docs now describe the same coverage as
-  Postgres-backed repository/migration suites.
-- The loop aligns the CI/test wording and updates the CI hygiene guard.
+- CI already skips the `onnxruntime-node` CUDA/GPU binary download in all
+  install steps to avoid flaky GitHub release downloads on CPU-only runners.
+- The loop adds workflow hygiene coverage so future CI edits keep all install
+  steps on `ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci`.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

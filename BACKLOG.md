@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now guards that all CI install steps use
+  `ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci`, preserving the CPU-only runner
+  workaround for flaky GPU binary downloads.
 - Postgres integration CI and Postgres-gated test comments now use
   Postgres-backed suite wording consistently, guarded by CI workflow hygiene
   coverage.

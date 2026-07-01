@@ -37,6 +37,14 @@ describe("CI workflow hygiene", () => {
     expect(auditStepIndex).toBeLessThan(typecheckStepIndex);
   });
 
+  it("keeps CI npm installs CPU-only to avoid flaky GPU binary downloads", () => {
+    const installSteps = ciWorkflow.match(
+      /      - name: Install\n(?:        # [^\n]+\n)*        run: ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci\n/g,
+    );
+
+    expect(installSteps).toHaveLength(3);
+  });
+
   it("builds the package in the main Node matrix before running tests", () => {
     const typecheckStepIndex = ciWorkflow.indexOf("      - name: Typecheck\n");
     const buildStepIndex = ciWorkflow.indexOf("      - name: Build\n");

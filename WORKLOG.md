@@ -2,6 +2,28 @@
 
 ## 2026-07-01
 
+- Guarded CPU-only CI install steps:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now asserts all three CI
+    `Install` steps keep using `ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci`.
+  - This preserves the existing runner-stability workaround that avoids flaky
+    GPU binary downloads on CPU-only GitHub Actions runners.
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`10` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1830` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned Postgres-backed test wording:
   - `.github/workflows/ci.yml` now names the backend-gated step
     `Run Postgres-backed suites`.
