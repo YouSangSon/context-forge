@@ -259,6 +259,30 @@ describe("public documentation drift checks", () => {
     }
   });
 
+  it("keeps Korean README comparison table labels localized", () => {
+    const readmeKo = read("README.ko.md");
+
+    expect(readmeKo).toContain("❌ (OpenAI 기본값)");
+    expect(readmeKo).toContain("❌ (호스팅형)");
+    expect(readmeKo).toContain("✅ (Mem0 래핑)");
+    expect(readmeKo).toContain("래퍼 전용");
+    expect(readmeKo).toContain("| 다양함 | 다양함 | 독점형 |");
+    expect(readmeKo).toContain("OSS 경로 활발히 유지");
+    expect(readmeKo).toContain("❌ (CE 2025 지원 중단)");
+
+    for (const stalePhrase of [
+      "OpenAI default",
+      "(hosted)",
+      "Mem0 wrap",
+      "wrapper 전용",
+      "| varies | varies | proprietary |",
+      "OSS 경로 active 유지",
+      "CE 2025 deprecated",
+    ]) {
+      expect(readmeKo).not.toContain(stalePhrase);
+    }
+  });
+
   it("documents transformers as a packaged runtime dependency", () => {
     const packageJson = readJson<{
       dependencies?: Record<string, string>;

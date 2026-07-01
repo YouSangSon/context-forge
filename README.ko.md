@@ -23,12 +23,12 @@ Claude Code, Codex CLI, 또는 어떤 MCP 클라이언트에든 붙이면 에이
 
 | | **Akasha** | doobidoo/mcp-memory-service | coleam00/mcp-mem0 | mem0ai/mem0 | letta-ai/letta | getzep/zep |
 |---|---|---|---|---|---|---|
-| **즉시 무료 사용** | ✅ | ✅ | ❌ (OpenAI) | ❌ (OpenAI default) | ❌ (hosted) | ❌ (Cloud SaaS) |
+| **즉시 무료 사용** | ✅ | ✅ | ❌ (OpenAI) | ❌ (OpenAI 기본값) | ❌ (호스팅형) | ❌ (Cloud SaaS) |
 | **데이터 본인 머신 저장** | ✅ | ✅ | 부분 (OpenAI 호출) | 부분 (OpenAI 호출) | ❌ (Letta Cloud) | ❌ (Zep Cloud) |
-| **MCP-native 프로토콜** | ✅ | ✅ | ✅ (Mem0 wrap) | wrapper 전용 | wrapper 전용 | ❌ |
+| **MCP-native 프로토콜** | ✅ | ✅ | ✅ (Mem0 래핑) | 래퍼 전용 | 래퍼 전용 | ❌ |
 | **즉시 멀티테넌트** | ✅ (`organization_id`, token-org 바인딩, SQL + vector 양 계층 필터) | ❌ | Mem0 의존 | ✅ | ✅ | ✅ |
-| **Postgres + vector 백엔드** | ✅ (Qdrant 기본; Postgres 단독 배포 옵션 pgvector) | SQLite-vec | Supabase + pgvector | varies | varies | proprietary |
-| **OSS 경로 active 유지** | ✅ | ✅ | ✅ (template repo) | ✅ | ✅ | ❌ (CE 2025 deprecated) |
+| **Postgres + vector 백엔드** | ✅ (Qdrant 기본; Postgres 단독 배포 옵션 pgvector) | SQLite-vec | Supabase + pgvector | 다양함 | 다양함 | 독점형 |
+| **OSS 경로 활발히 유지** | ✅ | ✅ | ✅ (template repo) | ✅ | ✅ | ❌ (CE 2025 지원 중단) |
 
 MCP 메모리 생태계에서는 *무료/로컬 기본값* 이 일반적입니다. doobidoo
 (1.7k★) 는 `$0` 비용을 전면에 내세우고, Akasha도 여러 도구가 채택한 무료 임베딩 모델

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Korean README comparison table now localizes non-code status labels, with
+  public-docs drift coverage.
 - Korean README comparison copy now uses localized positioning language instead
   of mixed English phrases, with public-docs drift coverage.
 - Korean backup guidance now keeps pgvector logical-data-path wording in Korean

@@ -44,6 +44,7 @@ changes; CHANGELOG entries call those out explicitly.
   Korean instead of inheriting the English README phrasing.
 - Docs: Korean README comparison copy now uses localized positioning language
   instead of mixed English phrases.
+- Docs: Korean README comparison table now localizes non-code status labels.
 
 Post-release audit cycle. v1.0.0 shipped with 0 OSS users, so this window
 was the safe time to tighten default-strict behavior on multi-tenancy
