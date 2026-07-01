@@ -2,6 +2,29 @@
 
 ## 2026-07-01
 
+- Hardened CI workflow job-section tests:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now asserts the
+    `pg-integration` and `pgvector-integration` job headings exist, and that
+    pgvector follows Postgres, before slicing backend job sections.
+  - This makes backend job command guards fail clearly if the workflow layout
+    changes.
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`9` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1829` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Guarded the focused pgvector CI job:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks the
     `pgvector-integration` job sets `PGVECTOR_TEST_URL` and runs only

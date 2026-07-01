@@ -4,13 +4,12 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Focused Pgvector CI Guard
+## Current Loop — CI Workflow Job Section Guards
 
 Status:
-- The pgvector integration job already runs the focused pgvector suite with
-  `PGVECTOR_TEST_URL`, but CI workflow hygiene coverage did not guard that
-  command/env contract directly.
-- The loop adds that guard beside the Postgres integration job coverage.
+- CI workflow hygiene tests slice backend job sections with `indexOf`.
+- The loop adds explicit job existence/order assertions so a missing or
+  reordered backend job fails clearly before section-specific checks run.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

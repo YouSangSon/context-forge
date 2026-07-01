@@ -62,6 +62,10 @@ describe("CI workflow hygiene", () => {
   it("keeps the Postgres integration job focused on Postgres-backed suites", () => {
     const pgJobStart = ciWorkflow.indexOf("  pg-integration:\n");
     const pgvectorJobStart = ciWorkflow.indexOf("  pgvector-integration:\n");
+
+    expect(pgJobStart).toBeGreaterThanOrEqual(0);
+    expect(pgvectorJobStart).toBeGreaterThan(pgJobStart);
+
     const pgJob = ciWorkflow.slice(pgJobStart, pgvectorJobStart);
 
     expect(pgJob).toContain("      - name: Run PG-dependent suites\n");
@@ -74,6 +78,9 @@ describe("CI workflow hygiene", () => {
 
   it("keeps the pgvector integration job focused on the pgvector suite", () => {
     const pgvectorJobStart = ciWorkflow.indexOf("  pgvector-integration:\n");
+
+    expect(pgvectorJobStart).toBeGreaterThanOrEqual(0);
+
     const pgvectorJob = ciWorkflow.slice(pgvectorJobStart);
 
     expect(pgvectorJob).toContain("      - name: Run pgvector integration suite\n");
