@@ -4,13 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Script Config Guard
+## Current Loop — Package Browser Metadata Guard
 
 Status:
-- Package manifest coverage guards that package `config` stays absent in both
-  `package.json` and the lockfile root metadata.
-- The loop catches metadata drift that would add npm-managed package script
-  configuration/env behavior without an explicit tooling policy decision.
+- Package manifest coverage guards that package `browser` stays absent in
+  `package.json`.
+- The loop catches metadata drift that would add client-side entrypoint
+  hints/replacements to this Node-oriented MCP server package without an
+  explicit packaging decision.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that package `browser` stays absent so
+  client-side entrypoint metadata cannot appear without an explicit packaging
+  decision for this Node-oriented MCP server.
 - Package manifest coverage now guards that package `config` stays absent in
   package and lockfile root metadata so npm package script configuration cannot
   appear without an explicit tooling policy decision.

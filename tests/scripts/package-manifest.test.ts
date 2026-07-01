@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 type PackageJson = {
   author?: unknown;
   bin?: unknown;
+  browser?: unknown;
   bundledDependencies?: unknown;
   bundleDependencies?: unknown;
   bugs?: unknown;
@@ -298,6 +299,12 @@ describe("package manifest publish surface", () => {
     const packageJson = readPackageJson();
 
     expect(packageJson.type).toBe("module");
+  });
+
+  it("does not declare browser-specific entrypoint metadata", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.browser).toBeUndefined();
   });
 
   it("keeps lockfile root package metadata aligned with package.json", () => {

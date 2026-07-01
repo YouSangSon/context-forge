@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded browser package metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package `browser`
+    stays absent in `package.json`.
+  - This catches metadata drift that would add client-side entrypoint
+    hints/replacements to this Node-oriented MCP server package without an
+    explicit packaging decision.
+  - Source checked: npm documents `browser` as the client-side alternative to
+    `main`, used to hint that a module may rely on primitives unavailable in
+    Node.js modules:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`30` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1874` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package script config metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package `config`
     stays absent in both `package.json` and the lockfile root metadata.
