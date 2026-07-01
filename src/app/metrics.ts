@@ -109,7 +109,7 @@ export function createMetricsRegistry(): MetricsRegistry {
       const status = String(observation.statusCode);
       const key = buildHttpSampleKey(method, observation.route, status);
       const existing = httpSamples.get(key);
-      const durationSeconds = Math.max(0, observation.durationSeconds);
+      const { durationSeconds } = observation;
 
       if (existing) {
         existing.count += 1;
@@ -132,7 +132,7 @@ export function createMetricsRegistry(): MetricsRegistry {
         observation.worker,
         observation.status,
       );
-      const durationSeconds = Math.max(0, observation.durationSeconds);
+      const { durationSeconds } = observation;
       const existing = sweeperTickSamples.get(key);
 
       if (existing) {
@@ -494,7 +494,7 @@ function assertHttpRequestObservation(
   assertOptionalString(candidate.method, "method");
   assertString(candidate.route, "route");
   assertHttpStatusCode(candidate.statusCode, "statusCode");
-  assertFiniteNumber(candidate.durationSeconds, "durationSeconds");
+  assertNonNegativeFiniteNumber(candidate.durationSeconds, "durationSeconds");
 }
 
 function assertSweeperTickObservation(
@@ -503,7 +503,7 @@ function assertSweeperTickObservation(
   const candidate = assertObject(value, "sweeper tick observation");
   assertSweeperWorker(candidate.worker, "worker");
   assertSweeperTickStatus(candidate.status, "status");
-  assertFiniteNumber(candidate.durationSeconds, "durationSeconds");
+  assertNonNegativeFiniteNumber(candidate.durationSeconds, "durationSeconds");
 
   if (candidate.counts === undefined) {
     return;
@@ -532,7 +532,7 @@ function assertDependencyReport(
     const check = assertObject(checkValue, prefix);
     assertString(check.name, `${prefix}.name`);
     assertDependencyStatus(check.status, `${prefix}.status`);
-    assertFiniteNumber(check.durationMs, `${prefix}.durationMs`);
+    assertNonNegativeFiniteNumber(check.durationMs, `${prefix}.durationMs`);
     if (check.message !== undefined) {
       assertString(check.message, `${prefix}.message`);
     }
@@ -631,6 +631,15 @@ function assertFiniteNumber(
 ): asserts value is number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new Error(`${fieldName} must be a finite number`);
+  }
+}
+
+function assertNonNegativeFiniteNumber(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new Error(`${fieldName} must be a non-negative finite number`);
   }
 }
 

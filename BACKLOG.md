@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Metrics registry duration observations now validate HTTP, sweeper, and
+  dependency durations as non-negative finite numbers instead of clamping
+  negative values to zero.
 - Metrics registry HTTP request observations now validate status codes as
   safe integers in the `100..599` range before using them as metric labels.
 - Metrics registry sweeper row counters now validate known row outcomes as

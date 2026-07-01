@@ -389,7 +389,16 @@ describe("createMetricsRegistry HTTP metrics", () => {
         statusCode: 200,
         durationSeconds: Number.POSITIVE_INFINITY,
       },
-      message: "durationSeconds must be a finite number",
+      message: "durationSeconds must be a non-negative finite number",
+    },
+    {
+      input: {
+        method: "GET",
+        route: "/healthz",
+        statusCode: 200,
+        durationSeconds: -0.1,
+      },
+      message: "durationSeconds must be a non-negative finite number",
     },
   ])("rejects malformed request observations", ({ input, message }) => {
     const metrics = createMetricsRegistry();
@@ -484,7 +493,15 @@ describe("createMetricsRegistry sweeper metrics", () => {
         status: "success",
         durationSeconds: Number.NaN,
       },
-      message: "durationSeconds must be a finite number",
+      message: "durationSeconds must be a non-negative finite number",
+    },
+    {
+      input: {
+        worker: "ingest",
+        status: "success",
+        durationSeconds: -0.1,
+      },
+      message: "durationSeconds must be a non-negative finite number",
     },
     {
       input: {
@@ -574,7 +591,15 @@ describe("createMetricsRegistry dependency metrics", () => {
         checks: [{ name: "postgres", status: "ok", durationMs: Number.NaN }],
       },
       message:
-        "dependency report.checks[0].durationMs must be a finite number",
+        "dependency report.checks[0].durationMs must be a non-negative finite number",
+    },
+    {
+      input: {
+        status: "ok",
+        checks: [{ name: "postgres", status: "ok", durationMs: -1 }],
+      },
+      message:
+        "dependency report.checks[0].durationMs must be a non-negative finite number",
     },
   ])("rejects malformed dependency reports", ({ input, message }) => {
     const metrics = createMetricsRegistry();

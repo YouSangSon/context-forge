@@ -2,6 +2,36 @@
 
 ## 2026-07-02
 
+- Guarded metrics registry duration observations:
+  - `src/app/metrics.ts` now validates HTTP, sweeper, and dependency metric
+    durations as non-negative finite numbers instead of clamping negative
+    values to zero during aggregation or rendering.
+  - `tests/app/metrics.test.ts` now covers negative HTTP request, sweeper
+    tick, and dependency check durations while preserving positive fractional
+    duration samples.
+  - Source checked: HTTP and sweeper durations come from monotonic
+    `process.hrtime.bigint()` deltas, and dependency durations come from
+    `Date.now()` deltas, so valid runtime paths already produce non-negative
+    values.
+
+Verification plan:
+- `npx vitest run tests/app/metrics.test.ts tests/app/server.test.ts tests/health/check-dependencies.test.ts tests/compact/sweeper-loop.test.ts tests/compact/ingest-sweeper-loop.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/metrics.test.ts tests/app/server.test.ts tests/health/check-dependencies.test.ts tests/compact/sweeper-loop.test.ts tests/compact/ingest-sweeper-loop.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`191` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2051` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded HTTP metrics status code labels:
   - `src/app/metrics.ts` now validates HTTP request metric `statusCode`
     observations as safe integers in the `100..599` range before rendering
