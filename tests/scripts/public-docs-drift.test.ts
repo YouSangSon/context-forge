@@ -460,6 +460,10 @@ describe("public documentation drift checks", () => {
         path: "tests/compact/compact-memory.test.ts",
         text: "apply path lands in P17 step 3",
       },
+      {
+        path: "src/compact/compact-memory.ts",
+        text: "apply-path code in P17 step 3 has a stable seam to extend",
+      },
     ];
 
     for (const { path, text } of staleSignals) {

@@ -1,9 +1,9 @@
 // Compaction plan orchestrator. Pure given (records, options): combines
 // dedup + decay + promotion into a single CompactMemoryToolResult.
 //
-// Extracted from src/mcp/server.ts:526-563 in P17 step 0 with no behavior
-// change, so the apply-path code in P17 step 3 has a stable seam to extend.
-// Tests can drive this directly without spinning up the MCP registry.
+// Extracted from the MCP server with no behavior change so dry-run planning
+// and destructive apply share the same result shape. Tests can drive this
+// directly without spinning up the MCP registry.
 
 import { findExactContentDuplicates } from "./detect-duplicates.js";
 import { findDecayCandidates } from "./decay-score.js";

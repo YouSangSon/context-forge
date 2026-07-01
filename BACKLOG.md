@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Refreshed a stale P17 planning-era comment in `src/compact/compact-memory.ts`
+  to describe the current shared planning role, with drift coverage.
 - Contributing docs now align local pre-push verification with the PR template:
   typecheck, build, moderate-level npm audit, and tests, guarded by
   public-docs drift coverage.

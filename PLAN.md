@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Contributor Verification Guidance Alignment
+## Current Loop — Compaction Plan Comment Refresh
 
 Status:
-- `CONTRIBUTING.md` and `CONTRIBUTING.ko.md` now tell contributors to run
-  typecheck, build, moderate-level npm audit, and tests before pushing.
-- `tests/scripts/public-docs-drift.test.ts` now guards the shared verification
-  command set across the PR template and both contributing docs.
+- `src/compact/compact-memory.ts` now describes its current shared dry-run and
+  destructive-apply planning role instead of a future P17 extension point.
+- `tests/scripts/public-docs-drift.test.ts` now guards that the stale P17
+  planning comment does not return.
 
 Verification:
-- Focused public-docs drift coverage, typecheck, build, audit, full tests, and
-  diff check passed for this contributor guidance alignment.
+- Focused compaction/public-docs drift coverage, typecheck, build, audit, full
+  tests, and diff check passed for this comment refresh.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 
