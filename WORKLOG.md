@@ -2,6 +2,30 @@
 
 ## 2026-07-01
 
+- Refreshed migration SQL comments:
+  - `src/db/migrations/004_add_cascade_indexes.sql`,
+    `005_add_compaction_archive.sql`, and
+    `006_add_archive_unarchive.sql` now describe current compaction and
+    unarchive behavior without internal `P17` or `P19.1` phase labels.
+  - `tests/scripts/public-docs-drift.test.ts` now guards those migration
+    comments against phase-label drift.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`42` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1835` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Tightened bare catch binding coverage:
   - Remaining bare `catch {}` clauses under `src/`, `tests/`, and `scripts/`
     now use explicit `_err: unknown` bindings.

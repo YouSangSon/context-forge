@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Migration SQL comments now avoid internal `P17`/`P19.1` phase labels, with
+  public-docs drift coverage guarding the touched migration files.
 - Bare TypeScript catch clauses now use explicit `_err: unknown` bindings, and
   source convention coverage rejects missing catch bindings.
 - TypeScript source convention coverage now guards tracked source, script, and

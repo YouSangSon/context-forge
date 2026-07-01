@@ -518,6 +518,18 @@ describe("public documentation drift checks", () => {
     expect(text).not.toContain("pre-P19.1 archive row");
   });
 
+  it("keeps migration comments free of internal phase labels", () => {
+    for (const path of [
+      "src/db/migrations/004_add_cascade_indexes.sql",
+      "src/db/migrations/005_add_compaction_archive.sql",
+      "src/db/migrations/006_add_archive_unarchive.sql",
+    ]) {
+      const text = read(path);
+      expect(text).not.toContain("P17");
+      expect(text).not.toContain("P19.1");
+    }
+  });
+
   it("keeps compaction apply, sweeper, and MCP type comments current", () => {
     const envExample = read(".env.example");
     const applyCompaction = read("src/compact/apply-compaction.ts");

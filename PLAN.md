@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Bare Catch Binding Convention
+## Current Loop — Migration Phase Label Drift
 
 Status:
-- Contributor guidance says `catch (err: unknown)` should always be used, but
-  bare `catch {}` clauses were still allowed.
-- The loop annotates remaining bare catch clauses as `_err: unknown` and makes
-  the source convention suite reject catch clauses without bindings.
+- Public-facing docs already guard against internal phase labels, but migration
+  SQL comments still mentioned `P17` and `P19.1`.
+- The loop updates migration comments to current feature wording and adds drift
+  coverage for the touched migration files.
 
 Verification:
-- Focused source convention coverage, typecheck, build, audit, full tests, and
+- Focused public-docs drift coverage, typecheck, build, audit, full tests, and
   diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
