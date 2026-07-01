@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded package platform restrictions:
+  - `tests/scripts/package-manifest.test.ts` now checks that package `os`,
+    `cpu`, and `libc` restrictions stay absent.
+  - This catches package metadata drift that would narrow Akasha's self-hosted
+    npm install surface without an explicit portability decision.
+  - Source checked: npm documents `os`, `cpu`, and `libc` fields as package
+    metadata that restrict supported operating systems, CPU architectures, and
+    Linux libc variants:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`22` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1866` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package lifecycle scripts:
   - `tests/scripts/package-manifest.test.ts` now checks that npm
     install/publish lifecycle scripts stay absent except for the existing

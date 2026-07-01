@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Lifecycle Script Guard
+## Current Loop — Package Platform Restriction Guard
 
 Status:
-- Package manifest coverage guards that npm install/publish lifecycle scripts
-  stay absent except for the existing `prepack` build hook.
-- The loop catches package metadata drift that would add hidden install or
-  publish-time side effects.
+- Package manifest coverage guards that package `os`, `cpu`, and `libc`
+  platform restrictions stay absent.
+- The loop catches metadata drift that would narrow Akasha's self-hosted npm
+  install surface without an explicit portability decision.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

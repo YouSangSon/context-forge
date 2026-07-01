@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that package `os`, `cpu`, and `libc`
+  platform restrictions stay absent for the self-hosted npm install surface.
 - Package manifest coverage now guards that npm install/publish lifecycle
   scripts stay absent except for the existing `prepack` build hook.
 - Package manifest coverage now guards that tracked `npm-shrinkwrap.json` stays

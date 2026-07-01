@@ -6,6 +6,7 @@ type PackageJson = {
   author?: unknown;
   bin?: unknown;
   bugs?: unknown;
+  cpu?: unknown;
   dependencies?: Record<string, string>;
   description?: unknown;
   devDependencies?: Record<string, string>;
@@ -14,10 +15,12 @@ type PackageJson = {
   files?: unknown;
   homepage?: unknown;
   keywords?: unknown;
+  libc?: unknown;
   license?: unknown;
   main?: unknown;
   name?: unknown;
   overrides?: Record<string, string>;
+  os?: unknown;
   private?: unknown;
   repository?: unknown;
   scripts?: Record<string, string>;
@@ -192,6 +195,14 @@ describe("package manifest publish surface", () => {
     const packageJson = readPackageJson();
 
     expect(packageJson.private).not.toBe(true);
+  });
+
+  it("does not restrict supported install platforms", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.os).toBeUndefined();
+    expect(packageJson.cpu).toBeUndefined();
+    expect(packageJson.libc).toBeUndefined();
   });
 
   it("keeps npm package support metadata pointed at the project", () => {
