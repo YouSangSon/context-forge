@@ -293,6 +293,10 @@ export function renderMemoryAdminPage(): string {
       statusEl.className = isError ? "status error" : "status";
     }
 
+    function errorMessage(error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+
     function inputValue(id) {
       return $(id).value.trim();
     }
@@ -499,10 +503,10 @@ export function renderMemoryAdminPage(): string {
 
     $("filters").addEventListener("submit", async (event) => {
       event.preventDefault();
-      try { await loadMemories(); } catch (error) { setStatus(error.message, true); }
+      try { await loadMemories(); } catch (error) { setStatus(errorMessage(error), true); }
     });
     $("reload").addEventListener("click", async () => {
-      try { await loadMemories(); } catch (error) { setStatus(error.message, true); }
+      try { await loadMemories(); } catch (error) { setStatus(errorMessage(error), true); }
     });
     $("clear").addEventListener("click", () => {
       state.memories = [];

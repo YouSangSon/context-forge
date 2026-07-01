@@ -223,6 +223,9 @@ describe("createOperatorServer", () => {
     expect(html).toContain("/v1/memory/update");
     expect(html).toContain("/v1/memory/delete");
     expect(html).toContain("/v1/memory/tag");
+    expect(html).toContain("function errorMessage(error)");
+    expect(html).toContain("setStatus(errorMessage(error), true)");
+    expect(html).not.toContain("setStatus(error.message, true)");
     expect(html).not.toContain('<option value="archived">');
     expect(html).toContain("if (!form.elements.durability.disabled)");
     expect(html).not.toContain("localStorage");
