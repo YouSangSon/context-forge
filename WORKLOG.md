@@ -2,6 +2,29 @@
 
 ## 2026-07-01
 
+- Aligned contributing verification guidance:
+  - `CONTRIBUTING.md` and `CONTRIBUTING.ko.md` now ask contributors to run
+    `npm run typecheck`, `npm run build`, `npm audit --audit-level=moderate`,
+    and `npm test` before pushing.
+  - `tests/scripts/public-docs-drift.test.ts` now guards the shared command set
+    across the PR template and both contributing docs.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`37` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1820` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Aligned PR verification checklist:
   - `.github/PULL_REQUEST_TEMPLATE.md` now asks contributors to include
     `npm run typecheck`, `npm run build`, `npm audit --audit-level=moderate`,

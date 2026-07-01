@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Contributing docs now align local pre-push verification with the PR template:
+  typecheck, build, moderate-level npm audit, and tests, guarded by
+  public-docs drift coverage.
 - PR template test-plan guidance now asks for typecheck, build, moderate-level
   npm audit, and test output, with public-docs drift coverage.
 - `MEMORY_API_TOKENS` configuration docs and `.env.example` now document that

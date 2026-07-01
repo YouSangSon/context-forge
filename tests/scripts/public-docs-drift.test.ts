@@ -129,8 +129,21 @@ function issueTemplateDropdownOptions(templatePath: string, fieldId: string): st
 }
 
 describe("public documentation drift checks", () => {
-  it("keeps the PR test plan aligned with verification commands", () => {
+  it("keeps contributor verification guidance aligned", () => {
     const prTemplate = read(".github/PULL_REQUEST_TEMPLATE.md");
+    const contributing = read("CONTRIBUTING.md");
+    const contributingKo = read("CONTRIBUTING.ko.md");
+
+    for (const command of [
+      "npm run typecheck",
+      "npm run build",
+      "npm audit --audit-level=moderate",
+      "npm test",
+    ]) {
+      expect(prTemplate).toContain(command);
+      expect(contributing).toContain(command);
+      expect(contributingKo).toContain(command);
+    }
 
     expect(prTemplate).toContain("`npm run typecheck` passes");
     expect(prTemplate).toContain("`npm run build` passes");
@@ -138,6 +151,8 @@ describe("public documentation drift checks", () => {
       "`npm audit --audit-level=moderate` reports 0 vulnerabilities",
     );
     expect(prTemplate).toContain("`npm test` passes");
+    expect(contributing).not.toContain("Tests + typecheck pass locally");
+    expect(contributingKo).not.toContain("테스트 + 타입 체크 로컬 통과");
   });
 
   it("indexes every paired public docs page", () => {

@@ -91,7 +91,8 @@ populated databases.
    - `docs:` documentation only
    - `test:` test additions or fixes
    - `chore:` deps, build, tooling
-3. **Tests + typecheck pass locally** before pushing.
+3. **Verification passes locally** before pushing: `npm run typecheck`,
+   `npm run build`, `npm audit --audit-level=moderate`, and `npm test`.
 4. **CHANGELOG.md**: add a line to the `## [Unreleased]` section describing
    the user-visible change (skip for purely internal refactors).
 5. **PR description**: link the issue if any, describe what changed and why,
