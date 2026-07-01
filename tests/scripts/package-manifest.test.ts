@@ -18,6 +18,7 @@ type PackageJson = {
   main?: unknown;
   name?: unknown;
   overrides?: Record<string, string>;
+  private?: unknown;
   repository?: unknown;
   scripts?: Record<string, string>;
   type?: unknown;
@@ -170,6 +171,12 @@ describe("package manifest publish surface", () => {
       license: packageJson.license,
       name: packageJson.name,
     }).toEqual(EXPECTED_PACKAGE_IDENTITY);
+  });
+
+  it("does not mark the npm package as private", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.private).not.toBe(true);
   });
 
   it("keeps npm package support metadata pointed at the project", () => {

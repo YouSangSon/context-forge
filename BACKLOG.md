@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that the npm package is not marked
+  `private: true`, avoiding accidental publish refusal.
 - Package manifest coverage now guards stable npm package identity metadata for
   package name and SPDX license without pinning normal release version changes.
 - Package manifest coverage now guards that the package does not add a

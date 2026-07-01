@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Identity Metadata Guard
+## Current Loop — Package Private Publish Guard
 
 Status:
-- Package manifest coverage guards the stable npm package `name` and SPDX
-  `license` metadata.
-- The loop catches package identity drift without pinning the release `version`,
-  which is expected to change during normal releases.
+- Package manifest coverage guards that the npm package is not marked
+  `private: true`.
+- The loop catches metadata drift that would make npm refuse publication while
+  leaving normal release metadata changes alone.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

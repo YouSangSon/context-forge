@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- Guarded npm private publish metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package `private`
+    is not `true`.
+  - This catches package metadata drift that would make npm refuse publication
+    while avoiding extra constraints on normal release fields.
+  - Source checked: npm documents `"private": true` as a package metadata flag
+    that causes npm to refuse publication:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`19` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1863` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded npm package identity metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package `name`
     remains `akasha-mcp` and package `license` remains `MIT`.
