@@ -244,6 +244,7 @@ function assertRetrievedMemoryCandidates(
 
     const value = candidate as Record<string, unknown>;
     assertSearchMemoryResult(value.record, `${prefix}.record`);
+    assertCandidateSource(value.source, `${prefix}.source`);
     assertObject(value.scores, `${prefix}.scores`);
     const scores = value.scores as Record<string, unknown>;
     assertOptionalFiniteNumber(scores.vector, `${prefix}.scores.vector`);
@@ -252,6 +253,7 @@ function assertRetrievedMemoryCandidates(
     assertFiniteNumber(scores.metadata, `${prefix}.scores.metadata`);
     assertFiniteNumber(scores.recency, `${prefix}.scores.recency`);
     assertFiniteNumber(scores.total, `${prefix}.scores.total`);
+    assertStringArray(value.reasons, `${prefix}.reasons`);
   }
 }
 
@@ -311,6 +313,16 @@ function assertString(value: unknown, fieldName: string): void {
   }
 }
 
+function assertStringArray(value: unknown, fieldName: string): void {
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+
+  for (const [index, item] of value.entries()) {
+    assertString(item, `${fieldName}[${index}]`);
+  }
+}
+
 function assertScopeType(value: unknown, fieldName: string): void {
   if (value !== "project" && value !== "user") {
     throw new Error(`${fieldName} must be "project" or "user"`);
@@ -337,14 +349,18 @@ function assertSourceType(value: unknown, fieldName: string): void {
   }
 }
 
+function assertCandidateSource(value: unknown, fieldName: string): void {
+  if (value !== "vector" && value !== "lexical" && value !== "hybrid") {
+    throw new Error(`${fieldName} must be "vector", "lexical", or "hybrid"`);
+  }
+}
+
 function assertOptionalCandidateSource(value: unknown): void {
   if (value === undefined) {
     return;
   }
 
-  if (value !== "vector" && value !== "lexical" && value !== "hybrid") {
-    throw new Error('source must be "vector", "lexical", or "hybrid"');
-  }
+  assertCandidateSource(value, "source");
 }
 
 function assertOptionalUnitScore(value: unknown, fieldName: string): void {

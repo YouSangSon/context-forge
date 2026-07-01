@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `rankCandidates` now validates candidate `source` and `reasons` fields before
+  sorting, rejecting malformed candidate shape instead of returning invalid
+  ranking metadata.
 - `rankCandidates` now validates candidate score components before sorting,
   rejecting malformed required or optional score values instead of returning
   candidates with invalid score details.

@@ -2,6 +2,25 @@
 
 ## 2026-07-02
 
+- Hardened ranking candidate source and reasons:
+  - `src/search/rank-results.ts` now validates candidate `source` before
+    sorting candidates passed to `rankCandidates`.
+  - Candidate `reasons` must now be an array of strings, so returned candidates
+    cannot carry malformed ranking metadata.
+  - `assertOptionalCandidateSource` now reuses the required candidate source
+    validator, keeping score options and candidates on the same source enum.
+  - `tests/search/rank-results.test.ts` covers malformed candidate source and
+    non-string reason entries.
+
+Verification:
+- `npx vitest run tests/search/rank-results.test.ts tests/search/retrieve-memory.test.ts --reporter=dot`
+  (`2` files passed; `54` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2055` tests passed, `34` skipped)
+- `git diff --check`
+
 - Hardened ranking candidate score components:
   - `src/search/rank-results.ts` now validates `vector`, `lexical`, `scope`,
     `metadata`, `recency`, and `total` score components on candidates passed to

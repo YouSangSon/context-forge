@@ -364,6 +364,9 @@ describe("rankResults", () => {
       "candidates[0].scores must be an object",
     );
     expect(
+      callRankCandidates([{ ...validCandidate, source: "manual" }]),
+    ).toThrow('candidates[0].source must be "vector", "lexical", or "hybrid"');
+    expect(
       callRankCandidates([
         {
           ...validCandidate,
@@ -387,5 +390,13 @@ describe("rankResults", () => {
         },
       ]),
     ).toThrow("candidates[0].scores.vector must be a finite number");
+    expect(
+      callRankCandidates([
+        {
+          ...validCandidate,
+          reasons: ["scope:project", null],
+        },
+      ]),
+    ).toThrow("candidates[0].reasons[1] must be a string");
   });
 });
