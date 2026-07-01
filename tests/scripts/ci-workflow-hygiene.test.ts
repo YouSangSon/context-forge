@@ -37,6 +37,19 @@ describe("CI workflow hygiene", () => {
     expect(auditStepIndex).toBeLessThan(typecheckStepIndex);
   });
 
+  it("builds the package in the main Node matrix before running tests", () => {
+    const typecheckStepIndex = ciWorkflow.indexOf("      - name: Typecheck\n");
+    const buildStepIndex = ciWorkflow.indexOf("      - name: Build\n");
+    const testStepIndex = ciWorkflow.indexOf(
+      "      - name: Test (non-PG suites)\n",
+    );
+
+    expect(ciWorkflow).toContain("      - name: Build\n");
+    expect(ciWorkflow).toContain("        run: npm run build\n");
+    expect(typecheckStepIndex).toBeLessThan(buildStepIndex);
+    expect(buildStepIndex).toBeLessThan(testStepIndex);
+  });
+
   it("sets explicit job timeouts so hung CI runs do not use the default 360 minutes", () => {
     for (const jobId of [
       "typecheck-and-test",

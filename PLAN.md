@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Job Timeout Hygiene
+## Current Loop — CI Build Step Alignment
 
 Status:
-- `.github/workflows/ci.yml` relied on GitHub Actions' default 360-minute job
-  timeout for all CI jobs.
-- The loop adds explicit 30-minute job timeouts and guards them in
-  `tests/scripts/ci-workflow-hygiene.test.ts`.
+- Local contributor and PR guidance require `npm run build`, but the main CI
+  Node matrix only ran audit, typecheck, and tests.
+- The loop adds `npm run build` after typecheck and before tests, with workflow
+  hygiene coverage for the step and ordering.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

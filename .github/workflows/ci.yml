@@ -46,6 +46,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Build
+        run: npm run build
+
       - name: Test (non-PG suites)
         # The 3 PG-dependent test files skip gracefully without Postgres on
         # 5432; the integration coverage runs in a separate job below where

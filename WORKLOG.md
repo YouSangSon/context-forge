@@ -2,6 +2,31 @@
 
 ## 2026-07-01
 
+- Added CI build coverage:
+  - `.github/workflows/ci.yml` now runs `npm run build` in the main Node matrix
+    after typecheck and before non-PG tests.
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now guards the build step and
+    its ordering.
+  - Source checked: `CONTRIBUTING.md`, `CONTRIBUTING.ko.md`, and the PR
+    template already require `npm run build` as part of local/PR verification;
+    this aligns CI with that repository policy.
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`6` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1826` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Added explicit CI job timeouts:
   - `.github/workflows/ci.yml` now sets `timeout-minutes: 30` on
     `typecheck-and-test`, `pg-integration`, and `pgvector-integration`.
