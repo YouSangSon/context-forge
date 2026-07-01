@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `chunkText` now consumes regex token matches into a bounded overlap window
+  instead of materializing all match objects upfront, with tests guarding exact
+  target-boundary and final partial overlap behavior.
 - Postgres pool configuration now supports documented `PG_POOL_MAX`,
   `PG_IDLE_TIMEOUT_MS`, and `PG_CONNECT_TIMEOUT_MS` tuning, with config parsing,
   pool construction, runtime startup, migrations, and focused tests using the

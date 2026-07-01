@@ -4,18 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Postgres Pool Tuning
+## Current Loop — Streaming Text Chunk Tokens
 
 Status:
-- Postgres pool creation now supports validated max, idle timeout, and connect
-  timeout options while preserving existing defaults.
-- Service config, runtime server startup, canonical service bootstrap, and
-  migration startup now pass the resolved pool tuning values.
-- English/Korean configuration docs and `.env.example` document the new
-  variables.
+- `chunkText` now iterates regex token matches into a bounded overlap window
+  instead of materializing every match object upfront.
+- Focused coverage guards target-boundary and crossed-boundary overlap behavior.
 
 Verification:
-- Focused Postgres pool/config/server coverage and typecheck passed.
+- Focused chunk coverage and typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

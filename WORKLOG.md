@@ -2,6 +2,36 @@
 
 ## 2026-07-02
 
+- Reduced chunkText token materialization:
+  - `src/chunk/chunk-text.ts` now streams `text.matchAll(/\S+/g)` into a
+    bounded token-span window sized by `targetTokens` and retained
+    `overlapTokens`.
+  - The chunk output shape, content slices, and offsets stay unchanged, while
+    large inputs avoid building one regex match object array for the whole
+    document before the first chunk is produced.
+  - `tests/chunk/chunk-text.test.ts` now guards exact target-boundary behavior
+    and the final overlapped partial chunk emitted after crossing the target.
+  - Source checked: internal performance audit finding 14 documents the
+    up-front `[...text.matchAll(/\S+/g)]` materialization in `chunkText`:
+    `docs/superpowers/audit/03-performance.md`.
+
+Verification plan:
+- `npx vitest run tests/chunk/chunk-text.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/chunk/chunk-text.test.ts` (`13` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1908` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Added Postgres pool tuning configuration:
   - `src/db/connection.ts` now accepts validated `max`,
     `idleTimeoutMillis`, and `connectionTimeoutMillis` options while keeping
