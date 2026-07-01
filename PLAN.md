@@ -4,13 +4,12 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Platform Restriction Guard
+## Current Loop — Package Publish Config Guard
 
 Status:
-- Package manifest coverage guards that package `os`, `cpu`, and `libc`
-  platform restrictions stay absent.
-- The loop catches metadata drift that would narrow Akasha's self-hosted npm
-  install surface without an explicit portability decision.
+- Package manifest coverage guards that package `publishConfig` stays absent.
+- The loop catches metadata drift that would change npm publish-time registry,
+  tag, or access behavior without an explicit release decision.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

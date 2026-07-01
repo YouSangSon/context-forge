@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that package `publishConfig` stays absent
+  so publish-time registry, tag, and access behavior cannot drift silently.
 - Package manifest coverage now guards that package `os`, `cpu`, and `libc`
   platform restrictions stay absent for the self-hosted npm install surface.
 - Package manifest coverage now guards that npm install/publish lifecycle

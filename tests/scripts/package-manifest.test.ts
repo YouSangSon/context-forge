@@ -22,6 +22,7 @@ type PackageJson = {
   overrides?: Record<string, string>;
   os?: unknown;
   private?: unknown;
+  publishConfig?: unknown;
   repository?: unknown;
   scripts?: Record<string, string>;
   type?: unknown;
@@ -203,6 +204,12 @@ describe("package manifest publish surface", () => {
     expect(packageJson.os).toBeUndefined();
     expect(packageJson.cpu).toBeUndefined();
     expect(packageJson.libc).toBeUndefined();
+  });
+
+  it("does not override npm publish configuration", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.publishConfig).toBeUndefined();
   });
 
   it("keeps npm package support metadata pointed at the project", () => {
