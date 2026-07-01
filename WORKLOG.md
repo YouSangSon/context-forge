@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- Guarded CI checkout ordering:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that every CI job
+    uses `actions/checkout@v4` immediately before `actions/setup-node`.
+  - This keeps repository files present before dependency installation,
+    typecheck, build, and test commands run.
+  - Source checked: `actions/checkout` documents that the action checks out the
+    repository under `$GITHUB_WORKSPACE` so workflows can access it:
+    https://github.com/actions/checkout
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`19` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1848` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded backend integration CI runtime:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that the Postgres
     and pgvector integration jobs use `node-version: "22"`.

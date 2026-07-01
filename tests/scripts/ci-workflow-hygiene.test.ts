@@ -36,6 +36,14 @@ describe("CI workflow hygiene", () => {
     expect(ciWorkflow).not.toMatch(/^\s*contents:\s+write\b/m);
   });
 
+  it("checks out the repository before setting up Node in every job", () => {
+    const checkoutThenSetupNodeSteps = ciWorkflow.match(
+      /      - name: Checkout\n        uses: actions\/checkout@v4\n\n      - name: Setup Node\n/g,
+    );
+
+    expect(checkoutThenSetupNodeSteps).toHaveLength(3);
+  });
+
   it("runs a moderate-or-higher dependency audit in CI", () => {
     const auditStepIndex = ciWorkflow.indexOf(
       "      - name: Audit dependencies\n",
