@@ -13,6 +13,7 @@ type PackageJson = {
   keywords?: unknown;
   license?: unknown;
   name?: unknown;
+  overrides?: Record<string, string>;
   scripts?: Record<string, string>;
   version?: unknown;
 };
@@ -94,6 +95,10 @@ const EXPECTED_DEVELOPMENT_DEPENDENCIES = [
   "vitest",
 ] as const;
 
+const EXPECTED_PACKAGE_OVERRIDES = {
+  esbuild: "^0.28.1",
+} as const;
+
 function readPackageJson(): PackageJson {
   return JSON.parse(fs.readFileSync("package.json", "utf8")) as PackageJson;
 }
@@ -174,6 +179,12 @@ describe("package manifest publish surface", () => {
     expect(Object.keys(packageJson.devDependencies ?? {}).sort()).toEqual([
       ...EXPECTED_DEVELOPMENT_DEPENDENCIES,
     ].sort());
+  });
+
+  it("keeps package overrides scoped to the current build tooling override", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.overrides).toEqual(EXPECTED_PACKAGE_OVERRIDES);
   });
 
   it("uses an explicit package allowlist for runtime and public docs assets", () => {

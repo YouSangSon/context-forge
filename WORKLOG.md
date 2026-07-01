@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- Guarded package override metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that
+    `overrides.esbuild` stays on the current `^0.28.1` build tooling override.
+  - This catches package metadata drift when the npm override that shapes
+    transitive build tooling resolution is removed or changed without review.
+  - Source checked: npm documents `overrides` as a root `package.json` field
+    for replacing packages in the dependency tree:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/#overrides
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`14` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1858` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package dependency scope:
   - `tests/scripts/package-manifest.test.ts` now checks the exact runtime
     dependency names separately from development-only tooling names.
