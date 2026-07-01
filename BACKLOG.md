@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Rate limiter coverage now guards stale in-memory bucket eviction, and the
+  token-bucket limiter drops buckets idle for a full refill window so rotated
+  tokens or future wider key spaces do not accumulate forever.
 - Public docs drift coverage now guards that rate-limit docs describe
   `RATE_LIMIT_PER_MINUTE` as process-local in-memory state, with multi-replica
   deployments requiring a shared proxy or edge limiter for strict

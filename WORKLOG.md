@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Added stale bucket eviction to the app-local rate limiter:
+  - `src/app/middleware/rate-limit.ts` now sweeps buckets that have been idle
+    for one full refill window before handling a request.
+  - Evicting those buckets is behavior-preserving because the same key would
+    have refilled to a full bucket after one full window, matching a new entry.
+  - `tests/app/rate-limit.test.ts` now verifies idle buckets are swept while
+    active buckets remain tracked.
+  - Source checked: internal performance audit finding 13 documents the
+    unbounded `Map` risk in the process-local rate limiter:
+    `docs/superpowers/audit/03-performance.md`.
+
+Verification plan:
+- `npx vitest run tests/app/rate-limit.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/rate-limit.test.ts` (`28` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1886` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded the multi-replica rate-limit boundary:
   - `docs/configuration.md`, `docs/configuration.ko.md`, `docs/security.md`,
     `docs/security.ko.md`, `docs/deployment.md`, and

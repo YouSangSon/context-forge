@@ -240,6 +240,27 @@ describe("createTokenBucketLimiter", () => {
     });
   });
 
+  it("sweeps buckets that have been idle for a full refill window", () => {
+    let time = 0;
+    const limiter = createTokenBucketLimiter({
+      capacity: CAPACITY,
+      windowMs: WINDOW_MS,
+      now: () => time,
+    });
+
+    limiter.check("alpha");
+    limiter.check("beta");
+    expect(limiter.bucketCount?.()).toBe(2);
+
+    time = WINDOW_MS - 1;
+    limiter.check("gamma");
+    expect(limiter.bucketCount?.()).toBe(3);
+
+    time = WINDOW_MS;
+    limiter.check("delta");
+    expect(limiter.bucketCount?.()).toBe(2);
+  });
+
   it("rejects non-string direct keys before bucket lookup", () => {
     const limiter = createTokenBucketLimiter({
       capacity: CAPACITY,

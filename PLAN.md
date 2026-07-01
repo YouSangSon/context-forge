@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Multi-Replica Rate Limit Boundary
+## Current Loop — Rate Limiter Bucket Eviction
 
 Status:
-- Configuration, security, and deployment docs now state that
-  `RATE_LIMIT_PER_MINUTE` is a process-local in-memory bucket.
-- Public docs drift coverage guards the multi-replica boundary so future docs
-  do not imply a strict deployment-wide quota from the app-local limiter alone.
+- The in-memory token-bucket limiter now sweeps buckets that have been idle for
+  one full refill window.
+- Focused coverage verifies stale token buckets are evicted without changing
+  normal per-token isolation behavior.
 
 Verification:
-- Focused public-docs drift coverage passed.
+- Focused rate-limit coverage passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

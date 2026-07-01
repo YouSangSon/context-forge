@@ -1,6 +1,8 @@
 // In-memory token-bucket rate limiter, keyed by bearer token (or "anonymous"
 // when auth is disabled). Single-process only — for multi-instance deploys
 // swap to Redis or a shared store. Process restart resets all buckets.
+// Buckets idle for one full refill window are swept because a later request
+// would see the same full bucket as a newly-created entry.
 //
 // Token bucket: each key starts with `capacity` tokens. Each request consumes
 // 1 token. Tokens refill at `capacity / windowMs` per ms. When a bucket hits
@@ -20,6 +22,7 @@ export type RateLimitDecision = {
 
 export type RateLimiter = {
   check(key: string): RateLimitDecision;
+  bucketCount?(): number;
 };
 
 type BucketState = {
@@ -42,6 +45,7 @@ export function createTokenBucketLimiter(
   const buckets = new Map<string, BucketState>();
   const now = options.now ?? (() => Date.now());
   const refillRatePerMs = options.capacity / options.windowMs;
+  let nextSweepMs = 0;
 
   return {
     check(key: string): RateLimitDecision {
@@ -52,6 +56,11 @@ export function createTokenBucketLimiter(
       const t = now();
       if (!Number.isFinite(t)) {
         throw new Error("rate-limit now must return a finite number");
+      }
+
+      if (t >= nextSweepMs) {
+        sweepStaleBuckets(buckets, t, options.windowMs);
+        nextSweepMs = t + options.windowMs;
       }
 
       const existing = buckets.get(key);
@@ -90,7 +99,24 @@ export function createTokenBucketLimiter(
       const retryAfterMs = Math.ceil(tokensNeeded / refillRatePerMs);
       return { allowed: false, remaining: 0, retryAfterMs };
     },
+
+    bucketCount() {
+      return buckets.size;
+    },
   };
+}
+
+function sweepStaleBuckets(
+  buckets: Map<string, BucketState>,
+  nowMs: number,
+  windowMs: number,
+): void {
+  const staleAtOrBeforeMs = nowMs - windowMs;
+  for (const [key, bucket] of buckets) {
+    if (bucket.lastRefillMs <= staleAtOrBeforeMs) {
+      buckets.delete(key);
+    }
+  }
 }
 
 function assertRateLimiterOptions(
