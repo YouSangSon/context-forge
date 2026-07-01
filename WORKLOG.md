@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded runtime TypeScript files against unsafe type-erasure assertions:
+  - `tests/scripts/source-conventions.test.ts` now scans tracked runtime and
+    script TypeScript files with the TypeScript AST and rejects `as any`,
+    `as never`, `<any>`, and `<never>` assertions.
+  - The guard intentionally excludes tests so malformed-input fixtures can keep
+    using `as never` where they are exercising runtime validation boundaries.
+  - Source checked: internal code-quality audit finding CQ-03 documents the
+    route-dispatch `as never` risk in `src/app/routes/memory.ts`:
+    `docs/superpowers/audit/04-code-quality.md`.
+
+Verification plan:
+- `npx vitest run tests/scripts/source-conventions.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/source-conventions.test.ts` (`6` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1909` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Reduced chunkText token materialization:
   - `src/chunk/chunk-text.ts` now streams `text.matchAll(/\S+/g)` into a
     bounded token-span window sized by `targetTokens` and retained

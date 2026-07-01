@@ -126,6 +126,44 @@ function collectTypeScriptSuppressionViolations(path: string): string[] {
   return violations;
 }
 
+function runtimeSourceFiles(): string[] {
+  return trackedTypeScriptFiles().filter(
+    (fileName) => fileName.startsWith("src/") || fileName.startsWith("scripts/"),
+  );
+}
+
+function collectUnsafeAssertionViolations(path: string): string[] {
+  const text = fs.readFileSync(path, "utf8");
+  const sourceFile = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
+  const violations: string[] = [];
+  const unsafeTypeKinds = new Set<ts.SyntaxKind>([
+    ts.SyntaxKind.AnyKeyword,
+    ts.SyntaxKind.NeverKeyword,
+  ]);
+
+  function recordIfUnsafeAssertion(
+    node: ts.AsExpression | ts.TypeAssertion,
+  ): void {
+    if (!unsafeTypeKinds.has(node.type.kind)) {
+      return;
+    }
+
+    violations.push(
+      `${path}:${lineNumberAt(sourceFile, node.getStart(sourceFile))} ${node.type.getText(sourceFile)}`,
+    );
+  }
+
+  function visit(node: ts.Node): void {
+    if (ts.isAsExpression(node) || ts.isTypeAssertionExpression(node)) {
+      recordIfUnsafeAssertion(node);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return violations;
+}
+
 describe("source code conventions", () => {
   it("keeps TypeScript strict mode enabled", () => {
     const compilerOptions = readTsConfig().compilerOptions;
@@ -165,6 +203,14 @@ describe("source code conventions", () => {
   it("keeps tracked TypeScript files free of TypeScript suppression comments", () => {
     const violations = trackedTypeScriptFiles().flatMap((path) =>
       collectTypeScriptSuppressionViolations(path),
+    );
+
+    expect(violations).toEqual([]);
+  });
+
+  it("keeps runtime TypeScript files free of unsafe type-erasure assertions", () => {
+    const violations = runtimeSourceFiles().flatMap((path) =>
+      collectUnsafeAssertionViolations(path),
     );
 
     expect(violations).toEqual([]);

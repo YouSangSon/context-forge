@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- TypeScript source convention coverage now rejects unsafe `any` and `never`
+  type-erasure assertions in runtime and script sources while leaving test-only
+  malformed-input casts available.
 - `chunkText` now consumes regex token matches into a bounded overlap window
   instead of materializing all match objects upfront, with tests guarding exact
   target-boundary and final partial overlap behavior.

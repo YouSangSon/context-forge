@@ -4,15 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Streaming Text Chunk Tokens
+## Current Loop — Runtime Type-Erasure Assertion Guard
 
 Status:
-- `chunkText` now iterates regex token matches into a bounded overlap window
-  instead of materializing every match object upfront.
-- Focused coverage guards target-boundary and crossed-boundary overlap behavior.
+- Source convention coverage now scans runtime and script TypeScript files for
+  unsafe `as any`, `as never`, `<any>`, and `<never>` assertions.
+- Test fixtures can still use `as never` to exercise malformed-input runtime
+  validation paths.
 
 Verification:
-- Focused chunk coverage and typecheck passed.
+- Focused source-convention coverage and typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
