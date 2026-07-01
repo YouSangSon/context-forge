@@ -475,7 +475,43 @@ describe("createMetricsRegistry sweeper metrics", () => {
         durationSeconds: 0.1,
         counts: { scanned: Number.POSITIVE_INFINITY },
       },
-      message: "counts.scanned must be a finite number",
+      message: "counts.scanned must be a non-negative safe integer",
+    },
+    {
+      input: {
+        worker: "ingest",
+        status: "success",
+        durationSeconds: 0.1,
+        counts: { scanned: Number.NaN },
+      },
+      message: "counts.scanned must be a non-negative safe integer",
+    },
+    {
+      input: {
+        worker: "ingest",
+        status: "success",
+        durationSeconds: 0.1,
+        counts: { scanned: -1 },
+      },
+      message: "counts.scanned must be a non-negative safe integer",
+    },
+    {
+      input: {
+        worker: "ingest",
+        status: "success",
+        durationSeconds: 0.1,
+        counts: { scanned: 1.5 },
+      },
+      message: "counts.scanned must be a non-negative safe integer",
+    },
+    {
+      input: {
+        worker: "ingest",
+        status: "success",
+        durationSeconds: 0.1,
+        counts: { scanned: Number.MAX_SAFE_INTEGER + 1 },
+      },
+      message: "counts.scanned must be a non-negative safe integer",
     },
   ])("rejects malformed sweeper observations", ({ input, message }) => {
     const metrics = createMetricsRegistry();

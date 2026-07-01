@@ -267,18 +267,17 @@ function observeSweeperRows(
   }
 
   const key = buildSweeperRowSampleKey(worker, outcome);
-  const sanitizedCount = Math.max(0, count);
   const existing = samples.get(key);
 
   if (existing) {
-    existing.count += sanitizedCount;
+    existing.count += count;
     return;
   }
 
   samples.set(key, {
     worker,
     outcome,
-    count: sanitizedCount,
+    count,
   });
 }
 
@@ -515,7 +514,7 @@ function assertSweeperTickObservation(
     if (!isKnownSweeperRowOutcome(outcome)) {
       continue;
     }
-    assertFiniteNumber(count, `counts.${outcome}`);
+    assertNonNegativeSafeInteger(count, `counts.${outcome}`);
   }
 }
 

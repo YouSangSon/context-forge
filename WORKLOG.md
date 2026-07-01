@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded metrics registry sweeper row counters:
+  - `src/app/metrics.ts` now validates known sweeper row outcome counters as
+    non-negative safe integers instead of clamping negative values or accepting
+    fractional values.
+  - `tests/app/metrics.test.ts` now covers infinite, `NaN`, negative,
+    fractional, and unsafe integer sweeper row counts.
+  - Source checked: compaction and ingest sweeper loops emit row counts from
+    `runOutboxSweep` and `runIngestSweep` results, while `durationSeconds`
+    remains a finite float metric.
+
+Verification plan:
+- `npx vitest run tests/app/metrics.test.ts tests/compact/sweeper-loop.test.ts tests/compact/ingest-sweeper-loop.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/metrics.test.ts tests/compact/sweeper-loop.test.ts tests/compact/ingest-sweeper-loop.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`96` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2045` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded metrics registry background queue backlog counts:
   - `src/app/metrics.ts` now validates rendered background queue backlog row
     counts as non-negative safe integers instead of clamping negative values

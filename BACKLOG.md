@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Metrics registry sweeper row counters now validate known row outcomes as
+  non-negative safe integers instead of clamping negative counts or accepting
+  fractional values.
 - Metrics registry rendering now validates background queue backlog snapshot
   counts as non-negative safe integers instead of clamping or truncating bad
   collector output.
