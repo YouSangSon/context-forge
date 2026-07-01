@@ -2,6 +2,37 @@
 
 ## 2026-07-02
 
+- Guarded entity mention id row mapping:
+  - `src/store/memory-repository.ts` now maps `entities.id` rows returned by
+    entity upserts through positive safe-integer validation before building
+    persisted mentions.
+  - Malformed entity ids now fail before `memory_entity_mentions` or
+    `entity_relationships` inserts can receive invalid entity references.
+  - `tests/store/memory-repository.test.ts` now covers malformed entity id rows
+    through the mock-pool `addMemory` transaction path and verifies rollback
+    occurs before mention inserts.
+  - Source checked: `entities.id` is a `BIGSERIAL` field, and
+    `memory_entity_mentions.entity_id` / `entity_relationships.*_entity_id`
+    are `BIGINT` references in migration `011_entity_temporal_graph.sql`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/mcp/server.test.ts tests/search/retrieve-memory.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/mcp/server.test.ts tests/search/retrieve-memory.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`278` tests passed, `7` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1982` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded memory search result id row mapping:
   - `src/store/memory-repository.ts` now maps hydrated memory result `id`,
     `source_id`, and joined source `id` through positive safe-integer row

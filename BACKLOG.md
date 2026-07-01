@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Entity mention write-path row mapping now validates returned entity ids before
+  inserting mention or relationship rows.
 - Memory search result row mapping now validates hydrated memory/source ids
   before returning search/list result records.
 - Memory graph relationship row mapping now validates relationship ids and

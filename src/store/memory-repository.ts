@@ -1211,7 +1211,14 @@ async function persistPostgresEntityGraph(
   );
   const persistedMentions = mentions.flatMap((mention) => {
     const entity = entitiesByKey.get(entityMentionKey(mention));
-    return entity ? [{ ...mention, entityId: toNumber(entity.id) }] : [];
+    return entity
+      ? [
+        {
+          ...mention,
+          entityId: mapPositiveSafeInteger(entity.id, "entity id"),
+        },
+      ]
+      : [];
   });
 
   if (persistedMentions.length === 0) {

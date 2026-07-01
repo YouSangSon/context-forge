@@ -451,6 +451,109 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     });
   });
 
+  it.each([
+    {
+      entityId: "0",
+      message: "entity id must be a positive safe integer",
+    },
+    {
+      entityId: "1.5",
+      message: "entity id must be a positive safe integer",
+    },
+    {
+      entityId: "bad",
+      message: "database number must be finite",
+    },
+  ])("addMemory rejects malformed entity id rows before mention insert %#", async ({
+    entityId,
+    message,
+  }) => {
+    const sourceRow = {
+      source_id_joined: 9,
+      source_organization_id: "org-a",
+      source_scope_type: "project",
+      source_scope_id: "proj-x",
+      source_type: "document",
+      source_ref: "{\"sourceRef\":\"docs/spec.md\",\"uri\":null}",
+      source_title: null,
+      source_created_at: "2026-06-26T00:00:00.000Z",
+    };
+    const memoryRow = {
+      id: 42,
+      organization_id: "org-a",
+      scope_type: "project",
+      scope_id: "proj-x",
+      project_key: "proj-x",
+      kind: "fact",
+      title: null,
+      content: "QDRANT_SNAPSHOT_TIMEOUT changed on 2026-06-26.",
+      summary: null,
+      durability: "ephemeral",
+      importance: 0,
+      source_id: 9,
+      created_at: "2026-06-26T00:00:00.000Z",
+      updated_at: "2026-06-26T00:00:00.000Z",
+    };
+    const clientQueryCalls: SqlQueryCall[] = [];
+    const mockClient = {
+      query: vi.fn().mockImplementation((sql: string, params?: unknown[]) => {
+        clientQueryCalls.push({ sql, params: params ?? [] });
+        if (["BEGIN", "ROLLBACK", "COMMIT"].includes(sql)) {
+          return Promise.resolve({ rows: [] });
+        }
+        if (sql.includes("SELECT") && sql.includes("FROM sources")) {
+          return Promise.resolve({ rows: [] });
+        }
+        if (sql.includes("INSERT INTO sources")) {
+          return Promise.resolve({ rows: [sourceRow] });
+        }
+        if (sql.includes("INSERT INTO memory_records")) {
+          return Promise.resolve({ rows: [memoryRow] });
+        }
+        if (sql.includes("INSERT INTO entities")) {
+          return Promise.resolve({
+            rows: [{
+              id: entityId,
+              kind: "code_symbol",
+              normalized: "qdrant_snapshot_timeout",
+            }],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const mockPool = {
+      connect: vi.fn().mockResolvedValue(mockClient),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.addMemory({
+        organizationId: "org-a",
+        scopeType: "project",
+        scopeId: "proj-x",
+        projectKey: "proj-x",
+        memoryType: "fact",
+        content: "QDRANT_SNAPSHOT_TIMEOUT changed on 2026-06-26.",
+        source: {
+          scopeType: "project",
+          scopeId: "proj-x",
+          sourceType: "document",
+          sourceRef: "docs/spec.md",
+        },
+      }),
+    ).rejects.toThrow(message);
+
+    expect(clientQueryCalls.some(({ sql }) => sql === "ROLLBACK")).toBe(true);
+    expect(clientQueryCalls.some(({ sql }) => sql === "COMMIT")).toBe(false);
+    expect(
+      clientQueryCalls.some(({ sql }) =>
+        sql.includes("INSERT INTO memory_entity_mentions"),
+      ),
+    ).toBe(false);
+  });
+
   it("upsertPostgresSource pushes sourceRef filter into SQL WHERE clause (PERF-5)", () => {
     // addMemory calls upsertPostgresSource via a transaction client.
     // The SELECT for an existing source must pass sourceRef as $5 and use
