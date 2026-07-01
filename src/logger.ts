@@ -38,12 +38,12 @@ function formatLogLevelValue(value: unknown): string {
     if (serialized !== undefined) {
       return `${serialized} (${type})`;
     }
-  } catch {
+  } catch (_err: unknown) {
     // Fall back to a type tag when JSON serialization is not possible.
   }
   try {
     return `${Object.prototype.toString.call(value)} (${type})`;
-  } catch {
+  } catch (_err: unknown) {
     return `<unprintable> (${type})`;
   }
 }

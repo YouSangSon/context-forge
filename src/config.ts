@@ -213,7 +213,7 @@ function parsePort(value: unknown): number {
   let port: number;
   try {
     port = parsePlainDecimalPositiveInt(raw);
-  } catch {
+  } catch (_err: unknown) {
     throw new Error(`Invalid PORT: ${raw}`);
   }
 
@@ -234,7 +234,7 @@ function parsePositiveInt(
   }
   try {
     return parsePlainDecimalPositiveInt(raw);
-  } catch {
+  } catch (_err: unknown) {
     throw new Error(`expected positive integer, got "${raw}"`);
   }
 }

@@ -192,7 +192,7 @@ function requireHttpsUrl(value: string | undefined, name: string): string {
   let parsed: URL;
   try {
     parsed = new URL(value.trim());
-  } catch {
+  } catch (_err: unknown) {
     throw new Error(`Invalid ${name}: expected an absolute HTTPS URL`);
   }
 

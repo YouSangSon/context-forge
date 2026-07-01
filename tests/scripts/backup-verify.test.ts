@@ -784,7 +784,7 @@ async function writeExecutable(filePath: string, content: string): Promise<void>
 async function readOptionalText(filePath: string): Promise<string> {
   try {
     return await readFile(filePath, "utf8");
-  } catch {
+  } catch (_err: unknown) {
     return "";
   }
 }
@@ -847,7 +847,7 @@ async function exists(filePath: string) {
   try {
     await access(filePath);
     return true;
-  } catch {
+  } catch (_err: unknown) {
     return false;
   }
 }

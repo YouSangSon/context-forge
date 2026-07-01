@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Bare TypeScript catch clauses now use explicit `_err: unknown` bindings, and
+  source convention coverage rejects missing catch bindings.
 - TypeScript source convention coverage now guards tracked source, script, and
   test files against explicit `any` type keywords.
 - TypeScript catch binding convention coverage now uses AST traversal instead

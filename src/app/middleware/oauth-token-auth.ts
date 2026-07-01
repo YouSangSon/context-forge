@@ -281,7 +281,7 @@ class RemoteJwksOAuthTokenVerifier implements OAuthTokenVerifier {
         issuer: decoded.iss,
         ...(payload.aud ? { audience: payload.aud } : {}),
       };
-    } catch {
+    } catch (_err: unknown) {
       return null;
     }
   }
@@ -343,7 +343,7 @@ async function tryDiscoverJwksUrl(metadataUrl: string): Promise<string | null> {
     return typeof body.jwks_uri === "string"
       ? requireHttpsUrl(body.jwks_uri, "jwks_uri")
       : null;
-  } catch {
+  } catch (_err: unknown) {
     return null;
   }
 }
@@ -351,7 +351,7 @@ async function tryDiscoverJwksUrl(metadataUrl: string): Promise<string | null> {
 function safelyDecodeJwt(token: string): JWTPayload | null {
   try {
     return decodeJwt(token);
-  } catch {
+  } catch (_err: unknown) {
     return null;
   }
 }
@@ -526,7 +526,7 @@ function requireHttpsUrl(value: string, name: string): string {
   let parsed: URL;
   try {
     parsed = new URL(value.trim());
-  } catch {
+  } catch (_err: unknown) {
     throw new Error(`Invalid ${name}: expected an absolute HTTPS URL`);
   }
 

@@ -238,7 +238,7 @@ function isAllowedOrigin(origin: string | undefined): boolean {
       parsed.hostname === "::1" ||
       parsed.hostname === "[::1]"
     );
-  } catch {
+  } catch (_err: unknown) {
     return false;
   }
 }
@@ -254,7 +254,7 @@ function validateHostHeader(
   let hostname: string;
   try {
     hostname = new URL(`http://${hostHeader}`).hostname;
-  } catch {
+  } catch (_err: unknown) {
     return `Invalid Host header: ${hostHeader}`;
   }
 
@@ -293,7 +293,7 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown> {
 
   try {
     return JSON.parse(Buffer.concat(chunks).toString("utf8"));
-  } catch {
+  } catch (_err: unknown) {
     throw new BadRequestError("invalid JSON body", 400);
   }
 }

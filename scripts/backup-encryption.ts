@@ -317,7 +317,7 @@ function maybeBase64Key(value: string): Buffer | null {
   try {
     const decoded = Buffer.from(value, "base64");
     return decoded.length === 32 ? decoded : null;
-  } catch {
+  } catch (_err: unknown) {
     return null;
   }
 }

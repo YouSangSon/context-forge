@@ -22,7 +22,14 @@ function collectCatchBindingViolations(path: string): string[] {
   const violations: string[] = [];
 
   function visit(node: ts.Node): void {
-    if (ts.isCatchClause(node) && node.variableDeclaration !== undefined) {
+    if (ts.isCatchClause(node)) {
+      if (node.variableDeclaration === undefined) {
+        violations.push(
+          `${path}:${lineNumberAt(sourceFile, node.getStart(sourceFile))} missing catch binding`,
+        );
+        return;
+      }
+
       const typeNode = node.variableDeclaration.type;
       if (typeNode?.kind !== ts.SyntaxKind.UnknownKeyword) {
         const binding = node.variableDeclaration.name.getText(sourceFile);

@@ -272,7 +272,7 @@ export function createPgVectorIndex(
         // (a dead/dropped connection must not mask the real failure).
         try {
           await client.query("ROLLBACK");
-        } catch {
+        } catch (_err: unknown) {
           /* ignore rollback failure */
         }
         throw err;
@@ -407,7 +407,7 @@ export function createPgVectorIndex(
         // (a dead/dropped connection must not mask the real failure).
         try {
           await client.query("ROLLBACK");
-        } catch {
+        } catch (_err: unknown) {
           /* ignore rollback failure */
         }
         throw err;

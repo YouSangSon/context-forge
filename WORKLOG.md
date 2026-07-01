@@ -2,6 +2,28 @@
 
 ## 2026-07-01
 
+- Tightened bare catch binding coverage:
+  - Remaining bare `catch {}` clauses under `src/`, `tests/`, and `scripts/`
+    now use explicit `_err: unknown` bindings.
+  - `tests/scripts/source-conventions.test.ts` now fails catch clauses with no
+    binding, preserving the contributor convention through AST coverage.
+
+Verification plan:
+- `npx vitest run tests/scripts/source-conventions.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/source-conventions.test.ts` (`2` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1834` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Added an explicit `any` type convention guard:
   - `tests/scripts/source-conventions.test.ts` now scans tracked TypeScript ASTs
     for `AnyKeyword` nodes.

@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Explicit Any Type Guard
+## Current Loop — Bare Catch Binding Convention
 
 Status:
-- Contributor guidance says strict TypeScript with no `any`, but the source
-  convention suite only guarded catch bindings.
-- The loop adds AST coverage for explicit `any` type keywords across tracked
-  `src/`, `tests/`, and `scripts/` TypeScript files.
+- Contributor guidance says `catch (err: unknown)` should always be used, but
+  bare `catch {}` clauses were still allowed.
+- The loop annotates remaining bare catch clauses as `_err: unknown` and makes
+  the source convention suite reject catch clauses without bindings.
 
 Verification:
 - Focused source convention coverage, typecheck, build, audit, full tests, and

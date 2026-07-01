@@ -191,7 +191,7 @@ function readGitEmail(cwd: string): string | null {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     }).trim();
-  } catch {
+  } catch (_err: unknown) {
     return null;
   }
 }

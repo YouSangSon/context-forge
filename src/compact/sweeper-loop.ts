@@ -114,7 +114,7 @@ export function startBackgroundSweeper(
       if (inFlight) {
         try {
           await inFlight;
-        } catch {
+        } catch (_err: unknown) {
           // Already logged in tick; swallow during shutdown.
         }
       }

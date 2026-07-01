@@ -392,7 +392,7 @@ function parseJsonObjectFromText(text: string): unknown {
   const trimmed = text.trim();
   try {
     return JSON.parse(trimmed);
-  } catch {
+  } catch (_err: unknown) {
     const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
     if (fenced?.[1]) {
       return JSON.parse(fenced[1]);

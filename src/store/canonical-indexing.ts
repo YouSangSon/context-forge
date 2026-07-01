@@ -547,7 +547,7 @@ export async function refreshCanonicalMemoryIndex(input: {
           nextRetryAt: new Date(Date.now() + nextRetryDelayMs(job.qdrantAttempts)),
           error,
         });
-      } catch {
+      } catch (_err: unknown) {
         // Preserve the original refresh failure; losing the retry marker is a
         // secondary outage and should not mask the vector/chunk error.
       }

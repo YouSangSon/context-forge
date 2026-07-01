@@ -337,7 +337,7 @@ async function exists(filePath: string): Promise<boolean> {
   try {
     await access(filePath);
     return true;
-  } catch {
+  } catch (_err: unknown) {
     return false;
   }
 }
