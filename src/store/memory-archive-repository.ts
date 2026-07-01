@@ -16,6 +16,8 @@ import { toIsoString, toNumber } from "./db-utils.js";
 import { assertNonBlankText } from "./memory-content.js";
 
 const QDRANT_CLEANUP_VISIBILITY_TIMEOUT_MS = 60_000;
+const POSTGRES_INTEGER_MIN = -2_147_483_648;
+const POSTGRES_INTEGER_MAX = 2_147_483_647;
 
 export type CompactionRunStatus = "pending" | "completed" | "failed";
 export type ArchiveReason = "duplicate" | "decay";
@@ -531,7 +533,10 @@ export function createMemoryArchiveRepository(
         content: row.content,
         summary: row.summary,
         durability: row.durability,
-        importance: toNumber(row.importance),
+        importance: toPostgresInteger(
+          row.importance,
+          "memory archive importance",
+        ),
         originalCreatedAt: toIsoString(row.original_created_at),
         originalUpdatedAt: toIsoString(row.original_updated_at),
         unarchivedAt:
@@ -693,6 +698,18 @@ function toPositiveSafeInteger(value: unknown, fieldName: string): number {
 function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
   const numberValue = toNumber(value);
   assertNonNegativeSafeInteger(numberValue, fieldName);
+  return numberValue;
+}
+
+function toPostgresInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (
+    !Number.isInteger(numberValue) ||
+    numberValue < POSTGRES_INTEGER_MIN ||
+    numberValue > POSTGRES_INTEGER_MAX
+  ) {
+    throw new Error(`${fieldName} must be a Postgres integer`);
+  }
   return numberValue;
 }
 

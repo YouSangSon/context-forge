@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded memory archive importance row mapping:
+  - `src/store/memory-archive-repository.ts` now maps archived memory
+    `importance` through Postgres integer validation before returning archive
+    lookup rows to the unarchive flow.
+  - `tests/store/memory-archive-repository.test.ts` now covers malformed
+    fractional, out-of-range, and nonnumeric archive importance rows through
+    mock-pool lookup coverage.
+  - Source checked: `memory_archive.importance` is an `INTEGER` column in
+    migration `005_add_compaction_archive.sql`, matching
+    `memory_records.importance` in migration `001_initial.sql`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/memory-repository.test.ts tests/store/db-utils.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`206` tests passed, `7` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2033` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded compaction run row mapping:
   - `src/store/memory-archive-repository.ts` now maps compaction run ids
     through positive safe-integer validation and run outcome counters through

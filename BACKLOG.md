@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository lookup row mapping now validates archived
+  `importance` as a Postgres integer before returning archive rows.
 - Memory archive repository run row mapping now validates compaction run ids
   and outcome counters before returning create/find run records.
 - Memory archive repository restore row mapping now validates restored

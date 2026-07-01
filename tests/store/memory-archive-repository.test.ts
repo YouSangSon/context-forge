@@ -724,6 +724,31 @@ describe("MemoryArchiveRepository.findArchiveByIds", () => {
 
     await expect(repo.findArchiveByIds([50], "org-a")).rejects.toThrow(message);
   });
+
+  it.each([
+    {
+      importance: "1.5",
+      message: "memory archive importance must be a Postgres integer",
+    },
+    {
+      importance: "2147483648",
+      message: "memory archive importance must be a Postgres integer",
+    },
+    {
+      importance: "bad",
+      message: "database number must be finite",
+    },
+  ])("rejects malformed archive importance rows %#", async ({
+    importance,
+    message,
+  }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [archiveRow({ importance })],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findArchiveByIds([50], "org-a")).rejects.toThrow(message);
+  });
 });
 
 describe("MemoryArchiveRepository.restoreToCanonical", () => {
