@@ -1,5 +1,4 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import type { IncomingMessage } from "node:http";
 
 // Each configured token may bind to a single organization. Format:
 //   "rawToken"             -> no binding (legacy: any org allowed)
@@ -114,14 +113,6 @@ export async function authenticateBearer(
 
   const oauthMatch = await oauthVerifier.verify(provided);
   return oauthMatch ? { ...oauthMatch, token: provided, authType: "oauth" } : null;
-}
-
-export function matchBearerFromRequest(
-  req: IncomingMessage,
-  tokens: readonly BearerToken[],
-): BearerToken | null {
-  const header = req.headers.authorization;
-  return matchBearer(typeof header === "string" ? header : undefined, tokens);
 }
 
 function extractBearerValue(authHeader: string | undefined): string | null {

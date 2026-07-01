@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Bearer auth no longer exports the unused `matchBearerFromRequest` request
+  wrapper; active HTTP and MCP callers pass authorization header strings
+  directly to `authenticateBearer`.
 - Bearer auth no longer exports the unused `checkBearer` and
   `checkBearerFromRequest` boolean compatibility wrappers; tests now focus on
   the active token-loading and token-matching API.

@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Removed the unused bearer-auth request wrapper:
+  - `src/app/middleware/bearer-auth.ts` no longer imports
+    `IncomingMessage` or exports `matchBearerFromRequest`.
+  - `tests/app/bearer-auth.test.ts` drops the wrapper-only request fixture and
+    keeps focused coverage on `loadBearerTokens` and `matchBearer`; active HTTP
+    and MCP callers already pass header strings to `authenticateBearer`.
+  - Source checked: `rg` found `matchBearerFromRequest` only in its own test,
+    while `src/app/server.ts` and `src/app/mcp-http.ts` use
+    `authenticateBearer` directly.
+
+Verification plan:
+- `npx vitest run tests/app/bearer-auth.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/app/bearer-auth.test.ts --reporter=dot`
+  (`25` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1906` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Removed dead bearer-auth compatibility exports:
   - `src/app/middleware/bearer-auth.ts` no longer exports `checkBearer` or
     `checkBearerFromRequest`; the active runtime path uses `authenticateBearer`

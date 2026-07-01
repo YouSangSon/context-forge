@@ -2,9 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   loadBearerTokens,
   matchBearer,
-  matchBearerFromRequest,
 } from "../../src/app/middleware/bearer-auth.js";
-import type { IncomingMessage } from "node:http";
 
 // ---------------------------------------------------------------------------
 // vi.mock must be hoisted to the top of the module (Vitest limitation with ESM).
@@ -24,16 +22,6 @@ vi.mock("node:crypto", async (importOriginal) => {
     },
   };
 });
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function makeReq(authHeader?: string): IncomingMessage {
-  return {
-    headers: authHeader ? { authorization: authHeader } : {},
-  } as unknown as IncomingMessage;
-}
 
 const TOKENS = [
   { token: "alpha-secret", organizationId: "dev-team" },
@@ -268,34 +256,5 @@ describe("loadBearerTokens", () => {
     expect(() => loadBearerTokens({ MEMORY_API_TOKENS: value })).toThrow(
       /Invalid MEMORY_API_TOKENS entry: entries must not be blank/i,
     );
-  });
-});
-
-// ---------------------------------------------------------------------------
-// matchBearerFromRequest — reads authorization header from IncomingMessage
-// ---------------------------------------------------------------------------
-
-describe("matchBearerFromRequest", () => {
-  it("returns the matched token when the request carries a valid Authorization header", () => {
-    // Arrange
-    const req = makeReq("Bearer alpha-secret");
-
-    // Act
-    const result = matchBearerFromRequest(req, TOKENS);
-
-    // Assert
-    expect(result).not.toBeNull();
-    expect(result!.organizationId).toBe("dev-team");
-  });
-
-  it("returns null when the request has no Authorization header", () => {
-    // Arrange
-    const req = makeReq();
-
-    // Act
-    const result = matchBearerFromRequest(req, TOKENS);
-
-    // Assert
-    expect(result).toBeNull();
   });
 });

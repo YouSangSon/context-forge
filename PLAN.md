@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Bearer Auth Dead Export Cleanup
+## Current Loop — Bearer Auth Request Wrapper Cleanup
 
 Status:
 - `src/app/middleware/bearer-auth.ts` no longer exports the unused
-  `checkBearer` and `checkBearerFromRequest` boolean compatibility wrappers.
-- `tests/app/bearer-auth.test.ts` now focuses on the active token-loading,
-  `matchBearer`, and request-header matching paths.
+  `matchBearerFromRequest` request wrapper.
+- Active callers already pass the authorization header string directly to
+  `authenticateBearer`, so the module now keeps only the runtime auth helpers.
 
 Verification:
 - Focused bearer-auth coverage passed.
