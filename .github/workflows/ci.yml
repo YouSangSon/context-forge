@@ -89,7 +89,7 @@ jobs:
         # and that download hits GitHub releases (flaky — has 500'd mid-run).
         run: ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci
 
-      - name: Run PG-dependent suites
+      - name: Run Postgres-backed suites
         env:
           POSTGRES_USER: memory
           POSTGRES_PASSWORD: memory

@@ -68,7 +68,7 @@ describe("CI workflow hygiene", () => {
 
     const pgJob = ciWorkflow.slice(pgJobStart, pgvectorJobStart);
 
-    expect(pgJob).toContain("      - name: Run PG-dependent suites\n");
+    expect(pgJob).toContain("      - name: Run Postgres-backed suites\n");
     expect(pgJob).toContain("        run: >\n          npx vitest run\n");
     expect(pgJob).toContain("          tests/store/memory-repository.test.ts\n");
     expect(pgJob).toContain("          tests/jobs/ingest-job-repository.test.ts\n");

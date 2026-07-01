@@ -1595,7 +1595,7 @@ describe("createMemoryRepository (unit — no PG required)", () => {
   });
 });
 
-// PG-dependent suite: skip when POSTGRES_HOST is unset (e.g. the non-PG CI
+// Postgres-backed suite: skip when POSTGRES_HOST is unset (e.g. the non-PG CI
 // job, or local dev without docker compose). The pg-integration CI job sets
 // it explicitly. Local opt-in: `POSTGRES_HOST=127.0.0.1 npm test`.
 describe.skipIf(!process.env.POSTGRES_HOST)("createMemoryRepository", () => {

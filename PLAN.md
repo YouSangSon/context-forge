@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Semantic Dedup Test Name Refresh
+## Current Loop — Postgres-Backed Test Wording
 
 Status:
-- `tests/mcp/server.test.ts` still used a planning-era `(P18)` label in the
-  semantic dedup test name.
-- The loop refreshes that test name and extends public-docs drift coverage for
-  the stale phrase.
+- The CI step and Postgres-gated test comments still used `PG-dependent`
+  wording while public docs now describe the same coverage as
+  Postgres-backed repository/migration suites.
+- The loop aligns the CI/test wording and updates the CI hygiene guard.
 
 Verification:
-- Focused MCP server/public-docs drift coverage, typecheck, build, audit, full
-  tests, and diff check passed.
+- Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,
+  and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

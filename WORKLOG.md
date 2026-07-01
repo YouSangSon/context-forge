@@ -2,6 +2,31 @@
 
 ## 2026-07-01
 
+- Aligned Postgres-backed test wording:
+  - `.github/workflows/ci.yml` now names the backend-gated step
+    `Run Postgres-backed suites`.
+  - `tests/store/memory-repository.test.ts`,
+    `tests/jobs/ingest-job-repository.test.ts`, and
+    `tests/db/migrate.test.ts` use the same Postgres-backed wording in their
+    skip comments.
+  - `tests/scripts/ci-workflow-hygiene.test.ts` guards the updated step name.
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`9` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1829` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Refreshed semantic dedup MCP test naming:
   - `tests/mcp/server.test.ts` now names the `semanticDedupThreshold` behavior
     without the planning-era `(P18)` label.

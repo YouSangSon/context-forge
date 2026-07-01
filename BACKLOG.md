@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Postgres integration CI and Postgres-gated test comments now use
+  Postgres-backed suite wording consistently, guarded by CI workflow hygiene
+  coverage.
 - Semantic dedup MCP server test names now describe current behavior without
   planning-era phase labels, guarded by public-docs drift coverage.
 - CI workflow hygiene coverage now asserts backend job section existence and
