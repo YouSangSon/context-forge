@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Audit log repository row mapping now validates audit ids and duration
+  counters before returning listed audit entries.
 - Goal run repository row mapping now validates run and iteration ids before
   returning mapped goal run records.
 - Ingest job repository row mapping now validates job and memory-record ids

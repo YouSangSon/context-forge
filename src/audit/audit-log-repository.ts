@@ -108,17 +108,36 @@ export function createAuditLogRepository(pool: PgPool): AuditLogRepository {
 
 function mapAuditLogRow(row: AuditLogRow): StoredAuditLogEntry {
   return {
-    id: toNumber(row.id),
+    id: toPositiveSafeInteger(row.id, "audit log id"),
     organizationId: row.organization_id,
     actor: row.actor,
     tool: row.tool,
     projectKey: row.project_key,
     outcome: row.outcome,
     errorMessage: row.error_message,
-    durationMs: toNumber(row.duration_ms),
+    durationMs: toNonNegativeSafeInteger(
+      row.duration_ms,
+      "audit log duration_ms",
+    ),
     requestId: row.request_id,
     createdAt: toIsoString(row.created_at),
   };
+}
+
+function toPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue <= 0) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+  return numberValue;
+}
+
+function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue < 0) {
+    throw new Error(`${fieldName} must be a non-negative safe integer`);
+  }
+  return numberValue;
 }
 
 const DEFAULT_AUDIT_LIMIT = 100;

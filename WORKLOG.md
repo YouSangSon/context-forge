@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded audit log numeric row mapping:
+  - `src/audit/audit-log-repository.ts` now maps audit log `id` through
+    positive safe-integer validation and `duration_ms` through non-negative
+    safe-integer validation before returning listed audit entries.
+  - `tests/audit/audit-truncation.test.ts` now covers malformed audit id and
+    duration rows through mock-pool `listByOrganization` coverage.
+  - Source checked: `audit_log.id` is `BIGSERIAL` and
+    `audit_log.duration_ms` is `INTEGER` in migration
+    `003_add_audit_log.sql`.
+
+Verification plan:
+- `npx vitest run tests/audit/audit-truncation.test.ts tests/audit/audit-write.test.ts tests/store/db-utils.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/audit/audit-truncation.test.ts tests/audit/audit-write.test.ts tests/store/db-utils.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`66` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2011` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded goal run id row mapping:
   - `src/goal-run/goal-run-repository.ts` now maps goal run `id`,
     goal run iteration `id`, and iteration `goal_run_id` rows through positive

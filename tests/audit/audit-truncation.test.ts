@@ -204,23 +204,65 @@ describe("createAuditLogRepository — error_message truncation", () => {
   });
 
   it.each([
-    { label: "id null", row: buildAuditRow({ id: null }) },
-    { label: "id boolean", row: buildAuditRow({ id: false }) },
-    { label: "id array", row: buildAuditRow({ id: [42] }) },
-    { label: "duration null", row: buildAuditRow({ duration_ms: null }) },
-    { label: "duration boolean", row: buildAuditRow({ duration_ms: false }) },
-    { label: "duration array", row: buildAuditRow({ duration_ms: [17] }) },
+    {
+      label: "id null",
+      row: buildAuditRow({ id: null }),
+      message: "database number must be finite",
+    },
+    {
+      label: "id zero",
+      row: buildAuditRow({ id: "0" }),
+      message: "audit log id must be a positive safe integer",
+    },
+    {
+      label: "id fractional",
+      row: buildAuditRow({ id: "1.5" }),
+      message: "audit log id must be a positive safe integer",
+    },
+    {
+      label: "id boolean",
+      row: buildAuditRow({ id: false }),
+      message: "database number must be finite",
+    },
+    {
+      label: "id array",
+      row: buildAuditRow({ id: [42] }),
+      message: "database number must be finite",
+    },
+    {
+      label: "duration null",
+      row: buildAuditRow({ duration_ms: null }),
+      message: "database number must be finite",
+    },
+    {
+      label: "duration negative",
+      row: buildAuditRow({ duration_ms: "-1" }),
+      message: "audit log duration_ms must be a non-negative safe integer",
+    },
+    {
+      label: "duration fractional",
+      row: buildAuditRow({ duration_ms: "1.5" }),
+      message: "audit log duration_ms must be a non-negative safe integer",
+    },
+    {
+      label: "duration boolean",
+      row: buildAuditRow({ duration_ms: false }),
+      message: "database number must be finite",
+    },
+    {
+      label: "duration array",
+      row: buildAuditRow({ duration_ms: [17] }),
+      message: "database number must be finite",
+    },
   ])(
     "listByOrganization rejects malformed audit row number values: $label",
-    async ({ row }) => {
+    async ({ row, message }) => {
       const fakePool = {
         query: vi.fn().mockResolvedValue({ rows: [row] }),
       };
       const repo = createAuditLogRepository(fakePool as never);
 
-      await expect(repo.listByOrganization("org-1")).rejects.toThrow(
-        "database number must be finite",
-      );
+      await expect(repo.listByOrganization("org-1")).rejects.toThrow(message);
     },
   );
 

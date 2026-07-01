@@ -4,18 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Goal Run Id Row Mapping
+## Current Loop — Audit Log Numeric Row Mapping
 
 Status:
-- `src/goal-run/goal-run-repository.ts` now maps goal run and iteration id
-  rows as positive safe integers before returning runs or iterations.
-- `recordIteration` now maps inserted iteration rows before `COMMIT`, so
-  malformed returned ids roll back the transaction.
-- `tests/goal-run/goal-run-repository.test.ts` now covers malformed run and
-  iteration id/reference rows.
+- `src/audit/audit-log-repository.ts` now maps audit log `id` as a positive
+  safe integer and `duration_ms` as a non-negative safe integer before
+  returning audit entries.
+- `tests/audit/audit-truncation.test.ts` now covers malformed audit id and
+  duration rows through mock-pool list coverage.
 
 Verification:
-- Focused goal-run/convention tests passed.
+- Focused audit/db-utils/convention tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
