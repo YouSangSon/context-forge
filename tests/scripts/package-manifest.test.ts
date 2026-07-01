@@ -76,6 +76,24 @@ const DISALLOWED_ALLOWLIST_ENTRIES = [
   "tests/**",
 ] as const;
 
+const EXPECTED_RUNTIME_DEPENDENCIES = [
+  "@huggingface/transformers",
+  "@modelcontextprotocol/sdk",
+  "@qdrant/js-client-rest",
+  "jose",
+  "openai",
+  "pg",
+  "pino",
+  "zod",
+] as const;
+
+const EXPECTED_DEVELOPMENT_DEPENDENCIES = [
+  "@types/node",
+  "tsx",
+  "typescript",
+  "vitest",
+] as const;
+
 function readPackageJson(): PackageJson {
   return JSON.parse(fs.readFileSync("package.json", "utf8")) as PackageJson;
 }
@@ -145,6 +163,17 @@ describe("package manifest publish surface", () => {
     expect(packageLock.version).toBe(packageJson.version);
     expect(packageLock.lockfileVersion).toBe(3);
     expect(packageLock.packages[""]).toBeDefined();
+  });
+
+  it("keeps runtime dependencies separate from development tooling", () => {
+    const packageJson = readPackageJson();
+
+    expect(Object.keys(packageJson.dependencies ?? {}).sort()).toEqual([
+      ...EXPECTED_RUNTIME_DEPENDENCIES,
+    ].sort());
+    expect(Object.keys(packageJson.devDependencies ?? {}).sort()).toEqual([
+      ...EXPECTED_DEVELOPMENT_DEPENDENCIES,
+    ].sort());
   });
 
   it("uses an explicit package allowlist for runtime and public docs assets", () => {

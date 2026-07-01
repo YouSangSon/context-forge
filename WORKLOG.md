@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded package dependency scope:
+  - `tests/scripts/package-manifest.test.ts` now checks the exact runtime
+    dependency names separately from development-only tooling names.
+  - This catches package metadata drift when runtime libraries and local
+    build/test tools move across the `dependencies` / `devDependencies`
+    boundary while the lockfile remains aligned.
+  - Source checked: `package.json`, package-lock root metadata, README,
+    configuration, architecture, and public-doc drift coverage describe
+    runtime dependencies such as `@huggingface/transformers` separately from
+    local TypeScript/Vitest tooling.
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`13` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1857` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded documented backup creation scripts:
   - `tests/scripts/package-manifest.test.ts` now checks that `backup:create`,
     `backup:create:qdrant`, and `backup:create:pgvector` still route through

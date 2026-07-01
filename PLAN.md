@@ -4,13 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Backup Creation Script Guard
+## Current Loop — Dependency Scope Guard
 
 Status:
-- Package manifest coverage guards documented backup creation scripts for the
-  backend-aware default, forced Qdrant, and forced pgvector paths.
-- The loop keeps README, operations, and self-hosted backup guidance aligned
-  with the shell entrypoint and `VECTOR_BACKEND` overrides operators run.
+- Package manifest coverage guards the intended runtime dependency set
+  separately from development-only tooling.
+- The loop catches package metadata drift where runtime libraries and local
+  build/test tools move across the `dependencies` / `devDependencies`
+  boundary.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

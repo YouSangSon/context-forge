@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards the intended runtime dependency set
+  separately from development-only tooling.
 - Package manifest coverage now guards documented backup creation scripts for
   backend-aware, forced-Qdrant, and forced-pgvector backup paths.
 - Package manifest coverage now guards documented development watch scripts
