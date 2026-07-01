@@ -1,4 +1,12 @@
 .DS_Store
+Thumbs.db
+Desktop.ini
+desktop.ini
+*.swp
+*.swo
+*.orig
+*.rej
+*~
 
 .worktrees/
 dist/

@@ -23,6 +23,19 @@ const placeholderDbUserInfo = new Set([
   "user:pw",
   "memory:STRONG_PW",
 ]);
+const generatedMetadataFileNames = new Set([
+  ".DS_Store",
+  "Thumbs.db",
+  "Desktop.ini",
+  "desktop.ini",
+]);
+const generatedMetadataSuffixes = [
+  ".swp",
+  ".swo",
+  ".orig",
+  ".rej",
+  "~",
+];
 
 function trackedFiles(): string[] {
   return execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
@@ -33,6 +46,14 @@ function trackedFiles(): string[] {
 
 function isTextFile(content: Buffer): boolean {
   return !content.includes(0);
+}
+
+function isGeneratedMetadataPath(path: string): boolean {
+  const filename = path.split("/").at(-1) ?? "";
+  return (
+    generatedMetadataFileNames.has(filename) ||
+    generatedMetadataSuffixes.some((suffix) => filename.endsWith(suffix))
+  );
 }
 
 function hasOnlyPlaceholderDbCredentials(content: string): boolean {
@@ -49,10 +70,8 @@ function hasOnlyPlaceholderDbCredentials(content: string): boolean {
 }
 
 describe("repo secret hygiene", () => {
-  it("keeps macOS Finder metadata out of tracked files", () => {
-    expect(
-      trackedFiles().filter((path) => path.split("/").includes(".DS_Store")),
-    ).toEqual([]);
+  it("keeps desktop and editor metadata out of tracked files", () => {
+    expect(trackedFiles().filter(isGeneratedMetadataPath)).toEqual([]);
   });
 
   it("does not globally allow embedded database credentials", () => {

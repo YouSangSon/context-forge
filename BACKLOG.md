@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Removed ignored desktop metadata artifacts from the workspace and broadened
+  `.gitignore` plus repo hygiene coverage for common desktop/editor metadata.
 - Removed ignored `.github/.DS_Store` workspace metadata and added a repo
   hygiene guard against tracked Finder metadata files.
 - Korean setup, embedding, and backup snippets now localize `default`, `stub`,

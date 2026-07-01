@@ -4,16 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Finder Metadata Hygiene
+## Current Loop — Generated Metadata Hygiene
 
 Status:
-- Removed an ignored `.github/.DS_Store` workspace artifact.
-- `tests/scripts/repo-secret-hygiene.test.ts` now guards against tracked
-  macOS Finder metadata files.
+- Removed ignored desktop metadata artifacts from the workspace.
+- `.gitignore` and `tests/scripts/repo-secret-hygiene.test.ts` now cover common
+  desktop/editor metadata files, not only `.DS_Store`.
 
 Verification:
-- Focused repo hygiene coverage, typecheck, build, audit, full tests, and diff
-  check passed for this Finder metadata hygiene update.
+- Focused repo hygiene coverage, generated-metadata workspace scan, typecheck,
+  build, audit, full tests, and diff check passed for this generated metadata
+  hygiene update.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

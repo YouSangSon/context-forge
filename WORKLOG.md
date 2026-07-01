@@ -2,6 +2,30 @@
 
 ## 2026-07-01
 
+- Broadened generated metadata hygiene:
+  - Removed ignored desktop metadata artifacts from the workspace.
+  - `.gitignore` now covers common desktop/editor metadata files.
+  - `tests/scripts/repo-secret-hygiene.test.ts` now guards against tracked
+    desktop/editor metadata files, not only `.DS_Store`.
+
+Verification plan:
+- `npx vitest run tests/scripts/repo-secret-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/repo-secret-hygiene.test.ts` (`3` tests passed)
+- Generated-metadata workspace scan excluding `node_modules`, `.git`, and
+  `.worktrees` (no matches)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1811` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Cleaned up Finder metadata hygiene:
   - Removed ignored workspace artifact `.github/.DS_Store`.
   - `tests/scripts/repo-secret-hygiene.test.ts` now guards against tracked
