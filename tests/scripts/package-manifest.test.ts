@@ -206,6 +206,18 @@ describe("package manifest publish surface", () => {
     });
   });
 
+  it("keeps documented development watch scripts pointed at source entrypoints", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.scripts).toMatchObject({
+      "dev:cli": "tsx src/cli.ts",
+      "dev:mcp": "tsx src/mcp/server.ts",
+      "dev:server": "tsx src/app/server.ts",
+      "dev:worker": "tsx src/app/worker.ts",
+      "test:watch": "vitest",
+    });
+  });
+
   it("keeps the excluded eval harness out of runtime imports", () => {
     const violations: string[] = [];
     const evalImportPattern =

@@ -4,14 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Operator Script Guard
+## Current Loop — Development Script Guard
 
 Status:
-- Package manifest coverage guards documented operator package scripts that
-  run built `dist/` entrypoints for server, worker, migrations, lifecycle, and
-  backup/restore helpers.
-- The loop keeps operational docs from staying green while package scripts
-  drift away from built runtime artifacts.
+- Package manifest coverage guards documented development watch package
+  scripts for HTTP, worker, MCP, CLI, and Vitest watch mode.
+- The loop keeps README and CONTRIBUTING command tables aligned with source
+  entrypoints that developers actually run locally.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

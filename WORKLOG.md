@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- Guarded documented development watch scripts:
+  - `tests/scripts/package-manifest.test.ts` now checks that `dev:server`,
+    `dev:worker`, `dev:mcp`, `dev:cli`, and `test:watch` still point at the
+    expected source entrypoints and Vitest watch command.
+  - This catches package script drift before README and CONTRIBUTING can keep
+    pointing contributors at commands with changed local-development behavior.
+  - Source checked: README and CONTRIBUTING list these npm scripts in their
+    common or daily command tables.
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`11` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1855` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded documented operator package scripts:
   - `tests/scripts/package-manifest.test.ts` now checks that `start:server`,
     `start:worker`, `db:migrate`, `lifecycle:init`, `backup:decrypt`,
