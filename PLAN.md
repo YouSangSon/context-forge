@@ -4,13 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Install Hygiene Guard
+## Current Loop — CI Node Matrix Guard
 
 Status:
-- CI install steps intentionally set `ONNXRUNTIME_NODE_INSTALL_CUDA=skip` before
-  `npm ci` so GitHub-hosted runners do not attempt flaky GPU binary downloads.
-- The loop adds a CI workflow hygiene guard that rejects raw `npm ci`,
-  `npm install`, or `npm i` commands without that CPU-only environment setting.
+- The durable runtime decision is Node 22 minimum with CI coverage on Node 22
+  and Node 24.
+- The loop adds a CI workflow hygiene guard that keeps the main Node matrix on
+  those supported runtime lines and confirms `setup-node` consumes the matrix
+  value.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

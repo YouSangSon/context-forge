@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now guards that the main Node matrix stays on
+  Node 22 and Node 24 while `setup-node` consumes the matrix value.
 - CI workflow hygiene coverage now rejects unguarded `npm ci`, `npm install`,
   and `npm i` commands so future install steps keep the CPU-only onnxruntime
   workaround.

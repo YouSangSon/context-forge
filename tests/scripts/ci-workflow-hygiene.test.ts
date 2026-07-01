@@ -45,6 +45,11 @@ describe("CI workflow hygiene", () => {
     expect(installSteps).toHaveLength(3);
   });
 
+  it("keeps the main CI Node matrix on supported runtime lines", () => {
+    expect(ciWorkflow).toContain('        node: ["22", "24"]\n');
+    expect(ciWorkflow).toContain("          node-version: ${{ matrix.node }}\n");
+  });
+
   it("rejects unguarded npm install commands in CI", () => {
     const violations = ciWorkflow
       .split(/\r?\n/)

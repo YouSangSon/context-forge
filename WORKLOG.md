@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded the CI Node matrix:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that the main CI
+    matrix keeps Node 22 and Node 24.
+  - The same guard confirms `actions/setup-node` receives `${{ matrix.node }}`
+    as its `node-version` input.
+  - Source checked: GitHub Actions Node.js guidance describes `setup-node` as
+    the recommended way to configure Node.js versions consistently across
+    runners:
+    https://docs.github.com/actions/guides/building-and-testing-nodejs
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`12` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1841` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded CI install commands:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now rejects raw `npm ci`,
     `npm install`, and `npm i` workflow commands.
