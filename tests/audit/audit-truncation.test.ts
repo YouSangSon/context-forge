@@ -173,6 +173,57 @@ describe("createAuditLogRepository — error_message truncation", () => {
     },
   );
 
+  it("listByOrganization maps numeric audit row values through shared DB helpers", async () => {
+    const fakePool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [
+          buildAuditRow({
+            id: "42",
+            duration_ms: "17",
+            created_at: new Date("2026-04-25T00:00:00.000Z"),
+          }),
+        ],
+      }),
+    };
+    const repo = createAuditLogRepository(fakePool as never);
+
+    await expect(repo.listByOrganization("org-1")).resolves.toEqual([
+      {
+        id: 42,
+        organizationId: "org-1",
+        actor: "alice",
+        tool: "add_memory",
+        projectKey: "project-alpha",
+        outcome: "ok",
+        errorMessage: null,
+        durationMs: 17,
+        requestId: "req-1",
+        createdAt: "2026-04-25T00:00:00.000Z",
+      },
+    ]);
+  });
+
+  it.each([
+    { label: "id null", row: buildAuditRow({ id: null }) },
+    { label: "id boolean", row: buildAuditRow({ id: false }) },
+    { label: "id array", row: buildAuditRow({ id: [42] }) },
+    { label: "duration null", row: buildAuditRow({ duration_ms: null }) },
+    { label: "duration boolean", row: buildAuditRow({ duration_ms: false }) },
+    { label: "duration array", row: buildAuditRow({ duration_ms: [17] }) },
+  ])(
+    "listByOrganization rejects malformed audit row number values: $label",
+    async ({ row }) => {
+      const fakePool = {
+        query: vi.fn().mockResolvedValue({ rows: [row] }),
+      };
+      const repo = createAuditLogRepository(fakePool as never);
+
+      await expect(repo.listByOrganization("org-1")).rejects.toThrow(
+        "database number must be finite",
+      );
+    },
+  );
+
   it("truncates error_message to 1024 chars before persistence", async () => {
     let capturedParams: unknown[] | undefined;
 
@@ -259,6 +310,22 @@ function buildAuditEntry(overrides: Record<string, unknown> = {}) {
     tool: "add_memory",
     outcome: "ok",
     durationMs: 5,
+    ...overrides,
+  };
+}
+
+function buildAuditRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 1,
+    organization_id: "org-1",
+    actor: "alice",
+    tool: "add_memory",
+    project_key: "project-alpha",
+    outcome: "ok",
+    error_message: null,
+    duration_ms: 5,
+    request_id: "req-1",
+    created_at: "2026-04-25T00:00:00.000Z",
     ...overrides,
   };
 }

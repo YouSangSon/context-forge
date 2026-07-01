@@ -1,4 +1,5 @@
 import type { PgPool } from "../db/connection.js";
+import { toIsoString, toNumber } from "../store/db-utils.js";
 import { assertNonBlankText } from "../store/memory-content.js";
 
 export type AuditOutcome = "ok" | "error";
@@ -28,14 +29,14 @@ export type AuditLogRepository = {
 };
 
 type AuditLogRow = {
-  id: number;
+  id: number | string;
   organization_id: string;
   actor: string;
   tool: string;
   project_key: string | null;
   outcome: AuditOutcome;
   error_message: string | null;
-  duration_ms: number;
+  duration_ms: number | string;
   request_id: string | null;
   created_at: string | Date;
 };
@@ -107,19 +108,16 @@ export function createAuditLogRepository(pool: PgPool): AuditLogRepository {
 
 function mapAuditLogRow(row: AuditLogRow): StoredAuditLogEntry {
   return {
-    id: typeof row.id === "number" ? row.id : Number(row.id),
+    id: toNumber(row.id),
     organizationId: row.organization_id,
     actor: row.actor,
     tool: row.tool,
     projectKey: row.project_key,
     outcome: row.outcome,
     errorMessage: row.error_message,
-    durationMs: row.duration_ms,
+    durationMs: toNumber(row.duration_ms),
     requestId: row.request_id,
-    createdAt:
-      row.created_at instanceof Date
-        ? row.created_at.toISOString()
-        : row.created_at,
+    createdAt: toIsoString(row.created_at),
   };
 }
 

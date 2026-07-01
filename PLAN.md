@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — DB Number Runtime Type Guard
+## Current Loop — Audit Row DB Helper Reuse
 
 Status:
-- `toNumber` now accepts `unknown` at the runtime boundary and rejects
-  non-number/string values before JavaScript numeric coercion can turn them into
-  `0` or `1`.
-- `tests/store/db-utils.test.ts` covers `null`, booleans, arrays, objects,
-  non-finite numbers, blank strings, and non-numeric strings.
+- `src/audit/audit-log-repository.ts` now maps audit row `id`,
+  `duration_ms`, and `created_at` through shared DB row helpers instead of local
+  coercion.
+- `tests/audit/audit-truncation.test.ts` covers numeric string mapping and
+  malformed audit row numeric values from `listByOrganization`.
 
 Verification:
-- Focused repository mapping tests passed.
+- Focused audit/helper tests passed.
 - Typecheck, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.

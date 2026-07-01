@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Reused DB helpers in audit row mapping:
+  - `src/audit/audit-log-repository.ts` now maps `id`, `duration_ms`, and
+    `created_at` through shared `toNumber` and `toIsoString` helpers instead of
+    local numeric and timestamp coercion.
+  - `tests/audit/audit-truncation.test.ts` covers numeric string audit rows,
+    `Date` timestamp rows, and malformed audit row numeric values from
+    `listByOrganization`.
+  - Source checked: audit repository listing was the remaining direct
+    `Number(row.id)` database row mapping path outside the shared store helper.
+
+Verification plan:
+- `npx vitest run tests/audit/audit-truncation.test.ts tests/audit/audit-write.test.ts tests/store/db-utils.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/audit/audit-truncation.test.ts tests/audit/audit-write.test.ts tests/store/db-utils.test.ts --reporter=dot`
+  (`56` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `1934` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Tightened DB row number runtime typing:
   - `src/store/db-utils.ts` now treats `toNumber` as an `unknown` runtime
     boundary and rejects non-number/string inputs before JavaScript coercion can

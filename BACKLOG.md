@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Audit log listing now reuses shared DB row helpers for numeric and timestamp
+  mapping, so malformed audit row numeric values fail consistently.
 - Shared DB number mapping now rejects non-number/string runtime values before
   JavaScript coercion can turn `null`, booleans, or arrays into numeric values.
 - Shared DB number mapping now rejects malformed finite-number values before
