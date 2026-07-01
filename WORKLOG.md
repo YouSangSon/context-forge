@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded lockfile install-script packages:
+  - `tests/scripts/package-manifest.test.ts` now checks the exact package-lock
+    package paths that declare `hasInstallScript: true`.
+  - This catches dependency tree drift that would introduce a new
+    preinstall/install/postinstall package script without an explicit
+    dependency review.
+  - Source checked: npm documents `hasInstallScript` as a package-lock package
+    descriptor flag for packages that have `preinstall`, `install`, or
+    `postinstall` scripts:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`34` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1878` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package types metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package `types`
     and `typings` metadata stay absent.

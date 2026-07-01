@@ -54,6 +54,7 @@ type PackageLock = {
       devEngines?: unknown;
       devDependencies?: Record<string, string>;
       engines?: Record<string, string>;
+      hasInstallScript?: boolean;
       license?: unknown;
       name?: unknown;
       optionalDependencies?: Record<string, string>;
@@ -130,6 +131,14 @@ const EXPECTED_PACKAGE_OVERRIDES = {
 } as const;
 
 const EXPECTED_ESBUILD_LOCK_VERSION = "0.28.1";
+
+const EXPECTED_LOCKFILE_INSTALL_SCRIPT_PACKAGES = [
+  "node_modules/esbuild",
+  "node_modules/fsevents",
+  "node_modules/onnxruntime-node",
+  "node_modules/protobufjs",
+  "node_modules/sharp",
+] as const;
 
 const DISALLOWED_PACKAGE_LIFECYCLE_SCRIPTS = [
   "dependencies",
@@ -345,6 +354,18 @@ describe("package manifest publish surface", () => {
     expect(packageLock.version).toBe(packageJson.version);
     expect(packageLock.lockfileVersion).toBe(3);
     expect(packageLock.packages[""]).toBeDefined();
+  });
+
+  it("keeps lockfile install-script packages explicit", () => {
+    const packageLock = readPackageLock();
+    const installScriptPackages = Object.entries(packageLock.packages)
+      .filter(([, metadata]) => metadata.hasInstallScript === true)
+      .map(([path]) => path)
+      .sort();
+
+    expect(installScriptPackages).toEqual([
+      ...EXPECTED_LOCKFILE_INSTALL_SCRIPT_PACKAGES,
+    ].sort());
   });
 
   it("keeps package-lock as the active npm lockfile", () => {

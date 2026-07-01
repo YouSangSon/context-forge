@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards the lockfile package descriptors that
+  declare `hasInstallScript: true` so dependency tree drift cannot add new
+  preinstall/install/postinstall package scripts without review.
 - Package manifest coverage now guards that package `types` and `typings`
   metadata stay absent so TypeScript declaration entrypoints cannot appear
   without an explicit public API packaging decision.
