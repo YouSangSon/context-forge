@@ -3,6 +3,14 @@ import fs from "node:fs";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
+type TsConfig = {
+  compilerOptions?: {
+    noImplicitAny?: unknown;
+    strict?: unknown;
+    useUnknownInCatchVariables?: unknown;
+  };
+};
+
 function trackedTypeScriptFiles(): string[] {
   return execFileSync("git", ["ls-files", "src", "tests", "scripts"], {
     encoding: "utf8",
@@ -10,6 +18,10 @@ function trackedTypeScriptFiles(): string[] {
     .split(/\r?\n/)
     .filter((path) => path.endsWith(".ts"))
     .sort();
+}
+
+function readTsConfig(): TsConfig {
+  return JSON.parse(fs.readFileSync("tsconfig.json", "utf8")) as TsConfig;
 }
 
 function lineNumberAt(sourceFile: ts.SourceFile, position: number): number {
@@ -83,6 +95,14 @@ function collectTypeScriptSuppressionViolations(path: string): string[] {
 }
 
 describe("source code conventions", () => {
+  it("keeps TypeScript strict mode enabled", () => {
+    const compilerOptions = readTsConfig().compilerOptions;
+
+    expect(compilerOptions?.strict).toBe(true);
+    expect(compilerOptions?.noImplicitAny).not.toBe(false);
+    expect(compilerOptions?.useUnknownInCatchVariables).not.toBe(false);
+  });
+
   it("keeps source catch bindings explicitly typed as unknown", () => {
     const violations = trackedTypeScriptFiles().flatMap((path) =>
       collectCatchBindingViolations(path),

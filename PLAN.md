@@ -4,14 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — TypeScript Nocheck Comment Guard
+## Current Loop — TypeScript Strict Config Guard
 
 Status:
 - Contributor guidance expects strict TypeScript without `any`, and the source
-  convention suite already guards catch bindings, explicit `any` types, and
-  line-level TypeScript suppression comments.
-- The loop extends coverage to keep tracked TypeScript files free of file-wide
-  `@ts-nocheck` comments.
+  convention suite guards catch bindings, explicit `any` types, and suppression
+  comments.
+- The loop adds coverage to keep `tsconfig.json` strict mode enabled and avoid
+  disabling `noImplicitAny` or unknown catch variables.
 
 Verification:
 - Focused source convention coverage, typecheck, build, audit, full tests, and

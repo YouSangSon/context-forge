@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- TypeScript source convention coverage now guards that `tsconfig.json` keeps
+  strict mode enabled without disabling `noImplicitAny` or unknown catch
+  variables.
 - TypeScript source convention coverage now rejects file-wide `@ts-nocheck`
   comments in tracked source, script, and test files.
 - TypeScript source convention coverage now rejects `@ts-ignore` and
