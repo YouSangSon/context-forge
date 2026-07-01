@@ -228,6 +228,7 @@ describe("createOperatorServer", () => {
     expect(html).toContain("return Number.isFinite(value) ? value : fallback;");
     expect(html).toContain('limit: numberInputValue($("limit"), 50)');
     expect(html).toContain("numberInputValue(form.elements.importance, null)");
+    expect(html).toContain("request failed (\" + response.status + \" \" + response.statusText + \")");
     expect(html).toContain("setStatus(errorMessage(error), true)");
     expect(html).not.toContain("setStatus(error.message, true)");
     expect(html).toContain(

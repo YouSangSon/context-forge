@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- The `/admin/memory` static shell now includes HTTP status details when
+  non-JSON error responses fall back to generated status text.
 - The `/admin/memory` static shell now sends only finite numeric limit and
   importance values in API payloads, guarded by server shell coverage.
 - The `/admin/memory` static shell now catches save/tag/archive action failures

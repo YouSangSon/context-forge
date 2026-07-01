@@ -342,7 +342,10 @@ export function renderMemoryAdminPage(): string {
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok || body.success === false) {
-        throw new Error(body.error?.message || "request failed");
+        const fallback = response.statusText
+          ? "request failed (" + response.status + " " + response.statusText + ")"
+          : "request failed (" + response.status + ")";
+        throw new Error(body.error?.message || fallback);
       }
       return body.data;
     }
