@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 type PackageJson = {
   bin?: unknown;
+  description?: unknown;
   exports?: unknown;
   files?: unknown;
   scripts?: Record<string, string>;
@@ -59,6 +60,14 @@ function packageFiles(packageJson: PackageJson): string[] {
 }
 
 describe("package manifest publish surface", () => {
+  it("describes the pluggable vector backend in npm metadata", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.description).toBe(
+      "A persistent-memory MCP server for AI coding agents. Postgres-backed with Qdrant or pgvector search.",
+    );
+  });
+
   it("uses an explicit package allowlist for runtime and public docs assets", () => {
     const files = packageFiles(readPackageJson());
 

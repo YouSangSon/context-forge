@@ -2,6 +2,32 @@
 
 ## 2026-07-01
 
+- Aligned npm package metadata with the pluggable vector-backend docs:
+  - `package.json#description` now describes Postgres-backed storage with
+    Qdrant or pgvector search instead of implying Qdrant-only operation.
+  - `tests/scripts/package-manifest.test.ts` now guards that npm metadata
+    wording alongside the package publish surface.
+  - `CHANGELOG.md` and `CHANGELOG.ko.md` record the user-visible metadata fix.
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm pack --dry-run --json`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`4` tests passed)
+- `npm pack --dry-run --json` (passed; `prepack` rebuilt `dist/`, `115`
+  package entries)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`78` files passed, `2` skipped; `1802` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Removed the source-checkout-only installer from the npm package allowlist:
   - `package.json#files` no longer includes `install.sh`; the script remains a
     repository-checkout installer and source-checkout docs may still reference

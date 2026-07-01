@@ -35,6 +35,9 @@ changes; CHANGELOG entries call those out explicitly.
   output under `dist/`, exclude root source/tests/CI/internal work tracking plus
   source-checkout-only `install.sh` and Docker/Compose assets, and `prepack`
   rebuilds a clean `dist/` before pack/publish.
+- npm package metadata: the package description now reflects Postgres-backed
+  storage with Qdrant or pgvector search instead of implying Qdrant-only
+  operation.
 
 Post-release audit cycle. v1.0.0 shipped with 0 OSS users, so this window
 was the safe time to tighten default-strict behavior on multi-tenancy

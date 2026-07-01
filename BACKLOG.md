@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- npm package metadata now describes Postgres-backed storage with Qdrant or
+  pgvector search, and the package manifest test guards that wording.
 - Unreleased English/Korean changelog notes now record the npm package tarball
   surface fix, with Unreleased-only drift coverage for package tarball
   inclusion/exclusion markers.
