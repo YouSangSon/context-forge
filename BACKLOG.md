@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- The `/admin/memory` static shell now catches save/tag/archive action failures
+  and reports them through the status error fallback.
 - The `/admin/memory` static shell now stringifies caught non-`Error` values
   before writing status text, guarded by server shell coverage.
 - Migration SQL comments now avoid internal `P17`/`P19.1` phase labels, with

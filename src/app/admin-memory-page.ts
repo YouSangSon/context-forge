@@ -434,13 +434,13 @@ export function renderMemoryAdminPage(): string {
       }
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
-        await saveMemory(memory.id, form);
+        try { await saveMemory(memory.id, form); } catch (error) { setStatus(errorMessage(error), true); }
       });
       form.querySelector("[data-action='tag']").addEventListener("click", async () => {
-        await tagMemory(memory.id, form);
+        try { await tagMemory(memory.id, form); } catch (error) { setStatus(errorMessage(error), true); }
       });
       form.querySelector("[data-action='archive']").addEventListener("click", async () => {
-        await archiveMemory(memory.id);
+        try { await archiveMemory(memory.id); } catch (error) { setStatus(errorMessage(error), true); }
       });
       detailEl.append(heading, form);
     }

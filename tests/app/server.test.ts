@@ -226,6 +226,15 @@ describe("createOperatorServer", () => {
     expect(html).toContain("function errorMessage(error)");
     expect(html).toContain("setStatus(errorMessage(error), true)");
     expect(html).not.toContain("setStatus(error.message, true)");
+    expect(html).toContain(
+      "try { await saveMemory(memory.id, form); } catch (error) { setStatus(errorMessage(error), true); }",
+    );
+    expect(html).toContain(
+      "try { await tagMemory(memory.id, form); } catch (error) { setStatus(errorMessage(error), true); }",
+    );
+    expect(html).toContain(
+      "try { await archiveMemory(memory.id); } catch (error) { setStatus(errorMessage(error), true); }",
+    );
     expect(html).not.toContain('<option value="archived">');
     expect(html).toContain("if (!form.elements.durability.disabled)");
     expect(html).not.toContain("localStorage");
