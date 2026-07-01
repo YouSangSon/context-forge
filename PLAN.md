@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Development Script Guard
+## Current Loop — Backup Creation Script Guard
 
 Status:
-- Package manifest coverage guards documented development watch package
-  scripts for HTTP, worker, MCP, CLI, and Vitest watch mode.
-- The loop keeps README and CONTRIBUTING command tables aligned with source
-  entrypoints that developers actually run locally.
+- Package manifest coverage guards documented backup creation scripts for the
+  backend-aware default, forced Qdrant, and forced pgvector paths.
+- The loop keeps README, operations, and self-hosted backup guidance aligned
+  with the shell entrypoint and `VECTOR_BACKEND` overrides operators run.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

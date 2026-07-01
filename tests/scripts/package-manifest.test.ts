@@ -206,6 +206,16 @@ describe("package manifest publish surface", () => {
     });
   });
 
+  it("keeps documented backup creation scripts backend-aware", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.scripts).toMatchObject({
+      "backup:create": "./scripts/create-backup.sh",
+      "backup:create:pgvector": "VECTOR_BACKEND=pgvector ./scripts/create-backup.sh",
+      "backup:create:qdrant": "VECTOR_BACKEND=qdrant ./scripts/create-backup.sh",
+    });
+  });
+
   it("keeps documented development watch scripts pointed at source entrypoints", () => {
     const packageJson = readPackageJson();
 

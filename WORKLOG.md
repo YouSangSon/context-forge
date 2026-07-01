@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded documented backup creation scripts:
+  - `tests/scripts/package-manifest.test.ts` now checks that `backup:create`,
+    `backup:create:qdrant`, and `backup:create:pgvector` still route through
+    `scripts/create-backup.sh` with the documented backend override behavior.
+  - This catches package script drift before README, operations, deployment,
+    or self-hosted backup docs can keep pointing operators at stale commands.
+  - Source checked: README, operations, deployment, self-hosted operations, and
+    public-doc drift coverage all document the backend-aware backup creation
+    scripts.
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`12` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1856` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded documented development watch scripts:
   - `tests/scripts/package-manifest.test.ts` now checks that `dev:server`,
     `dev:worker`, `dev:mcp`, `dev:cli`, and `test:watch` still point at the

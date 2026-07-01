@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards documented backup creation scripts for
+  backend-aware, forced-Qdrant, and forced-pgvector backup paths.
 - Package manifest coverage now guards documented development watch scripts
   for HTTP, worker, MCP, CLI, and Vitest watch mode.
 - Package manifest coverage now guards documented operator package scripts that
