@@ -147,6 +147,14 @@ describe("createGoalRunRepository", () => {
 
   it.each([
     {
+      row: runRow({ id: "0" }),
+      message: "goal run id must be a positive safe integer",
+    },
+    {
+      row: runRow({ id: "bad" }),
+      message: "database number must be finite",
+    },
+    {
       row: runRow({ iteration_count: "-1" }),
       message: "goal run iteration_count must be a non-negative safe integer",
     },
@@ -158,7 +166,7 @@ describe("createGoalRunRepository", () => {
       row: runRow({ iteration_count: "bad" }),
       message: "database number must be finite",
     },
-  ])("start rejects malformed run counter rows %#", async ({ row, message }) => {
+  ])("start rejects malformed run numeric rows %#", async ({ row, message }) => {
     const pool = {
       query: vi.fn(() => Promise.resolve({ rows: [row] })),
       connect: vi.fn(),
@@ -326,6 +334,64 @@ describe("createGoalRunRepository", () => {
     );
   });
 
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "goal run iteration id must be a positive safe integer",
+    },
+    {
+      rowPatch: { goal_run_id: "1.5" },
+      message: "goal run iteration goal_run_id must be a positive safe integer",
+    },
+  ])("recordIteration rolls back on malformed inserted iteration rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const calls: SqlQueryCall[] = [];
+    const client = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        if (sql.includes("UPDATE goal_runs")) {
+          return Promise.resolve({ rows: [{ iteration_count: "1" }] });
+        }
+        if (sql.includes("INSERT INTO goal_run_iterations")) {
+          return Promise.resolve({
+            rows: [
+              {
+                id: "11",
+                goal_run_id: "7",
+                organization_id: "org-a",
+                iteration_index: "1",
+                attempt: "try A",
+                outcome: "failure",
+                summary: null,
+                error: "boom",
+                created_at: "2026-06-27T00:01:00.000Z",
+                ...rowPatch,
+              },
+            ],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const pool = { query: vi.fn(), connect: vi.fn().mockResolvedValue(client) };
+
+    const repo = createGoalRunRepository(pool as never);
+    await expect(
+      repo.recordIteration({
+        organizationId: "org-a",
+        goalRunId: 7,
+        attempt: "try A",
+        outcome: "failure",
+      }),
+    ).rejects.toThrow(message);
+
+    expect(calls.some((c) => c.sql === "ROLLBACK")).toBe(true);
+    expect(calls.some((c) => c.sql === "COMMIT")).toBe(false);
+  });
+
   it("recordIteration on a closed/unknown run rolls back and throws", async () => {
     const calls: SqlQueryCall[] = [];
     const client = {
@@ -466,7 +532,23 @@ describe("createGoalRunRepository", () => {
     expect(result?.iterations[0]?.outcome).toBe("failure");
   });
 
-  it("get rejects malformed iteration index rows", async () => {
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "goal run iteration id must be a positive safe integer",
+    },
+    {
+      rowPatch: { goal_run_id: "bad" },
+      message: "database number must be finite",
+    },
+    {
+      rowPatch: { iteration_index: "0" },
+      message: "goal run iteration_index must be a positive safe integer",
+    },
+  ])("get rejects malformed iteration numeric rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
     const pool = {
       query: vi.fn((sql: string) => {
         if (sql.includes("FROM goal_runs")) {
@@ -484,6 +566,7 @@ describe("createGoalRunRepository", () => {
               summary: null,
               error: "e",
               created_at: "2026-06-27T00:01:00.000Z",
+              ...rowPatch,
             },
           ],
         });
@@ -494,7 +577,7 @@ describe("createGoalRunRepository", () => {
 
     await expect(
       repo.get({ organizationId: "org-a", goalRunId: 7 }),
-    ).rejects.toThrow("goal run iteration_index must be a positive safe integer");
+    ).rejects.toThrow(message);
   });
 
   it("list rejects whitespace-only organizationId before querying", async () => {

@@ -4,16 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Ingest Job Id Row Mapping
+## Current Loop — Goal Run Id Row Mapping
 
 Status:
-- `src/jobs/ingest-job-repository.ts` now maps ingest job `id` and
-  `memory_record_id` rows as positive safe integers before returning jobs.
-- `tests/jobs/ingest-job-claim.test.ts` now covers malformed mapped ingest job
-  id/reference rows through mock-pool claim coverage.
+- `src/goal-run/goal-run-repository.ts` now maps goal run and iteration id
+  rows as positive safe integers before returning runs or iterations.
+- `recordIteration` now maps inserted iteration rows before `COMMIT`, so
+  malformed returned ids roll back the transaction.
+- `tests/goal-run/goal-run-repository.test.ts` now covers malformed run and
+  iteration id/reference rows.
 
 Verification:
-- Focused ingest-job/db-utils/ingest-sweeper/convention tests passed.
+- Focused goal-run/convention tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from

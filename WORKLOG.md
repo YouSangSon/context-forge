@@ -2,6 +2,38 @@
 
 ## 2026-07-02
 
+- Guarded goal run id row mapping:
+  - `src/goal-run/goal-run-repository.ts` now maps goal run `id`,
+    goal run iteration `id`, and iteration `goal_run_id` rows through positive
+    safe-integer validation before returning mapped records.
+  - `recordIteration` now maps inserted iteration rows before `COMMIT`, so
+    malformed returned ids roll back the transaction instead of failing after
+    commit.
+  - `tests/goal-run/goal-run-repository.test.ts` now covers malformed run and
+    iteration id/reference rows through mock-pool start, record, and get
+    coverage.
+  - Source checked: `goal_runs.id` and `goal_run_iterations.id` are
+    `BIGSERIAL`, and `goal_run_iterations.goal_run_id` is a `BIGINT`
+    reference in migration `013_add_goal_runs.sql`.
+
+Verification plan:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/build-goal-context.test.ts tests/goal-run/goal-run-handlers.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/build-goal-context.test.ts tests/goal-run/goal-run-handlers.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`92` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2007` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded ingest job id row mapping:
   - `src/jobs/ingest-job-repository.ts` now maps ingest job `id` and
     `memory_record_id` rows through positive safe-integer validation before

@@ -182,8 +182,11 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           );
         }
 
+        const iteration = mapIteration(
+          requireSingleRow(inserted.rows[0], "iteration"),
+        );
         await client.query("COMMIT");
-        return mapIteration(requireSingleRow(inserted.rows[0], "iteration"));
+        return iteration;
       } catch (error: unknown) {
         await client.query("ROLLBACK").catch(() => undefined);
         throw error;
@@ -298,7 +301,7 @@ async function closeRun(
 
 function mapRun(row: GoalRunRow): GoalRun {
   return {
-    id: toNumber(row.id),
+    id: toPositiveSafeInteger(row.id, "goal run id"),
     organizationId: row.organization_id,
     scopeType: row.scope_type,
     scopeId: row.scope_id,
@@ -319,8 +322,11 @@ function mapRun(row: GoalRunRow): GoalRun {
 
 function mapIteration(row: GoalRunIterationRow): GoalRunIteration {
   return {
-    id: toNumber(row.id),
-    goalRunId: toNumber(row.goal_run_id),
+    id: toPositiveSafeInteger(row.id, "goal run iteration id"),
+    goalRunId: toPositiveSafeInteger(
+      row.goal_run_id,
+      "goal run iteration goal_run_id",
+    ),
     organizationId: row.organization_id,
     iterationIndex: toPositiveSafeInteger(
       row.iteration_index,
