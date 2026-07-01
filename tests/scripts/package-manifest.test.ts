@@ -192,6 +192,20 @@ describe("package manifest publish surface", () => {
     expect(packageJson.scripts?.test).toBe("vitest run");
   });
 
+  it("keeps documented operator scripts pointed at built artifacts", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.scripts).toMatchObject({
+      "backup:decrypt": "node dist/scripts/backup-encryption.js decrypt-file",
+      "backup:verify": "node dist/scripts/backup-verify.js",
+      "db:migrate": "node dist/src/db/migrate.js",
+      "lifecycle:init": "node dist/src/cli.js init",
+      "restore:smoke": "node dist/scripts/restore-smoke.js",
+      "start:server": "node dist/src/app/server.js",
+      "start:worker": "node dist/src/app/worker.js",
+    });
+  });
+
   it("keeps the excluded eval harness out of runtime imports", () => {
     const violations: string[] = [];
     const evalImportPattern =

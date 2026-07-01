@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded documented operator package scripts:
+  - `tests/scripts/package-manifest.test.ts` now checks that `start:server`,
+    `start:worker`, `db:migrate`, `lifecycle:init`, `backup:decrypt`,
+    `backup:verify`, and `restore:smoke` still point at built `dist/`
+    artifacts.
+  - This catches package script drift before operator docs can keep referring
+    to commands whose runtime entrypoints changed.
+  - Source checked: README, deployment, operations, self-hosted operations,
+    and configuration docs reference these npm scripts as operator commands.
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`10` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1854` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded contributor verification scripts:
   - `tests/scripts/package-manifest.test.ts` now checks that package scripts
     keep `typecheck` on `tsc --noEmit` and `test` on `vitest run`.

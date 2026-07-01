@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards documented operator package scripts that
+  run built server, worker, migration, lifecycle, backup, and restore artifacts.
 - Package manifest coverage now guards the contributor-facing `typecheck` and
   `test` package scripts used by local verification guidance.
 - Package manifest coverage now guards that `package-lock.json` top-level
