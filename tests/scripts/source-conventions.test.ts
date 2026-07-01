@@ -10,6 +10,7 @@ type TsConfig = {
     strict?: unknown;
     useUnknownInCatchVariables?: unknown;
   };
+  include?: unknown;
 };
 
 function parseTsConfig(): ts.ParsedCommandLine {
@@ -132,6 +133,17 @@ describe("source code conventions", () => {
     expect(compilerOptions?.strict).toBe(true);
     expect(compilerOptions?.noImplicitAny).not.toBe(false);
     expect(compilerOptions?.useUnknownInCatchVariables).not.toBe(false);
+  });
+
+  it("keeps the TypeScript project include set covering checked files", () => {
+    expect(readTsConfig().include).toEqual(
+      expect.arrayContaining([
+        "src/**/*.ts",
+        "scripts/**/*.ts",
+        "tests/**/*.ts",
+        "vitest.config.ts",
+      ]),
+    );
   });
 
   it("keeps source catch bindings explicitly typed as unknown", () => {

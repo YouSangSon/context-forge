@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- Guarded the TypeScript project include set:
+  - `tests/scripts/source-conventions.test.ts` now checks that `tsconfig.json`
+    continues to include `src/**/*.ts`, `scripts/**/*.ts`, `tests/**/*.ts`, and
+    `vitest.config.ts`.
+  - This keeps the tsconfig-driven source convention scanner from silently
+    dropping source, script, test, or root Vitest config files.
+
+Verification plan:
+- `npx vitest run tests/scripts/source-conventions.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/source-conventions.test.ts` (`5` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1839` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Derived TypeScript convention coverage from `tsconfig.json`:
   - `tests/scripts/source-conventions.test.ts` now parses `tsconfig.json` with
     the TypeScript compiler API before applying catch binding, explicit `any`,

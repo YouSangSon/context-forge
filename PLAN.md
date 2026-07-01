@@ -4,14 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Tsconfig-Driven Convention Coverage
+## Current Loop — TypeScript Include Coverage Guard
 
 Status:
 - Contributor guidance expects strict TypeScript without `any`, and the source
   convention suite guards catch bindings, explicit `any` types, suppression
   comments, and strict compiler options.
-- The loop makes the convention suite derive its checked TypeScript files from
-  `tsconfig.json` instead of keeping a second hand-maintained path list.
+- The loop keeps the `tsconfig.json` include set covering source, scripts,
+  tests, and root Vitest config files so the tsconfig-driven convention scanner
+  cannot silently narrow its checked surface.
 
 Verification:
 - Focused source convention coverage, typecheck, build, audit, full tests, and

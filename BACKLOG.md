@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- TypeScript source convention coverage now guards that `tsconfig.json` keeps
+  source, scripts, tests, and root Vitest config files in the project include
+  set.
 - TypeScript source convention coverage now derives its checked file set from
   `tsconfig.json`, avoiding a second hand-maintained TypeScript path list.
 - TypeScript source convention coverage now includes root `vitest.config.ts`,
