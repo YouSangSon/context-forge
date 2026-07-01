@@ -4,17 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Build Step Alignment
+## Current Loop — README Command Alignment
 
 Status:
-- Local contributor and PR guidance require `npm run build`, but the main CI
-  Node matrix only ran audit, typecheck, and tests.
-- The loop adds `npm run build` after typecheck and before tests, with workflow
-  hygiene coverage for the step and ordering.
+- `README.md` and `README.ko.md` common command lists included typecheck and
+  test but not the build and dependency audit commands now required by
+  contributor, PR, and CI verification.
+- The loop adds those commands to both README files and extends public-docs
+  drift coverage.
 
 Verification:
-- Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,
-  and diff check passed.
+- Focused public-docs drift coverage, typecheck, build, audit, full tests, and
+  diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

@@ -236,7 +236,9 @@ npm run dev:mcp       # MCP stdio server in watch mode
 npm run dev:cli       # CLI in watch mode
 npm run lifecycle:init -- --project my-project --organization-id default
 npm run typecheck     # tsc --noEmit
-npm run test          # vitest run
+npm run build         # clean dist/ and compile TypeScript
+npm audit --audit-level=moderate
+npm test              # vitest run
 npm run db:migrate    # apply pending migrations
 npm run backup:create # backend-aware backup for VECTOR_BACKEND
 npm run backup:create:pgvector # explicit Postgres-only pgvector backup

@@ -131,6 +131,8 @@ function issueTemplateDropdownOptions(templatePath: string, fieldId: string): st
 describe("public documentation drift checks", () => {
   it("keeps contributor verification guidance aligned", () => {
     const prTemplate = read(".github/PULL_REQUEST_TEMPLATE.md");
+    const readme = read("README.md");
+    const readmeKo = read("README.ko.md");
     const contributing = read("CONTRIBUTING.md");
     const contributingKo = read("CONTRIBUTING.ko.md");
 
@@ -141,6 +143,8 @@ describe("public documentation drift checks", () => {
       "npm test",
     ]) {
       expect(prTemplate).toContain(command);
+      expect(readme).toContain(command);
+      expect(readmeKo).toContain(command);
       expect(contributing).toContain(command);
       expect(contributingKo).toContain(command);
     }

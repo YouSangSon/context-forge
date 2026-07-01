@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- README common command lists now include build and moderate-level dependency
+  audit commands, guarded by public-docs drift coverage.
 - CI now runs `npm run build` in the main Node matrix after typecheck and before
   tests, aligning CI with contributor and PR verification guidance.
 - CI jobs now set explicit 30-minute job timeouts instead of relying on the

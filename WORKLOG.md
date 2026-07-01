@@ -2,6 +2,29 @@
 
 ## 2026-07-01
 
+- Aligned README common commands:
+  - `README.md` and `README.ko.md` now list `npm run build` and
+    `npm audit --audit-level=moderate` alongside typecheck/test in the common
+    commands section.
+  - `tests/scripts/public-docs-drift.test.ts` now checks the shared
+    verification command set across README, CONTRIBUTING, and the PR template.
+
+Verification plan:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/public-docs-drift.test.ts` (`41` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1826` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Added CI build coverage:
   - `.github/workflows/ci.yml` now runs `npm run build` in the main Node matrix
     after typecheck and before non-PG tests.
