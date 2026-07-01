@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- Guarded CI workflow triggers:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that
+    `.github/workflows/ci.yml` runs on pushes to `main` and pull requests
+    targeting `main`.
+  - Source checked: GitHub Actions workflow trigger guidance documents branch
+    filters for `push` and `pull_request` events:
+    https://docs.github.com/actions/using-workflows/triggering-a-workflow
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`13` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1842` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded the CI Node matrix:
   - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that the main CI
     matrix keeps Node 22 and Node 24.

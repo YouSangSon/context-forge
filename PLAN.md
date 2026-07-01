@@ -4,14 +4,12 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — CI Node Matrix Guard
+## Current Loop — CI Trigger Guard
 
 Status:
-- The durable runtime decision is Node 22 minimum with CI coverage on Node 22
-  and Node 24.
-- The loop adds a CI workflow hygiene guard that keeps the main Node matrix on
-  those supported runtime lines and confirms `setup-node` consumes the matrix
-  value.
+- CI should run for both pushes to `main` and pull requests targeting `main`.
+- The loop adds a CI workflow hygiene guard that keeps those workflow triggers
+  and branch filters from being removed silently.
 
 Verification:
 - Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,

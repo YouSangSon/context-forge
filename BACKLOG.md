@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now guards that the workflow runs on pushes to
+  `main` and pull requests targeting `main`.
 - CI workflow hygiene coverage now guards that the main Node matrix stays on
   Node 22 and Node 24 while `setup-node` consumes the matrix value.
 - CI workflow hygiene coverage now rejects unguarded `npm ci`, `npm install`,

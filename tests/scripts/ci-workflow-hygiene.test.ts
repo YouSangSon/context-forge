@@ -4,6 +4,12 @@ import { describe, expect, it } from "vitest";
 const ciWorkflow = fs.readFileSync(".github/workflows/ci.yml", "utf8");
 
 describe("CI workflow hygiene", () => {
+  it("runs on pushes and pull requests targeting main", () => {
+    expect(ciWorkflow).toContain(
+      "on:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\n",
+    );
+  });
+
   it("keeps the default GitHub token permissions read-only", () => {
     const permissionsBlock = ciWorkflow.match(
       /^permissions:\n((?:  [^\n]+\n)+)/m,
