@@ -4,14 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Package Optional Dependencies Guard
+## Current Loop — Package Peer Dependencies Guard
 
 Status:
-- Package manifest coverage guards that package `optionalDependencies` stays
-  absent in both `package.json` and the lockfile root metadata.
-- The loop catches dependency metadata drift that would make runtime dependency
-  install failures non-fatal or override normal dependency entries without an
-  explicit dependency policy decision.
+- Package manifest coverage guards that package `peerDependencies` and
+  `peerDependenciesMeta` stay absent in both `package.json` and the lockfile
+  root metadata.
+- The loop catches dependency metadata drift that would turn Akasha's runtime
+  dependencies into host/plugin compatibility contracts without an explicit
+  dependency policy decision.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,

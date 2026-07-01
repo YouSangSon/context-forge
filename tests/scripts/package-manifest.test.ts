@@ -22,6 +22,8 @@ type PackageJson = {
   main?: unknown;
   name?: unknown;
   optionalDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: unknown;
   overrides?: Record<string, string>;
   os?: unknown;
   private?: unknown;
@@ -45,6 +47,8 @@ type PackageLock = {
       license?: unknown;
       name?: unknown;
       optionalDependencies?: Record<string, string>;
+      peerDependencies?: Record<string, string>;
+      peerDependenciesMeta?: unknown;
       version?: unknown;
     }
   >;
@@ -235,6 +239,16 @@ describe("package manifest publish surface", () => {
 
     expect(packageJson.optionalDependencies).toBeUndefined();
     expect(lockfileRoot?.optionalDependencies).toBeUndefined();
+  });
+
+  it("does not declare peer dependency contracts", () => {
+    const packageJson = readPackageJson();
+    const lockfileRoot = readPackageLock().packages[""];
+
+    expect(packageJson.peerDependencies).toBeUndefined();
+    expect(packageJson.peerDependenciesMeta).toBeUndefined();
+    expect(lockfileRoot?.peerDependencies).toBeUndefined();
+    expect(lockfileRoot?.peerDependenciesMeta).toBeUndefined();
   });
 
   it("keeps npm package support metadata pointed at the project", () => {

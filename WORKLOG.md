@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded package peer dependency metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package
+    `peerDependencies` and `peerDependenciesMeta` stay absent in both
+    `package.json` and the lockfile root metadata.
+  - This catches dependency metadata drift that would turn Akasha's runtime
+    dependencies into host/plugin compatibility contracts without an explicit
+    dependency policy decision.
+  - Source checked: npm documents `peerDependencies` as compatibility with a
+    host tool or library for plugin-style packages, and `peerDependenciesMeta`
+    as metadata that can mark peer dependencies optional:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`27` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1871` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded package optional dependency metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package
     `optionalDependencies` stays absent in both `package.json` and the
