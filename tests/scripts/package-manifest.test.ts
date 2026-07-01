@@ -55,6 +55,7 @@ type PackageLock = {
       devDependencies?: Record<string, string>;
       engines?: Record<string, string>;
       hasInstallScript?: boolean;
+      hasShrinkwrap?: boolean;
       inBundle?: boolean;
       license?: unknown;
       link?: boolean;
@@ -380,6 +381,16 @@ describe("package manifest publish surface", () => {
       .sort();
 
     expect(bundledOrLinkedPackages).toEqual([]);
+  });
+
+  it("does not declare nested shrinkwrap lockfile packages", () => {
+    const packageLock = readPackageLock();
+    const shrinkwrappedPackages = Object.entries(packageLock.packages)
+      .filter(([, metadata]) => metadata.hasShrinkwrap === true)
+      .map(([path]) => path)
+      .sort();
+
+    expect(shrinkwrappedPackages).toEqual([]);
   });
 
   it("keeps package-lock as the active npm lockfile", () => {

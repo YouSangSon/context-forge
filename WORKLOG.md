@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- Guarded nested shrinkwrap lockfile descriptors:
+  - `tests/scripts/package-manifest.test.ts` now checks that package-lock
+    package descriptors do not declare `hasShrinkwrap` metadata.
+  - This catches dependency tree drift that would introduce package-scoped
+    shrinkwrap lockfiles without an explicit dependency review.
+  - Source checked: npm documents `hasShrinkwrap` as a package-lock package
+    descriptor flag for packages that have an `npm-shrinkwrap.json` file:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`36` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1880` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded lockfile bundled/linked package descriptors:
   - `tests/scripts/package-manifest.test.ts` now checks that package-lock
     package descriptors do not declare `inBundle` or `link` metadata.

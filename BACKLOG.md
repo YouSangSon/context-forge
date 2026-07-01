@@ -19,6 +19,9 @@ experience, documentation, features.
 ## Done In This Branch
 
 - Package manifest coverage now guards that lockfile package descriptors do not
+  declare `hasShrinkwrap` metadata so nested package-scoped shrinkwrap
+  lockfiles cannot appear without review.
+- Package manifest coverage now guards that lockfile package descriptors do not
   declare `inBundle` or `link` metadata so bundled dependency extraction or
   local/symlink package resolution cannot appear without review.
 - Package manifest coverage now guards the lockfile package descriptors that

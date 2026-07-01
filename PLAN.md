@@ -4,14 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Lockfile Bundled/Linked Package Guard
+## Current Loop — Lockfile Nested Shrinkwrap Guard
 
 Status:
 - Package manifest coverage guards that lockfile package descriptors do not
-  declare bundled or linked package metadata.
-- The loop catches dependency tree drift that would introduce bundled
-  dependency extraction or local/symlink package resolution without an explicit
-  dependency review.
+  declare nested shrinkwrap metadata.
+- The loop catches dependency tree drift that would introduce package-scoped
+  shrinkwrap lockfiles without an explicit dependency review.
 
 Verification:
 - Focused package manifest coverage, typecheck, build, audit, full tests,
