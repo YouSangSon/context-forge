@@ -148,8 +148,8 @@ export type CompactMemoryToolResult = {
   duplicateGroups: DuplicateGroupView[];
   decayCandidates: DecayCandidateView[];
   summary: string;
-  // P17: populated when dryRun=false. compactionRunId is the server-generated
-  // UUID idempotency key; applyStats summarizes the destructive run.
+  // Populated when dryRun=false. compactionRunId is the server-generated UUID
+  // idempotency key; applyStats summarizes the destructive run.
   compactionRunId?: string;
   applyStats?: CompactionApplyStats;
 };
@@ -264,7 +264,7 @@ export type ListAuditLogToolResult = {
   entries: AuditLogEntryView[];
 };
 
-// P19.1 — unarchive recovery flow.
+// Unarchive recovery flow.
 export type UnarchiveMemoryToolInput = {
   organizationId?: string;
   archiveIds: number[];

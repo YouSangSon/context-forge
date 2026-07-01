@@ -500,6 +500,17 @@ describe("public documentation drift checks", () => {
     expect(text).not.toContain("pre-P19.1 archive row");
   });
 
+  it("keeps compaction apply and MCP type comments current", () => {
+    const applyCompaction = read("src/compact/apply-compaction.ts");
+    const mcpTypes = read("src/mcp/types.ts");
+
+    expect(applyCompaction).not.toContain("destructive P17 apply path");
+    expect(applyCompaction).not.toContain("scoped out for P17");
+    expect(applyCompaction).not.toContain("P17 step 6");
+    expect(mcpTypes).not.toContain("P17: populated when dryRun=false");
+    expect(mcpTypes).not.toContain("P19.1 — unarchive recovery flow");
+  });
+
   it("documents descriptor-driven tool validation in API docs", () => {
     expect(read("docs/api-reference.md")).toContain("shared tool schema");
     expect(read("docs/api-reference.ko.md")).toContain("공유 tool schema");

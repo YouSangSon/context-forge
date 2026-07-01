@@ -2,6 +2,33 @@
 
 ## 2026-07-01
 
+- Refreshed compaction apply and MCP type comments:
+  - `src/compact/apply-compaction.ts` now describes the destructive apply path,
+    advisory-lock scope choice, and rate limit without internal phase labels.
+  - `src/mcp/types.ts` now describes compact apply result fields and unarchive
+    tool types with current feature wording.
+  - Historical changelog and migration comments remain untouched because those
+    describe past release context.
+  - `tests/scripts/public-docs-drift.test.ts` now guards the stale source
+    phrases from returning.
+
+Verification plan:
+- `npx vitest run tests/compact/apply-compaction.test.ts tests/scripts/public-docs-drift.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/compact/apply-compaction.test.ts tests/scripts/public-docs-drift.test.ts`
+  (`82` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`79` files passed, `2` skipped; `1824` tests passed, `34` skipped)
+- `git diff --check` (passed)
+
 - Refreshed memory archive source labels:
   - `src/store/memory-archive-repository.ts` no longer describes the
     compaction apply path, rate-limit helper, or unarchive recovery flow with

@@ -4,19 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Memory Archive Source Label Cleanup
+## Current Loop — Compaction Apply Comment Cleanup
 
 Status:
-- `src/store/memory-archive-repository.ts` still used internal phase labels in
-  compaction/unarchive comments and in the direct `restoreToCanonical`
-  missing-`source_id` error text.
-- The loop updates those source-facing labels to current feature/error wording
-  and adds focused drift coverage. The documented unarchive outcome reason is
-  intentionally unchanged for client compatibility.
+- `src/compact/apply-compaction.ts` and `src/mcp/types.ts` still used internal
+  phase labels in current compaction/unarchive comments.
+- The loop updates those comments to current feature wording and adds focused
+  drift coverage while leaving historical changelog and migration comments
+  untouched.
 
 Verification:
-- Focused memory archive / unarchive / drift coverage, typecheck, build,
-  audit, full tests, and diff check passed.
+- Focused compaction apply / drift coverage, typecheck, build, audit, full
+  tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

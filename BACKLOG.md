@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Compaction apply and MCP type comments now describe current apply/unarchive
+  behavior without internal phase labels, guarded by public-docs drift
+  coverage.
 - Memory archive repository comments and direct missing-`source_id` restore
   errors now use current feature/error wording instead of internal phase
   labels; the documented unarchive outcome reason remains stable for client

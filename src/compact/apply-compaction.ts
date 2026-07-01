@@ -1,4 +1,4 @@
-// applyCompaction — orchestrates the destructive P17 apply path.
+// applyCompaction — orchestrates the destructive compaction apply path.
 //
 // Order per record (matches design doc §4.2):
 //   1. PG: WITH deleted AS (DELETE FROM memory_records ...)
@@ -14,10 +14,10 @@
 // Concurrency: relies on memory_archive UNIQUE (compaction_run_id,
 // source_record_id) for record-level idempotency and on
 // compaction_runs.idempotency_key UNIQUE for run-level replay defense.
-// Advisory-lock-based scope mutex was scoped out for P17 — see
-// MemoryArchiveRepository.acquireScopeLock for the available primitive
-// (session-level lock semantics need a dedicated connection to hold across
-// statements; out of scope until multi-replica deploy).
+// Advisory-lock-based scope mutex is intentionally not wired into this apply
+// path yet. MemoryArchiveRepository.acquireScopeLock exposes the available
+// primitive, but session-level lock semantics need a dedicated connection to
+// hold across statements; that remains out of scope until multi-replica deploy.
 
 import { randomUUID } from "node:crypto";
 import type { Logger } from "../logger.js";
@@ -141,8 +141,8 @@ export async function applyCompaction(
 
   const candidates = collectArchiveCandidates(plan);
 
-  // Apply-path rate limit (P17 step 6). Default 1/hour/org; tests and
-  // bulk-migration ops can disable via { windowMs: 0 }.
+  // Apply-path rate limit. Default 1/hour/org; tests and bulk-migration ops
+  // can disable via { windowMs: 0 }.
   const limit = deps.applyRateLimit ?? DEFAULT_APPLY_RATE_LIMIT;
   if (limit.windowMs > 0) {
     const recentCount = await deps.archiveRepository.countRecentApplyRuns(
