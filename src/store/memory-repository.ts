@@ -906,7 +906,7 @@ async function inspectPostgresMemoryGraph(
 
 function mapPostgresGraphEntity(row: PostgresGraphEntityRow): MemoryGraphEntity {
   return {
-    id: toNumber(row.id),
+    id: mapPositiveSafeInteger(row.id, "graph entity id"),
     organizationId: row.organization_id,
     kind: row.kind,
     normalized: row.normalized,

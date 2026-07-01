@@ -1252,6 +1252,14 @@ describe("createMemoryRepository (unit — no PG required)", () => {
 
   it.each([
     {
+      rowPatch: { id: "0" },
+      message: "graph entity id must be a positive safe integer",
+    },
+    {
+      rowPatch: { id: "bad" },
+      message: "database number must be finite",
+    },
+    {
       rowPatch: { mention_count: "-1" },
       message: "graph entity mention_count must be a non-negative safe integer",
     },
