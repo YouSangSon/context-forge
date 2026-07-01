@@ -18,6 +18,7 @@ type PackageJson = {
   engines?: Record<string, string>;
   exports?: unknown;
   files?: unknown;
+  gypfile?: unknown;
   homepage?: unknown;
   keywords?: unknown;
   libc?: unknown;
@@ -420,6 +421,16 @@ describe("package manifest publish surface", () => {
     for (const scriptName of DISALLOWED_PACKAGE_LIFECYCLE_SCRIPTS) {
       expect(scripts).not.toHaveProperty(scriptName);
     }
+  });
+
+  it("does not declare native addon build metadata", () => {
+    const packageJson = readPackageJson();
+    const trackedBindingGyp = execFileSync("git", ["ls-files", "binding.gyp"], {
+      encoding: "utf8",
+    }).trim();
+
+    expect(packageJson.gypfile).toBeUndefined();
+    expect(trackedBindingGyp).toBe("");
   });
 
   it("keeps contributor verification scripts stable", () => {

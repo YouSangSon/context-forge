@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Package manifest coverage now guards that package `gypfile` metadata and
+  tracked root `binding.gyp` stay absent so native addon build behavior cannot
+  appear without an explicit packaging decision.
 - Package manifest coverage now guards that package `browser` stays absent so
   client-side entrypoint metadata cannot appear without an explicit packaging
   decision for this Node-oriented MCP server.

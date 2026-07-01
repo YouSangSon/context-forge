@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- Guarded native addon build metadata:
+  - `tests/scripts/package-manifest.test.ts` now checks that package `gypfile`
+    metadata and tracked root `binding.gyp` stay absent.
+  - This catches metadata drift that would introduce npm's native addon
+    node-gyp build path without an explicit packaging decision.
+  - Source checked: npm documents `gypfile` in the context of root
+    `binding.gyp`; without explicit install/preinstall scripts, npm defaults to
+    building with `node-gyp` when that file exists:
+    https://docs.npmjs.com/cli/v11/configuring-npm/package-json/
+
+Verification plan:
+- `npx vitest run tests/scripts/package-manifest.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/package-manifest.test.ts` (`31` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1875` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded browser package metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that package `browser`
     stays absent in `package.json`.
