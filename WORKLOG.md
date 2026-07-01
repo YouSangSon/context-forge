@@ -2,6 +2,35 @@
 
 ## 2026-07-02
 
+- Guarded pgvector memory record id row mapping:
+  - `src/vector/pgvector-index.ts` now maps query payload
+    `memory_record_id` through positive safe-integer validation while leaving
+    similarity `score` on finite-number validation.
+  - `tests/vector/pgvector-index.integration.test.ts` now covers zero,
+    fractional, boolean, and array `memory_record_id` rows through the
+    existing mock-pool query path.
+  - Source checked: pgvector stores `memory_record_id` in a `BIGINT` payload
+    column and node-postgres returns that value as a string, so conversion
+    remains necessary but must reject non-id values.
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`52` tests passed, `12` skipped)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2038` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded background queue count row mapping:
   - `src/app/background-queue-metrics.ts` now maps `COUNT(*)` rows as
     non-negative safe integers instead of truncating fractional values or

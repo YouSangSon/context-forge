@@ -247,12 +247,22 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     {
       label: "memory_record_id boolean",
       row: buildPgVectorQueryRow({ memory_record_id: false }),
-      message: "memory_record_id must be a finite number",
+      message: "memory_record_id must be a positive safe integer",
     },
     {
       label: "memory_record_id array",
       row: buildPgVectorQueryRow({ memory_record_id: [42] }),
-      message: "memory_record_id must be a finite number",
+      message: "memory_record_id must be a positive safe integer",
+    },
+    {
+      label: "memory_record_id zero",
+      row: buildPgVectorQueryRow({ memory_record_id: "0" }),
+      message: "memory_record_id must be a positive safe integer",
+    },
+    {
+      label: "memory_record_id fractional",
+      row: buildPgVectorQueryRow({ memory_record_id: "1.5" }),
+      message: "memory_record_id must be a positive safe integer",
     },
   ])("query rejects malformed pgvector row numbers: $label", async ({ row, message }) => {
     const { pool, query, client } = makeQueryPool([row]);

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query row mapping now validates payload `memory_record_id` as a
+  positive safe integer while preserving finite-float score mapping.
 - Background queue metrics now reject malformed `COUNT(*)` rows instead of
   truncating fractional values or clamping negatives to zero.
 - Memory archive repository lookup row mapping now validates archived

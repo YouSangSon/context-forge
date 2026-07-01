@@ -442,7 +442,10 @@ function mapPgVectorQueryRow(row: PgVectorQueryRow): VectorHit {
       memory_record_id:
         row.memory_record_id == null
           ? null
-          : toPgVectorFiniteNumber(row.memory_record_id, "memory_record_id"),
+          : toPgVectorPositiveSafeInteger(
+              row.memory_record_id,
+              "memory_record_id",
+            ),
       organization_id: row.organization_id,
       scope_type: row.scope_type,
       scope_id: row.scope_id,
@@ -469,6 +472,25 @@ function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {
     (typeof value === "string" && value.trim().length === 0)
   ) {
     throw new Error(`${fieldName} must be a finite number`);
+  }
+  return numberValue;
+}
+
+function toPgVectorPositiveSafeInteger(
+  value: unknown,
+  fieldName: string,
+): number {
+  if (typeof value !== "number" && typeof value !== "string") {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+
+  const numberValue = typeof value === "number" ? value : Number(value);
+  if (
+    !Number.isSafeInteger(numberValue) ||
+    numberValue <= 0 ||
+    (typeof value === "string" && value.trim().length === 0)
+  ) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
   }
   return numberValue;
 }

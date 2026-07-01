@@ -4,17 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Background Queue Count Row Mapping
+## Current Loop — Pgvector Memory Record ID Row Mapping
 
 Status:
-- `src/app/background-queue-metrics.ts` now maps `COUNT(*)` rows as
-  non-negative safe integers instead of truncating fractional values or
-  clamping negatives to zero.
-- `tests/app/background-queue-metrics.test.ts` now covers nonnumeric,
-  negative, fractional, and `NaN` count rows.
+- `src/vector/pgvector-index.ts` now maps query payload
+  `memory_record_id` rows as positive safe integers while leaving similarity
+  `score` as a finite float.
+- `tests/vector/pgvector-index.integration.test.ts` now covers zero,
+  fractional, boolean, and array `memory_record_id` rows through the existing
+  mock-pool query path.
 
 Verification:
-- Focused background queue/metrics/convention tests passed.
+- Focused pgvector/point-builder/convention tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
