@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded CI job-level token permission overrides:
+  - `tests/scripts/ci-workflow-hygiene.test.ts` now checks that individual CI
+    jobs do not declare their own `permissions:` block.
+  - This keeps GitHub Actions token permissions centralized at the existing
+    workflow-level `contents: read` setting unless a future job explicitly
+    needs a reviewed scoped exception.
+  - Source checked: GitHub Actions documents that `jobs.<job_id>.permissions`
+    can modify default `GITHUB_TOKEN` permissions for a specific job, while
+    workflow-level `permissions` applies to all jobs:
+    https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
+
+Verification plan:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/scripts/ci-workflow-hygiene.test.ts` (`21` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`80` files passed, `2` skipped; `1884` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded lockfile root bin metadata:
   - `tests/scripts/package-manifest.test.ts` now checks that the package-lock
     root descriptor does not declare `bin` executable metadata.

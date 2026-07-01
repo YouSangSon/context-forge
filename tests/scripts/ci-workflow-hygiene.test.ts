@@ -36,6 +36,12 @@ describe("CI workflow hygiene", () => {
     expect(ciWorkflow).not.toMatch(/^\s*contents:\s+write\b/m);
   });
 
+  it("does not override workflow token permissions in individual jobs", () => {
+    const jobsBlock = ciWorkflow.slice(ciWorkflow.indexOf("jobs:\n"));
+
+    expect(jobsBlock).not.toMatch(/^    permissions:\n/m);
+  });
+
   it("checks out the repository before setting up Node in every job", () => {
     const checkoutThenSetupNodeSteps = ciWorkflow.match(
       /      - name: Checkout\n        uses: actions\/checkout@v4\n\n      - name: Setup Node\n/g,

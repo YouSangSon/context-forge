@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- CI workflow hygiene coverage now guards that individual jobs do not override
+  the workflow-level `contents: read` token permissions, keeping CI token
+  access centralized and read-only unless reviewed.
 - Package manifest coverage now guards that the package-lock root descriptor
   does not declare `bin` executable metadata, keeping npm-installed executable
   entrypoint surface absent unless reviewed.

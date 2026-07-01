@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop — Lockfile Bin Metadata Guard
+## Current Loop — CI Job Permissions Guard
 
 Status:
-- Package manifest coverage guards that the package-lock root descriptor does
-  not add `bin` executable metadata.
-- The loop keeps npm-installed executable entrypoint surface absent unless a
-  future packaging decision intentionally adds a CLI entrypoint.
+- CI workflow hygiene coverage guards that individual jobs do not override the
+  workflow-level `contents: read` token permissions.
+- The loop keeps GitHub Actions token permissions centralized and read-only
+  unless a future CI job explicitly needs a scoped exception.
 
 Verification:
-- Focused package manifest coverage, typecheck, build, audit, full tests,
+- Focused CI workflow hygiene coverage, typecheck, build, audit, full tests,
   and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
