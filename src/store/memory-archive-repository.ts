@@ -402,7 +402,10 @@ export function createMemoryArchiveRepository(
         archiveId: toPositiveSafeInteger(row.id, "memory archive id"),
         organizationId: row.organization_id,
         qdrantPointIds: row.qdrant_point_ids ?? [],
-        attemptCount: toNumber(row.qdrant_attempt_count),
+        attemptCount: toNonNegativeSafeInteger(
+          row.qdrant_attempt_count,
+          "memory archive qdrant_attempt_count",
+        ),
       }));
     },
 
@@ -444,7 +447,10 @@ export function createMemoryArchiveRepository(
         archiveId: toPositiveSafeInteger(row.id, "memory archive id"),
         organizationId: row.organization_id,
         qdrantPointIds: row.qdrant_point_ids ?? [],
-        attemptCount: toNumber(row.qdrant_attempt_count),
+        attemptCount: toNonNegativeSafeInteger(
+          row.qdrant_attempt_count,
+          "memory archive qdrant_attempt_count",
+        ),
       }));
     },
 
@@ -682,6 +688,12 @@ function toPositiveSafeInteger(value: unknown, fieldName: string): number {
   return numberValue;
 }
 
+function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertNonNegativeSafeInteger(numberValue, fieldName);
+  return numberValue;
+}
+
 function mapRunRow(row: {
   id: number | string;
   organization_id: string;
@@ -728,6 +740,19 @@ function assertPositiveSafeInteger(
     value <= 0
   ) {
     throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+}
+
+function assertNonNegativeSafeInteger(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value < 0
+  ) {
+    throw new Error(`${fieldName} must be a non-negative safe integer`);
   }
 }
 

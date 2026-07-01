@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- Guarded memory archive cleanup attempt counter row mapping:
+  - `src/store/memory-archive-repository.ts` now maps
+    `qdrant_attempt_count` through non-negative safe-integer validation before
+    returning pending or claimed Qdrant cleanup records.
+  - `tests/store/memory-archive-repository.test.ts` now covers malformed
+    pending-list and claim-return attempt counter rows through mock-pool
+    coverage.
+  - Source checked: `memory_archive.qdrant_attempt_count` is an `INTEGER`
+    with default `0` in migration `005_add_compaction_archive.sql`.
+
+Verification plan:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/outbox-sweeper.test.ts tests/compact/sweeper-loop.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/store/db-utils.test.ts tests/compact/outbox-sweeper.test.ts tests/compact/sweeper-loop.test.ts tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`145` tests passed)
+- `npm run typecheck` (passed)
+- `npm run build` (passed)
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2023` tests passed, `34`
+  skipped)
+- `git diff --check` (passed)
+
 - Guarded memory archive id row mapping:
   - `src/store/memory-archive-repository.ts` now maps memory archive ids
     returned by apply, cleanup listing, cleanup claiming, and archive lookup

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository row mapping now validates Qdrant cleanup attempt
+  counters before returning pending or claimed cleanup records.
 - Memory archive repository row mapping now validates archive ids and archived
   source id references before returning compaction, cleanup, claim, or
   unarchive rows.

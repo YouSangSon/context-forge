@@ -395,6 +395,40 @@ describe("MemoryArchiveRepository.findPendingQdrantCleanup", () => {
     );
   });
 
+  it.each([
+    {
+      attemptCount: "-1",
+      message:
+        "memory archive qdrant_attempt_count must be a non-negative safe integer",
+    },
+    {
+      attemptCount: "1.5",
+      message:
+        "memory archive qdrant_attempt_count must be a non-negative safe integer",
+    },
+    {
+      attemptCount: "bad",
+      message: "database number must be finite",
+    },
+  ])(
+    "rejects malformed pending cleanup attempt rows: $attemptCount",
+    async ({ attemptCount, message }) => {
+      const { pool } = makeMockPool(async () => ({
+        rows: [
+          {
+            id: "1",
+            organization_id: "org-a",
+            qdrant_point_ids: ["pa1"],
+            qdrant_attempt_count: attemptCount,
+          },
+        ],
+      }));
+      const repo = createMemoryArchiveRepository(pool);
+
+      await expect(repo.findPendingQdrantCleanup(50)).rejects.toThrow(message);
+    },
+  );
+
   it("filters due pending rows without claiming locks", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -487,6 +521,29 @@ describe("MemoryArchiveRepository.claimPendingQdrantCleanup", () => {
         now: new Date("2026-06-25T00:00:00.000Z"),
       }),
     ).rejects.toThrow("memory archive id must be a positive safe integer");
+  });
+
+  it("rejects malformed claimed cleanup attempt rows", async () => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [
+        {
+          id: "1",
+          organization_id: "org-a",
+          qdrant_point_ids: ["pa1"],
+          qdrant_attempt_count: "1.5",
+        },
+      ],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.claimPendingQdrantCleanup({
+        limit: 10,
+        now: new Date("2026-06-25T00:00:00.000Z"),
+      }),
+    ).rejects.toThrow(
+      "memory archive qdrant_attempt_count must be a non-negative safe integer",
+    );
   });
 });
 
