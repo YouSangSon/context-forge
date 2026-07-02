@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant query now validates query vectors are non-empty and finite before
+  calling the Qdrant client, matching the pgvector adapter's query-vector
+  boundary guard.
 - Pgvector query now validates `limit` values are positive safe integers before
   opening a database client, so invalid SQL `LIMIT` values do not reach
   pgvector queries.

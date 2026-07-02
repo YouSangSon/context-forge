@@ -159,6 +159,36 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     expect(client.query).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      label: "empty",
+      vector: [],
+      message: "query vector must be a non-empty array",
+    },
+    {
+      label: "NaN",
+      vector: [0.1, Number.NaN, 0.3],
+      message: "query vector[1] must be a finite number",
+    },
+  ])("rejects malformed query vectors before Qdrant query: $label", async ({ vector, message }) => {
+    const client = makeClient();
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.query(
+        vector,
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "p" }],
+          projectKey: "p",
+        },
+        10,
+      ),
+    ).rejects.toThrow(message);
+
+    expect(client.query).not.toHaveBeenCalled();
+  });
+
   it("rejects malformed Qdrant query responses before reading point lists", async () => {
     const client = makeClient();
     client.query.mockResolvedValue(null);

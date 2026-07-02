@@ -88,6 +88,7 @@ export function createQdrantVectorIndex(
     },
 
     async query(vector: number[], filter: VectorFilter, limit: number): Promise<VectorHit[]> {
+      assertQdrantQueryVector(vector);
       const must = buildQdrantMust(filter);
       const response: unknown = await client.query(collectionName, {
         query: vector,
@@ -163,6 +164,18 @@ export function createQdrantVectorIndex(
       await client.delete(collectionName, selector);
     },
   };
+}
+
+function assertQdrantQueryVector(vector: readonly unknown[]): void {
+  if (vector.length === 0) {
+    throw new Error("query vector must be a non-empty array");
+  }
+
+  for (const [index, component] of vector.entries()) {
+    if (typeof component !== "number" || !Number.isFinite(component)) {
+      throw new Error(`query vector[${index}] must be a finite number`);
+    }
+  }
 }
 
 function assertQdrantQueryResponse(value: unknown): asserts value is QdrantQueryResponse {

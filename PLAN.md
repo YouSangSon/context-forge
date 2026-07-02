@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Pgvector Query Limit Validation
+## Current Loop - Qdrant Query Vector Validation
 
 Status:
-- `src/vector/pgvector-index.ts` now validates pgvector query `limit` values
-  are positive safe integers before opening a database client.
-- `tests/vector/pgvector-index.integration.test.ts` now covers zero and
-  fractional limits with a mocked pool.
+- `src/vector/qdrant-index.ts` now validates Qdrant query vectors are non-empty
+  and finite before calling the Qdrant client.
+- `tests/vector/qdrant-index.test.ts` now covers empty and `NaN` query vectors
+  with a mocked client.
 
 Verification:
-- Focused pgvector tests passed after a RED reproducer.
+- Focused Qdrant tests passed after a RED reproducer.
 - Related vector/search tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.
