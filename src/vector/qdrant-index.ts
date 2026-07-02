@@ -90,6 +90,7 @@ export function createQdrantVectorIndex(
       for (const point of points) {
         assertQdrantPointId(point);
         assertQdrantPointVector(point);
+        assertQdrantPointMemoryRecordId(point);
       }
 
       await client.upsert(collectionName, { points });
@@ -204,6 +205,13 @@ function assertQdrantPointIds(ids: readonly unknown[]): void {
   for (const [index, id] of ids.entries()) {
     assertQdrantNonEmptyString(id, `ids[${index}]`);
   }
+}
+
+function assertQdrantPointMemoryRecordId(point: VectorPoint): void {
+  assertQdrantPositiveSafeInteger(
+    point.payload.memory_record_id,
+    "point.payload.memory_record_id",
+  );
 }
 
 function assertQdrantNonEmptyString(value: unknown, fieldName: string): void {

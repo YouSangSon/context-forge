@@ -194,6 +194,7 @@ export function createPgVectorIndex(
       for (const point of points) {
         assertPgVectorPointId(point);
         assertPgVectorEmbeddingVector(point);
+        assertPgVectorPointMemoryRecordId(point);
       }
 
       // HIGH 2: Chunk into batches of UPSERT_BATCH_ROWS to stay under the
@@ -489,6 +490,13 @@ function assertPgVectorPointIds(ids: readonly unknown[]): void {
   for (const [index, id] of ids.entries()) {
     assertPgVectorNonEmptyString(id, `ids[${index}]`);
   }
+}
+
+function assertPgVectorPointMemoryRecordId(point: VectorPoint): void {
+  assertPgVectorPositiveSafeInteger(
+    point.payload.memory_record_id,
+    "point.payload.memory_record_id",
+  );
 }
 
 function assertPgVectorNonEmptyString(value: unknown, fieldName: string): void {

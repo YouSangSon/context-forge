@@ -153,6 +153,32 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
   });
 
   it.each([
+    { label: "missing", memoryRecordId: undefined },
+    { label: "zero", memoryRecordId: 0 },
+    { label: "fractional", memoryRecordId: 1.5 },
+  ])("upsert rejects malformed point memory_record_id before opening a client: $label", async ({ memoryRecordId }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-record-id",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            ...(memoryRecordId === undefined ? {} : { memory_record_id: memoryRecordId }),
+            organization_id: "org-a",
+          },
+        },
+      ]),
+    ).rejects.toThrow("point.payload.memory_record_id must be a positive safe integer");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
     { label: "empty", id: "" },
     { label: "blank", id: " \n\t " },
   ])("upsert rejects malformed point ids before opening a client: $label", async ({ id }) => {

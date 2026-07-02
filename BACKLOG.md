@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector upserts now validate `payload.memory_record_id` as a
+  positive safe integer before calling storage clients, so malformed record ids
+  cannot reach Qdrant or SQL.
 - `buildVectorPoint` now validates required payload metadata fields as
   non-empty strings before producing vector payloads, rejecting blank `kind`,
   `durability`, `updatedAt`, and `embeddingVersion` values.

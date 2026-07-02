@@ -4,18 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Point Required Metadata Validation
+## Current Loop - Vector Upsert Record ID Validation
 
 Status:
-- `src/vector/point-builder.ts` now rejects blank `kind`, `durability`,
-  `updatedAt`, and `embeddingVersion` values before building vector point
-  payloads.
-- Existing type checks remain intact for missing or non-string required
-  metadata fields.
+- `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now reject
+  malformed upsert `payload.memory_record_id` values before calling storage
+  clients.
+- Missing, zero, and fractional record ids fail with clear adapter boundary
+  errors instead of reaching Qdrant or SQL.
 
 Verification:
-- Focused point-builder tests passed after RED reproducers.
-- Related point-builder/vector/canonical-indexing/compaction tests passed.
+- Focused Qdrant/pgvector tests passed after RED reproducers.
+- Related vector/search/canonical-indexing/compaction tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from
