@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 16:54 KST - Hardened memory update organization normalization:
+  - `src/store/memory-repository.ts` now trims direct organization identifiers
+    before update transaction reads, writes, tag replacement, and graph refresh.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/store/memory-repository.test.ts` covers trimmed update transaction
+    parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed the new update organization trimming case because raw organization ID
+  text reached hydrate query parameters.
+- GREEN: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `174` tests passed, `7` skipped)
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`3` files passed; `383` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2435`
+  tests passed, `34` skipped)
+
 - 16:51 KST - Hardened memory creation organization normalization:
   - `src/store/memory-repository.ts` now trims direct organization identifiers
     before source upsert and memory insert writes.

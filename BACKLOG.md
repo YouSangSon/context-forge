@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory updates now trim direct organization identifiers before transaction
+  reads, writes, tag replacement, and graph refresh.
 - Memory creation now trims direct organization identifiers before source and
   memory writes.
 - Memory graph inspection now trims direct organization identifiers before

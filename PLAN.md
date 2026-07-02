@@ -4,15 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Add Memory Organization Normalization
+## Current Loop - Update Memory Organization Normalization
 
 Status:
-- Memory creation now trims direct organization identifiers before source and
-  memory writes.
+- Memory updates now trim direct organization identifiers before transaction
+  reads, writes, tag replacement, and graph refresh.
 - Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused memory repository tests passed after the RED add memory
+- Focused memory repository tests passed after the RED update memory
   organization trimming reproducer.
 - Related store indexing and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.

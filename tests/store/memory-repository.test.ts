@@ -2055,6 +2055,86 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     });
   });
 
+  it("updateMemoryRecord trims organizationId before transaction queries", async () => {
+    const clientQueryCalls: SqlQueryCall[] = [];
+    let hydrationReads = 0;
+    const currentRow = hydratedMemoryRow();
+    const updatedHydratedRow = {
+      ...hydratedMemoryRow(),
+      title: "After",
+      content: "still plain text",
+      summary: "after",
+      updated_at: "2026-06-26T00:00:01.000Z",
+    };
+    const mockClient = {
+      query: vi.fn().mockImplementation((sql: string, params?: unknown[]) => {
+        clientQueryCalls.push({ sql, params: params ?? [] });
+        if (sql === "BEGIN" || sql === "COMMIT" || sql === "ROLLBACK") {
+          return Promise.resolve({ rows: [] });
+        }
+        if (sql.includes("SELECT") && sql.includes("FROM memory_records mr") && sql.includes("WHERE mr.id = $1")) {
+          hydrationReads += 1;
+          return Promise.resolve({
+            rows: [hydrationReads === 1 ? currentRow : updatedHydratedRow],
+          });
+        }
+        if (sql.includes("UPDATE memory_records")) {
+          return Promise.resolve({
+            rows: [{
+              id: 42,
+              organization_id: "org-a",
+              scope_type: "project",
+              scope_id: "proj-x",
+              project_key: "proj-x",
+              kind: "fact",
+              title: "After",
+              content: "still plain text",
+              summary: "after",
+              durability: "durable",
+              importance: 1,
+              source_id: 9,
+              created_at: "2026-06-26T00:00:00.000Z",
+              updated_at: "2026-06-26T00:00:01.000Z",
+            }],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const mockPool = {
+      connect: vi.fn().mockResolvedValue(mockClient),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.updateMemoryRecord({
+      id: 42,
+      organizationId: " org-a ",
+      title: "After",
+      content: "still plain text",
+      summary: "after",
+    });
+
+    const hydrationCalls = clientQueryCalls.filter(
+      ({ sql }) => sql.includes("SELECT") && sql.includes("FROM memory_records mr"),
+    );
+    const updateCall = clientQueryCalls.find(({ sql }) =>
+      sql.includes("UPDATE memory_records"),
+    );
+    const deleteRelationshipsCall = clientQueryCalls.find(({ sql }) =>
+      sql.includes("DELETE FROM entity_relationships"),
+    );
+    const deleteMentionsCall = clientQueryCalls.find(({ sql }) =>
+      sql.includes("DELETE FROM memory_entity_mentions"),
+    );
+
+    expect(hydrationCalls[0]?.params).toEqual([42, "org-a"]);
+    expect(updateCall?.params[1]).toBe("org-a");
+    expect(deleteRelationshipsCall?.params).toEqual([42, "org-a"]);
+    expect(deleteMentionsCall?.params).toEqual([42, "org-a"]);
+    expect(hydrationCalls[1]?.params).toEqual([42, "org-a"]);
+  });
+
   it("updateMemoryRecord rejects whitespace-only organization IDs before opening a transaction", async () => {
     const mockPool = {
       connect: vi.fn(),

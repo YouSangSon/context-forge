@@ -507,6 +507,7 @@ export function createMemoryRepository(
 
     async updateMemoryRecord(input) {
       assertNonBlankText(input.organizationId, "organizationId");
+      const organizationId = input.organizationId.trim();
       const nextTags =
         input.tags === undefined ? undefined : normalizeTags(input.tags);
 
@@ -518,7 +519,7 @@ export function createMemoryRepository(
         const currentRow = await getPostgresMemoryRecordById(
           client,
           input.id,
-          input.organizationId,
+          organizationId,
         );
         if (!currentRow) {
           await client.query("ROLLBACK");
@@ -587,7 +588,7 @@ export function createMemoryRepository(
           `,
           [
             input.id,
-            input.organizationId,
+            organizationId,
             nextKind,
             nextTitle,
             nextContent,
@@ -601,18 +602,18 @@ export function createMemoryRepository(
         if (input.tags !== undefined) {
           await replacePostgresMemoryTags(client, {
             memoryRecordId: input.id,
-            organizationId: input.organizationId,
+            organizationId,
             tags: nextTags ?? [],
           });
         }
 
-        await deletePostgresEntityGraphForMemory(client, input.id, input.organizationId);
+        await deletePostgresEntityGraphForMemory(client, input.id, organizationId);
         const currentSourceMetadata = parseStoredPostgresSourceRef(
           currentRow.source_ref,
         );
         await persistPostgresEntityGraph(client, {
           input: {
-            organizationId: input.organizationId,
+            organizationId,
             scopeType: mapScopeType(updatedRow.scope_type, "memory scope_type"),
             scopeId: updatedRow.scope_id,
             projectKey: updatedRow.project_key ?? undefined,
@@ -634,7 +635,7 @@ export function createMemoryRepository(
               uri: currentSourceMetadata.uri ?? undefined,
             },
           },
-          organizationId: input.organizationId,
+          organizationId,
           memoryRecordId: input.id,
           sourceRow: currentRow,
         });
@@ -642,7 +643,7 @@ export function createMemoryRepository(
         const hydrated = await getPostgresMemoryRecordById(
           client,
           input.id,
-          input.organizationId,
+          organizationId,
         );
 
         await client.query("COMMIT");
