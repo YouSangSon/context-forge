@@ -1553,6 +1553,29 @@ describe("createToolRegistry", () => {
     );
   });
 
+  it("trims update_memory optional title and summary before repository dispatch", async () => {
+    const services = createCanonicalServices();
+    const registry = createToolRegistry({
+      resolveCanonicalServices: async () => services,
+    });
+
+    await registry.update_memory({
+      organizationId: "org-a",
+      memoryId: 501,
+      title: " Updated title ",
+      summary: " Updated summary ",
+    });
+
+    expect(services.repository.updateMemoryRecord).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 501,
+        organizationId: "org-a",
+        title: "Updated title",
+        summary: "Updated summary",
+      }),
+    );
+  });
+
   it("rejects invalid update_memory importance before repository dispatch", async () => {
     const services = createCanonicalServices();
     const resolveCanonicalServices = vi.fn(async () => services);

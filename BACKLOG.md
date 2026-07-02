@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Shared MCP optional text normalization now trims nonblank values while
+  preserving blank-to-null behavior.
 - MCP scope identifier utilities now return trimmed project and user scope IDs
   after nonblank validation.
 - `search_memory` handler now trims direct query values before resolving

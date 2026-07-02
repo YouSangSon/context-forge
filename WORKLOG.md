@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 16:07 KST - Hardened MCP optional text normalization:
+  - `src/mcp/tool-handlers.ts` now trims nonblank values returned by shared
+    optional text normalization.
+  - Blank optional text still normalizes to `null`.
+  - `tests/mcp/server.test.ts` covers direct `update_memory` title and summary
+    trimming before repository dispatch.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot` failed the new
+  optional text trimming case because raw title/summary values reached the
+  repository update call.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot` (`1` file
+  passed; `133` tests passed)
+
+Verification:
+- `npx vitest run tests/mcp/server.test.ts tests/goal-run/goal-run-handlers.test.ts tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`3` files passed; `218` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2417`
+  tests passed, `34` skipped)
+
 - 16:03 KST - Hardened MCP scope identifier normalization:
   - `src/mcp/tool-utils.ts` now returns trimmed project keys and user scope IDs
     from `requireProjectKey` and `requireUserScopeId`.

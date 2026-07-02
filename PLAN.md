@@ -4,18 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - MCP Scope Identifier Normalization
+## Current Loop - MCP Optional Text Normalization
 
 Status:
-- `requireProjectKey` and `requireUserScopeId` now return trimmed identifiers
-  after nonblank validation.
-- Direct MCP handler paths using these helpers now receive normalized scope
-  identifiers.
+- Shared MCP optional text normalization now trims nonblank values before
+  handler dispatch.
+- Blank optional text still normalizes to `null`.
 
 Verification:
-- Focused tool utility tests passed after the RED scope identifier trimming
+- Focused MCP server tests passed after the RED optional text trimming
   reproducer.
-- Related MCP registry/server tests passed.
+- Related MCP and goal-run handler tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.
