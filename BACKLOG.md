@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository compaction run row mapping now rejects malformed
+  returned organization IDs before exposing run metadata.
 - Memory archive repository pending qdrant cleanup row mapping now rejects
   malformed returned organization IDs and qdrant point ID arrays.
 - Memory archive repository compaction command entrypoints now reject malformed

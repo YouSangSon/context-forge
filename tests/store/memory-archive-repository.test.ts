@@ -131,6 +131,15 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
 
   it.each([
     {
+      rowPatch: { organization_id: null },
+      message: "compaction run organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message:
+        "compaction run organization_id must contain non-whitespace text",
+    },
+    {
       rowPatch: { id: "0" },
       message: "compaction run id must be a positive safe integer",
     },

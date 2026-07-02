@@ -823,18 +823,13 @@ function toPostgresInteger(value: unknown, fieldName: string): number {
   return numberValue;
 }
 
-function mapRunRow(row: {
-  id: number | string;
-  organization_id: string;
-  status: unknown;
-  archived_count: number | string;
-  duplicate_count: number | string;
-  decay_count: number | string;
-  qdrant_failed: number | string;
-}): CompactionRunRow {
+function mapRunRow(value: unknown): CompactionRunRow {
+  const row = assertObject(value, "compaction run row");
+  const organizationId = row.organization_id;
+  assertNonBlankText(organizationId, "compaction run organization_id");
   return {
     id: toPositiveSafeInteger(row.id, "compaction run id"),
-    organizationId: row.organization_id,
+    organizationId,
     status: toCompactionRunStatus(row.status),
     archivedCount: toNonNegativeSafeInteger(
       row.archived_count,

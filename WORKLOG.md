@@ -10373,3 +10373,28 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2259` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened compaction run row organization mapping:
+  - Added RED coverage showing malformed compaction run `organization_id`
+    values were returned directly from replay lookups instead of failing at the
+    repository boundary.
+  - Compaction run row mapping now validates row objects and organization IDs
+    before exposing run metadata, while preserving the existing status and
+    counter guards.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed compaction run organization metadata resolved
+  instead of rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `135` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/apply-compaction.test.ts tests/compact/compact-memory.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `344` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2261` tests passed, `34` skipped)
+- `git diff --check` (passed)
