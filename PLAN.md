@@ -4,12 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Archive Apply Input Validation
+## Current Loop - Compaction Run Create Input Validation
 
 Status:
-- Memory archive repository apply now validates run/record ids, archive reason,
-  optional kept record id, optional decay score, and plan timestamp before SQL.
-- Malformed archive apply inputs fail before the destructive delete/archive CTE.
+- Memory archive repository run creation now validates actor, dry-run flag,
+  plan timestamp, and idempotency key before inserting compaction run rows.
+- Malformed create-run inputs fail before SQL instead of being inserted or
+  failing through incidental timestamp serialization.
 
 Verification:
 - Focused memory archive repository tests passed after a RED direct-input

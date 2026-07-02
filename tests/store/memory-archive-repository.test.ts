@@ -44,6 +44,16 @@ describe("createMemoryArchiveRepository", () => {
 });
 
 describe("MemoryArchiveRepository.createCompactionRun", () => {
+  const baseInput = {
+    organizationId: "org-a",
+    actor: "test",
+    scopeType: "project",
+    scopeId: "alpha",
+    dryRun: false,
+    planGeneratedAt: new Date("2026-04-25T12:00:00.000Z"),
+    idempotencyKey: "00000000-0000-0000-0000-000000000001",
+  };
+
   it("inserts a new run and maps the returning row", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [RUN_ROW] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -200,6 +210,40 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
         idempotencyKey: "00000000-0000-0000-0000-000000000006",
       }),
     ).rejects.toThrow(/scopeId/);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      inputPatch: { actor: " \n\t " },
+      message: "actor must contain non-whitespace text",
+    },
+    {
+      inputPatch: { dryRun: "false" },
+      message: "dryRun must be a boolean",
+    },
+    {
+      inputPatch: { planGeneratedAt: new Date(Number.NaN) },
+      message: "planGeneratedAt must be a valid Date",
+    },
+    {
+      inputPatch: { idempotencyKey: " \n\t " },
+      message: "idempotencyKey must contain non-whitespace text",
+    },
+  ])("rejects malformed direct run inputs before querying %#", async ({
+    inputPatch,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [RUN_ROW] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.createCompactionRun({
+        ...baseInput,
+        ...inputPatch,
+      } as never),
+    ).rejects.toThrow(message);
 
     expect(query).not.toHaveBeenCalled();
   });

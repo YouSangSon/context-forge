@@ -10182,3 +10182,27 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2223` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened compaction run create input mapping:
+  - Added RED coverage showing malformed direct `createCompactionRun` actor,
+    dry-run flag, timestamp, and idempotency key inputs resolved or failed with
+    incidental timestamp errors instead of clear pre-SQL errors.
+  - Compaction run creation now validates all run metadata fields before
+    issuing the insert.
+  - No `DECISIONS.md` entry: this is repository input-boundary validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed create-run inputs resolved or failed with an
+  incidental timestamp error instead of clear boundary errors.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `101` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/apply-compaction.test.ts tests/compact/compact-memory.test.ts tests/compact/outbox-sweeper.test.ts tests/compact/unarchive-compaction.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`6` files passed; `373` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2227` tests passed, `34` skipped)
+- `git diff --check` (passed)

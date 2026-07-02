@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository run creation now rejects malformed direct run
+  metadata before inserting compaction run rows.
 - Memory archive repository apply now rejects malformed direct record-apply
   inputs before the destructive delete/archive CTE.
 - Memory archive repository completion now rejects malformed direct run

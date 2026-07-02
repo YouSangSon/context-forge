@@ -149,9 +149,7 @@ export function createMemoryArchiveRepository(
 
   return {
     async createCompactionRun(input) {
-      assertNonBlankText(input.organizationId, "organizationId");
-      assertNonBlankText(input.scopeType, "scopeType");
-      assertNonBlankText(input.scopeId, "scopeId");
+      assertCreateCompactionRunInput(input);
 
       // ON CONFLICT on idempotency_key: replay defense. Returns the existing
       // row (with its outcome counters) if a run with this UUID already
@@ -674,6 +672,18 @@ function assertQdrantCleanupClaimInput(value: unknown): asserts value is {
   assertValidDate(candidate.now, "now");
 }
 
+function assertCreateCompactionRunInput(
+  input: CreateCompactionRunInput,
+): void {
+  assertNonBlankText(input.organizationId, "organizationId");
+  assertNonBlankText(input.actor, "actor");
+  assertNonBlankText(input.scopeType, "scopeType");
+  assertNonBlankText(input.scopeId, "scopeId");
+  assertBoolean(input.dryRun, "dryRun");
+  assertValidDate(input.planGeneratedAt, "planGeneratedAt");
+  assertNonBlankText(input.idempotencyKey, "idempotencyKey");
+}
+
 function assertApplyCompactionRecordInput(
   input: ApplyCompactionRecordInput,
 ): void {
@@ -832,6 +842,12 @@ function assertObject(
 function assertFunction(value: unknown, fieldName: string): void {
   if (typeof value !== "function") {
     throw new Error(`${fieldName} must be a function`);
+  }
+}
+
+function assertBoolean(value: unknown, fieldName: string): void {
+  if (typeof value !== "boolean") {
+    throw new Error(`${fieldName} must be a boolean`);
   }
 }
 
