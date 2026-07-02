@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `list_audit_log` now trims direct organization identifiers before audit log
+  listing calls and response echoing.
 - `update_memory`, `delete_memory`, and `tag_memory` now trim direct
   organization identifiers before canonical mutation repository and vector
   cleanup calls.

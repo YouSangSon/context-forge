@@ -813,7 +813,7 @@ export function createToolHandlers(input: {
         );
       }
       assertOptionalPositiveInteger(toolInput.limit, "limit", 1000);
-      const organizationId = toolInput.organizationId ?? "default";
+      const organizationId = toolInput.organizationId?.trim() ?? "default";
       const entries = await auditLogForListing.listByOrganization(
         organizationId,
         { limit: toolInput.limit },

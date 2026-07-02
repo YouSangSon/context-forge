@@ -1759,14 +1759,14 @@ describe("createToolRegistry", () => {
     const registry = createToolRegistry({ auditLog });
 
     await expect(
-      registry.list_audit_log({ limit: 1000 }),
+      registry.list_audit_log({ organizationId: " org-a ", limit: 1000 }),
     ).resolves.toMatchObject({
       ok: true,
-      organizationId: "default",
+      organizationId: "org-a",
       entries: [],
     });
 
-    expect(auditLog.listByOrganization).toHaveBeenCalledWith("default", {
+    expect(auditLog.listByOrganization).toHaveBeenCalledWith("org-a", {
       limit: 1000,
     });
   });
