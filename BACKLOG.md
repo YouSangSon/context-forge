@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- PGVector queries and deletes now trim direct organization identifiers before
+  building SQL filters.
 - Qdrant vector queries and deletes now trim direct organization identifiers
   before building backend filters.
 - Retrieval now trims direct organization identifiers before vector, lexical,

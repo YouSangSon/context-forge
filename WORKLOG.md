@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 17:27 KST - Hardened PGVector organization normalization:
+  - `src/vector/pgvector-index.ts` now uses the shared optional vector org
+    normalizer before query filters, point deletes, and record-id deletes.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs, and empty string still preserves legacy unscoped vector behavior.
+  - `tests/vector/pgvector-index.integration.test.ts` covers trimmed SQL
+    parameters with mock pools, so the guard runs even without PGVector.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new PGVector organization trimming cases because raw organization
+  ID text reached SQL parameters.
+- GREEN: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `77` tests passed, `12` skipped)
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/vector/qdrant-index.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`4` files passed; `191` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2447`
+  tests passed, `34` skipped)
+
 - 17:24 KST - Hardened Qdrant vector organization normalization:
   - `src/vector/organization-id.ts` now exposes
     `normalizeOptionalVectorOrganizationId` for optional vector org filters.

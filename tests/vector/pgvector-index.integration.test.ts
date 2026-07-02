@@ -602,6 +602,37 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     expect(params).toEqual(["[0.1,0.2,0.3]", "project", "project-alpha", 5]);
   });
 
+  it("query trims organizationId before SQL parameters", async () => {
+    const { pool, query } = makeQueryPool([]);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: " org-a ",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        5,
+      ),
+    ).resolves.toEqual([]);
+
+    const selectCall = query.mock.calls.find(([sql]) =>
+      typeof sql === "string" && sql.includes("FROM memory_vectors_test")
+    );
+    expect(selectCall).toBeDefined();
+
+    const [, params] = selectCall as [string, unknown[]];
+    expect(params).toEqual([
+      "[0.1,0.2,0.3]",
+      "org-a",
+      "project",
+      "project-alpha",
+      5,
+    ]);
+  });
+
   it("query maps numeric string row values through guarded pgvector helpers", async () => {
     const { pool, query, client } = makeQueryPool([
       buildPgVectorQueryRow({
@@ -858,6 +889,18 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
 
     await index.deleteByRecordIds([101, 202], { organizationId: "org-a" });
+
+    expect(query).toHaveBeenCalledWith(
+      "DELETE FROM memory_vectors_test WHERE memory_record_id = ANY($1) AND organization_id = $2",
+      [[101, 202], "org-a"],
+    );
+  });
+
+  it("deleteByRecordIds trims organizationId before SQL parameters", async () => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await index.deleteByRecordIds([101, 202], { organizationId: " org-a " });
 
     expect(query).toHaveBeenCalledWith(
       "DELETE FROM memory_vectors_test WHERE memory_record_id = ANY($1) AND organization_id = $2",
@@ -1339,6 +1382,18 @@ describe("pgvector adapter — delete SQL", () => {
     const index = createPgVectorIndex(pool, { tableName: "test_memory_vectors" });
 
     await index.delete(["chunk:1", "chunk:2"], { organizationId: "org-a" });
+
+    expect(query).toHaveBeenCalledWith(
+      "DELETE FROM test_memory_vectors WHERE point_id = ANY($1) AND organization_id = $2",
+      [["chunk:1", "chunk:2"], "org-a"],
+    );
+  });
+
+  it("trims organizationId before SQL delete parameters", async () => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "test_memory_vectors" });
+
+    await index.delete(["chunk:1", "chunk:2"], { organizationId: " org-a " });
 
     expect(query).toHaveBeenCalledWith(
       "DELETE FROM test_memory_vectors WHERE point_id = ANY($1) AND organization_id = $2",

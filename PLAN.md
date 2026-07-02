@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Qdrant Vector Organization Normalization
+## Current Loop - PGVector Organization Normalization
 
 Status:
-- Qdrant vector queries and deletes now trim direct organization identifiers
-  before building backend filters.
+- PGVector queries and deletes now trim direct organization identifiers before
+  building SQL filters.
 - Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused Qdrant vector tests passed after RED query/delete/delete-by-record-id
+- Focused PGVector tests passed after RED query/delete/delete-by-record-id
   organization trimming reproducer.
-- Related vector helper and point-builder tests passed.
+- Related Qdrant, vector helper, and point-builder tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

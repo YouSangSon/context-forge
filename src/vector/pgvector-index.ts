@@ -56,8 +56,8 @@ import type {
   VectorPoint,
 } from "./vector-index.js";
 import {
-  assertOptionalVectorOrganizationId,
   assertVectorPointOrganizationIds,
+  normalizeOptionalVectorOrganizationId,
 } from "./organization-id.js";
 
 // Max rows per INSERT batch — 14 params/row × 4000 = 56000 < 65535 cap.
@@ -301,7 +301,8 @@ export function createPgVectorIndex(
       assertPgVectorQueryVector(vector);
       assertPgVectorPositiveSafeInteger(limit, "limit");
       assertPgVectorFilter(filter);
-      assertOptionalVectorOrganizationId(filter.organizationId);
+      const organizationId =
+        normalizeOptionalVectorOrganizationId(filter.organizationId);
       assertPgVectorFilterScopes(filter.scopes);
       assertPgVectorOptionalProjectKey(filter.projectKey);
 
@@ -327,8 +328,8 @@ export function createPgVectorIndex(
         const whereClauses: string[] = [];
 
         // Mirror buildQdrantMust: add org clause only when organizationId is non-empty.
-        if (filter.organizationId) {
-          params.push(filter.organizationId);
+        if (organizationId) {
+          params.push(organizationId);
           whereClauses.push(`organization_id = $${params.length}`);
         }
 
@@ -403,14 +404,15 @@ export function createPgVectorIndex(
     },
 
     async delete(ids: string[], options: VectorDeleteOptions = {}): Promise<void> {
-      assertOptionalVectorOrganizationId(options.organizationId);
+      const organizationId =
+        normalizeOptionalVectorOrganizationId(options.organizationId);
 
       assertPgVectorPointIds(ids);
       if (ids.length === 0) return;
-      if (options.organizationId) {
+      if (organizationId) {
         await pool.query(
           `DELETE FROM ${tableName} WHERE point_id = ANY($1) AND organization_id = $2`,
-          [ids, options.organizationId],
+          [ids, organizationId],
         );
         return;
       }
@@ -421,14 +423,15 @@ export function createPgVectorIndex(
       recordIds: number[],
       options: VectorDeleteOptions = {},
     ): Promise<void> {
-      assertOptionalVectorOrganizationId(options.organizationId);
+      const organizationId =
+        normalizeOptionalVectorOrganizationId(options.organizationId);
 
       assertPgVectorRecordIds(recordIds);
       if (recordIds.length === 0) return;
-      if (options.organizationId) {
+      if (organizationId) {
         await pool.query(
           `DELETE FROM ${tableName} WHERE memory_record_id = ANY($1) AND organization_id = $2`,
-          [recordIds, options.organizationId],
+          [recordIds, organizationId],
         );
         return;
       }
