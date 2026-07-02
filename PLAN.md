@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Upsert Kind Validation
+## Current Loop - Vector Upsert Payload Object Validation
 
 Status:
-- `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now reject
-  malformed upsert `payload.kind` values before calling storage clients.
-- Missing and blank kind values fail with clear adapter boundary errors instead
-  of reaching Qdrant or SQL.
+- `src/vector/organization-id.ts` now rejects non-object `VectorPoint.payload`
+  values before reading `payload.organization_id`.
+- Qdrant and pgvector upserts now fail with a clear boundary error for null
+  payloads instead of throwing incidental property-access errors.
 
 Verification:
 - Focused Qdrant/pgvector tests passed after RED reproducers.

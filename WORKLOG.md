@@ -2,6 +2,37 @@
 
 ## 2026-07-02
 
+- Hardened vector upsert payload object validation:
+  - `src/vector/organization-id.ts` now validates each upsert
+    `VectorPoint.payload` is an object before reading `payload.organization_id`.
+  - Null payloads now fail with a clear adapter boundary error instead of an
+    incidental property-access TypeError.
+  - Qdrant and pgvector tests cover null upsert payloads with mocked clients.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new payload cases because both adapters hit an incidental
+  `Cannot read properties of null` error while reading organization metadata.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`2` files passed; `131` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+  (`7` files passed; `309` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2148` tests passed,
+  `34` skipped)
+
 - Hardened vector upsert kind validation:
   - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now
     validate upsert `payload.kind` values as non-empty strings before calling

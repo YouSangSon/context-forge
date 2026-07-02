@@ -16,6 +16,14 @@ export function assertVectorPointOrganizationIds(
   points: readonly VectorPoint[],
 ): void {
   for (const point of points) {
+    if (
+      typeof point.payload !== "object" ||
+      point.payload === null ||
+      Array.isArray(point.payload)
+    ) {
+      throw new Error(`upsert: point "${point.id}" payload must be an object`);
+    }
+
     const organizationId = point.payload.organization_id;
     if (typeof organizationId !== "string") {
       throw new Error(

@@ -152,6 +152,25 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it("upsert rejects non-object point payloads before opening a client", async () => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-payload",
+          vector: [0.1, 0.2, 0.3],
+          payload: null,
+        } as never,
+      ]),
+    ).rejects.toThrow('upsert: point "chunk:bad-payload" payload must be an object');
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it.each([
     { label: "missing", memoryRecordId: undefined },
     { label: "zero", memoryRecordId: 0 },
