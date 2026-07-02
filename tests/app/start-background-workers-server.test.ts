@@ -148,6 +148,55 @@ describe("startOperatorServer background worker startup", () => {
     servers.pop();
   });
 
+  it("stops workers when probe pool cleanup throws synchronously", async () => {
+    const stopWorkers = vi.fn().mockResolvedValue(undefined);
+    const probeEnd = vi.fn(() => {
+      throw new Error("probe cleanup boom");
+    });
+    const startBackgroundWorkers = vi.fn().mockResolvedValue({
+      startedWorkers: ["compaction"],
+      stop: stopWorkers,
+    });
+    const createPgPool = vi.fn(() => ({
+      end: probeEnd,
+    }));
+
+    vi.doMock("../../src/app/background-workers.js", () => ({
+      startBackgroundWorkers,
+    }));
+    vi.doMock("../../src/db/connection.js", () => ({
+      createPgPool,
+    }));
+
+    const { closeOperatorServer, startOperatorServer } = await import(
+      "../../src/app/server.js"
+    );
+    const server = startOperatorServer({
+      config: buildTestConfig(),
+      registry: {} as ToolRegistry,
+      logger: buildLogger(),
+      bearerTokens: [],
+      dependencyProbes: {},
+      backgroundQueueMetrics: null,
+      oauthProtectedResource: null,
+      oauthTokenVerifier: null,
+    });
+    servers.push(server);
+
+    if (!server.address()) {
+      await once(server, "listening");
+    }
+    await vi.waitFor(() => expect(startBackgroundWorkers).toHaveBeenCalledOnce());
+
+    await expect(closeOperatorServer(server)).rejects.toThrow(
+      "probe cleanup boom",
+    );
+
+    expect(probeEnd).toHaveBeenCalledOnce();
+    expect(stopWorkers).toHaveBeenCalledOnce();
+    servers.pop();
+  });
+
   it("cleans probe pool without starting workers when HTTP bind fails", async () => {
     const blocker = http.createServer();
     await new Promise<void>((resolve) =>

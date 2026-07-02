@@ -9887,3 +9887,30 @@ Verification:
 - `npm test -- --reporter=dot`
   (`81` files passed, `2` skipped; `2171` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened operator server cleanup task wrapping:
+  - Added RED coverage showing a probe-pool `end()` method that throws
+    synchronously escaped the close-event cleanup path and skipped background
+    worker shutdown.
+  - `startOperatorServer` now wraps `probePool.end()` in
+    `Promise.resolve().then(...)` and uses an async worker-stop continuation, so
+    synchronous cleanup failures become rejected cleanup tasks.
+  - Remaining cleanup work now runs through `settleCleanup`, and
+    `closeOperatorServer` surfaces the original cleanup error as a rejection.
+  - No `DECISIONS.md` entry: this is lifecycle cleanup hardening inside the
+    existing operator server shutdown path.
+
+Verification:
+- RED: `npx vitest run tests/app/start-background-workers-server.test.ts --reporter=dot`
+  failed because the synchronous probe-pool cleanup throw escaped the cleanup
+  promise and worker shutdown was not observed.
+- GREEN focused: `npx vitest run tests/app/start-background-workers-server.test.ts --reporter=dot`
+  (`1` file passed; `4` tests passed)
+- Related: `npx vitest run tests/app/start-background-workers-server.test.ts tests/app/start-operator-server-metrics.test.ts tests/app/operator-server-boundary.test.ts tests/app/background-workers.test.ts tests/app/server.test.ts tests/app/mcp-http.test.ts --reporter=dot`
+  (`6` files passed; `146` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`81` files passed, `2` skipped; `2172` tests passed, `34` skipped)
+- `git diff --check` (passed)

@@ -523,8 +523,8 @@ export function startOperatorServer(
   const cleanup = (): Promise<void> => {
     if (!cleanupPromise) {
       cleanupPromise = settleCleanup([
-        probePool.end(),
-        backgroundWorkerStartup.then((handle) =>
+        Promise.resolve().then(() => probePool.end()),
+        backgroundWorkerStartup.then(async (handle) =>
           (handle ?? backgroundWorkers)?.stop(),
         ),
       ]);

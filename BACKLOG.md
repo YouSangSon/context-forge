@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Operator server cleanup now wraps probe-pool and worker-stop shutdown calls
+  before settlement, so synchronous cleanup failures still allow remaining
+  cleanup tasks to run and surface as rejected cleanup promises.
 - Background worker shutdown now closes canonical services even when one worker
   `stop()` throws synchronously, matching the existing async rejection cleanup
   behavior.
