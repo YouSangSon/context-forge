@@ -286,6 +286,74 @@ describe("createAuditLogRepository — error_message truncation", () => {
     },
   );
 
+  it.each([
+    {
+      label: "organization null",
+      row: buildAuditRow({ organization_id: null }),
+      message: "audit log organization_id must be a string",
+    },
+    {
+      label: "organization blank",
+      row: buildAuditRow({ organization_id: " \n\t " }),
+      message: "audit log organization_id must contain non-whitespace text",
+    },
+    {
+      label: "actor null",
+      row: buildAuditRow({ actor: null }),
+      message: "audit log actor must be a string",
+    },
+    {
+      label: "actor blank",
+      row: buildAuditRow({ actor: " \n\t " }),
+      message: "audit log actor must contain non-whitespace text",
+    },
+    {
+      label: "tool boolean",
+      row: buildAuditRow({ tool: false }),
+      message: "audit log tool must be a string",
+    },
+    {
+      label: "tool blank",
+      row: buildAuditRow({ tool: " \n\t " }),
+      message: "audit log tool must contain non-whitespace text",
+    },
+    {
+      label: "project key number",
+      row: buildAuditRow({ project_key: 42 }),
+      message: "audit log project_key must be a string or null",
+    },
+    {
+      label: "project key blank",
+      row: buildAuditRow({ project_key: " \n\t " }),
+      message: "audit log project_key must contain non-whitespace text",
+    },
+    {
+      label: "error message boolean",
+      row: buildAuditRow({ error_message: false }),
+      message: "audit log error_message must be a string or null",
+    },
+    {
+      label: "request id number",
+      row: buildAuditRow({ request_id: 42 }),
+      message: "audit log request_id must be a string or null",
+    },
+    {
+      label: "request id blank",
+      row: buildAuditRow({ request_id: " \n\t " }),
+      message: "audit log request_id must contain non-whitespace text",
+    },
+  ])(
+    "listByOrganization rejects malformed audit row scalar values: $label",
+    async ({ row, message }) => {
+      const fakePool = {
+        query: vi.fn().mockResolvedValue({ rows: [row] }),
+      };
+      const repo = createAuditLogRepository(fakePool as never);
+
+      await expect(repo.listByOrganization("org-1")).rejects.toThrow(message);
+    },
+  );
+
   it("truncates error_message to 1024 chars before persistence", async () => {
     let capturedParams: unknown[] | undefined;
 

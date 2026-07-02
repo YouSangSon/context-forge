@@ -10627,3 +10627,30 @@ Verification:
 - `git diff --check` (passed)
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2343` tests passed, `34` skipped)
+
+## 2026-07-02 15:14 KST - Audit Log Row Scalar Validation
+
+- Hardened audit log scalar row mapping:
+  - Added RED coverage showing malformed returned organization IDs, actors,
+    tools, nullable project/request IDs, and error message types resolved
+    instead of failing at the repository boundary.
+  - Audit log rows now validate required metadata as non-blank text, nullable
+    project/request IDs as null-or-nonblank text, and error messages as
+    string-or-null before returning stored audit entries.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/audit/audit-truncation.test.ts --reporter=dot`
+  failed with `11` malformed audit row scalar cases resolving instead of
+  rejecting.
+- GREEN focused: `npx vitest run tests/audit/audit-truncation.test.ts --reporter=dot`
+  (`1` file passed; `52` tests passed)
+- Related: `npx vitest run tests/audit/audit-truncation.test.ts tests/audit/audit-write.test.ts tests/app/memory-routes-boundary.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `205` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check` (passed)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2354` tests passed, `34` skipped)

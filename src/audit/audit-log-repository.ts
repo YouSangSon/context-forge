@@ -109,17 +109,29 @@ export function createAuditLogRepository(pool: PgPool): AuditLogRepository {
 function mapAuditLogRow(row: AuditLogRow): StoredAuditLogEntry {
   return {
     id: toPositiveSafeInteger(row.id, "audit log id"),
-    organizationId: row.organization_id,
-    actor: row.actor,
-    tool: row.tool,
-    projectKey: row.project_key,
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "audit log organization_id",
+    ),
+    actor: mapRequiredText(row.actor, "audit log actor"),
+    tool: mapRequiredText(row.tool, "audit log tool"),
+    projectKey: mapNullableNonBlankText(
+      row.project_key,
+      "audit log project_key",
+    ),
     outcome: toAuditOutcome(row.outcome),
-    errorMessage: row.error_message,
+    errorMessage: mapNullableText(
+      row.error_message,
+      "audit log error_message",
+    ),
     durationMs: toNonNegativeSafeInteger(
       row.duration_ms,
       "audit log duration_ms",
     ),
-    requestId: row.request_id,
+    requestId: mapNullableNonBlankText(
+      row.request_id,
+      "audit log request_id",
+    ),
     createdAt: toIsoString(row.created_at),
   };
 }
@@ -138,6 +150,37 @@ function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
     throw new Error(`${fieldName} must be a non-negative safe integer`);
   }
   return numberValue;
+}
+
+function mapRequiredText(value: unknown, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value;
+}
+
+function mapNullableText(value: unknown, fieldName: string): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
+}
+
+function mapNullableNonBlankText(
+  value: unknown,
+  fieldName: string,
+): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string or null`);
+  }
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
+  return value;
 }
 
 function toAuditOutcome(value: unknown): AuditOutcome {

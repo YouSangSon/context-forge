@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Audit log row mapping now rejects malformed returned organization, actor,
+  tool, nullable project/request IDs, and error message types before exposing
+  audit entries.
 - Ingest job row mapping now rejects malformed returned organization IDs and
   nullable ingest/qdrant error strings before exposing job state.
 - Canonical memory chunk row mapping now rejects malformed returned content,
