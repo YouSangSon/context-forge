@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Store nullable text normalization now trims nonblank title/summary values
+  while preserving blank-to-null behavior.
 - Shared MCP optional text normalization now trims nonblank values while
   preserving blank-to-null behavior.
 - MCP scope identifier utilities now return trimmed project and user scope IDs

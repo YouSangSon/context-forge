@@ -1059,7 +1059,8 @@ function normalizeNullableText(value: unknown, fieldName: string): string | null
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string`);
   }
-  return value.trim().length === 0 ? null : value;
+  const normalized = value.trim();
+  return normalized.length === 0 ? null : normalized;
 }
 
 function normalizeMemoryType(

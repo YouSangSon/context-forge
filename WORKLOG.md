@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 16:11 KST - Hardened store nullable text normalization:
+  - `src/store/memory-repository.ts` now trims nonblank nullable text values
+    before persistence.
+  - Blank nullable text still normalizes to `null`.
+  - `tests/store/memory-repository.test.ts` covers direct `updateMemoryRecord`
+    title and summary trimming before the SQL update.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed the new nullable text trimming case because raw title/summary values
+  reached the update parameters.
+- GREEN: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `165` tests passed, `7` skipped)
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`3` files passed; `374` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2418`
+  tests passed, `34` skipped)
+
 - 16:07 KST - Hardened MCP optional text normalization:
   - `src/mcp/tool-handlers.ts` now trims nonblank values returned by shared
     optional text normalization.

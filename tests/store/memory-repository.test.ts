@@ -2036,6 +2036,58 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     });
   });
 
+  it("updateMemoryRecord trims title and summary before updating the row", async () => {
+    const clientQueryCalls: SqlQueryCall[] = [];
+    let hydrationReads = 0;
+    const updatedRow = {
+      ...hydratedMemoryRow(),
+      title: "Updated title",
+      summary: "Updated summary",
+      updated_at: "2026-06-26T00:00:01.000Z",
+    };
+    const mockClient = {
+      query: vi.fn().mockImplementation((sql: string, params?: unknown[]) => {
+        clientQueryCalls.push({ sql, params: params ?? [] });
+        if (sql === "BEGIN" || sql === "COMMIT" || sql === "ROLLBACK") {
+          return Promise.resolve({ rows: [] });
+        }
+        if (sql.includes("SELECT") && sql.includes("FROM memory_records mr")) {
+          hydrationReads += 1;
+          return Promise.resolve({
+            rows: [hydrationReads === 1 ? hydratedMemoryRow() : updatedRow],
+          });
+        }
+        if (sql.includes("UPDATE memory_records")) {
+          return Promise.resolve({ rows: [updatedRow] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const mockPool = {
+      connect: vi.fn().mockResolvedValue(mockClient),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    const updated = await repo.updateMemoryRecord({
+      id: 42,
+      organizationId: "org-a",
+      title: " Updated title ",
+      summary: " Updated summary ",
+    });
+
+    const updateCall = clientQueryCalls.find(({ sql }) =>
+      sql.includes("UPDATE memory_records"),
+    );
+    expect(updateCall?.params[3]).toBe("Updated title");
+    expect(updateCall?.params[5]).toBe("Updated summary");
+    expect(updated).toMatchObject({
+      id: 42,
+      title: "Updated title",
+      summary: "Updated summary",
+    });
+  });
+
   it("updateMemoryRecord rejects invalid enum and integer values before updating the row", async () => {
     const cases = [
       { kind: "note" as never, message: /kind/ },
