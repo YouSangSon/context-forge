@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Retrieval now trims direct organization identifiers before vector, lexical,
+  and hydration calls.
 - Ingest job creation now trims direct organization identifiers before
   insertion.
 - Canonical reindex now trims direct organization identifiers before chunk

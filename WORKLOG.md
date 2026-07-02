@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- 17:20 KST - Hardened retrieval organization normalization:
+  - `src/search/retrieve-memory.ts` now trims direct organization identifiers
+    before vector queries, lexical repository search, and hydration calls.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs, and legacy anonymous search still maps absent organization IDs to the
+    empty vector filter string.
+  - `tests/search/retrieve-memory.test.ts` covers trimmed vector, lexical, and
+    hydration parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/search/retrieve-memory.test.ts --reporter=dot`
+  failed the new retrieval organization trimming case because raw organization
+  ID text reached vector filters.
+- GREEN: `npx vitest run tests/search/retrieve-memory.test.ts --reporter=dot`
+  (`1` file passed; `38` tests passed)
+
+Verification:
+- `npx vitest run tests/search/retrieve-memory.test.ts tests/search/lexical-score.test.ts tests/search/rank-results.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `204` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2441`
+  tests passed, `34` skipped)
+
 - 17:17 KST - Hardened ingest job creation organization normalization:
   - `src/jobs/ingest-job-repository.ts` now trims direct organization
     identifiers before creating ingest job rows.

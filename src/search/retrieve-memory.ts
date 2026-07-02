@@ -41,7 +41,11 @@ export async function retrieveMemory(
   assertRetrieveMemoryInput(input);
   assertOrganizationId(input.organizationId, input.allowLegacyAnonymous, "retrieveMemory");
 
-  const organizationId = input.organizationId ?? "";
+  const normalizedInput: RetrieveMemoryInput = {
+    ...input,
+    organizationId: input.organizationId?.trim(),
+  };
+  const organizationId = normalizedInput.organizationId ?? "";
   const scopes = retrievalScopes(input);
   const lexicalQuery = normalizeOptionalText(input.query);
   const lexicalLimit = Math.min(
@@ -50,11 +54,11 @@ export async function retrieveMemory(
   );
 
   const [projectVectorHits, userVectorHits, lexicalRecords] = await Promise.all([
-    queryScope(input, organizationId, scopes[0]!, input.projectKey),
+    queryScope(normalizedInput, organizationId, scopes[0]!, input.projectKey),
     input.userScopeId
-      ? queryScope(input, organizationId, scopes[1]!, null)
+      ? queryScope(normalizedInput, organizationId, scopes[1]!, null)
       : Promise.resolve([]),
-    queryLexicalCandidates(input, scopes, lexicalLimit, lexicalQuery),
+    queryLexicalCandidates(normalizedInput, scopes, lexicalLimit, lexicalQuery),
   ]);
 
   const hits = [...projectVectorHits, ...userVectorHits];
@@ -69,7 +73,7 @@ export async function retrieveMemory(
   const hydratedRecords =
     ids.length === 0
       ? []
-      : await hydrateMemoryRecords(input, ids);
+      : await hydrateMemoryRecords(normalizedInput, ids);
 
   const recordsById = new Map<number, SearchMemoryResult>();
   for (const record of [...hydratedRecords, ...lexicalRecords]) {

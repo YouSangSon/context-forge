@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Ingest Job Organization Normalization
+## Current Loop - Retrieve Memory Organization Normalization
 
 Status:
-- Ingest job creation now trims direct organization identifiers before
-  insertion.
+- Retrieval now trims direct organization identifiers before vector, lexical,
+  and hydration calls.
 - Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused ingest job repository tests passed after the RED create
+- Focused retrieve-memory tests passed after the RED retrieval
   organization trimming reproducer.
-- Related ingest and indexing tests passed.
+- Related search ranking and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.
