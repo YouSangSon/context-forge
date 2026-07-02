@@ -393,7 +393,8 @@ export function createToolHandlers(input: {
     },
 
     async reindex_memory(toolInput) {
-      if (!toolInput.organizationId) {
+      const organizationId = toolInput.organizationId?.trim();
+      if (!organizationId) {
         throw new Error(
           "reindex_memory requires organizationId: omitting it would reindex chunks " +
             "across all tenants sharing the same scope, violating data isolation. " +
@@ -401,7 +402,6 @@ export function createToolHandlers(input: {
         );
       }
       assertProvidedScopeIdentifiers(toolInput);
-      const organizationId: string = toolInput.organizationId;
       const projectKey = requireProjectKey(toolInput.projectKey, "project");
       const userScopeId = resolveUserScopeId({
         cwd,
@@ -586,7 +586,7 @@ export function createToolHandlers(input: {
               scopeType: "project" as const,
               scopeId: requireProjectKey(toolInput.projectKey, scope),
             };
-      const organizationId = toolInput.organizationId ?? "default";
+      const organizationId = toolInput.organizationId?.trim() ?? "default";
 
       const memories = await withCanonicalRepository((repository) =>
         repository.listMemoryForGovernance(scopeRef, {

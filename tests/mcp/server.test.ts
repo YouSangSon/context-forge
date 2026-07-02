@@ -744,6 +744,23 @@ describe("createToolRegistry", () => {
     expect(services.embeddings.embedBatch).not.toHaveBeenCalled();
   });
 
+  it("rejects whitespace-only reindex organizationId before canonical service resolution", async () => {
+    const services = createCanonicalServices();
+    const resolveCanonicalServices = vi.fn(async () => services);
+    const registry = createToolRegistry({ resolveCanonicalServices });
+
+    await expect(
+      registry.reindex_memory({
+        organizationId: " \n\t ",
+        projectKey: "project-alpha",
+      }),
+    ).rejects.toThrow(/organizationId/);
+
+    expect(resolveCanonicalServices).not.toHaveBeenCalled();
+    expect(services.chunkRepository.listChunks).not.toHaveBeenCalled();
+    expect(services.vectorIndex.deleteByRecordIds).not.toHaveBeenCalled();
+  });
+
   it("rejects non-string scope identifiers before canonical service resolution", async () => {
     const services = createCanonicalServices();
     const resolveCanonicalServices = vi.fn(async () => services);
@@ -1167,7 +1184,7 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.reindex_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       projectKey: "project-alpha",
     });
 
@@ -1225,7 +1242,7 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.list_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       projectKey: "project-alpha",
       includeArchived: true,
       tag: "ops",

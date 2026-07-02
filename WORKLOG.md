@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- 18:27 KST - Hardened MCP governance handler organization normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
+    `reindex_memory` canonical reindex calls and `list_memory` governance
+    repository listing calls.
+  - Whitespace-only `reindex_memory` organization IDs are rejected before
+    canonical service resolution.
+  - `tests/mcp/server.test.ts` covers trimmed reindex/list-memory inputs and
+    the early whitespace-only reindex rejection path.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed the updated list-memory governance case because raw organization ID
+  text reached `listMemoryForGovernance`.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `134` tests passed)
+
+Verification:
+- `npx vitest run tests/store/canonical-indexing.test.ts tests/audit/audit-write.test.ts --reporter=dot`
+  (`2` files passed; `90` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2459`
+  tests passed, `34` skipped)
+
 - 18:22 KST - Hardened context pack handler organization normalization:
   - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
     `build_context_pack` runs service-backed retrieval and persists context
