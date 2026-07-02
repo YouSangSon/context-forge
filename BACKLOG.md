@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository completion now rejects malformed direct run
+  completion inputs before updating compaction run rows.
 - Unarchive restore now rejects malformed archive scope/kind/durability enum
   values before canonical restore, chunking, embedding, or vector upsert side
   effects run.

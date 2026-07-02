@@ -10135,3 +10135,26 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2209` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened compaction run completion input mapping:
+  - Added RED coverage showing malformed direct `completeCompactionRun`
+    run id, status, counters, and error message inputs resolved instead of
+    failing before SQL.
+  - Completion now validates all direct fields before issuing the
+    `compaction_runs` update.
+  - No `DECISIONS.md` entry: this is repository input-boundary validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed completion inputs resolved instead of rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `91` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/apply-compaction.test.ts tests/compact/compact-memory.test.ts tests/compact/outbox-sweeper.test.ts tests/compact/unarchive-compaction.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`6` files passed; `363` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2217` tests passed, `34` skipped)
+- `git diff --check` (passed)

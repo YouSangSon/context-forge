@@ -366,6 +366,88 @@ describe("MemoryArchiveRepository.markQdrantStatus", () => {
   });
 });
 
+describe("MemoryArchiveRepository.completeCompactionRun", () => {
+  const baseInput = {
+    runId: 7,
+    status: "completed" as const,
+    archivedCount: 3,
+    duplicateCount: 1,
+    decayCount: 2,
+    qdrantFailed: 0,
+  };
+
+  it("updates run outcome counters and optional error message", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.completeCompactionRun({
+      ...baseInput,
+      status: "failed",
+      errorMessage: "qdrant cleanup failed",
+    });
+
+    const sql = query.mock.calls[0]![0] as string;
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(sql).toContain("UPDATE compaction_runs");
+    expect(sql).toContain("completed_at = NOW()");
+    expect(params).toEqual([
+      7,
+      "failed",
+      3,
+      1,
+      2,
+      0,
+      "qdrant cleanup failed",
+    ]);
+  });
+
+  it.each([
+    {
+      inputPatch: { runId: 0 },
+      message: "runId must be a positive safe integer",
+    },
+    {
+      inputPatch: { status: "paused" },
+      message: 'status must be "pending", "completed", or "failed"',
+    },
+    {
+      inputPatch: { archivedCount: -1 },
+      message: "archivedCount must be a non-negative safe integer",
+    },
+    {
+      inputPatch: { duplicateCount: 1.5 },
+      message: "duplicateCount must be a non-negative safe integer",
+    },
+    {
+      inputPatch: { decayCount: Number.NaN },
+      message: "decayCount must be a non-negative safe integer",
+    },
+    {
+      inputPatch: { qdrantFailed: -1 },
+      message: "qdrantFailed must be a non-negative safe integer",
+    },
+    {
+      inputPatch: { errorMessage: 503 },
+      message: "errorMessage must be a string when provided",
+    },
+  ])("rejects malformed direct completion inputs before querying %#", async ({
+    inputPatch,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.completeCompactionRun({
+        ...baseInput,
+        ...inputPatch,
+      } as never),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+});
+
 describe("MemoryArchiveRepository.findPendingQdrantCleanup", () => {
   it("rejects malformed direct limits before querying", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));

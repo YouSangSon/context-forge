@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Unarchive Archive Enum Validation
+## Current Loop - Compaction Run Completion Input Validation
 
 Status:
-- Unarchive restore now validates archive scope/kind/durability enum fields
-  before calling canonical restore or building chunk/vector payloads.
-- Malformed archive model enum values fail per archive outcome before restore
-  side effects run.
+- Memory archive repository completion now validates run id, status, outcome
+  counters, and optional error message before updating compaction run rows.
+- Malformed completion inputs fail before SQL instead of being sent to
+  Postgres.
 
 Verification:
-- Focused unarchive compaction tests passed after a RED malformed-archive
+- Focused memory archive repository tests passed after a RED direct-input
   reproducer.
 - Related archive repository, compaction, outbox, and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.

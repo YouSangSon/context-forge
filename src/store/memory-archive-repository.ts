@@ -352,6 +352,8 @@ export function createMemoryArchiveRepository(
     },
 
     async completeCompactionRun(input) {
+      assertCompleteCompactionRunInput(input);
+
       await pool.query(
         `
           UPDATE compaction_runs
@@ -672,6 +674,18 @@ function assertQdrantCleanupClaimInput(value: unknown): asserts value is {
   assertValidDate(candidate.now, "now");
 }
 
+function assertCompleteCompactionRunInput(
+  input: CompleteCompactionRunInput,
+): void {
+  assertPositiveSafeInteger(input.runId, "runId");
+  assertCompactionRunStatus(input.status, "status");
+  assertNonNegativeSafeInteger(input.archivedCount, "archivedCount");
+  assertNonNegativeSafeInteger(input.duplicateCount, "duplicateCount");
+  assertNonNegativeSafeInteger(input.decayCount, "decayCount");
+  assertNonNegativeSafeInteger(input.qdrantFailed, "qdrantFailed");
+  assertOptionalString(input.errorMessage, "errorMessage");
+}
+
 function toRecentApplyRunCount(value: unknown): number {
   let count: number;
   try {
@@ -746,12 +760,19 @@ function mapRunRow(row: {
 }
 
 function toCompactionRunStatus(value: unknown): CompactionRunStatus {
-  if (value === "pending" || value === "completed" || value === "failed") {
-    return value;
+  assertCompactionRunStatus(value, "compaction run status");
+  return value;
+}
+
+function assertCompactionRunStatus(
+  value: unknown,
+  fieldName: string,
+): asserts value is CompactionRunStatus {
+  if (value !== "pending" && value !== "completed" && value !== "failed") {
+    throw new Error(
+      `${fieldName} must be "pending", "completed", or "failed"`,
+    );
   }
-  throw new Error(
-    'compaction run status must be "pending", "completed", or "failed"',
-  );
 }
 
 function toArchiveScopeType(value: unknown): string {
