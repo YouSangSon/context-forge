@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- MCP tool audit instrumentation now trims direct organization identifiers
+  before writing success or error audit rows.
 - Context pack run persistence now trims direct organization identifiers before
   writing run rows.
 - Canonical chunk listing now trims direct organization identifiers before

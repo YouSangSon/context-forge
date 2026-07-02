@@ -57,8 +57,10 @@ function instrumentToolRegistry(input: {
     },
     run: () => Promise<T>,
   ): Promise<T> {
+    let organizationId = "default";
     if (toolInput.organizationId !== undefined) {
       assertNonBlankText(toolInput.organizationId, "organizationId");
+      organizationId = toolInput.organizationId.trim();
     }
     const projectKey = optionalStringField(toolInput.projectKey, "projectKey");
     optionalStringField(toolInput.userScopeId, "userScopeId");
@@ -96,7 +98,7 @@ function instrumentToolRegistry(input: {
       // the caller.
       void auditLog
         ?.record({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId,
           actor: defaultActor,
           tool: toolName,
           projectKey: projectKey ?? null,
@@ -119,7 +121,7 @@ function instrumentToolRegistry(input: {
 
       void auditLog
         ?.record({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId,
           actor: defaultActor,
           tool: toolName,
           projectKey: projectKey ?? null,

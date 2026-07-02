@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 18:20 KST - Hardened MCP audit wrapper organization normalization:
+  - `src/mcp/tool-registry.ts` now trims direct organization identifiers before
+    best-effort success or error audit rows are written.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/audit/audit-write.test.ts` covers trimmed successful audit rows.
+
+RED/GREEN:
+- RED: `npx vitest run tests/audit/audit-write.test.ts --reporter=dot`
+  failed the new audit organization trimming case because raw organization ID
+  text reached `auditLog.record`.
+- GREEN: `npx vitest run tests/audit/audit-write.test.ts --reporter=dot`
+  (`1` file passed; `8` tests passed)
+
+Verification:
+- `npx vitest run tests/mcp/tool-registry.test.ts tests/mcp/server.test.ts tests/audit/audit-truncation.test.ts --reporter=dot`
+  (`3` files passed; `203` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2458`
+  tests passed, `34` skipped)
+
 - 18:14 KST - Hardened context pack run organization normalization:
   - `src/store/canonical-indexing.ts` now trims direct organization
     identifiers before `createContextPackRun` writes

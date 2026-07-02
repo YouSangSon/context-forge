@@ -104,6 +104,30 @@ describe("audit logging at the tool boundary", () => {
     );
   });
 
+  it("trims organizationId before writing successful audit rows", async () => {
+    const auditLog = buildAuditLog();
+    const repository = buildRepository();
+    const registry = createToolRegistry({
+      repository,
+      auditLog,
+      defaultActor: "alice@example.com",
+    });
+
+    await registry.add_memory({
+      projectKey: "project-alpha",
+      organizationId: " dev-team ",
+      kind: "decision",
+      content: "Decision: ship feature X",
+    });
+
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "dev-team",
+        outcome: "ok",
+      }),
+    );
+  });
+
   it("records an error audit row when the tool throws", async () => {
     const auditLog = buildAuditLog();
     const repository = buildRepository();
