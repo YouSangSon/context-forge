@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- 15:44 KST - Hardened OAuth protected-resource direct string validation:
+  - `src/app/oauth-protected-resource.ts` now rejects blank direct metadata
+    URL, resource, authorization server, supported-scope, insufficient-scope,
+    and metadata URL resource strings.
+  - Challenge helpers fail before building `WWW-Authenticate` headers from
+    malformed direct OAuth protected-resource config.
+  - `tests/app/oauth-protected-resource.test.ts` covers blank direct metadata
+    and scope strings.
+
+RED/GREEN:
+- RED: `npx vitest run tests/app/oauth-protected-resource.test.ts --reporter=dot`
+  failed the new blank-string challenge config cases because helpers only
+  checked types.
+- GREEN: `npx vitest run tests/app/oauth-protected-resource.test.ts --reporter=dot`
+  (`1` file passed; `16` tests passed)
+
+Verification:
+- `npx vitest run tests/app/oauth-protected-resource.test.ts tests/app/oauth-token-auth.test.ts tests/app/server.test.ts tests/app/mcp-http.test.ts tests/app/operator-server-boundary.test.ts --reporter=dot`
+  (`5` files passed; `170` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2406`
+  tests passed, `34` skipped)
+
 - 15:41 KST - Hardened operator server direct ServiceConfig numeric validation:
   - `src/app/server.ts` now validates direct config ports as safe integers in
     the Node listen range before construction/startup.

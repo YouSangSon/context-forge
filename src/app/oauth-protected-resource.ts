@@ -127,12 +127,12 @@ export function buildOAuthInsufficientScopeHeader(
   scope: string,
 ): string {
   assertOAuthProtectedResourceConfig(config);
-  assertString(scope, "scope");
+  assertNonBlankString(scope, "scope");
   return `Bearer error="insufficient_scope", resource_metadata="${quoteAuthParam(config.metadataUrl)}", scope="${quoteAuthParam(scope)}"`;
 }
 
 export function buildProtectedResourceMetadataUrl(resource: string): string {
-  assertString(resource, "resource");
+  assertNonBlankString(resource, "resource");
   const parsed = new URL(resource);
   const path = parsed.pathname === "/mcp" ? "/mcp" : "";
   return `${parsed.origin}${WELL_KNOWN_BASE}${path}`;
@@ -230,7 +230,7 @@ export function assertOAuthProtectedResourceConfig(
   }
 
   const candidate = config as Record<string, unknown>;
-  assertString(candidate.metadataUrl, "metadataUrl");
+  assertNonBlankString(candidate.metadataUrl, "metadataUrl");
 
   if (
     typeof candidate.metadata !== "object" ||
@@ -241,12 +241,12 @@ export function assertOAuthProtectedResourceConfig(
   }
 
   const metadata = candidate.metadata as Record<string, unknown>;
-  assertString(metadata.resource, "metadata.resource");
+  assertNonBlankString(metadata.resource, "metadata.resource");
   if (!Array.isArray(metadata.authorization_servers)) {
     throw new Error("metadata.authorization_servers must be an array");
   }
   for (const [index, server] of metadata.authorization_servers.entries()) {
-    assertString(server, `metadata.authorization_servers[${index}]`);
+    assertNonBlankString(server, `metadata.authorization_servers[${index}]`);
   }
   if (
     !Array.isArray(metadata.bearer_methods_supported) ||
@@ -260,7 +260,7 @@ export function assertOAuthProtectedResourceConfig(
   }
 
   for (const [index, scope] of metadata.scopes_supported.entries()) {
-    assertString(scope, `metadata.scopes_supported[${index}]`);
+    assertNonBlankString(scope, `metadata.scopes_supported[${index}]`);
   }
 }
 
@@ -270,6 +270,16 @@ function assertString(
 ): asserts value is string {
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string`);
+  }
+}
+
+function assertNonBlankString(
+  value: unknown,
+  fieldName: string,
+): asserts value is string {
+  assertString(value, fieldName);
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
   }
 }
 

@@ -201,6 +201,43 @@ describe("OAuth protected resource challenge helpers", () => {
         },
       } as unknown as typeof config),
     ).toThrow("metadata.scopes_supported[1] must be a string");
+    expect(() =>
+      buildOAuthWwwAuthenticateHeader({
+        ...config,
+        metadataUrl: " \n\t ",
+      }),
+    ).toThrow("metadataUrl must contain non-whitespace text");
+    expect(() =>
+      buildOAuthWwwAuthenticateHeader({
+        ...config,
+        metadata: {
+          ...config.metadata,
+          resource: "",
+        },
+      }),
+    ).toThrow("metadata.resource must contain non-whitespace text");
+    expect(() =>
+      buildOAuthWwwAuthenticateHeader({
+        ...config,
+        metadata: {
+          ...config.metadata,
+          authorization_servers: ["https://auth.example.com", ""],
+        },
+      }),
+    ).toThrow(
+      "metadata.authorization_servers[1] must contain non-whitespace text",
+    );
+    expect(() =>
+      buildOAuthWwwAuthenticateHeader({
+        ...config,
+        metadata: {
+          ...config.metadata,
+          scopes_supported: ["akasha:memory", " \n\t "],
+        },
+      }),
+    ).toThrow(
+      "metadata.scopes_supported[1] must contain non-whitespace text",
+    );
   });
 
   it("builds an insufficient_scope Bearer challenge", () => {
@@ -225,7 +262,13 @@ describe("OAuth protected resource challenge helpers", () => {
       buildOAuthInsufficientScopeHeader(config, 12 as unknown as string),
     ).toThrow("scope must be a string");
     expect(() =>
+      buildOAuthInsufficientScopeHeader(config, " \n\t "),
+    ).toThrow("scope must contain non-whitespace text");
+    expect(() =>
       buildProtectedResourceMetadataUrl(12 as unknown as string),
     ).toThrow("resource must be a string");
+    expect(() =>
+      buildProtectedResourceMetadataUrl(" \n\t "),
+    ).toThrow("resource must contain non-whitespace text");
   });
 });

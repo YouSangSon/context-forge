@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- OAuth protected-resource challenge helpers now reject blank direct metadata,
+  resource, authorization server, and scope strings.
 - Operator server direct `ServiceConfig` now validates port and Postgres pool
   numeric fields before construction/startup while preserving `port: 0`.
 - Rate limiter decisions now validate `allowed`, `remaining`, and
