@@ -88,8 +88,22 @@ const malformedOptionCases = [
     message: "bearerTokens must be an array",
   },
   {
+    input: () => ({ bearerTokens: [" \n\t "] }),
+    message: "bearerTokens[0] must contain non-whitespace text",
+  },
+  {
     input: () => ({ bearerTokens: [null] }),
     message: "bearerTokens[0] must be an object",
+  },
+  {
+    input: () => ({ bearerTokens: [{ token: "" }] }),
+    message: "bearerTokens[0].token must contain non-whitespace text",
+  },
+  {
+    input: () => ({
+      bearerTokens: [{ token: "token-a", organizationId: " \n\t " }],
+    }),
+    message: "bearerTokens[0].organizationId must contain non-whitespace text",
   },
   {
     input: () => ({ dependencyProbes: null }),

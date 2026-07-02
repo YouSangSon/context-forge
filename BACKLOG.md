@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Operator server direct `bearerTokens` options now reject blank token strings
+  and blank organization bindings before server construction/startup.
 - Goal-run row mapping now rejects malformed returned run and iteration scalar
   metadata before exposing goal state.
 - Audit log row mapping now rejects malformed returned organization, actor,

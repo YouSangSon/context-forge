@@ -107,7 +107,18 @@ export type CreateOperatorServerOptions = {
 function normalizeTokens(
   tokens: readonly (string | BearerToken)[],
 ): BearerToken[] {
-  return tokens.map((t) => (typeof t === "string" ? { token: t } : t));
+  return tokens.map((t) => {
+    if (typeof t === "string") {
+      return { token: t.trim() };
+    }
+    return {
+      ...t,
+      token: t.token.trim(),
+      ...(t.organizationId !== undefined
+        ? { organizationId: t.organizationId.trim() }
+        : {}),
+    };
+  });
 }
 
 // Loopback hosts are safe to expose without auth — only processes on the
@@ -753,18 +764,26 @@ function assertOptionalBearerTokens(value: unknown): void {
   }
   for (const [index, token] of value.entries()) {
     if (typeof token === "string") {
+      assertNonBlankString(token, `bearerTokens[${index}]`);
       continue;
     }
     const entry = assertObject(token, `bearerTokens[${index}]`);
     if (typeof entry.token !== "string") {
       throw new Error(`bearerTokens[${index}].token must be a string`);
     }
+    assertNonBlankString(entry.token, `bearerTokens[${index}].token`);
     if (
       entry.organizationId !== undefined &&
       typeof entry.organizationId !== "string"
     ) {
       throw new Error(
         `bearerTokens[${index}].organizationId must be a string`,
+      );
+    }
+    if (entry.organizationId !== undefined) {
+      assertNonBlankString(
+        entry.organizationId,
+        `bearerTokens[${index}].organizationId`,
       );
     }
   }
@@ -808,6 +827,15 @@ function assertOptionalBackgroundQueueMetrics(value: unknown): void {
 function assertString(value: unknown, fieldName: string): asserts value is string {
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string`);
+  }
+}
+
+function assertNonBlankString(
+  value: string,
+  fieldName: string,
+): void {
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
   }
 }
 

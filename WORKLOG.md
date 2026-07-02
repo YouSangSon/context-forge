@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- 15:27 KST - Hardened operator server direct bearer token validation:
+  - `src/app/server.ts` now rejects blank direct `bearerTokens` string entries
+    and blank `BearerToken.token` / `BearerToken.organizationId` values before
+    operator server construction or startup.
+  - Direct token normalization now trims injected token and organization values
+    to match the env-derived token parser.
+  - `tests/app/operator-server-boundary.test.ts` covers malformed direct token
+    strings and blank org bindings for both `createOperatorServer` and
+    `startOperatorServer`.
+
+RED/GREEN:
+- RED: `npx vitest run tests/app/operator-server-boundary.test.ts --reporter=dot`
+  failed the new direct bearer token cases because blank token/org values
+  passed option validation.
+- GREEN: `npx vitest run tests/app/operator-server-boundary.test.ts --reporter=dot`
+  (`1` file passed; `38` tests passed)
+
+Verification:
+- `npx vitest run tests/app/operator-server-boundary.test.ts tests/app/server.test.ts tests/app/bearer-auth.test.ts tests/app/mcp-http.test.ts tests/app/mcp-http-boundary.test.ts --reporter=dot`
+  (`5` files passed; `164` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2380`
+  tests passed, `34` skipped)
+
 - Hardened vector upsert point entry validation:
   - `src/vector/organization-id.ts` now validates each upsert `VectorPoint`
     entry is an object before reading `point.payload`.

@@ -4,17 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Goal Run Row Scalar Validation
+## Current Loop - Operator Bearer Token Boundary Validation
 
 Status:
-- Goal-run row mapping now validates returned run and iteration scalar
-  metadata before exposing goal state.
-- Malformed goal-run scalar rows fail at the repository boundary instead of
-  leaking invalid continuation metadata to callers.
+- Direct operator server `bearerTokens` options now reject blank token strings
+  and blank organization bindings before server construction/startup.
+- Direct token normalization now trims injected token and organization values,
+  matching the env-derived token path.
 
 Verification:
-- Focused goal-run repository tests passed after RED scalar-row reproducers.
-- Related goal-run handler, context, repeat-check, and MCP server tests passed.
+- Focused operator-server boundary tests passed after RED direct-token
+  reproducers.
+- Related server, bearer-auth, and MCP HTTP tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.
