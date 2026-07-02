@@ -106,6 +106,41 @@ export function createTokenBucketLimiter(
   };
 }
 
+export function assertRateLimitDecision(
+  value: unknown,
+): asserts value is RateLimitDecision {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value)
+  ) {
+    throw new Error("rate-limit decision must be an object");
+  }
+
+  const candidate = value as Record<string, unknown>;
+  if (typeof candidate.allowed !== "boolean") {
+    throw new Error("rate-limit decision.allowed must be a boolean");
+  }
+  if (
+    typeof candidate.remaining !== "number" ||
+    !Number.isSafeInteger(candidate.remaining) ||
+    candidate.remaining < 0
+  ) {
+    throw new Error(
+      "rate-limit decision.remaining must be a non-negative integer",
+    );
+  }
+  if (
+    typeof candidate.retryAfterMs !== "number" ||
+    !Number.isFinite(candidate.retryAfterMs) ||
+    candidate.retryAfterMs < 0
+  ) {
+    throw new Error(
+      "rate-limit decision.retryAfterMs must be a finite non-negative number",
+    );
+  }
+}
+
 function sweepStaleBuckets(
   buckets: Map<string, BucketState>,
   nowMs: number,

@@ -18,7 +18,10 @@ import {
   setOAuthWwwAuthenticateHeader,
   type OAuthProtectedResourceConfig,
 } from "./oauth-protected-resource.js";
-import type { RateLimiter } from "./middleware/rate-limit.js";
+import {
+  assertRateLimitDecision,
+  type RateLimiter,
+} from "./middleware/rate-limit.js";
 import { checkOAuthScopes } from "./middleware/oauth-token-auth.js";
 
 export type HandleMcpHttpRequestOptions = {
@@ -91,6 +94,7 @@ export async function handleMcpHttpRequest(
   if (rateLimiter) {
     const key = matchedToken?.token ?? "anonymous";
     const decision = rateLimiter.check(key);
+    assertRateLimitDecision(decision);
     if (!decision.allowed) {
       res.setHeader(
         "Retry-After",

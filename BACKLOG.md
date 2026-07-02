@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Rate limiter decisions now validate `allowed`, `remaining`, and
+  `retryAfterMs` before HTTP/MCP handlers write rate-limit responses.
 - OAuth verifier fallback results now validate token strings, optional
   organization bindings, and optional scopes before authentication succeeds.
 - MCP HTTP direct `bearerTokens` options now validate token entry objects,

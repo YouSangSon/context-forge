@@ -4,17 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - OAuth Verifier Result Boundary Validation
+## Current Loop - Rate Limit Decision Boundary Validation
 
 Status:
-- OAuth verifier fallback results now validate token, optional organization
-  binding, and optional scopes before becoming an authenticated bearer.
-- Malformed injected verifier results now fail at the auth boundary instead of
-  leaking blank org bindings or malformed scopes into HTTP/MCP authorization.
+- Rate limiter `check()` decisions now validate `allowed`, `remaining`, and
+  `retryAfterMs` before HTTP/MCP handlers act on them.
+- Malformed injected limiter decisions now fail at the boundary instead of
+  writing invalid `Retry-After` headers.
 
 Verification:
-- Focused bearer-auth tests passed after RED verifier-result reproducers.
-- Related OAuth, MCP HTTP, server, and operator boundary tests passed.
+- Focused rate-limit and MCP HTTP boundary tests passed after RED malformed
+  decision reproducers.
+- Related MCP HTTP, server, and operator boundary tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

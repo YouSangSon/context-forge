@@ -39,6 +39,7 @@ import {
   type BackgroundQueueMetricsCollector,
 } from "./background-queue-metrics.js";
 import {
+  assertRateLimitDecision,
   createTokenBucketLimiter,
   loadRateLimitFromEnv,
   type RateLimiter,
@@ -318,6 +319,7 @@ export function createOperatorServer(
         if (rateLimiter) {
           const key = matchedToken?.token ?? "anonymous";
           const decision = rateLimiter.check(key);
+          assertRateLimitDecision(decision);
           if (!decision.allowed) {
             res.writeHead(429, {
               "content-type": "application/json",

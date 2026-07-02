@@ -102,4 +102,22 @@ describe("handleMcpHttpRequest boundary validation", () => {
   ])("rejects malformed direct options %#", async ({ input, message }) => {
     await expect(handleMcpHttpRequest(input as never)).rejects.toThrow(message);
   });
+
+  it("rejects malformed rate limiter decisions before writing Retry-After", async () => {
+    const options = {
+      ...baseOptions(),
+      rateLimiter: {
+        check: vi.fn().mockReturnValue({
+          allowed: false,
+          remaining: 0,
+          retryAfterMs: "soon",
+        }),
+      },
+    };
+
+    await expect(handleMcpHttpRequest(options as never)).rejects.toThrow(
+      "rate-limit decision.retryAfterMs must be a finite non-negative number",
+    );
+    expect(options.res.setHeader).not.toHaveBeenCalled();
+  });
 });

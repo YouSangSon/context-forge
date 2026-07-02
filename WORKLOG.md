@@ -2,6 +2,37 @@
 
 ## 2026-07-02
 
+- 15:36 KST - Hardened rate limiter decision validation:
+  - `src/app/middleware/rate-limit.ts` now exports
+    `assertRateLimitDecision` for direct/injected limiter decisions.
+  - HTTP and MCP HTTP handlers validate `allowed`, `remaining`, and
+    `retryAfterMs` immediately after `rateLimiter.check()` returns.
+  - Malformed limiter decisions now fail before handlers write invalid
+    `Retry-After` headers.
+  - `tests/app/rate-limit.test.ts` and
+    `tests/app/mcp-http-boundary.test.ts` cover malformed decision objects and
+    invalid retry-after values.
+
+RED/GREEN:
+- RED: `npx vitest run tests/app/rate-limit.test.ts --reporter=dot` failed
+  because `assertRateLimitDecision` did not exist.
+- RED: `npx vitest run tests/app/mcp-http-boundary.test.ts --reporter=dot`
+  failed because malformed `retryAfterMs` was accepted.
+- GREEN: `npx vitest run tests/app/rate-limit.test.ts --reporter=dot` (`1`
+  file passed; `35` tests passed)
+- GREEN: `npx vitest run tests/app/mcp-http-boundary.test.ts --reporter=dot`
+  (`1` file passed; `17` tests passed)
+
+Verification:
+- `npx vitest run tests/app/rate-limit.test.ts tests/app/mcp-http-boundary.test.ts tests/app/mcp-http.test.ts tests/app/server.test.ts tests/app/operator-server-boundary.test.ts --reporter=dot`
+  (`5` files passed; `177` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2398`
+  tests passed, `34` skipped)
+
 - 15:33 KST - Hardened OAuth verifier result validation:
   - `src/app/middleware/bearer-auth.ts` now validates OAuth verifier fallback
     results before treating them as authenticated bearer tokens.
