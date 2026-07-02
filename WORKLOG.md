@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- 18:08 KST - Hardened canonical chunk replace organization normalization:
+  - `src/store/canonical-indexing.ts` now trims direct record organization
+    identifiers before `replaceChunksForRecord` transaction DELETE parameters.
+  - `replaceChunksForRecordWithPendingIngest` also uses the normalized
+    organization ID for transaction DELETE and pending ingest job INSERT
+    parameters.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/store/canonical-indexing.test.ts` covers trimmed replace and
+    pending-replace parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  failed the new replace organization trimming cases because raw organization
+  ID text reached DELETE parameters.
+- GREEN: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`1` file passed; `80` tests passed)
+
+Verification:
+- `npx vitest run tests/compact/ingest-sweeper.test.ts tests/compact/unarchive-compaction.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`3` files passed; `214` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2455`
+  tests passed, `34` skipped)
+
 - 18:05 KST - Hardened canonical chunk insert organization normalization:
   - `src/store/canonical-indexing.ts` now trims direct record organization
     identifiers before `insertChunks` writes `memory_chunks.organization_id`.

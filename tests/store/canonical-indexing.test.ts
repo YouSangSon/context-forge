@@ -1624,6 +1624,44 @@ describe("canonical indexing", () => {
     expect(mockPool.connect).not.toHaveBeenCalled();
   });
 
+  it("replaceChunksForRecord trims record organizationId before deleting existing chunks", async () => {
+    const clientQueryCalls: { sql: string; params: unknown[] }[] = [];
+    const mockClient = {
+      query: vi.fn().mockImplementation((sql: string, params?: unknown[]) => {
+        clientQueryCalls.push({ sql, params: params ?? [] });
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const mockPool = {
+      query: vi.fn(),
+      connect: vi.fn().mockResolvedValue(mockClient),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await repo.replaceChunksForRecord!({
+      record: {
+        ...createRecord({ id: 501, content: "replacement chunk" }),
+        organizationId: " org-a ",
+      },
+      chunks: [],
+      embedding: {
+        provider: "openai",
+        model: "text-embedding-3-small",
+        dimensions: 1536,
+        version: "v1",
+        targetTokens: 800,
+        overlapTokens: 120,
+      },
+    });
+
+    const deleteQuery = clientQueryCalls.find((call) =>
+      call.sql.includes("DELETE FROM memory_chunks"),
+    );
+    expect(deleteQuery?.params).toEqual([501, "org-a"]);
+    expect(mockClient.release).toHaveBeenCalledOnce();
+  });
+
   it("replaceChunksForRecordWithPendingIngest rejects invalid nextRetryAt before connecting", async () => {
     const mockPool = {
       query: vi.fn(),
@@ -1734,7 +1772,7 @@ describe("canonical indexing", () => {
     const result = await repo.replaceChunksForRecordWithPendingIngest!({
       record: {
         id: 501,
-        organizationId: "org-a",
+        organizationId: " org-a ",
         sourceId: 1,
         scopeType: "project",
         scopeId: "project-alpha",
@@ -1781,6 +1819,10 @@ describe("canonical indexing", () => {
       expect.stringContaining("INSERT INTO ingest_jobs"),
       "COMMIT",
     ]);
+    const deleteQuery = clientQueryCalls.find((call) =>
+      call.sql.includes("DELETE FROM memory_chunks"),
+    );
+    expect(deleteQuery?.params).toEqual([501, "org-a"]);
     const ingestInsert = clientQueryCalls.find((call) =>
       call.sql.includes("INSERT INTO ingest_jobs"),
     );

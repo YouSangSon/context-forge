@@ -180,8 +180,9 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
 
     async replaceChunksForRecord(input) {
       assertChunkWriteInput(input);
-      const organizationId = input.record.organizationId ?? "default";
-      assertNonBlankText(organizationId, "organizationId");
+      const rawOrganizationId = input.record.organizationId ?? "default";
+      assertNonBlankText(rawOrganizationId, "organizationId");
+      const organizationId = rawOrganizationId.trim();
       const client = await pool.connect();
 
       try {
@@ -207,8 +208,9 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
 
     async replaceChunksForRecordWithPendingIngest(input) {
       assertReplaceChunksWithPendingIngestInput(input);
-      const organizationId = input.record.organizationId ?? "default";
-      assertNonBlankText(organizationId, "organizationId");
+      const rawOrganizationId = input.record.organizationId ?? "default";
+      assertNonBlankText(rawOrganizationId, "organizationId");
+      const organizationId = rawOrganizationId.trim();
       const client = await pool.connect();
 
       try {
