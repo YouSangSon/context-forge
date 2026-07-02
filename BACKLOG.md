@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory listing now trims direct organization identifiers before building
+  query parameters.
 - Memory lexical search now trims direct organization identifiers before
   building query parameters.
 - Goal-run close operations now trim direct organization identifiers before

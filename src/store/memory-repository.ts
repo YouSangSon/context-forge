@@ -381,11 +381,15 @@ export function createMemoryRepository(
 
     async listMemory(scope, options) {
       assertOrganizationId(options?.organizationId, options?.allowLegacyAnonymous, "listMemory");
+      const organizationId =
+        options?.organizationId === undefined
+          ? undefined
+          : options.organizationId.trim();
       const limit = clampListLimit(options?.limit);
       const params: unknown[] = [scope.scopeType, scope.scopeId];
       let orgClause = "";
-      if (options?.organizationId !== undefined) {
-        const orgIndex = params.push(options.organizationId);
+      if (organizationId !== undefined) {
+        const orgIndex = params.push(organizationId);
         orgClause = ` AND mr.organization_id = $${orgIndex}`;
       }
       const limitIndex = params.push(limit);

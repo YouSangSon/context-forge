@@ -840,6 +840,25 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     ).resolves.toEqual([]);
   });
 
+  it("listMemory trims organizationId before querying", async () => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.listMemory(
+      { scopeType: "project", scopeId: "proj-x" },
+      { organizationId: " org-a " },
+    );
+
+    expect(queryCalls[0]?.params).toContain("org-a");
+    expect(queryCalls[0]?.params).not.toContain(" org-a ");
+  });
+
   it("getMemoryRecordsByIds throws when organizationId is undefined and allowLegacyAnonymous is not set (SEC-read)", () => {
     const mockPool = { query: vi.fn() };
     const repo = createMemoryRepository(mockPool as never);
