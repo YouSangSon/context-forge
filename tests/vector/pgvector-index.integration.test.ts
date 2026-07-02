@@ -839,6 +839,17 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
 
     expect(query).not.toHaveBeenCalled();
   });
+
+  it("deleteByRecordIds rejects non-array record id lists before SQL", async () => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.deleteByRecordIds(null as never),
+    ).rejects.toThrow("deleteByRecordIds: recordIds must be an array");
+
+    expect(query).not.toHaveBeenCalled();
+  });
 });
 
 describe("pgvector adapter — ensureCollection SQL shape", () => {

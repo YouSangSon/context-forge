@@ -1076,6 +1076,23 @@ describe("createQdrantVectorIndex — deleteByRecordIds", () => {
     expect(client.delete).not.toHaveBeenCalled();
   });
 
+  it("rejects non-array record id lists before Qdrant deleteByRecordIds", async () => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.deleteByRecordIds(null as never),
+    ).rejects.toThrow("deleteByRecordIds: recordIds must be an array");
+
+    expect(client.delete).not.toHaveBeenCalled();
+  });
+
   it("skips Qdrant call when recordIds array is empty (data-loss guard)", async () => {
     const client = {
       query: vi.fn(),

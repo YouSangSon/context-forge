@@ -9564,3 +9564,29 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`81` files passed, `2` skipped; `2154` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened vector delete-by-record ID list boundaries:
+  - Added RED coverage showing Qdrant and pgvector `deleteByRecordIds` threw
+    incidental `recordIds.length` property-access errors for `null` record-ID
+    list inputs.
+  - Qdrant and pgvector record-ID list guards now accept unknown inputs, reject
+    non-arrays with `deleteByRecordIds: recordIds must be an array`, and still
+    validate each record ID as a positive safe integer.
+  - Both adapters now run record-ID list validation before the empty-list
+    data-loss guard, preserving empty delete-by-record behavior while failing
+    malformed inputs before Qdrant or SQL calls.
+  - No `DECISIONS.md` entry: this is adapter input hardening for the existing
+    vector delete-by-record contract, not a new durable architecture decision.
+
+Verification:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed with `Cannot read properties of null (reading 'length')`.
+- GREEN focused: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`2` files passed; `139` tests passed; `12` skipped)
+- Related: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+  (`7` files passed; `317` tests passed; `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2156` tests passed, `34` skipped)
+- `git diff --check` (passed)

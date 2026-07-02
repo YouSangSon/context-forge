@@ -154,8 +154,8 @@ export function createQdrantVectorIndex(
       assertOptionalVectorOrganizationId(options.organizationId);
 
       // Guard: an empty/null filter would delete the entire collection.
-      if (recordIds.length === 0) return;
       assertQdrantRecordIds(recordIds);
+      if (recordIds.length === 0) return;
       const recordIdFilter = {
         should: recordIds.map((id) => ({
           key: "memory_record_id",
@@ -286,7 +286,11 @@ function assertQdrantPositiveSafeInteger(
   }
 }
 
-function assertQdrantRecordIds(recordIds: readonly unknown[]): void {
+function assertQdrantRecordIds(recordIds: unknown): asserts recordIds is readonly number[] {
+  if (!Array.isArray(recordIds)) {
+    throw new Error("deleteByRecordIds: recordIds must be an array");
+  }
+
   for (const [index, recordId] of recordIds.entries()) {
     assertQdrantPositiveSafeInteger(recordId, `recordIds[${index}]`);
   }

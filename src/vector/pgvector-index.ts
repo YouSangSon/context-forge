@@ -422,8 +422,8 @@ export function createPgVectorIndex(
     ): Promise<void> {
       assertOptionalVectorOrganizationId(options.organizationId);
 
-      if (recordIds.length === 0) return;
       assertPgVectorRecordIds(recordIds);
+      if (recordIds.length === 0) return;
       if (options.organizationId) {
         await pool.query(
           `DELETE FROM ${tableName} WHERE memory_record_id = ANY($1) AND organization_id = $2`,
@@ -622,7 +622,11 @@ function assertPgVectorPositiveSafeInteger(
   }
 }
 
-function assertPgVectorRecordIds(recordIds: readonly unknown[]): void {
+function assertPgVectorRecordIds(recordIds: unknown): asserts recordIds is readonly number[] {
+  if (!Array.isArray(recordIds)) {
+    throw new Error("deleteByRecordIds: recordIds must be an array");
+  }
+
   for (const [index, recordId] of recordIds.entries()) {
     assertPgVectorPositiveSafeInteger(recordId, `recordIds[${index}]`);
   }

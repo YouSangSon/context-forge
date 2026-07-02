@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector `deleteByRecordIds` now validate the record-ID list is an
+  array before reading `recordIds.length`, so null delete-by-record inputs fail
+  with a clear boundary error instead of incidental property access failures.
 - Qdrant and pgvector deletes now validate the point-ID list is an array before
   reading `ids.length`, so null delete inputs fail with a clear boundary error
   instead of incidental property access failures.
