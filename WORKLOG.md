@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened pgvector upsert vector component validation:
+  - `src/vector/pgvector-index.ts` now validates every upsert vector component
+    as a finite number before opening a database client.
+  - Invalid `NaN` or `Infinity` values now fail with a clear adapter boundary
+    error instead of reaching pgvector SQL as malformed vector literals.
+  - `tests/vector/pgvector-index.integration.test.ts` covers non-finite vector
+    components with a mocked pool.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new vector-component cases because validation happened after the
+  adapter tried to open/use a database client.
+- GREEN: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `33` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`3` files passed; `101` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2076` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened pgvector query nullable string payload mapping:
   - `src/vector/pgvector-index.ts` now validates nullable string payload fields
     before returning backend-neutral `VectorHit` payloads.

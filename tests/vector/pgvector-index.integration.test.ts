@@ -152,6 +152,31 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it.each([
+    { label: "NaN", vector: [0.1, Number.NaN, 0.3] },
+    { label: "Infinity", vector: [0.1, Number.POSITIVE_INFINITY, 0.3] },
+  ])("upsert rejects non-finite vector components before opening a client: $label", async ({ vector }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-vector",
+          vector,
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+          },
+        },
+      ]),
+    ).rejects.toThrow("vector[1] must be a finite number");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("query treats empty organizationId as legacy unscoped lookup", async () => {
     const query = vi.fn().mockResolvedValue({ rows: [] });
     const client = {

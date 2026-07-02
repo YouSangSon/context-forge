@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector upsert now validates vector components are finite numbers before
+  opening a database client, so invalid `[NaN]`/`[Infinity]` vector literals do
+  not reach pgvector SQL.
 - Pgvector query result mapping now validates nullable string payload fields
   before returning vector hits, so malformed scalar metadata cannot leak from
   adapter rows into `VectorHit.payload`.

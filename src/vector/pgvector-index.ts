@@ -42,10 +42,10 @@
 //   from pg_attribute and throws early if it ≠ the configured `dimensions`.
 //   This surfaces mismatches at startup rather than as a cryptic upsert error.
 //
-// EMPTY EMBEDDING GUARD (LOW 5):
-//   upsert() validates that every point's vector is non-empty before building
-//   SQL — an empty embedding would produce "[]"::vector which pgvector rejects,
-//   aborting the entire batch without a useful error message.
+// EMBEDDING VECTOR GUARD (LOW 5):
+//   upsert() validates that every point's vector is non-empty and finite before
+//   building SQL — invalid literals such as "[]"::vector or "[NaN]"::vector
+//   would otherwise abort the entire batch without a useful error message.
 //
 import type { PgPool } from "../db/connection.js";
 import type {
@@ -190,15 +190,8 @@ export function createPgVectorIndex(
       if (points.length === 0) return;
       assertVectorPointOrganizationIds(points);
 
-      // LOW 5: Validate embeddings before building SQL — an empty vector produces
-      // "[]"::vector which pgvector rejects and aborts the entire batch.
       for (const point of points) {
-        if (point.vector.length === 0) {
-          throw new Error(
-            `upsert: point "${point.id}" has an empty embedding vector. ` +
-            "Ensure the embedding step produced a valid vector before calling upsert.",
-          );
-        }
+        assertPgVectorEmbeddingVector(point);
       }
 
       // HIGH 2: Chunk into batches of UPSERT_BATCH_ROWS to stay under the
@@ -467,6 +460,23 @@ function mapPgVectorQueryRow(row: PgVectorQueryRow): VectorHit {
       ),
     },
   };
+}
+
+function assertPgVectorEmbeddingVector(point: VectorPoint): void {
+  if (point.vector.length === 0) {
+    throw new Error(
+      `upsert: point "${point.id}" has an empty embedding vector. ` +
+      "Ensure the embedding step produced a valid vector before calling upsert.",
+    );
+  }
+
+  for (const [index, component] of point.vector.entries()) {
+    if (typeof component !== "number" || !Number.isFinite(component)) {
+      throw new Error(
+        `upsert: point "${point.id}" vector[${index}] must be a finite number`,
+      );
+    }
+  }
 }
 
 function assertPgVectorQueryRows(value: unknown): asserts value is PgVectorQueryRow[] {
