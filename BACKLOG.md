@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive restore and restored-record compensation delete now trim
+  direct organization identifiers before ownership checks and SQL writes.
 - Memory archive lookup now trims direct organization identifiers before
   querying archive rows by ID.
 - Lifecycle init now trims direct project keys and task text before rendering

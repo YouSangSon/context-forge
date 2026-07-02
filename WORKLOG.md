@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- 17:47 KST - Hardened memory archive restore organization normalization:
+  - `src/store/memory-archive-repository.ts` now trims direct organization
+    identifiers before `restoreToCanonical` ownership checks and INSERT
+    parameters.
+  - Restored-record compensation deletes also trim organization identifiers
+    before DELETE parameters.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/store/memory-archive-repository.test.ts` covers trimmed restore and
+    compensation-delete parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed the new restore/delete organization trimming cases because raw
+  organization ID text reached the ownership check and DELETE parameters.
+- GREEN: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `148` tests passed)
+
+Verification:
+- `npx vitest run tests/compact/unarchive-compaction.test.ts tests/compact/outbox-sweeper.test.ts --reporter=dot`
+  (`2` files passed; `63` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2450`
+  tests passed, `34` skipped)
+
 - 17:44 KST - Hardened memory archive lookup organization normalization:
   - `src/store/memory-archive-repository.ts` now trims direct organization
     identifiers before `findArchiveByIds` queries archive rows by ID.

@@ -1321,6 +1321,17 @@ describe("MemoryArchiveRepository.restoreToCanonical", () => {
     expect(params).toContain(200); // source_id
   });
 
+  it("trims organizationId before checking org ownership and restoring", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [{ id: "999" }] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    const result = await repo.restoreToCanonical(makeArchive(), " org-a ");
+
+    expect(result).toEqual({ restoredRecordId: 999 });
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params[0]).toBe("org-a");
+  });
+
   it.each(["0", "1.5"])(
     "rejects malformed restored memory id rows: %s",
     async (id) => {
@@ -1418,6 +1429,16 @@ describe("MemoryArchiveRepository.deleteRestoredCanonicalRecord", () => {
     expect(sql).toContain("DELETE FROM memory_records");
     expect(sql).toContain("WHERE id = $1");
     expect(sql).toContain("AND organization_id = $2");
+    expect(params).toEqual([999, "org-a"]);
+  });
+
+  it("trims organizationId before deleting restored canonical records", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.deleteRestoredCanonicalRecord(999, " org-a ");
+
+    const params = query.mock.calls[0]![1] as unknown[];
     expect(params).toEqual([999, "org-a"]);
   });
 

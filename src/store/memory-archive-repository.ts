@@ -508,6 +508,7 @@ export function createMemoryArchiveRepository(
 
     async restoreToCanonical(archive, organizationId) {
       assertNonBlankText(organizationId, "organizationId");
+      const scopedOrganizationId = organizationId.trim();
       const restorableArchive = mapRestorableArchive(archive);
 
       // Insert preserves original_created_at / original_updated_at so
@@ -515,9 +516,9 @@ export function createMemoryArchiveRepository(
       // source_id is restored verbatim — caller is expected to verify the
       // source row still exists if FK violation matters (most ops won't
       // hit this since sources outlive memory_records).
-      if (restorableArchive.organizationId !== organizationId) {
+      if (restorableArchive.organizationId !== scopedOrganizationId) {
         throw new Error(
-          `restoreToCanonical: org mismatch (archive.org=${restorableArchive.organizationId}, requested=${organizationId})`,
+          `restoreToCanonical: org mismatch (archive.org=${restorableArchive.organizationId}, requested=${scopedOrganizationId})`,
         );
       }
       if (restorableArchive.sourceId === null) {
@@ -536,7 +537,7 @@ export function createMemoryArchiveRepository(
           RETURNING id
         `,
         [
-          organizationId,
+          scopedOrganizationId,
           restorableArchive.scopeType,
           restorableArchive.scopeId,
           restorableArchive.projectKey,
@@ -565,6 +566,7 @@ export function createMemoryArchiveRepository(
     async deleteRestoredCanonicalRecord(recordId, organizationId) {
       assertPositiveSafeInteger(recordId, "recordId");
       assertNonBlankText(organizationId, "organizationId");
+      const scopedOrganizationId = organizationId.trim();
 
       await pool.query(
         `
@@ -572,7 +574,7 @@ export function createMemoryArchiveRepository(
           WHERE id = $1
             AND organization_id = $2
         `,
-        [recordId, organizationId],
+        [recordId, scopedOrganizationId],
       );
     },
 
