@@ -640,15 +640,17 @@ export async function reindexCanonicalMemory(input: {
   batchSize?: number;
 }): Promise<{ chunkCount: number }> {
   assertNonBlankText(input.organizationId, "organizationId");
+  const organizationId = input.organizationId.trim();
+  const reindexInput = { ...input, organizationId };
 
   const batchSize = normalizeReindexBatchSize(input.batchSize);
   let foundChunks = false;
 
-  await forEachReindexChunkPage(input, batchSize, async (chunks) => {
+  await forEachReindexChunkPage(reindexInput, batchSize, async (chunks) => {
     foundChunks = true;
     await input.vectorIndex.deleteByRecordIds(
       [...new Set(chunks.map((chunk) => chunk.memoryRecordId))],
-      { organizationId: input.organizationId },
+      { organizationId },
     );
   });
 
@@ -660,7 +662,7 @@ export async function reindexCanonicalMemory(input: {
   // a page has been reinserted is unsafe when one memory record spans pages: a
   // later delete for that same record could erase vectors inserted earlier.
   let chunkCount = 0;
-  await forEachReindexChunkPage(input, batchSize, async (chunks) => {
+  await forEachReindexChunkPage(reindexInput, batchSize, async (chunks) => {
     const embeddings = await input.embeddings.embedBatch(
       chunks.map((chunk) => chunk.content),
     );

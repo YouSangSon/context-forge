@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Canonical reindex now trims direct organization identifiers before chunk
+  paging and vector cleanup calls.
 - Memory archive now trims direct organization identifiers before querying.
 - Memory deletion now trims direct organization identifiers before querying.
 - Single memory record lookup now trims direct organization identifiers before

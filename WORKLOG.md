@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 17:14 KST - Hardened canonical reindex organization normalization:
+  - `src/store/canonical-indexing.ts` now trims direct organization
+    identifiers before chunk paging and vector cleanup calls.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/store/canonical-indexing.test.ts` covers trimmed repository and
+    vector cleanup parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  failed the new reindex organization trimming case because raw organization
+  ID text reached chunk paging parameters.
+- GREEN: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`1` file passed; `77` tests passed)
+
+Verification:
+- `npx vitest run tests/store/canonical-indexing.test.ts tests/jobs/ingest-sweeper.test.ts tests/context-pack/build-context-pack.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `132` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2439`
+  tests passed, `34` skipped)
+
 - 17:11 KST - Hardened memory archive organization normalization:
   - `src/store/memory-repository.ts` now trims direct organization identifiers
     before `archiveMemoryRecord` queries.

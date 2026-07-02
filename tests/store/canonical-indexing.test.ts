@@ -918,6 +918,68 @@ describe("canonical indexing", () => {
     expect(vectorIndex.upsert).not.toHaveBeenCalled();
   });
 
+  it("reindexCanonicalMemory trims organizationId before repository and vector cleanup calls", async () => {
+    const scopes = [
+      { scopeType: "project" as const, scopeId: "project-alpha" },
+    ];
+    const chunk = {
+      id: 701,
+      memoryRecordId: 501,
+      chunkIndex: 0,
+      content: "Project chunk",
+      startOffset: 0,
+      endOffset: 13,
+      embeddingVersion: "v1",
+      organizationId: "org-a",
+      scopeType: "project" as const,
+      scopeId: "project-alpha",
+      projectKey: "project-alpha",
+      durability: "durable",
+      kind: "decision",
+      updatedAt: "2026-03-29T00:00:00.000Z",
+    };
+    const chunkRepository = {
+      listChunks: vi.fn().mockResolvedValue([chunk]),
+      updatePointIds: vi.fn().mockResolvedValue(undefined),
+    };
+    const embeddings = {
+      embed: vi.fn(),
+      embedBatch: vi.fn().mockResolvedValue([[0.1, 0.2]]),
+    };
+    const vectorIndex = {
+      upsert: vi.fn().mockResolvedValue(undefined),
+      query: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+
+    await reindexCanonicalMemory({
+      chunkRepository: chunkRepository as never,
+      embeddings,
+      vectorIndex,
+      organizationId: " org-a ",
+      scopes,
+      batchSize: 10,
+    });
+
+    expect(chunkRepository.listChunks).toHaveBeenNthCalledWith(
+      1,
+      "org-a",
+      scopes,
+      { limit: 10 },
+    );
+    expect(chunkRepository.listChunks).toHaveBeenNthCalledWith(
+      2,
+      "org-a",
+      scopes,
+      { limit: 10 },
+    );
+    expect(vectorIndex.deleteByRecordIds).toHaveBeenCalledWith([501], {
+      organizationId: "org-a",
+    });
+  });
+
   it("reindexes stored chunks in pages without deleting a record after partial upsert", async () => {
     const chunks = [
       {

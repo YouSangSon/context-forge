@@ -4,16 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Memory Archive Organization Normalization
+## Current Loop - Reindex Organization Normalization
 
 Status:
-- Memory archive now trims direct organization identifiers before querying.
+- Canonical reindex now trims direct organization identifiers before chunk
+  paging and vector cleanup calls.
 - Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused memory repository tests passed after the RED memory archive
+- Focused canonical indexing tests passed after the RED reindex
   organization trimming reproducer.
-- Related store indexing and MCP server tests passed.
+- Related indexing, ingest, context-pack, and vector tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.
