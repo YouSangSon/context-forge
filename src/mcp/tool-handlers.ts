@@ -572,6 +572,8 @@ export function createToolHandlers(input: {
       if (toolInput.tag !== undefined) {
         assertNonBlankText(toolInput.tag, "memory tag");
       }
+      const tag =
+        toolInput.tag === undefined ? undefined : toolInput.tag.trim();
       assertOptionalPositiveInteger(toolInput.limit, "limit", 5000);
       const scope = toolInput.scope ?? "project";
       const userScopeId = resolveUserScopeId({
@@ -595,7 +597,7 @@ export function createToolHandlers(input: {
         repository.listMemoryForGovernance(scopeRef, {
           organizationId,
           includeArchived: toolInput.includeArchived,
-          tag: toolInput.tag,
+          tag,
           limit: toolInput.limit,
         }),
       );
@@ -616,6 +618,8 @@ export function createToolHandlers(input: {
       if (toolInput.query !== undefined) {
         assertNonBlankText(toolInput.query, "graph query");
       }
+      const query =
+        toolInput.query === undefined ? undefined : toolInput.query.trim();
       assertOptionalPositiveInteger(toolInput.limit, "limit", 5000);
       assertOptionalPositiveInteger(
         toolInput.relationshipLimit,
@@ -644,7 +648,7 @@ export function createToolHandlers(input: {
         repository.inspectMemoryGraph(scopeRef, {
           organizationId,
           kind: toolInput.kind,
-          query: toolInput.query,
+          query,
           includeArchived: toolInput.includeArchived,
           limit: toolInput.limit,
           relationshipLimit: toolInput.relationshipLimit,

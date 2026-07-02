@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `list_memory` tag filters and `inspect_memory_graph` query filters now trim
+  direct text before canonical repository calls.
 - `build_context_pack` now trims direct task text before retrieval, markdown
   rendering, and context-pack run persistence.
 - Goal-run handlers now trim direct goal and attempt text before service and

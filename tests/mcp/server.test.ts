@@ -1246,7 +1246,7 @@ describe("createToolRegistry", () => {
       organizationId: " org-a ",
       projectKey: "project-alpha",
       includeArchived: true,
-      tag: "ops",
+      tag: " ops ",
       limit: 25,
     });
 
@@ -1278,7 +1278,7 @@ describe("createToolRegistry", () => {
       organizationId: " org-a ",
       projectKey: "project-alpha",
       kind: "code_symbol",
-      query: "QDRANT",
+      query: " QDRANT ",
       includeArchived: true,
       limit: 25,
       relationshipLimit: 10,

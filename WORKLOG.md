@@ -2,6 +2,29 @@
 
 ## 2026-07-02
 
+- 19:03 KST - Hardened governance filter text normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct `list_memory` tag filters and
+    `inspect_memory_graph` query filters before canonical repository calls.
+  - `tests/mcp/server.test.ts` covers trimmed governance filter text at the
+    direct registry boundary.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed the updated governance listing and graph cases because raw filter text
+  reached repository calls.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `134` tests passed)
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`2` files passed; `259` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2461`
+  tests passed, `34` skipped)
+
 - 19:00 KST - Hardened context pack task normalization:
   - `src/mcp/tool-handlers.ts` now trims direct `build_context_pack` task text
     before retrieval, markdown rendering, and context-pack run persistence.
