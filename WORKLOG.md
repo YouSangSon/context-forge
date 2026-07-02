@@ -10300,3 +10300,27 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2244` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened archive scope lock input mapping:
+  - Added RED coverage showing malformed direct `acquireScopeLock` inputs
+    failed through incidental property access or field errors instead of clear
+    pre-SQL object validation.
+  - Advisory lock acquisition now validates the input object before reading
+    organization and scope fields.
+  - No `DECISIONS.md` entry: this is repository input-boundary validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed lock inputs were not rejected with clear object
+  boundary errors.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `120` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/apply-compaction.test.ts tests/compact/compact-memory.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `329` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2246` tests passed, `34` skipped)
+- `git diff --check` (passed)

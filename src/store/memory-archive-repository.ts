@@ -632,9 +632,7 @@ export function createMemoryArchiveRepository(
     },
 
     async acquireScopeLock(args) {
-      assertNonBlankText(args.organizationId, "organizationId");
-      assertNonBlankText(args.scopeType, "scopeType");
-      assertNonBlankText(args.scopeId, "scopeId");
+      const lockInput = assertScopeLockInput(args);
 
       // Per-(org, scope) advisory lock. Two simultaneous applies on the same
       // scope race on canonical DELETE; this serializes them. Lock auto-
@@ -647,7 +645,7 @@ export function createMemoryArchiveRepository(
             hashtextextended($1, 0)
           ) AS acquired
         `,
-        [`${args.organizationId}:${args.scopeType}:${args.scopeId}`],
+        [`${lockInput.organizationId}:${lockInput.scopeType}:${lockInput.scopeId}`],
       );
       return result.rows[0]?.acquired === true;
     },
@@ -711,6 +709,22 @@ function assertCompleteCompactionRunInput(
   assertNonNegativeSafeInteger(input.decayCount, "decayCount");
   assertNonNegativeSafeInteger(input.qdrantFailed, "qdrantFailed");
   assertOptionalString(input.errorMessage, "errorMessage");
+}
+
+function assertScopeLockInput(value: unknown): {
+  organizationId: string;
+  scopeType: string;
+  scopeId: string;
+} {
+  const candidate = assertObject(value, "scope lock input");
+  return {
+    organizationId: assertRequiredNonBlankString(
+      candidate.organizationId,
+      "organizationId",
+    ),
+    scopeType: assertRequiredNonBlankString(candidate.scopeType, "scopeType"),
+    scopeId: assertRequiredNonBlankString(candidate.scopeId, "scopeId"),
+  };
 }
 
 function mapRestorableArchive(value: unknown): ArchiveRow {

@@ -1257,6 +1257,31 @@ describe("MemoryArchiveRepository.acquireScopeLock", () => {
     expect(acquired).toBe(false);
   });
 
+  it.each([
+    {
+      input: null,
+      message: "scope lock input must be an object",
+    },
+    {
+      input: [],
+      message: "scope lock input must be an object",
+    },
+  ])("rejects malformed direct lock inputs before querying %#", async ({
+    input,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({
+      rows: [{ acquired: true }],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.acquireScopeLock(input as never)).rejects.toThrow(
+      message,
+    );
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("rejects whitespace-only organizationId before querying", async () => {
     const { pool, query } = makeMockPool(async () => ({
       rows: [{ acquired: true }],

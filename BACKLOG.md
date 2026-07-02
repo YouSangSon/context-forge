@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository advisory lock acquisition now rejects malformed
+  direct lock inputs before querying Postgres.
 - Memory archive repository restore now rejects malformed direct archive
   objects before inserting canonical memory rows.
 - Memory archive repository compaction run lookup now rejects malformed direct
