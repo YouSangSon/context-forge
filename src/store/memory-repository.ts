@@ -659,6 +659,7 @@ export function createMemoryRepository(
     async archiveMemoryRecord(input) {
       assertPositiveSafeInteger(input.id, "id");
       assertNonBlankText(input.organizationId, "organizationId");
+      const organizationId = input.organizationId.trim();
 
       const result = await pool.query<{
         archived: boolean;
@@ -693,7 +694,7 @@ export function createMemoryRepository(
             ON mc.memory_record_id = target.id
            AND mc.organization_id = $2
         `,
-        [input.id, input.organizationId],
+        [input.id, organizationId],
       );
 
       const archiveResult = mapArchiveMemoryRecordRow(result.rows[0]);

@@ -4,14 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Memory Delete Organization Normalization
+## Current Loop - Memory Archive Organization Normalization
 
 Status:
-- Memory deletion now trims direct organization identifiers before querying.
+- Memory archive now trims direct organization identifiers before querying.
 - Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused memory repository tests passed after the RED memory delete
+- Focused memory repository tests passed after the RED memory archive
   organization trimming reproducer.
 - Related store indexing and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.

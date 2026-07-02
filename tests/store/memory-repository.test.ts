@@ -2521,6 +2521,31 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     });
   });
 
+  it("archiveMemoryRecord trims organizationId before querying", async () => {
+    const queryCalls: { sql: string; params: unknown[] }[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({
+          rows: [{
+            archived: true,
+            found: true,
+            qdrant_point_ids: [],
+          }],
+        });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.archiveMemoryRecord({
+      id: 55,
+      organizationId: " org-a ",
+    });
+
+    expect(queryCalls).toHaveLength(1);
+    expect(queryCalls[0]?.params).toEqual([55, "org-a"]);
+  });
+
   it("archiveMemoryRecord rejects whitespace-only organization IDs before querying", async () => {
     const mockPool = {
       query: vi.fn(),
