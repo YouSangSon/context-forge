@@ -1274,7 +1274,7 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.inspect_memory_graph({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       projectKey: "project-alpha",
       kind: "code_symbol",
       query: "QDRANT",

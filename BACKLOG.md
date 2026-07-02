@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `inspect_memory_graph` now trims direct organization identifiers before
+  canonical graph inspection repository calls.
 - MCP governance handlers now trim direct organization identifiers before
   reindexing and governance listing calls.
 - `build_context_pack` now trims direct organization identifiers before

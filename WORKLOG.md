@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 18:31 KST - Hardened MCP graph inspection handler organization
+  normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
+    `inspect_memory_graph` calls canonical graph inspection repository
+    primitives.
+  - `tests/mcp/server.test.ts` covers trimmed graph inspection organization
+    IDs at the direct registry boundary.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed the updated graph inspection case because raw organization ID text
+  reached `inspectMemoryGraph`.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `134` tests passed)
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`2` files passed; `259` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2459`
+  tests passed, `34` skipped)
+
 - 18:27 KST - Hardened MCP governance handler organization normalization:
   - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
     `reindex_memory` canonical reindex calls and `list_memory` governance

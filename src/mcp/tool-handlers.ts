@@ -635,7 +635,7 @@ export function createToolHandlers(input: {
               scopeType: "project" as const,
               scopeId: requireProjectKey(toolInput.projectKey, scope),
             };
-      const organizationId = toolInput.organizationId ?? "default";
+      const organizationId = toolInput.organizationId?.trim() ?? "default";
 
       const graph = await withCanonicalRepository((repository) =>
         repository.inspectMemoryGraph(scopeRef, {
