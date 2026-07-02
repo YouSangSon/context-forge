@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Lifecycle init now trims direct project keys and task text before rendering
+  generated hooks and README output.
 - Lifecycle init now trims direct user scope identifiers before rendering
   generated hook output.
 - Lifecycle init now trims direct organization identifiers before rendering

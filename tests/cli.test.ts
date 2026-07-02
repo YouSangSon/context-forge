@@ -777,13 +777,13 @@ describe("parseCliArgs", () => {
       [
         "init",
         "--project",
-        "project-alpha",
+        " project-alpha ",
         "--organization-id",
         " acme ",
         "--user",
         " alice ",
         "--task",
-        "continue work",
+        " continue work ",
         "--out-dir",
         ".akasha",
       ],
@@ -842,17 +842,25 @@ describe("parseCliArgs", () => {
       "utf8",
     );
     expect(sessionStart).toContain(" pack ");
+    expect(sessionStart).toContain("DEFAULT_PROJECT_KEY='project-alpha'");
+    expect(sessionStart).toContain("DEFAULT_TASK='continue work'");
     expect(sessionStart).toContain("--organization-id");
     expect(sessionStart).toContain("DEFAULT_ORGANIZATION_ID='acme'");
     expect(sessionStart).toContain("DEFAULT_USER_SCOPE_ID='alice'");
     expect(sessionEnd).toContain(" remember ");
+    expect(sessionEnd).toContain("DEFAULT_PROJECT_KEY='project-alpha'");
     expect(sessionEnd).toContain("DEFAULT_ORGANIZATION_ID='acme'");
     expect(sessionEnd).toContain("DEFAULT_USER_SCOPE_ID='alice'");
+    expect(readme).toContain("- project: `project-alpha`");
     expect(readme).toContain("- organization: `acme`");
+    expect(sessionStart).not.toContain("DEFAULT_PROJECT_KEY=' project-alpha '");
+    expect(sessionStart).not.toContain("DEFAULT_TASK=' continue work '");
     expect(sessionStart).not.toContain("DEFAULT_ORGANIZATION_ID=' acme '");
     expect(sessionStart).not.toContain("DEFAULT_USER_SCOPE_ID=' alice '");
+    expect(sessionEnd).not.toContain("DEFAULT_PROJECT_KEY=' project-alpha '");
     expect(sessionEnd).not.toContain("DEFAULT_ORGANIZATION_ID=' acme '");
     expect(sessionEnd).not.toContain("DEFAULT_USER_SCOPE_ID=' alice '");
+    expect(readme).not.toContain("- project: ` project-alpha `");
     expect(readme).not.toContain("- organization: ` acme `");
     expect(sessionEnd).toContain("mktemp");
     expect(sessionEnd).toContain("--content-file");
