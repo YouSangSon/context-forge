@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 17:17 KST - Hardened ingest job creation organization normalization:
+  - `src/jobs/ingest-job-repository.ts` now trims direct organization
+    identifiers before creating ingest job rows.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/jobs/ingest-job-repository.test.ts` covers trimmed create
+    parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/jobs/ingest-job-repository.test.ts --reporter=dot`
+  failed the new ingest job create organization trimming case because raw
+  organization ID text reached INSERT parameters.
+- GREEN: `npx vitest run tests/jobs/ingest-job-repository.test.ts --reporter=dot`
+  (`1` file passed; `7` tests passed, `6` skipped)
+
+Verification:
+- `npx vitest run tests/jobs/ingest-job-repository.test.ts tests/jobs/ingest-job-claim.test.ts tests/jobs/ingest-sweeper.test.ts tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`3` files passed; `104` tests passed, `6` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2440`
+  tests passed, `34` skipped)
+
 - 17:14 KST - Hardened canonical reindex organization normalization:
   - `src/store/canonical-indexing.ts` now trims direct organization
     identifiers before chunk paging and vector cleanup calls.

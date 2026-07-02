@@ -31,6 +31,22 @@ function ingestJobRow(overrides: Record<string, unknown> = {}) {
 }
 
 describe("createIngestJobRepository row mapping", () => {
+  it("trims organizationId before creating ingest jobs", async () => {
+    const pool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [ingestJobRow()],
+      }),
+    };
+    const repo = createIngestJobRepository(pool as never);
+
+    await repo.create({ memoryRecordId: 42, organizationId: " org-a " });
+
+    expect(pool.query).toHaveBeenCalledWith(
+      expect.stringContaining("INSERT INTO ingest_jobs"),
+      [42, "org-a"],
+    );
+  });
+
   it.each([
     {
       rowPatch: { status: "queued" },

@@ -58,6 +58,7 @@ export function createIngestJobRepository(pool: PgPool): IngestJobRepository {
   return {
     async create(input) {
       assertCreateInput(input);
+      const organizationId = input.organizationId.trim();
 
       const result = await pool.query<IngestJobRow>(
         `
@@ -65,7 +66,7 @@ export function createIngestJobRepository(pool: PgPool): IngestJobRepository {
           VALUES ($1, $2, 'pending')
           RETURNING ${RETURNING_COLUMNS}
         `,
-        [input.memoryRecordId, input.organizationId],
+        [input.memoryRecordId, organizationId],
       );
 
       return mapJob(requireSingleRow(result.rows[0], "ingest job"));

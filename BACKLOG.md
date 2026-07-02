@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Ingest job creation now trims direct organization identifiers before
+  insertion.
 - Canonical reindex now trims direct organization identifiers before chunk
   paging and vector cleanup calls.
 - Memory archive now trims direct organization identifiers before querying.
