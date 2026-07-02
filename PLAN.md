@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Qdrant Upsert Point Id Validation
+## Current Loop - Vector Delete Point Id Validation
 
 Status:
-- `src/vector/qdrant-index.ts` now validates Qdrant upsert point IDs are
-  non-empty strings before calling the Qdrant client.
-- `tests/vector/qdrant-index.test.ts` now covers empty and blank point IDs with
-  a mocked client.
+- `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now validate
+  `delete(ids)` point IDs are non-empty strings before calling storage clients.
+- Qdrant and pgvector tests now cover empty and blank delete IDs with mocked
+  clients.
 
 Verification:
-- Focused Qdrant tests passed after a RED reproducer.
+- Focused Qdrant/pgvector tests passed after RED reproducers.
 - Related vector/search tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.

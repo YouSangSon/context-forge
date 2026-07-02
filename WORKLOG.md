@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened vector delete point ID validation:
+  - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now
+    validate `delete(ids)` point IDs are non-empty strings before calling
+    storage clients.
+  - Invalid empty or blank delete IDs now fail with clear adapter boundary
+    errors instead of reaching Qdrant or SQL.
+  - Qdrant and pgvector tests cover malformed delete IDs with mocked clients.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new delete ID cases because both adapters allowed invalid IDs to
+  reach storage clients and resolved successfully.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`2` files passed; `91` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`3` files passed; `126` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2101` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant upsert point ID validation:
   - `src/vector/qdrant-index.ts` now validates point IDs are non-empty strings
     before calling the Qdrant client.

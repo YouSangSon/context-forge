@@ -1012,6 +1012,20 @@ describe("pgvector adapter — delete SQL", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it.each([
+    { label: "empty", ids: [""] },
+    { label: "blank", ids: [" \n\t "] },
+  ])("rejects malformed point ids before SQL delete: $label", async ({ ids }) => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "test_memory_vectors" });
+
+    await expect(
+      index.delete(ids),
+    ).rejects.toThrow("ids[0] must be a non-empty string");
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("skips SQL when ids are empty", async () => {
     const { pool, query } = makeMockPool();
     const index = createPgVectorIndex(pool, { tableName: "test_memory_vectors" });

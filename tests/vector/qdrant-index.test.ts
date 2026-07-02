@@ -617,6 +617,26 @@ describe("createQdrantVectorIndex — delete", () => {
     expect(client.delete).not.toHaveBeenCalled();
   });
 
+  it.each([
+    { label: "empty", ids: [""] },
+    { label: "blank", ids: [" \n\t "] },
+  ])("rejects malformed point ids before Qdrant delete: $label", async ({ ids }) => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.delete(ids),
+    ).rejects.toThrow("ids[0] must be a non-empty string");
+
+    expect(client.delete).not.toHaveBeenCalled();
+  });
+
   it("skips Qdrant delete call when ids array is empty (guards against Qdrant 400)", async () => {
     const client = {
       query: vi.fn(),

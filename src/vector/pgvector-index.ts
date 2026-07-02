@@ -398,6 +398,7 @@ export function createPgVectorIndex(
       assertOptionalVectorOrganizationId(options.organizationId);
 
       if (ids.length === 0) return;
+      assertPgVectorPointIds(ids);
       if (options.organizationId) {
         await pool.query(
           `DELETE FROM ${tableName} WHERE point_id = ANY($1) AND organization_id = $2`,
@@ -478,8 +479,18 @@ function assertPgVectorEmbeddingVector(point: VectorPoint): void {
 }
 
 function assertPgVectorPointId(point: VectorPoint): void {
-  if (typeof point.id !== "string" || point.id.trim().length === 0) {
-    throw new Error("point.id must be a non-empty string");
+  assertPgVectorPointIdValue(point.id, "point.id");
+}
+
+function assertPgVectorPointIds(ids: readonly unknown[]): void {
+  for (const [index, id] of ids.entries()) {
+    assertPgVectorPointIdValue(id, `ids[${index}]`);
+  }
+}
+
+function assertPgVectorPointIdValue(value: unknown, fieldName: string): void {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${fieldName} must be a non-empty string`);
   }
 }
 

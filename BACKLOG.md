@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector deletes now validate point IDs are non-empty strings
+  before calling storage clients, so malformed delete IDs cannot reach Qdrant
+  or SQL.
 - Qdrant upsert now validates point IDs are non-empty strings before calling
   the Qdrant client, matching the pgvector adapter's point ID boundary guard.
 - Pgvector upsert now validates point IDs are non-empty strings before opening
