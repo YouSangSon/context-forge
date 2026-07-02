@@ -10063,3 +10063,27 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2199` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened memory archive row enum mapping:
+  - Added RED coverage showing malformed stored compaction run `status` and
+    archive record `scope_type`, `kind`, and `durability` values were returned
+    instead of failing at the repository boundary.
+  - Memory archive row mapping now validates those DB enum fields before
+    returning compaction run or archive row models.
+  - No `DECISIONS.md` entry: this is row boundary validation hardening for
+    existing enum contracts.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed compaction/archive enum rows resolved instead of
+  rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `83` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/apply-compaction.test.ts tests/compact/unarchive-compaction.test.ts tests/compact/outbox-sweeper.test.ts tests/compact/sweeper-loop.test.ts tests/compact/compact-memory.test.ts --reporter=dot`
+  (`6` files passed; `243` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2203` tests passed, `34` skipped)
+- `git diff --check` (passed)

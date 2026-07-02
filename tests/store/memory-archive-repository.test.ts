@@ -117,6 +117,10 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
       rowPatch: { qdrant_failed: "-1" },
       message: "compaction run qdrant_failed must be a non-negative safe integer",
     },
+    {
+      rowPatch: { status: "paused" },
+      message: 'compaction run status must be "pending", "completed", or "failed"',
+    },
   ])("rejects malformed existing run row values %#", async ({ rowPatch, message }) => {
     const { pool } = makeMockPool(async () => ({ rows: [runRow(rowPatch)] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -744,6 +748,29 @@ describe("MemoryArchiveRepository.findArchiveByIds", () => {
   }) => {
     const { pool } = makeMockPool(async () => ({
       rows: [archiveRow({ importance })],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findArchiveByIds([50], "org-a")).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      rowPatch: { scope_type: "team" },
+      message: "memory archive scope_type must be one of: user, project",
+    },
+    {
+      rowPatch: { kind: "note" },
+      message: "memory archive kind must be one of: decision, summary, fact",
+    },
+    {
+      rowPatch: { durability: "permanent" },
+      message:
+        "memory archive durability must be one of: ephemeral, durable, archived",
+    },
+  ])("rejects malformed archive enum rows %#", async ({ rowPatch, message }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [archiveRow(rowPatch)],
     }));
     const repo = createMemoryArchiveRepository(pool);
 

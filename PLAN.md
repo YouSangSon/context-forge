@@ -4,18 +4,20 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Ingest Job Row Enum Validation
+## Current Loop - Memory Archive Row Enum Validation
 
 Status:
-- Ingest job row mapping now validates stored `status` and `qdrant_status`
-  values before returning repository results.
-- Malformed ingest job DB enum values fail at the repository boundary instead
-  of leaking into sweeper/canonical indexing paths.
+- Memory archive row mapping now validates stored compaction run status and
+  archived record scope/kind/durability values before returning repository
+  results.
+- Malformed archive DB enum values fail at the repository boundary instead of
+  leaking into compaction restore paths.
 
 Verification:
-- Focused ingest job repository tests passed after a RED malformed-row
+- Focused memory archive repository tests passed after a RED malformed-row
   reproducer.
-- Related ingest job, ingest sweeper, and canonical indexing tests passed.
+- Related compaction apply, unarchive, outbox sweeper, and compaction tests
+  passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

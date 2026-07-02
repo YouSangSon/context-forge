@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive row mapping now rejects malformed stored compaction/archive
+  enum values before returning repository results.
 - Ingest job row mapping now rejects malformed stored job/qdrant status values
   before returning repository results.
 - Goal-run row mapping now rejects malformed stored scope/status/outcome enum

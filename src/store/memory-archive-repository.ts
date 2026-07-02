@@ -525,14 +525,14 @@ export function createMemoryArchiveRepository(
                 row.source_id,
                 "memory archive source_id",
               ),
-        scopeType: row.scope_type,
+        scopeType: toArchiveScopeType(row.scope_type),
         scopeId: row.scope_id,
         projectKey: row.project_key,
-        kind: row.kind,
+        kind: toArchiveKind(row.kind),
         title: row.title,
         content: row.content,
         summary: row.summary,
-        durability: row.durability,
+        durability: toArchiveDurability(row.durability),
         importance: toPostgresInteger(
           row.importance,
           "memory archive importance",
@@ -716,7 +716,7 @@ function toPostgresInteger(value: unknown, fieldName: string): number {
 function mapRunRow(row: {
   id: number | string;
   organization_id: string;
-  status: CompactionRunStatus;
+  status: unknown;
   archived_count: number | string;
   duplicate_count: number | string;
   decay_count: number | string;
@@ -725,7 +725,7 @@ function mapRunRow(row: {
   return {
     id: toPositiveSafeInteger(row.id, "compaction run id"),
     organizationId: row.organization_id,
-    status: row.status,
+    status: toCompactionRunStatus(row.status),
     archivedCount: toNonNegativeSafeInteger(
       row.archived_count,
       "compaction run archived_count",
@@ -743,6 +743,38 @@ function mapRunRow(row: {
       "compaction run qdrant_failed",
     ),
   };
+}
+
+function toCompactionRunStatus(value: unknown): CompactionRunStatus {
+  if (value === "pending" || value === "completed" || value === "failed") {
+    return value;
+  }
+  throw new Error(
+    'compaction run status must be "pending", "completed", or "failed"',
+  );
+}
+
+function toArchiveScopeType(value: unknown): string {
+  if (value === "user" || value === "project") {
+    return value;
+  }
+  throw new Error("memory archive scope_type must be one of: user, project");
+}
+
+function toArchiveKind(value: unknown): string {
+  if (value === "decision" || value === "fact" || value === "summary") {
+    return value;
+  }
+  throw new Error("memory archive kind must be one of: decision, summary, fact");
+}
+
+function toArchiveDurability(value: unknown): string {
+  if (value === "ephemeral" || value === "durable" || value === "archived") {
+    return value;
+  }
+  throw new Error(
+    "memory archive durability must be one of: ephemeral, durable, archived",
+  );
 }
 
 function assertObject(
