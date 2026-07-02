@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened pgvector query row object shape mapping:
+  - `src/vector/pgvector-index.ts` now validates each query result row object
+    before reading vector-hit fields.
+  - Malformed row entries now fail with a clear adapter boundary error instead
+    of an incidental field-access TypeError.
+  - `tests/vector/pgvector-index.integration.test.ts` covers malformed rows
+    with a mocked pool.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new query-row test with `Cannot read properties of null (reading
+  'point_id')`.
+- GREEN: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `23` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`3` files passed; `91` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2066` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened pgvector query rows shape mapping:
   - `src/vector/pgvector-index.ts` now validates query result `rows` before
     mapping backend-neutral `VectorHit` objects.

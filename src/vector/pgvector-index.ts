@@ -467,6 +467,11 @@ function assertPgVectorQueryRows(value: unknown): asserts value is PgVectorQuery
   if (!Array.isArray(value)) {
     throw new Error("query rows must be an array");
   }
+  value.forEach((row, index) => {
+    if (typeof row !== "object" || row === null || Array.isArray(row)) {
+      throw new Error(`query rows[${index}] must be an object`);
+    }
+  });
 }
 
 function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {

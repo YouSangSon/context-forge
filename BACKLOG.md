@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query result mapping now validates each returned row object before
+  reading vector-hit fields, replacing incidental field-access failures with a
+  clear adapter boundary error.
 - Pgvector query result mapping now validates returned `rows` before mapping
   vector hits, replacing incidental `.map` failures with a clear adapter
   boundary error.
