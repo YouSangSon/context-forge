@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Background worker shutdown now closes canonical services even when one worker
+  `stop()` throws synchronously, matching the existing async rejection cleanup
+  behavior.
 - Background worker startup now validates returned sweeper handles before
   recording workers as started, so malformed injected starters fail through the
   existing startup-failure path instead of breaking later cleanup.

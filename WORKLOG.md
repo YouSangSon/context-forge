@@ -9863,3 +9863,27 @@ Verification:
 - `npm test -- --reporter=dot`
   (`81` files passed, `2` skipped; `2170` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened background worker stop cleanup:
+  - Added RED coverage showing a worker `stop()` method that throws
+    synchronously prevented later worker stops and canonical service cleanup.
+  - `stopStartedWorkers` now wraps each `handle.stop()` call in an async
+    callback before `Promise.allSettled`, so sync throws become rejected
+    promises and cleanup proceeds consistently.
+  - No `DECISIONS.md` entry: this is lifecycle cleanup hardening inside the
+    existing worker architecture.
+
+Verification:
+- RED: `npx vitest run tests/app/background-workers.test.ts --reporter=dot`
+  failed because the ingest stop and service close were not called after a
+  synchronous compaction stop failure.
+- GREEN focused: `npx vitest run tests/app/background-workers.test.ts --reporter=dot`
+  (`1` file passed; `23` tests passed)
+- Related: `npx vitest run tests/app/background-workers.test.ts tests/app/worker.test.ts tests/app/start-background-workers-server.test.ts tests/app/start-operator-server-metrics.test.ts tests/app/operator-server-boundary.test.ts --reporter=dot`
+  (`5` files passed; `77` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`81` files passed, `2` skipped; `2171` tests passed, `34` skipped)
+- `git diff --check` (passed)

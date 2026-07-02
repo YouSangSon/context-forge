@@ -199,6 +199,32 @@ describe("startBackgroundWorkers", () => {
     expect(close).toHaveBeenCalledOnce();
   });
 
+  it("closes canonical services when a worker stop throws synchronously", async () => {
+    const close = vi.fn().mockResolvedValue(undefined);
+    const services = buildServices(close);
+    const stopCompaction = vi.fn(() => {
+      throw new Error("stop boom");
+    });
+    const stopIngest = vi.fn().mockResolvedValue(undefined);
+    const handle = await startBackgroundWorkers({
+      logger: buildLogger(),
+      env: enabledEnv(),
+      bootstrapServices: vi.fn().mockResolvedValue(services),
+      startCompactionSweeper: vi.fn<StartCompactionSweeper>(() => ({
+        stop: stopCompaction,
+      })),
+      startIngestSweeper: vi.fn<StartIngestSweeper>(() => ({
+        stop: stopIngest,
+      })),
+    });
+
+    await expect(handle.stop()).rejects.toThrow("stop boom");
+
+    expect(stopCompaction).toHaveBeenCalledOnce();
+    expect(stopIngest).toHaveBeenCalledOnce();
+    expect(close).toHaveBeenCalledOnce();
+  });
+
   it("logs malformed sweeper handles and continues other workers by default", async () => {
     const logger = buildLogger();
     const close = vi.fn().mockResolvedValue(undefined);

@@ -289,7 +289,7 @@ async function stopStartedWorkers(
   services: BackgroundWorkerServices,
 ): Promise<void> {
   const results = await Promise.allSettled(
-    started.map((worker) => worker.handle.stop()),
+    started.map(async (worker) => worker.handle.stop()),
   );
   await services.close?.();
 
