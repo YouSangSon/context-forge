@@ -10544,3 +10544,32 @@ Verification:
 - `git diff --check` (passed)
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2299` tests passed, `34` skipped)
+
+## 2026-07-02 15:04 KST - Graph Memory Row Scalar Validation
+
+- Hardened graph entity and relationship row mapping:
+  - Added RED coverage showing malformed graph organization IDs, entity kind
+    values, normalized/display text, relationship types, nullable validity
+    bounds, and endpoint entity metadata resolved instead of failing at the
+    repository boundary.
+  - Graph row mapping now validates required scalar fields as non-blank text,
+    nullable validity bounds as null-or-nonblank text, and graph entity kind
+    values against the extracted-entity kind set before returning inspection
+    results.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed with `25` malformed graph scalar/entity-kind cases resolving instead
+  of rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `164` tests passed, `7` skipped)
+- Related: `npx vitest run tests/store/memory-repository.test.ts tests/mcp/server.test.ts tests/app/server.test.ts tests/app/mcp-http.test.ts --reporter=dot`
+  (`4` files passed; `383` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check` (passed)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2324` tests passed, `34` skipped)

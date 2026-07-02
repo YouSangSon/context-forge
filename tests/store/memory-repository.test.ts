@@ -1421,6 +1421,35 @@ describe("createMemoryRepository (unit — no PG required)", () => {
       message: "database number must be finite",
     },
     {
+      rowPatch: { organization_id: null },
+      message: "graph entity organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message: "graph entity organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { kind: "ticket" },
+      message:
+        "graph entity kind must be one of: code_symbol, path, url, date, proper_noun",
+    },
+    {
+      rowPatch: { normalized: 42 },
+      message: "graph entity normalized must be a string",
+    },
+    {
+      rowPatch: { normalized: " \n\t " },
+      message: "graph entity normalized must contain non-whitespace text",
+    },
+    {
+      rowPatch: { display_text: 42 },
+      message: "graph entity display_text must be a string",
+    },
+    {
+      rowPatch: { display_text: " \n\t " },
+      message: "graph entity display_text must contain non-whitespace text",
+    },
+    {
       rowPatch: { mention_count: "-1" },
       message: "graph entity mention_count must be a non-negative safe integer",
     },
@@ -1444,6 +1473,9 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     const mockPool = {
       query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
         queryCalls.push({ sql, params });
+        if (!sql.includes("FROM entities e")) {
+          return Promise.resolve({ rows: [] });
+        }
         return Promise.resolve({
           rows: [
             {
@@ -1487,6 +1519,87 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     {
       rowPatch: { evidence_memory_record_id: "bad" },
       message: "database number must be finite",
+    },
+    {
+      rowPatch: { organization_id: null },
+      message: "graph relationship organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message:
+        "graph relationship organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { relation_type: 42 },
+      message: "graph relationship relation_type must be a string",
+    },
+    {
+      rowPatch: { relation_type: " \n\t " },
+      message:
+        "graph relationship relation_type must contain non-whitespace text",
+    },
+    {
+      rowPatch: { valid_from: 42 },
+      message: "graph relationship valid_from must be a string or null",
+    },
+    {
+      rowPatch: { valid_from: " \n\t " },
+      message:
+        "graph relationship valid_from must contain non-whitespace text",
+    },
+    {
+      rowPatch: { valid_to: false },
+      message: "graph relationship valid_to must be a string or null",
+    },
+    {
+      rowPatch: { valid_to: " \n\t " },
+      message: "graph relationship valid_to must contain non-whitespace text",
+    },
+    {
+      rowPatch: { from_kind: "ticket" },
+      message:
+        "graph relationship from.kind must be one of: code_symbol, path, url, date, proper_noun",
+    },
+    {
+      rowPatch: { from_normalized: 42 },
+      message: "graph relationship from.normalized must be a string",
+    },
+    {
+      rowPatch: { from_normalized: " \n\t " },
+      message:
+        "graph relationship from.normalized must contain non-whitespace text",
+    },
+    {
+      rowPatch: { from_display_text: 42 },
+      message: "graph relationship from.display_text must be a string",
+    },
+    {
+      rowPatch: { from_display_text: " \n\t " },
+      message:
+        "graph relationship from.display_text must contain non-whitespace text",
+    },
+    {
+      rowPatch: { to_kind: "ticket" },
+      message:
+        "graph relationship to.kind must be one of: code_symbol, path, url, date, proper_noun",
+    },
+    {
+      rowPatch: { to_normalized: 42 },
+      message: "graph relationship to.normalized must be a string",
+    },
+    {
+      rowPatch: { to_normalized: " \n\t " },
+      message:
+        "graph relationship to.normalized must contain non-whitespace text",
+    },
+    {
+      rowPatch: { to_display_text: 42 },
+      message: "graph relationship to.display_text must be a string",
+    },
+    {
+      rowPatch: { to_display_text: " \n\t " },
+      message:
+        "graph relationship to.display_text must contain non-whitespace text",
     },
     {
       rowPatch: { confidence: "-0.1" },

@@ -920,10 +920,13 @@ async function inspectPostgresMemoryGraph(
 function mapPostgresGraphEntity(row: PostgresGraphEntityRow): MemoryGraphEntity {
   return {
     id: mapPositiveSafeInteger(row.id, "graph entity id"),
-    organizationId: row.organization_id,
-    kind: row.kind,
-    normalized: row.normalized,
-    displayText: row.display_text,
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "graph entity organization_id",
+    ),
+    kind: mapEntityKind(row.kind, "graph entity kind"),
+    normalized: mapRequiredText(row.normalized, "graph entity normalized"),
+    displayText: mapRequiredText(row.display_text, "graph entity display_text"),
     firstSeenAt: toIsoString(row.first_seen_at),
     lastSeenAt: toIsoString(row.last_seen_at),
     mentionCount: mapNonNegativeSafeInteger(
@@ -951,28 +954,52 @@ function mapPostgresGraphRelationship(
 
   return {
     id: mapPositiveSafeInteger(row.id, "graph relationship id"),
-    organizationId: row.organization_id,
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "graph relationship organization_id",
+    ),
     fromEntityId,
     toEntityId,
     fromEntity: {
       id: fromEntityId,
-      kind: row.from_kind,
-      normalized: row.from_normalized,
-      displayText: row.from_display_text,
+      kind: mapEntityKind(row.from_kind, "graph relationship from.kind"),
+      normalized: mapRequiredText(
+        row.from_normalized,
+        "graph relationship from.normalized",
+      ),
+      displayText: mapRequiredText(
+        row.from_display_text,
+        "graph relationship from.display_text",
+      ),
     },
     toEntity: {
       id: toEntityId,
-      kind: row.to_kind,
-      normalized: row.to_normalized,
-      displayText: row.to_display_text,
+      kind: mapEntityKind(row.to_kind, "graph relationship to.kind"),
+      normalized: mapRequiredText(
+        row.to_normalized,
+        "graph relationship to.normalized",
+      ),
+      displayText: mapRequiredText(
+        row.to_display_text,
+        "graph relationship to.display_text",
+      ),
     },
-    relationType: row.relation_type,
+    relationType: mapRequiredText(
+      row.relation_type,
+      "graph relationship relation_type",
+    ),
     evidenceMemoryRecordId: mapPositiveSafeInteger(
       row.evidence_memory_record_id,
       "graph relationship evidence_memory_record_id",
     ),
-    validFrom: row.valid_from,
-    validTo: row.valid_to,
+    validFrom: mapNullableNonBlankText(
+      row.valid_from,
+      "graph relationship valid_from",
+    ),
+    validTo: mapNullableNonBlankText(
+      row.valid_to,
+      "graph relationship valid_to",
+    ),
     confidence: mapConfidence(row.confidence, "graph relationship confidence"),
     createdAt: toIsoString(row.created_at),
   };
@@ -1126,6 +1153,40 @@ function mapNullableText(value: unknown, fieldName: string): string | null {
     return value;
   }
   throw new Error(`${fieldName} must be a string or null`);
+}
+
+function mapNullableNonBlankText(
+  value: unknown,
+  fieldName: string,
+): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string or null`);
+  }
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
+  return value;
+}
+
+function mapEntityKind(
+  value: unknown,
+  fieldName: string,
+): EntityMention["kind"] {
+  if (
+    value === "code_symbol" ||
+    value === "path" ||
+    value === "url" ||
+    value === "date" ||
+    value === "proper_noun"
+  ) {
+    return value;
+  }
+  throw new Error(
+    `${fieldName} must be one of: code_symbol, path, url, date, proper_noun`,
+  );
 }
 
 function assertPositiveSafeInteger(value: unknown, fieldName: string): void {

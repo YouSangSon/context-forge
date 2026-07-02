@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory repository graph row mapping now rejects malformed returned scalar
+  metadata and entity kind values before exposing graph inspection results.
 - Memory repository hydrated row mapping now rejects malformed returned
   organization, scope, content, and nullable scalar metadata before exposing
   search/list records.
