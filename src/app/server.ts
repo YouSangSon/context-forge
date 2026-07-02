@@ -720,16 +720,16 @@ function assertOptionalServiceConfig(value: unknown): void {
   }
   const config = assertObject(value, "config");
   assertString(config.host, "config.host");
-  assertNumber(config.port, "config.port");
+  assertPort(config.port, "config.port");
   assertString(config.databaseUrl, "config.databaseUrl");
   const postgres = assertObject(config.postgres, "config.postgres");
   const pool = assertObject(postgres.pool, "config.postgres.pool");
-  assertNumber(pool.max, "config.postgres.pool.max");
-  assertNumber(
+  assertPositiveSafeInteger(pool.max, "config.postgres.pool.max");
+  assertPositiveSafeInteger(
     pool.idleTimeoutMillis,
     "config.postgres.pool.idleTimeoutMillis",
   );
-  assertNumber(
+  assertPositiveSafeInteger(
     pool.connectionTimeoutMillis,
     "config.postgres.pool.connectionTimeoutMillis",
   );
@@ -841,9 +841,25 @@ function assertNonBlankString(
   }
 }
 
-function assertNumber(value: unknown, fieldName: string): asserts value is number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new Error(`${fieldName} must be a finite number`);
+function assertPort(value: unknown, fieldName: string): asserts value is number {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value < 0 ||
+    value > 65_535
+  ) {
+    throw new Error(
+      `${fieldName} must be a non-negative safe integer up to 65535`,
+    );
+  }
+}
+
+function assertPositiveSafeInteger(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
   }
 }
 

@@ -2,6 +2,36 @@
 
 ## 2026-07-02
 
+- 15:41 KST - Hardened operator server direct ServiceConfig numeric validation:
+  - `src/app/server.ts` now validates direct config ports as safe integers in
+    the Node listen range before construction/startup.
+  - Direct `port: 0` remains valid for ephemeral test servers; negative and
+    out-of-range ports fail at the option boundary.
+  - Direct Postgres pool `max`, `idleTimeoutMillis`, and
+    `connectionTimeoutMillis` values now require positive safe integers before
+    the lower-level pool constructor runs.
+  - `tests/app/operator-server-boundary.test.ts` covers malformed direct port
+    and pool numeric fields.
+
+RED/GREEN:
+- RED: `npx vitest run tests/app/operator-server-boundary.test.ts --reporter=dot`
+  failed because malformed direct config numeric fields passed construction or
+  failed later with lower-level errors.
+- GREEN: `npx vitest run tests/app/operator-server-boundary.test.ts --reporter=dot`
+  (`1` file passed; `46` tests passed)
+
+Verification:
+- `npx vitest run tests/app/operator-server-boundary.test.ts tests/app/start-background-workers-server.test.ts tests/app/start-operator-server-metrics.test.ts --reporter=dot`
+  (`3` files passed; `51` tests passed)
+- `npx vitest run tests/app/operator-server-boundary.test.ts tests/app/server.test.ts tests/config/service-config.test.ts tests/db/connection.test.ts tests/app/start-background-workers-server.test.ts tests/app/start-operator-server-metrics.test.ts --reporter=dot`
+  (`6` files passed; `201` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2406`
+  tests passed, `34` skipped)
+
 - 15:36 KST - Hardened rate limiter decision validation:
   - `src/app/middleware/rate-limit.ts` now exports
     `assertRateLimitDecision` for direct/injected limiter decisions.

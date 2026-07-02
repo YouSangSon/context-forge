@@ -71,6 +71,43 @@ const malformedOptionCases = [
     message: "config.host must be a string",
   },
   {
+    input: () => ({ config: buildConfig({ port: -1 }) }),
+    message: "config.port must be a non-negative safe integer up to 65535",
+  },
+  {
+    input: () => ({ config: buildConfig({ port: 65_536 }) }),
+    message: "config.port must be a non-negative safe integer up to 65535",
+  },
+  {
+    input: () => ({
+      config: {
+        ...buildConfig(),
+        postgres: {
+          pool: {
+            ...buildConfig().postgres.pool,
+            max: 0,
+          },
+        },
+      },
+    }),
+    message: "config.postgres.pool.max must be a positive safe integer",
+  },
+  {
+    input: () => ({
+      config: {
+        ...buildConfig(),
+        postgres: {
+          pool: {
+            ...buildConfig().postgres.pool,
+            idleTimeoutMillis: -1,
+          },
+        },
+      },
+    }),
+    message:
+      "config.postgres.pool.idleTimeoutMillis must be a positive safe integer",
+  },
+  {
     input: () => ({
       config: {
         ...buildConfig(),

@@ -4,18 +4,19 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Rate Limit Decision Boundary Validation
+## Current Loop - Service Config Numeric Boundary Validation
 
 Status:
-- Rate limiter `check()` decisions now validate `allowed`, `remaining`, and
-  `retryAfterMs` before HTTP/MCP handlers act on them.
-- Malformed injected limiter decisions now fail at the boundary instead of
-  writing invalid `Retry-After` headers.
+- Direct operator server `ServiceConfig` now validates port and Postgres pool
+  numeric fields before construction/startup.
+- Direct `port: 0` remains valid for ephemeral test servers, while negative or
+  out-of-range ports fail at the option boundary.
 
 Verification:
-- Focused rate-limit and MCP HTTP boundary tests passed after RED malformed
-  decision reproducers.
-- Related MCP HTTP, server, and operator boundary tests passed.
+- Focused operator-server boundary tests passed after RED numeric config
+  reproducers.
+- Related server, service-config, DB connection, background worker, and metrics
+  wiring tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

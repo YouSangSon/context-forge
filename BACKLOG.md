@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Operator server direct `ServiceConfig` now validates port and Postgres pool
+  numeric fields before construction/startup while preserving `port: 0`.
 - Rate limiter decisions now validate `allowed`, `remaining`, and
   `retryAfterMs` before HTTP/MCP handlers write rate-limit responses.
 - OAuth verifier fallback results now validate token strings, optional
