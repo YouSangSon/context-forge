@@ -4,12 +4,12 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Qdrant Query Response Shape Validation
+## Current Loop - Qdrant Point Object Shape Validation
 
 Status:
-- `src/vector/qdrant-index.ts` now validates Qdrant query responses as objects
-  before reading `points`.
-- `tests/vector/qdrant-index.test.ts` now covers malformed query responses.
+- `src/vector/qdrant-index.ts` now validates each Qdrant query point as an
+  object before reading `id`, `score`, or `payload`.
+- `tests/vector/qdrant-index.test.ts` now covers malformed point objects.
 
 Verification:
 - Focused Qdrant vector tests passed after a RED reproducer.

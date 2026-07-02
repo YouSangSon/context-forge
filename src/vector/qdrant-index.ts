@@ -170,6 +170,11 @@ function assertQdrantPoints(value: unknown): asserts value is QdrantQueryPoint[]
   if (!Array.isArray(value)) {
     throw new Error("points must be an array");
   }
+  value.forEach((point, index) => {
+    if (typeof point !== "object" || point === null || Array.isArray(point)) {
+      throw new Error(`points[${index}] must be an object`);
+    }
+  });
 }
 
 function toQdrantPointId(value: unknown, fieldName: string): string {

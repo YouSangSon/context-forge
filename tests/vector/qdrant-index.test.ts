@@ -282,6 +282,24 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     ).rejects.toThrow("points must be an array");
   });
 
+  it("rejects malformed Qdrant point objects before reading fields", async () => {
+    const client = makeClient();
+    client.query.mockResolvedValue({ points: [null] });
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.query(
+        [0.1],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "p" }],
+          projectKey: "p",
+        },
+        10,
+      ),
+    ).rejects.toThrow("points[0] must be an object");
+  });
+
   it("rejects non-finite Qdrant scores before returning VectorHit[]", async () => {
     const client = makeClient();
     client.query.mockResolvedValue({

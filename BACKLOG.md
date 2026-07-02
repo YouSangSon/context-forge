@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant vector query response mapping now validates each point object before
+  reading `id`, `score`, or `payload`, replacing incidental field-access
+  failures with a clear adapter boundary error.
 - Qdrant vector query response mapping now rejects malformed non-object query
   responses before reading `points`, replacing incidental property-access
   failures with a clear adapter boundary error.
