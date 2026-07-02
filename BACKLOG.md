@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository recent-apply counting now rejects malformed direct
+  window durations before querying compaction run rows.
 - Memory archive repository archive lookup now rejects malformed direct archive
   id lists before querying archive rows.
 - Memory archive repository run creation now rejects malformed direct run

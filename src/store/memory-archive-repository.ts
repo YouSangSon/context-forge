@@ -458,6 +458,7 @@ export function createMemoryArchiveRepository(
 
     async countRecentApplyRuns(organizationId, windowMs) {
       assertNonBlankText(organizationId, "organizationId");
+      assertPositiveSafeInteger(windowMs, "windowMs");
 
       // Postgres INTERVAL doesn't accept parameterized text directly; build
       // it from milliseconds via make_interval. windowMs is server-controlled

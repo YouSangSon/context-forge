@@ -774,6 +774,41 @@ describe("MemoryArchiveRepository.countRecentApplyRuns", () => {
   });
 
   it.each([
+    {
+      windowMs: 0,
+      message: "windowMs must be a positive safe integer",
+    },
+    {
+      windowMs: -1,
+      message: "windowMs must be a positive safe integer",
+    },
+    {
+      windowMs: 1.5,
+      message: "windowMs must be a positive safe integer",
+    },
+    {
+      windowMs: Number.NaN,
+      message: "windowMs must be a positive safe integer",
+    },
+    {
+      windowMs: "60000",
+      message: "windowMs must be a positive safe integer",
+    },
+  ])("rejects malformed direct apply-run windows before querying %#", async ({
+    windowMs,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [{ count: 0 }] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.countRecentApplyRuns("org-a", windowMs as never),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
     { count: 0, expected: 0 },
     { count: "0", expected: 0 },
     { count: "42", expected: 42 },
