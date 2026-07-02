@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- 18:53 KST - Added a handler organization boundary guard:
+  - `src/mcp/tool-handlers.ts` no longer contains raw direct
+    `toolInput.organizationId` pass-through or raw defaulting patterns at MCP
+    handler boundaries.
+  - `search_memory` now passes the already-trimmed direct organization ID into
+    record resolution.
+  - `unarchive_memory` now normalizes direct organization IDs before calling
+    `unarchiveCompaction`.
+  - `tests/mcp/tool-registry.test.ts` includes a static regression guard for
+    raw handler organization ID pass-through and defaulting patterns.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/tool-registry.test.ts --reporter=dot`
+  failed the new static guard because raw direct organization ID patterns
+  remained in `tool-handlers.ts`.
+- GREEN: `npx vitest run tests/mcp/tool-registry.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`2` files passed; `153` tests passed)
+
+Verification:
+- `npx vitest run tests/compact/unarchive-compaction.test.ts tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`2` files passed; `181` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2461`
+  tests passed, `34` skipped)
+
 - 18:50 KST - Hardened search handler organization normalization:
   - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
     `search_memory` record resolution dispatches to retrieve overrides, legacy

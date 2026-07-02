@@ -18,6 +18,10 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- MCP handler tests now guard against raw direct organization ID pass-through
+  and raw defaulting patterns at handler boundaries.
+- Remaining raw direct organization ID handler pass-throughs were removed from
+  search and unarchive boundaries.
 - `search_memory` record resolution now trims direct organization identifiers
   before retrieve overrides, legacy collection, and canonical retrieval.
 - `add_memory` now trims direct organization identifiers before repository

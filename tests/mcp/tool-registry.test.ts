@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { createToolHandlers } from "../../src/mcp/tool-handlers.js";
 import { createToolRegistry } from "../../src/mcp/tool-registry.js";
@@ -135,5 +136,15 @@ describe("createToolHandlers", () => {
       limit: 10,
     });
     expect(result.query).toBe("timeout retry");
+  });
+
+  it("does not pass raw toolInput organization IDs across handler boundaries", () => {
+    const source = readFileSync(
+      new URL("../../src/mcp/tool-handlers.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(source).not.toMatch(/organizationId:\s*toolInput\.organizationId\s*[,}]/);
+    expect(source).not.toMatch(/toolInput\.organizationId\s*\?\?\s*"default"/);
   });
 });

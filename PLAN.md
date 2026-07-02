@@ -4,16 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Search Handler Organization Normalization
+## Current Loop - Handler Organization Boundary Guard
 
 Status:
-- `search_memory` record resolution now trims direct organization identifiers
-  before retrieve overrides, legacy collection, and canonical retrieval.
+- Remaining raw `toolInput.organizationId` handler pass-throughs were removed
+  from search and unarchive boundaries.
+- MCP handler tests now include a static guard against raw organization ID
+  pass-through and raw defaulting patterns.
 
 Verification:
-- Focused tool-registry and MCP server tests passed after the RED retrieval
-  override reproducer.
-- Related search retrieval and memory repository tests passed.
+- Focused tool-registry and MCP server tests passed after the RED static
+  handler-boundary reproducer.
+- Related unarchive and archive repository tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

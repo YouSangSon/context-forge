@@ -295,7 +295,7 @@ export function createToolHandlers(input: {
       const query = toolInput.query.trim();
 
       const results = await resolveRecords({
-        organizationId: toolInput.organizationId,
+        organizationId: toolInput.organizationId?.trim(),
         projectKey,
         query,
         userScopeId: toolInput.userScopeId,
@@ -862,10 +862,11 @@ export function createToolHandlers(input: {
         };
       }
       return await withCanonicalServices(async (services) => {
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const result = await unarchiveCompaction(
           {
             archiveIds: toolInput.archiveIds,
-            organizationId: toolInput.organizationId ?? "default",
+            organizationId,
             actor: "unarchive_memory",
           },
           {
