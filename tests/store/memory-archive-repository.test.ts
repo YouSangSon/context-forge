@@ -1116,6 +1116,46 @@ describe("MemoryArchiveRepository.restoreToCanonical", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      archive: null,
+      message: "restore archive must be an object",
+    },
+    {
+      archive: makeArchive({ id: 0 }),
+      message: "memory archive id must be a positive safe integer",
+    },
+    {
+      archive: makeArchive({ scopeType: "team" }),
+      message: "memory archive scope_type must be one of: user, project",
+    },
+    {
+      archive: makeArchive({ kind: "note" }),
+      message: "memory archive kind must be one of: decision, summary, fact",
+    },
+    {
+      archive: makeArchive({ durability: "permanent" }),
+      message:
+        "memory archive durability must be one of: ephemeral, durable, archived",
+    },
+    {
+      archive: makeArchive({ originalUpdatedAt: "not-a-date" }),
+      message: "database timestamp must be a valid timestamp",
+    },
+  ])("rejects malformed direct restore archive inputs before querying %#", async ({
+    archive,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [{ id: 1 }] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.restoreToCanonical(archive as never, "org-a"),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("rejects when archive has no sourceId", async () => {
     const { pool } = makeMockPool(async () => ({ rows: [{ id: 1 }] }));
     const repo = createMemoryArchiveRepository(pool);

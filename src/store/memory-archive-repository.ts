@@ -550,20 +550,21 @@ export function createMemoryArchiveRepository(
 
     async restoreToCanonical(archive, organizationId) {
       assertNonBlankText(organizationId, "organizationId");
+      const restorableArchive = mapRestorableArchive(archive);
 
       // Insert preserves original_created_at / original_updated_at so
       // forensic queries see the actual age of the resurrected record. The
       // source_id is restored verbatim — caller is expected to verify the
       // source row still exists if FK violation matters (most ops won't
       // hit this since sources outlive memory_records).
-      if (archive.organizationId !== organizationId) {
+      if (restorableArchive.organizationId !== organizationId) {
         throw new Error(
-          `restoreToCanonical: org mismatch (archive.org=${archive.organizationId}, requested=${organizationId})`,
+          `restoreToCanonical: org mismatch (archive.org=${restorableArchive.organizationId}, requested=${organizationId})`,
         );
       }
-      if (archive.sourceId === null) {
+      if (restorableArchive.sourceId === null) {
         throw new Error(
-          `restoreToCanonical: archive ${archive.id} has no source_id; cannot restore until the original source is rebuilt`,
+          `restoreToCanonical: archive ${restorableArchive.id} has no source_id; cannot restore until the original source is rebuilt`,
         );
       }
       const result = await pool.query<{ id: number | string }>(
@@ -578,24 +579,24 @@ export function createMemoryArchiveRepository(
         `,
         [
           organizationId,
-          archive.scopeType,
-          archive.scopeId,
-          archive.projectKey,
-          archive.kind,
-          archive.title,
-          archive.content,
-          archive.summary,
-          archive.durability,
-          archive.importance,
-          archive.sourceId,
-          archive.originalCreatedAt,
-          archive.originalUpdatedAt,
+          restorableArchive.scopeType,
+          restorableArchive.scopeId,
+          restorableArchive.projectKey,
+          restorableArchive.kind,
+          restorableArchive.title,
+          restorableArchive.content,
+          restorableArchive.summary,
+          restorableArchive.durability,
+          restorableArchive.importance,
+          restorableArchive.sourceId,
+          restorableArchive.originalCreatedAt,
+          restorableArchive.originalUpdatedAt,
         ],
       );
       const newId = result.rows[0]?.id;
       if (newId === undefined) {
         throw new Error(
-          `restoreToCanonical: INSERT returned no id for archive ${archive.id}`,
+          `restoreToCanonical: INSERT returned no id for archive ${restorableArchive.id}`,
         );
       }
       return {
@@ -710,6 +711,56 @@ function assertCompleteCompactionRunInput(
   assertNonNegativeSafeInteger(input.decayCount, "decayCount");
   assertNonNegativeSafeInteger(input.qdrantFailed, "qdrantFailed");
   assertOptionalString(input.errorMessage, "errorMessage");
+}
+
+function mapRestorableArchive(value: unknown): ArchiveRow {
+  const candidate = assertObject(value, "restore archive");
+  const organizationId = candidate.organizationId;
+  assertNonBlankText(organizationId, "memory archive organizationId");
+  const sourceId =
+    candidate.sourceId === null
+      ? null
+      : toPositiveSafeInteger(candidate.sourceId, "memory archive source_id");
+  return {
+    id: toPositiveSafeInteger(candidate.id, "memory archive id"),
+    organizationId,
+    sourceRecordId: toPositiveSafeInteger(
+      candidate.sourceRecordId,
+      "memory archive source_record_id",
+    ),
+    sourceId,
+    scopeType: toArchiveScopeType(candidate.scopeType),
+    scopeId: assertRequiredNonBlankString(
+      candidate.scopeId,
+      "memory archive scopeId",
+    ),
+    projectKey: toNullableString(
+      candidate.projectKey,
+      "memory archive projectKey",
+    ),
+    kind: toArchiveKind(candidate.kind),
+    title: toNullableString(candidate.title, "memory archive title"),
+    content: assertRequiredNonBlankString(
+      candidate.content,
+      "memory archive content",
+    ),
+    summary: toNullableString(candidate.summary, "memory archive summary"),
+    durability: toArchiveDurability(candidate.durability),
+    importance: toPostgresInteger(
+      candidate.importance,
+      "memory archive importance",
+    ),
+    originalCreatedAt: toIsoString(
+      candidate.originalCreatedAt as string | Date,
+    ),
+    originalUpdatedAt: toIsoString(
+      candidate.originalUpdatedAt as string | Date,
+    ),
+    unarchivedAt:
+      candidate.unarchivedAt === null
+        ? null
+        : toIsoString(candidate.unarchivedAt as string | Date),
+  };
 }
 
 function toRecentApplyRunCount(value: unknown): number {
@@ -867,6 +918,24 @@ function assertPositiveSafeIntegerArray(
       );
     }
   }
+}
+
+function assertRequiredNonBlankString(
+  value: unknown,
+  fieldName: string,
+): string {
+  assertNonBlankText(value, fieldName);
+  return value;
+}
+
+function toNullableString(value: unknown, fieldName: string): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
 }
 
 function assertBoolean(value: unknown, fieldName: string): void {

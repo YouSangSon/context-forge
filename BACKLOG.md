@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository restore now rejects malformed direct archive
+  objects before inserting canonical memory rows.
 - Memory archive repository compaction run lookup now rejects malformed direct
   idempotency keys before querying run rows.
 - Memory archive repository recent-apply counting now rejects malformed direct
