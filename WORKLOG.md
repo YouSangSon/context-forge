@@ -10349,3 +10349,27 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2252` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened pending qdrant cleanup row metadata mapping:
+  - Added RED coverage showing malformed pending/claimed cleanup row
+    `organization_id` and `qdrant_point_ids` values were returned directly
+    instead of failing at the repository boundary.
+  - Pending cleanup reads and atomic claims now share one row mapper that
+    validates cleanup row objects, organization IDs, qdrant point ID arrays,
+    archive IDs, and attempt counts before returning worker payloads.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed cleanup row metadata resolved instead of rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `133` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/outbox-sweeper.test.ts tests/compact/apply-compaction.test.ts tests/compact/compact-memory.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`5` files passed; `374` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2259` tests passed, `34` skipped)
+- `git diff --check` (passed)

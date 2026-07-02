@@ -385,8 +385,8 @@ export function createMemoryArchiveRepository(
       // workers must use claimPendingQdrantCleanup for atomic visibility.
       const result = await pool.query<{
         id: number | string;
-        organization_id: string;
-        qdrant_point_ids: string[];
+        organization_id: unknown;
+        qdrant_point_ids: unknown;
         qdrant_attempt_count: number | string;
       }>(
         `
@@ -402,15 +402,7 @@ export function createMemoryArchiveRepository(
         `,
         [limit],
       );
-      return result.rows.map((row) => ({
-        archiveId: toPositiveSafeInteger(row.id, "memory archive id"),
-        organizationId: row.organization_id,
-        qdrantPointIds: row.qdrant_point_ids ?? [],
-        attemptCount: toNonNegativeSafeInteger(
-          row.qdrant_attempt_count,
-          "memory archive qdrant_attempt_count",
-        ),
-      }));
+      return result.rows.map(mapPendingQdrantCleanupRow);
     },
 
     async claimPendingQdrantCleanup(input) {
@@ -422,8 +414,8 @@ export function createMemoryArchiveRepository(
       );
       const result = await pool.query<{
         id: number | string;
-        organization_id: string;
-        qdrant_point_ids: string[];
+        organization_id: unknown;
+        qdrant_point_ids: unknown;
         qdrant_attempt_count: number | string;
       }>(
         `
@@ -447,15 +439,7 @@ export function createMemoryArchiveRepository(
         [now.toISOString(), limit, claimUntil.toISOString()],
       );
 
-      return result.rows.map((row) => ({
-        archiveId: toPositiveSafeInteger(row.id, "memory archive id"),
-        organizationId: row.organization_id,
-        qdrantPointIds: row.qdrant_point_ids ?? [],
-        attemptCount: toNonNegativeSafeInteger(
-          row.qdrant_attempt_count,
-          "memory archive qdrant_attempt_count",
-        ),
-      }));
+      return result.rows.map(mapPendingQdrantCleanupRow);
     },
 
     async countRecentApplyRuns(organizationId, windowMs) {
@@ -780,6 +764,24 @@ function mapRestorableArchive(value: unknown): ArchiveRow {
   };
 }
 
+function mapPendingQdrantCleanupRow(value: unknown): PendingQdrantCleanup {
+  const candidate = assertObject(value, "pending qdrant cleanup row");
+  const organizationId = candidate.organization_id;
+  assertNonBlankText(organizationId, "memory archive organization_id");
+  return {
+    archiveId: toPositiveSafeInteger(candidate.id, "memory archive id"),
+    organizationId,
+    qdrantPointIds: toNonBlankStringArray(
+      candidate.qdrant_point_ids,
+      "memory archive qdrant_point_ids",
+    ),
+    attemptCount: toNonNegativeSafeInteger(
+      candidate.qdrant_attempt_count,
+      "memory archive qdrant_attempt_count",
+    ),
+  };
+}
+
 function toRecentApplyRunCount(value: unknown): number {
   let count: number;
   try {
@@ -935,6 +937,18 @@ function assertPositiveSafeIntegerArray(
       );
     }
   }
+}
+
+function toNonBlankStringArray(value: unknown, fieldName: string): string[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+  const result: string[] = [];
+  for (const [index, item] of value.entries()) {
+    assertNonBlankText(item, `${fieldName}[${index}]`);
+    result.push(item);
+  }
+  return result;
 }
 
 function assertRequiredNonBlankString(

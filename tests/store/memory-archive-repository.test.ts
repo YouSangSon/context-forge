@@ -735,6 +735,49 @@ describe("MemoryArchiveRepository.findPendingQdrantCleanup", () => {
     },
   );
 
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "memory archive organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message:
+        "memory archive organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { qdrant_point_ids: null },
+      message: "memory archive qdrant_point_ids must be an array",
+    },
+    {
+      rowPatch: { qdrant_point_ids: [42] },
+      message: "memory archive qdrant_point_ids[0] must be a string",
+    },
+    {
+      rowPatch: { qdrant_point_ids: [" \n\t "] },
+      message:
+        "memory archive qdrant_point_ids[0] must contain non-whitespace text",
+    },
+  ])("rejects malformed pending cleanup row metadata %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [
+        {
+          id: "1",
+          organization_id: "org-a",
+          qdrant_point_ids: ["pa1"],
+          qdrant_attempt_count: "0",
+          ...rowPatch,
+        },
+      ],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findPendingQdrantCleanup(50)).rejects.toThrow(message);
+  });
+
   it("filters due pending rows without claiming locks", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -850,6 +893,40 @@ describe("MemoryArchiveRepository.claimPendingQdrantCleanup", () => {
     ).rejects.toThrow(
       "memory archive qdrant_attempt_count must be a non-negative safe integer",
     );
+  });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "memory archive organization_id must be a string",
+    },
+    {
+      rowPatch: { qdrant_point_ids: null },
+      message: "memory archive qdrant_point_ids must be an array",
+    },
+  ])("rejects malformed claimed cleanup row metadata %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [
+        {
+          id: "1",
+          organization_id: "org-a",
+          qdrant_point_ids: ["pa1"],
+          qdrant_attempt_count: "2",
+          ...rowPatch,
+        },
+      ],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.claimPendingQdrantCleanup({
+        limit: 10,
+        now: new Date("2026-06-25T00:00:00.000Z"),
+      }),
+    ).rejects.toThrow(message);
   });
 });
 
