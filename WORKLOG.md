@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 16:38 KST - Hardened memory lexical search organization normalization:
+  - `src/store/memory-repository.ts` now trims direct organization identifiers
+    before building search query parameters.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/store/memory-repository.test.ts` covers trimmed search parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed the new search organization trimming case because raw organization ID
+  text reached query parameters.
+- GREEN: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `168` tests passed, `7` skipped)
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`2` files passed; `301` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2429`
+  tests passed, `34` skipped)
+
 - 16:35 KST - Hardened goal-run close organization normalization:
   - `src/goal-run/goal-run-repository.ts` now trims direct organization
     identifiers before updating completed or abandoned runs.

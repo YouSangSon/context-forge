@@ -281,6 +281,10 @@ export function createMemoryRepository(
       if (input.organizationId !== undefined) {
         assertNonBlankText(input.organizationId, "organizationId");
       }
+      const organizationId =
+        input.organizationId === undefined
+          ? undefined
+          : input.organizationId.trim();
 
       if (typeof input.query !== "string") {
         throw new Error("search query must be a string");
@@ -347,8 +351,8 @@ export function createMemoryRepository(
       });
 
       let orgClause = "";
-      if (input.organizationId !== undefined) {
-        const orgIndex = params.push(input.organizationId);
+      if (organizationId !== undefined) {
+        const orgIndex = params.push(organizationId);
         orgClause = ` AND mr.organization_id = $${orgIndex}`;
       }
 

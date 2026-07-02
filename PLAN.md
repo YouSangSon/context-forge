@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Goal Run Close Organization Normalization
+## Current Loop - Search Memory Organization Normalization
 
 Status:
-- Goal-run close operations now trim direct organization identifiers before
-  updating completed or abandoned runs.
+- Memory lexical search now trims direct organization identifiers before
+  building query parameters.
 - Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused goal-run repository tests passed after the RED close organization
+- Focused memory repository tests passed after the RED search organization
   trimming reproducer.
-- Related goal-run handler/context and MCP server tests passed.
+- Related memory repository and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

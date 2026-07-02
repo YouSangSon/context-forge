@@ -2435,6 +2435,27 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(mockPool.query).not.toHaveBeenCalled();
   });
 
+  it("searchMemory trims organizationId before querying", async () => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.searchMemory({
+      query: "timeout retry",
+      scopes: [{ scopeType: "project", scopeId: "proj-x" }],
+      organizationId: " org-a ",
+      limit: 5,
+    });
+
+    expect(queryCalls[0]?.params).toContain("org-a");
+    expect(queryCalls[0]?.params).not.toContain(" org-a ");
+  });
+
   it.each([undefined, null, 42, {}, []])(
     "searchMemory rejects non-string direct queries before querying: %s",
     async (query) => {
