@@ -84,6 +84,10 @@ export function createQdrantVectorIndex(
       if (points.length === 0) return;
       assertVectorPointOrganizationIds(points);
 
+      for (const point of points) {
+        assertQdrantPointVector(point);
+      }
+
       await client.upsert(collectionName, { points });
     },
 
@@ -172,9 +176,27 @@ function assertQdrantQueryVector(vector: readonly unknown[]): void {
     throw new Error("query vector must be a non-empty array");
   }
 
+  assertQdrantFiniteVectorComponents(vector, "query vector");
+}
+
+function assertQdrantPointVector(point: VectorPoint): void {
+  if (point.vector.length === 0) {
+    throw new Error(
+      `upsert: point "${point.id}" has an empty embedding vector. ` +
+      "Ensure the embedding step produced a valid vector before calling upsert.",
+    );
+  }
+
+  assertQdrantFiniteVectorComponents(point.vector, "vector");
+}
+
+function assertQdrantFiniteVectorComponents(
+  vector: readonly unknown[],
+  fieldName: string,
+): void {
   for (const [index, component] of vector.entries()) {
     if (typeof component !== "number" || !Number.isFinite(component)) {
-      throw new Error(`query vector[${index}] must be a finite number`);
+      throw new Error(`${fieldName}[${index}] must be a finite number`);
     }
   }
 }

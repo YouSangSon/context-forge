@@ -462,6 +462,48 @@ describe("createQdrantVectorIndex — point building (upsert)", () => {
     expect(client.upsert).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      label: "empty",
+      vector: [],
+      message: /empty embedding vector/,
+    },
+    {
+      label: "NaN",
+      vector: [0.1, Number.NaN, 0.3],
+      message: "vector[1] must be a finite number",
+    },
+    {
+      label: "Infinity",
+      vector: [0.1, Number.POSITIVE_INFINITY, 0.3],
+      message: "vector[1] must be a finite number",
+    },
+  ])("rejects malformed upsert vectors before Qdrant upsert: $label", async ({ vector, message }) => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-vector",
+          vector,
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(client.upsert).not.toHaveBeenCalled();
+  });
+
   it("skips Qdrant upsert call when points array is empty", async () => {
     const client = {
       query: vi.fn(),

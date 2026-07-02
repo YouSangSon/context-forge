@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant upsert now validates vector arrays are non-empty and finite before
+  calling the Qdrant client, matching the pgvector adapter's upsert-vector
+  boundary guard.
 - Qdrant query now validates `limit` values are positive safe integers before
   calling the Qdrant client, matching the pgvector adapter's query-limit
   boundary guard.

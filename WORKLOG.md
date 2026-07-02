@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened Qdrant upsert vector validation:
+  - `src/vector/qdrant-index.ts` now validates upsert vectors are non-empty
+    and finite before calling the Qdrant client.
+  - Invalid empty, `NaN`, or `Infinity` vectors now fail with clear adapter
+    boundary errors instead of being sent to Qdrant.
+  - `tests/vector/qdrant-index.test.ts` covers malformed upsert vectors with a
+    mocked client.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  failed the new upsert-vector cases because the adapter allowed invalid
+  points to reach the Qdrant client and resolved successfully.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `40` tests passed)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`3` files passed; `112` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2087` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant query limit validation:
   - `src/vector/qdrant-index.ts` now validates query `limit` values are
     positive safe integers before calling the Qdrant client.
