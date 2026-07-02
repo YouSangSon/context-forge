@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createToolHandlers } from "../../src/mcp/tool-handlers.js";
 import { createToolRegistry } from "../../src/mcp/tool-registry.js";
 
@@ -110,5 +110,29 @@ describe("createToolHandlers", () => {
     },
   ])("rejects malformed handler construction input %#", ({ input, message }) => {
     expect(() => createToolHandlers(input as never)).toThrow(message);
+  });
+
+  it("trims direct search_memory queries before resolving records", async () => {
+    const retrieveMemory = vi.fn().mockResolvedValue([]);
+    const handlers = createToolHandlers({
+      options: { retrieveMemory },
+      cwd: process.cwd(),
+      withCanonicalServices,
+    });
+
+    const result = await handlers.search_memory({
+      projectKey: "project-alpha",
+      query: " timeout retry ",
+      includeUser: false,
+    });
+
+    expect(retrieveMemory).toHaveBeenCalledWith({
+      organizationId: undefined,
+      projectKey: "project-alpha",
+      userScopeId: undefined,
+      query: "timeout retry",
+      limit: 10,
+    });
+    expect(result.query).toBe("timeout retry");
   });
 });

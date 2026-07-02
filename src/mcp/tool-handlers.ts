@@ -291,11 +291,12 @@ export function createToolHandlers(input: {
       assertNonBlankText(toolInput.query, "search query");
       assertProvidedScopeIdentifiers(toolInput);
       const projectKey = requireProjectKey(toolInput.projectKey, "project");
+      const query = toolInput.query.trim();
 
       const results = await resolveRecords({
         organizationId: toolInput.organizationId,
         projectKey,
-        query: toolInput.query,
+        query,
         userScopeId: toolInput.userScopeId,
         includeUser: toolInput.includeUser,
         limit: toolInput.limit,
@@ -304,7 +305,7 @@ export function createToolHandlers(input: {
       return {
         ok: true,
         projectKey,
-        query: toolInput.query,
+        query,
         results,
       };
     },

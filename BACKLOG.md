@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `search_memory` handler now trims direct query values before resolving
+  records and echoes the normalized query in responses.
 - `retrieveMemory` now trims direct lexical queries and skips lexical
   repository search for whitespace-only direct queries.
 - Pg pool construction now trims direct connection strings before

@@ -2,6 +2,29 @@
 
 ## 2026-07-02
 
+- 16:00 KST - Hardened MCP search_memory query normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct `search_memory` query values
+    before resolving records.
+  - Handler responses echo the same normalized query value used for retrieval.
+  - `tests/mcp/tool-registry.test.ts` covers the direct handler boundary.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/tool-registry.test.ts --reporter=dot` failed
+  the new query trimming case because raw query strings reached the retrieval
+  service override.
+- GREEN: `npx vitest run tests/mcp/tool-registry.test.ts --reporter=dot` (`1`
+  file passed; `18` tests passed)
+
+Verification:
+- `npx vitest run tests/mcp/tool-registry.test.ts tests/mcp/server.test.ts tests/search/retrieve-memory.test.ts --reporter=dot`
+  (`3` files passed; `187` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2415`
+  tests passed, `34` skipped)
+
 - 15:57 KST - Hardened retrieveMemory query normalization:
   - `src/search/retrieve-memory.ts` now trims direct lexical queries before
     repository search and lexical scoring.
