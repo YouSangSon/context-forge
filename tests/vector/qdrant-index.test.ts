@@ -847,6 +847,28 @@ describe("createQdrantVectorIndex — ensureCollection", () => {
     );
     expect(client.createCollection).not.toHaveBeenCalled();
   });
+
+  it.each([
+    { label: "zero", dimensions: 0 },
+    { label: "fractional", dimensions: 3.5 },
+    { label: "NaN", dimensions: Number.NaN },
+  ])("rejects malformed dimensions before Qdrant collection checks: $label", async ({ dimensions }) => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.ensureCollection(dimensions),
+    ).rejects.toThrow("dimensions must be a positive safe integer");
+
+    expect(client.collectionExists).not.toHaveBeenCalled();
+    expect(client.createCollection).not.toHaveBeenCalled();
+  });
 });
 
 describe("FakeVectorIndex", () => {

@@ -71,6 +71,7 @@ export function createQdrantVectorIndex(
     // must pass through unchanged. The pgvector adapter's ensureCollection
     // will follow the same create-if-not-exists contract.
     async ensureCollection(dimensions: number): Promise<void> {
+      assertQdrantPositiveSafeInteger(dimensions, "dimensions");
       const response: unknown = await client.collectionExists(collectionName);
       assertQdrantCollectionExistsResponse(response);
       if (!response.exists) {

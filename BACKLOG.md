@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector collection bootstrap now validates dimensions are
+  positive safe integers before calling storage clients, so malformed dimensions
+  cannot reach Qdrant or SQL.
 - Qdrant and pgvector deletes now validate point IDs are non-empty strings
   before calling storage clients, so malformed delete IDs cannot reach Qdrant
   or SQL.

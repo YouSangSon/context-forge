@@ -99,6 +99,7 @@ export function createPgVectorIndex(
 
   return {
     async ensureCollection(dimensions: number): Promise<void> {
+      assertPgVectorPositiveSafeInteger(dimensions, "dimensions");
       // HIGH 3: Do NOT create the extension — requires superuser, fails on managed
       // Postgres (RDS, Cloud SQL, Supabase). Check it exists and guide the operator.
       const extCheck = await pool.query<{ exists: number }>(

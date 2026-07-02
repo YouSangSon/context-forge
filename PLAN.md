@@ -4,13 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Delete Point Id Validation
+## Current Loop - Vector EnsureCollection Dimension Validation
 
 Status:
 - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now validate
-  `delete(ids)` point IDs are non-empty strings before calling storage clients.
-- Qdrant and pgvector tests now cover empty and blank delete IDs with mocked
-  clients.
+  `ensureCollection(dimensions)` values are positive safe integers before
+  calling storage clients.
+- Qdrant and pgvector tests now cover zero, fractional, and `NaN` dimensions
+  with mocked clients.
 
 Verification:
 - Focused Qdrant/pgvector tests passed after RED reproducers.

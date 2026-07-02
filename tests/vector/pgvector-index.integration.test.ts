@@ -586,6 +586,23 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
   });
 });
 
+describe("pgvector adapter — ensureCollection SQL shape", () => {
+  it.each([
+    { label: "zero", dimensions: 0 },
+    { label: "fractional", dimensions: 3.5 },
+    { label: "NaN", dimensions: Number.NaN },
+  ])("ensureCollection rejects malformed dimensions before SQL: $label", async ({ dimensions }) => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.ensureCollection(dimensions),
+    ).rejects.toThrow("dimensions must be a positive safe integer");
+
+    expect(query).not.toHaveBeenCalled();
+  });
+});
+
 describe.skipIf(!HAS_TEST_URL)("pgvector adapter — integration against real pgvector", () => {
   const TABLE = "test_memory_vectors";
   let pool: PgPool;
