@@ -4,14 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Upsert Record ID Validation
+## Current Loop - Vector Upsert Scope Type Validation
 
 Status:
 - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now reject
-  malformed upsert `payload.memory_record_id` values before calling storage
-  clients.
-- Missing, zero, and fractional record ids fail with clear adapter boundary
-  errors instead of reaching Qdrant or SQL.
+  malformed upsert `payload.scope_type` values before calling storage clients.
+- Missing and blank scope types fail with clear adapter boundary errors instead
+  of reaching Qdrant or SQL.
 
 Verification:
 - Focused Qdrant/pgvector tests passed after RED reproducers.

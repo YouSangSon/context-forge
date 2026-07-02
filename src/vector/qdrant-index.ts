@@ -91,6 +91,7 @@ export function createQdrantVectorIndex(
         assertQdrantPointId(point);
         assertQdrantPointVector(point);
         assertQdrantPointMemoryRecordId(point);
+        assertQdrantPointScopeType(point);
       }
 
       await client.upsert(collectionName, { points });
@@ -211,6 +212,13 @@ function assertQdrantPointMemoryRecordId(point: VectorPoint): void {
   assertQdrantPositiveSafeInteger(
     point.payload.memory_record_id,
     "point.payload.memory_record_id",
+  );
+}
+
+function assertQdrantPointScopeType(point: VectorPoint): void {
+  assertQdrantNonEmptyString(
+    point.payload.scope_type,
+    "point.payload.scope_type",
   );
 }
 

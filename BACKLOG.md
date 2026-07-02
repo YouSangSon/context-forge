@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector upserts now validate `payload.scope_type` as a
+  non-empty string before calling storage clients, so malformed scope types
+  cannot reach Qdrant or SQL.
 - Qdrant and pgvector upserts now validate `payload.memory_record_id` as a
   positive safe integer before calling storage clients, so malformed record ids
   cannot reach Qdrant or SQL.

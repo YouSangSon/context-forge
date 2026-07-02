@@ -195,6 +195,7 @@ export function createPgVectorIndex(
         assertPgVectorPointId(point);
         assertPgVectorEmbeddingVector(point);
         assertPgVectorPointMemoryRecordId(point);
+        assertPgVectorPointScopeType(point);
       }
 
       // HIGH 2: Chunk into batches of UPSERT_BATCH_ROWS to stay under the
@@ -496,6 +497,13 @@ function assertPgVectorPointMemoryRecordId(point: VectorPoint): void {
   assertPgVectorPositiveSafeInteger(
     point.payload.memory_record_id,
     "point.payload.memory_record_id",
+  );
+}
+
+function assertPgVectorPointScopeType(point: VectorPoint): void {
+  assertPgVectorNonEmptyString(
+    point.payload.scope_type,
+    "point.payload.scope_type",
   );
 }
 
