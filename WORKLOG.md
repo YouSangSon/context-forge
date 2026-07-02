@@ -2,6 +2,23 @@
 
 ## 2026-07-02
 
+- Hardened vector query result shape in retrieval:
+  - `src/search/retrieve-memory.ts` now checks that each `VectorIndex.query`
+    result is an array before hydration.
+  - Malformed custom vector-index implementations now fail with a clear
+    boundary error instead of an incidental spread/type failure.
+  - `tests/search/retrieve-memory.test.ts` covers non-array vector query
+    results and verifies hydration is not called afterward.
+
+Verification:
+- `npx vitest run tests/search/retrieve-memory.test.ts tests/search/rank-results.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`3` files passed; `84` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2057` tests passed, `34` skipped)
+- `git diff --check`
+
 - Hardened vector hit score handling in retrieval:
   - `src/search/retrieve-memory.ts` now validates vector hit scores as finite
     numbers before building vector score maps for ranking.

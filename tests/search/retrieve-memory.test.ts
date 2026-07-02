@@ -165,6 +165,31 @@ describe("retrieveMemory", () => {
     expect(results.map((result) => result.id)).toEqual([12, 21]);
   });
 
+  it("rejects non-array vector query results before hydration", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue(null),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      getMemoryRecordsByIds: vi.fn(),
+    };
+
+    await expect(
+      retrieveMemory({
+        vectorIndex: vectorIndex as never,
+        repository: repository as never,
+        vector: [0.1, 0.2, 0.3],
+        organizationId: "dev-team",
+        projectKey: "project-alpha",
+        limit: 5,
+      }),
+    ).rejects.toThrow("vectorIndex.query result must be an array");
+    expect(repository.getMemoryRecordsByIds).not.toHaveBeenCalled();
+  });
+
   it("keeps project hits ahead when limit is smaller than the combined candidate set", async () => {
     const vectorIndex = {
       query: vi

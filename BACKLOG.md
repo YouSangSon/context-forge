@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `retrieveMemory` now rejects non-array `VectorIndex.query` results before
+  hydration, giving custom vector-index implementations a clear boundary error
+  instead of an incidental spread/type failure.
 - `retrieveMemory` now validates vector hit scores as finite numbers before
   ranking hydrated records, so malformed vector-index implementations cannot
   hide invalid scores behind ranking clamps.

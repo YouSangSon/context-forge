@@ -239,7 +239,7 @@ async function queryLexicalCandidates(
   });
 }
 
-function queryScope(
+async function queryScope(
   input: RetrieveMemoryInput,
   organizationId: string,
   scope: { scopeType: string; scopeId: string },
@@ -250,7 +250,11 @@ function queryScope(
     scopes: [scope],
     projectKey,
   };
-  return input.vectorIndex.query(input.vector, filter, input.limit);
+  const hits = await input.vectorIndex.query(input.vector, filter, input.limit);
+  if (!Array.isArray(hits)) {
+    throw new Error("vectorIndex.query result must be an array");
+  }
+  return hits;
 }
 
 function uniqueMemoryRecordIds(hits: VectorHit[]): number[] {
