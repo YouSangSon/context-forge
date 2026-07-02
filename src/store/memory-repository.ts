@@ -719,6 +719,7 @@ export function createMemoryRepository(
 
     async deleteMemoryRecord(id, organizationId) {
       assertNonBlankText(organizationId, "organizationId");
+      const scopedOrganizationId = organizationId.trim();
 
       // Single-statement rollback. ON DELETE CASCADE on memory_chunks,
       // ingest_jobs, and relationships (defined in migrations/001_initial.sql)
@@ -727,7 +728,7 @@ export function createMemoryRepository(
       // organization_id is required to prevent cross-tenant deletion (SEC-5).
       await pool.query(
         `DELETE FROM memory_records WHERE id = $1 AND organization_id = $2`,
-        [id, organizationId],
+        [id, scopedOrganizationId],
       );
     },
   };

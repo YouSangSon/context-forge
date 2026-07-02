@@ -18,6 +18,7 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory deletion now trims direct organization identifiers before querying.
 - Single memory record lookup now trims direct organization identifiers before
   querying.
 - Memory updates now trim direct organization identifiers before transaction

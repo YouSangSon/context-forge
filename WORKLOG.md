@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 17:05 KST - Hardened memory deletion organization normalization:
+  - `src/store/memory-repository.ts` now trims direct organization identifiers
+    before `deleteMemoryRecord` queries.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/store/memory-repository.test.ts` covers trimmed delete parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed the new memory delete organization trimming case because raw
+  organization ID text reached query parameters.
+- GREEN: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `176` tests passed, `7` skipped)
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`3` files passed; `385` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2437`
+  tests passed, `34` skipped)
+
 - 17:02 KST - Hardened single memory record lookup organization normalization:
   - `src/store/memory-repository.ts` now trims direct organization identifiers
     before `getMemoryRecordById` queries.
