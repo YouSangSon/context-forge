@@ -534,6 +534,32 @@ describe("createGoalRunRepository", () => {
 
   it.each([
     {
+      rowPatch: { scope_type: "team" },
+      message: 'goal run scope_type must be "project" or "user"',
+    },
+    {
+      rowPatch: { status: "paused" },
+      message: 'goal run status must be "active", "completed", or "abandoned"',
+    },
+  ])("get rejects malformed run enum rows %#", async ({ rowPatch, message }) => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow(rowPatch)] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.get({ organizationId: "org-a", goalRunId: 7 }),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
       rowPatch: { id: "0" },
       message: "goal run iteration id must be a positive safe integer",
     },
@@ -578,6 +604,39 @@ describe("createGoalRunRepository", () => {
     await expect(
       repo.get({ organizationId: "org-a", goalRunId: 7 }),
     ).rejects.toThrow(message);
+  });
+
+  it("get rejects malformed iteration outcome rows", async () => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow({ iteration_count: "1" })] });
+        }
+        return Promise.resolve({
+          rows: [
+            {
+              id: "1",
+              goal_run_id: "7",
+              organization_id: "org-a",
+              iteration_index: "1",
+              attempt: "a",
+              outcome: "retry",
+              summary: null,
+              error: "e",
+              created_at: "2026-06-27T00:01:00.000Z",
+            },
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.get({ organizationId: "org-a", goalRunId: 7 }),
+    ).rejects.toThrow(
+      'goal run iteration outcome must be "success", "failure", or "partial"',
+    );
   });
 
   it("list rejects whitespace-only organizationId before querying", async () => {

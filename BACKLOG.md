@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Goal-run row mapping now rejects malformed stored scope/status/outcome enum
+  values before returning repository results.
 - Memory hydrated row mapping now rejects malformed stored enum fields before
   returning list/search results.
 - Audit log list row mapping now rejects malformed stored `outcome` values

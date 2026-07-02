@@ -10014,3 +10014,27 @@ Verification:
 - `npm test -- --reporter=dot`
   (`81` files passed, `2` skipped; `2194` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened goal-run row enum mapping:
+  - Added RED coverage showing malformed stored run `scope_type`/`status` and
+    iteration `outcome` values were returned by `get` instead of failing at the
+    repository boundary.
+  - Goal-run row mapping now treats these DB enum fields as unknown and reuses
+    the existing scope/status/outcome guards before returning repository
+    models.
+  - No `DECISIONS.md` entry: this is row boundary validation hardening for
+    existing enum contracts.
+
+Verification:
+- RED: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  failed because malformed goal-run enum rows resolved instead of rejecting.
+- GREEN focused: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`1` file passed; `41` tests passed)
+- Related: `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/goal-run-handlers.test.ts tests/goal-run/build-goal-context.test.ts tests/goal-run/find-repeat-attempts.test.ts tests/mcp/server.test.ts tests/app/server.test.ts --reporter=dot`
+  (`6` files passed; `310` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`81` files passed, `2` skipped; `2197` tests passed, `34` skipped)
+- `git diff --check` (passed)

@@ -32,12 +32,12 @@ export class GoalRunNotActiveError extends Error {
 type GoalRunRow = {
   id: number | string;
   organization_id: string;
-  scope_type: GoalRun["scopeType"];
+  scope_type: unknown;
   scope_id: string;
   project_key: string | null;
   goal: string;
   termination_criteria: string | null;
-  status: GoalRun["status"];
+  status: unknown;
   iteration_count: number | string;
   created_at: string | Date;
   updated_at: string | Date;
@@ -51,7 +51,7 @@ type GoalRunIterationRow = {
   organization_id: string;
   iteration_index: number | string;
   attempt: string;
-  outcome: GoalRunIteration["outcome"];
+  outcome: unknown;
   summary: string | null;
   error: string | null;
   created_at: string | Date;
@@ -303,12 +303,12 @@ function mapRun(row: GoalRunRow): GoalRun {
   return {
     id: toPositiveSafeInteger(row.id, "goal run id"),
     organizationId: row.organization_id,
-    scopeType: row.scope_type,
+    scopeType: toGoalRunScopeType(row.scope_type, "goal run scope_type"),
     scopeId: row.scope_id,
     projectKey: row.project_key,
     goal: row.goal,
     terminationCriteria: row.termination_criteria,
-    status: row.status,
+    status: toGoalRunStatus(row.status, "goal run status"),
     iterationCount: toNonNegativeSafeInteger(
       row.iteration_count,
       "goal run iteration_count",
@@ -333,7 +333,10 @@ function mapIteration(row: GoalRunIterationRow): GoalRunIteration {
       "goal run iteration_index",
     ),
     attempt: row.attempt,
-    outcome: row.outcome,
+    outcome: toGoalRunIterationOutcome(
+      row.outcome,
+      "goal run iteration outcome",
+    ),
     summary: row.summary,
     error: row.error,
     createdAt: toIsoString(row.created_at),
@@ -352,6 +355,27 @@ function toPositiveSafeInteger(value: unknown, fieldName: string): number {
   const numberValue = toNumber(value);
   assertPositiveSafeInteger(numberValue, fieldName);
   return numberValue;
+}
+
+function toGoalRunScopeType(
+  value: unknown,
+  fieldName: string,
+): GoalRunScopeType {
+  assertGoalRunScopeType(value, fieldName);
+  return value;
+}
+
+function toGoalRunStatus(value: unknown, fieldName: string): GoalRunStatus {
+  assertGoalRunStatus(value, fieldName);
+  return value;
+}
+
+function toGoalRunIterationOutcome(
+  value: unknown,
+  fieldName: string,
+): GoalRunIterationOutcome {
+  assertGoalRunIterationOutcome(value, fieldName);
+  return value;
 }
 
 function assertGoalRunPool(value: unknown): asserts value is PgPool {
