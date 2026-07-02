@@ -473,6 +473,7 @@ export function createMemoryArchiveRepository(
       assertNonBlankText(organizationId, "organizationId");
 
       if (archiveIds.length === 0) return [];
+      const scopedOrganizationId = organizationId.trim();
       const result = await pool.query<{
         id: unknown;
         organization_id: unknown;
@@ -500,7 +501,7 @@ export function createMemoryArchiveRepository(
           WHERE id = ANY($1::bigint[])
             AND organization_id = $2
         `,
-        [archiveIds, organizationId],
+        [archiveIds, scopedOrganizationId],
       );
       return result.rows.map(mapArchiveLookupRow);
     },

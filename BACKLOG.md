@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive lookup now trims direct organization identifiers before
+  querying archive rows by ID.
 - Lifecycle init now trims direct project keys and task text before rendering
   generated hooks and README output.
 - Lifecycle init now trims direct user scope identifiers before rendering

@@ -1099,6 +1099,16 @@ describe("MemoryArchiveRepository.findArchiveByIds", () => {
     expect(params).toEqual([[1, 2, 3], "org-a"]);
   });
 
+  it("trims organizationId before querying archive rows", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.findArchiveByIds([1, 2, 3], " org-a ");
+
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params).toEqual([[1, 2, 3], "org-a"]);
+  });
+
   it("rejects whitespace-only organizationId before querying", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
