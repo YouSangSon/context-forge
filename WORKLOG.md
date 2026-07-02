@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 17:36 KST - Hardened lifecycle init user scope normalization:
+  - `src/lifecycle/init.ts` now trims direct user scope identifiers before
+    generated hook scripts are rendered.
+  - Existing nonblank validation still rejects whitespace-only user scope IDs.
+  - `tests/cli.test.ts` covers trimmed generated `DEFAULT_USER_SCOPE_ID`
+    values.
+
+RED/GREEN:
+- RED: `npx vitest run tests/cli.test.ts --reporter=dot` failed the new
+  lifecycle init user scope trimming case because raw user scope text reached
+  generated hook content.
+- GREEN: `npx vitest run tests/cli.test.ts --reporter=dot`
+  (`1` file passed; `30` tests passed)
+
+Verification:
+- `npx vitest run tests/cli.test.ts tests/scripts/package-manifest.test.ts --reporter=dot`
+  (`2` files passed; `69` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2447`
+  tests passed, `34` skipped)
+
 - 17:30 KST - Hardened lifecycle init organization normalization:
   - `src/lifecycle/init.ts` now trims direct organization identifiers before
     generated hook scripts and README content are rendered.
