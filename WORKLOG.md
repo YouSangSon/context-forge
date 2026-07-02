@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened pgvector upsert point ID validation:
+  - `src/vector/pgvector-index.ts` now validates point IDs are non-empty
+    strings before opening a database client.
+  - Invalid empty or blank point IDs now fail with a clear adapter boundary
+    error instead of reaching SQL.
+  - `tests/vector/pgvector-index.integration.test.ts` covers malformed point
+    IDs with a mocked pool.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new point ID cases because the adapter continued into the SQL
+  client path instead of failing at the adapter boundary.
+- GREEN: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `42` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`3` files passed; `120` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2095` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened pgvector deleteByRecordIds validation:
   - `src/vector/pgvector-index.ts` now validates `recordIds` are positive safe
     integers before sending pgvector delete SQL.

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector upsert now validates point IDs are non-empty strings before opening
+  a database client, so malformed `VectorPoint.id` values cannot reach SQL.
 - Pgvector `deleteByRecordIds` now validates record IDs are positive safe
   integers before sending SQL, matching the Qdrant adapter's record ID boundary
   guard.

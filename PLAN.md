@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Pgvector DeleteByRecordIds Validation
+## Current Loop - Pgvector Upsert Point Id Validation
 
 Status:
-- `src/vector/pgvector-index.ts` now validates pgvector `deleteByRecordIds`
-  record IDs are positive safe integers before sending SQL.
-- `tests/vector/pgvector-index.integration.test.ts` now covers zero,
-  fractional, and `NaN` record IDs with a mocked pool.
+- `src/vector/pgvector-index.ts` now validates pgvector upsert point IDs are
+  non-empty strings before opening a database client.
+- `tests/vector/pgvector-index.integration.test.ts` now covers empty and blank
+  point IDs with a mocked pool.
 
 Verification:
 - Focused pgvector tests passed after a RED reproducer.

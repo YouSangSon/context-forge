@@ -191,6 +191,7 @@ export function createPgVectorIndex(
       assertVectorPointOrganizationIds(points);
 
       for (const point of points) {
+        assertPgVectorPointId(point);
         assertPgVectorEmbeddingVector(point);
       }
 
@@ -474,6 +475,12 @@ function assertPgVectorEmbeddingVector(point: VectorPoint): void {
   }
 
   assertPgVectorFiniteVectorComponents(point.vector, "vector");
+}
+
+function assertPgVectorPointId(point: VectorPoint): void {
+  if (typeof point.id !== "string" || point.id.trim().length === 0) {
+    throw new Error("point.id must be a non-empty string");
+  }
 }
 
 function assertPgVectorQueryVector(vector: number[]): void {
