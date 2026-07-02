@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Goal-run iteration recording now trims direct attempt, summary, and error
+  text before insertion.
 - Goal-run start now trims direct goal and termination criteria text before
   insertion.
 - Governance memory listing now validates and trims direct tag filters before

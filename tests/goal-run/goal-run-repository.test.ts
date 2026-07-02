@@ -328,6 +328,55 @@ describe("createGoalRunRepository", () => {
     expect(linkCall?.params).toEqual([7, [101, 102], "org-a"]);
   });
 
+  it("recordIteration trims attempt, summary, and error before inserting", async () => {
+    const calls: SqlQueryCall[] = [];
+    const client = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        if (sql.includes("UPDATE goal_runs")) {
+          return Promise.resolve({ rows: [{ iteration_count: "1" }] });
+        }
+        if (sql.includes("INSERT INTO goal_run_iterations")) {
+          return Promise.resolve({
+            rows: [
+              {
+                id: "11",
+                goal_run_id: "7",
+                organization_id: "org-a",
+                iteration_index: "1",
+                attempt: "try A",
+                outcome: "failure",
+                summary: "summary",
+                error: "boom",
+                created_at: "2026-06-27T00:01:00.000Z",
+              },
+            ],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const pool = { query: vi.fn(), connect: vi.fn().mockResolvedValue(client) };
+
+    const repo = createGoalRunRepository(pool as never);
+    await repo.recordIteration({
+      organizationId: "org-a",
+      goalRunId: 7,
+      attempt: " try A ",
+      outcome: "failure",
+      summary: " summary ",
+      error: " boom ",
+    });
+
+    const insertCall = calls.find((c) =>
+      c.sql.includes("INSERT INTO goal_run_iterations"),
+    );
+    expect(insertCall?.params[3]).toBe("try A");
+    expect(insertCall?.params[5]).toBe("summary");
+    expect(insertCall?.params[6]).toBe("boom");
+  });
+
   it("recordIteration rolls back on malformed bumped iteration count", async () => {
     const calls: SqlQueryCall[] = [];
     const client = {

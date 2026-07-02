@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 16:19 KST - Hardened goal-run iteration text normalization:
+  - `src/goal-run/goal-run-repository.ts` now trims direct attempt, summary,
+    and error text before insertion.
+  - Existing nonblank validation still rejects whitespace-only attempt and
+    summary text.
+  - `tests/goal-run/goal-run-repository.test.ts` covers trimmed iteration
+    insert parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  failed the new iteration text trimming case because raw attempt text reached
+  the insert parameters.
+- GREEN: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`1` file passed; `63` tests passed)
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/goal-run-handlers.test.ts tests/goal-run/build-goal-context.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `244` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2422`
+  tests passed, `34` skipped)
+
 - 16:16 KST - Hardened goal-run start text normalization:
   - `src/goal-run/goal-run-repository.ts` now trims direct goal and
     termination criteria text before insertion.

@@ -121,6 +121,14 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
 
     async recordIteration(input) {
       assertRecordIterationInput(input);
+      const summary =
+        input.summary === undefined || input.summary === null
+          ? null
+          : input.summary.trim();
+      const error =
+        input.error === undefined || input.error === null
+          ? null
+          : input.error.trim();
 
       const client = await pool.connect();
       try {
@@ -165,10 +173,10 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
             input.goalRunId,
             input.organizationId,
             iterationIndex,
-            input.attempt,
+            input.attempt.trim(),
             input.outcome,
-            input.summary ?? null,
-            input.error ?? null,
+            summary,
+            error,
           ],
         );
 
