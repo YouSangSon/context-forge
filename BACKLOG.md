@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Canonical memory chunk row mapping now rejects malformed stored
+  scope/kind/durability enum values before returning reindexable chunk results.
 - Memory archive row mapping now rejects malformed stored compaction/archive
   enum values before returning repository results.
 - Ingest job row mapping now rejects malformed stored job/qdrant status values

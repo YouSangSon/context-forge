@@ -1936,6 +1936,58 @@ describe("canonical indexing", () => {
     ]);
   });
 
+  it.each([
+    {
+      rowPatch: { scope_type: "team" },
+      message: "memory chunk scope_type must be one of: user, project",
+    },
+    {
+      rowPatch: { kind: "note" },
+      message: "memory chunk kind must be one of: decision, summary, fact",
+    },
+    {
+      rowPatch: { durability: "permanent" },
+      message:
+        "memory chunk durability must be one of: ephemeral, durable, archived",
+    },
+  ])("listChunks rejects malformed reindex row enum values %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "701",
+          memory_record_id: "501",
+          chunk_index: "0",
+          content: "stored chunk",
+          start_offset: "0",
+          end_offset: "12",
+          embedding_version: "v1",
+          organization_id: "org-a",
+          scope_type: "project",
+          scope_id: "shared-project",
+          project_key: "shared-project",
+          durability: "durable",
+          kind: "summary",
+          title: null,
+          summary: null,
+          tags: null,
+          updated_at: "2026-01-01T00:00:00.000Z",
+          ...rowPatch,
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await expect(
+      repo.listChunks("org-a", [
+        { scopeType: "project", scopeId: "shared-project" },
+      ]),
+    ).rejects.toThrow(message);
+  });
+
   it("getChunksByRecordId rejects invalid recordId before querying", async () => {
     const mockPool = {
       query: vi.fn().mockResolvedValue({ rows: [] }),

@@ -10087,3 +10087,28 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2203` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened canonical chunk row enum mapping:
+  - Added RED coverage showing malformed stored `scope_type`, `kind`, and
+    `durability` values were returned by `listChunks` instead of failing at the
+    repository boundary.
+  - `mapReindexableMemoryChunkRow` now treats DB enum fields as unknown and
+    maps them through explicit guards before returning reindexable chunk
+    results.
+  - No `DECISIONS.md` entry: this is row boundary validation hardening for
+    existing enum contracts.
+
+Verification:
+- RED: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  failed because malformed canonical chunk enum rows resolved instead of
+  rejecting.
+- GREEN focused: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`1` file passed; `61` tests passed)
+- Related: `npx vitest run tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts tests/compact/ingest-sweeper-loop.test.ts tests/search/retrieve-memory.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`5` files passed; `300` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2206` tests passed, `34` skipped)
+- `git diff --check` (passed)

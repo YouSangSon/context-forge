@@ -53,11 +53,11 @@ type StoredMemoryChunkRow = {
 
 type ReindexableMemoryChunkRow = StoredMemoryChunkRow & {
   organization_id: string;
-  scope_type: SearchMemoryResult["scopeType"];
+  scope_type: unknown;
   scope_id: string;
   project_key: string | null;
-  durability: string;
-  kind: string;
+  durability: unknown;
+  kind: unknown;
   title: string | null;
   summary: string | null;
   tags: string[] | null;
@@ -870,11 +870,11 @@ function mapReindexableMemoryChunkRow(
   return {
     ...mapStoredMemoryChunkRow(row),
     organizationId: row.organization_id,
-    scopeType: row.scope_type,
+    scopeType: mapScopeType(row.scope_type),
     scopeId: row.scope_id,
     projectKey: row.project_key,
-    durability: row.durability,
-    kind: row.kind,
+    durability: mapDurability(row.durability),
+    kind: mapMemoryKind(row.kind),
     title: row.title,
     summary: row.summary,
     tags: row.tags ?? [],
@@ -892,6 +892,29 @@ function toPositiveSafeInteger(value: unknown, fieldName: string): number {
   const numberValue = toNumber(value);
   assertPositiveSafeInteger(numberValue, fieldName);
   return numberValue;
+}
+
+function mapScopeType(value: unknown): SearchMemoryResult["scopeType"] {
+  if (value === "user" || value === "project") {
+    return value;
+  }
+  throw new Error("memory chunk scope_type must be one of: user, project");
+}
+
+function mapDurability(value: unknown): string {
+  if (value === "ephemeral" || value === "durable" || value === "archived") {
+    return value;
+  }
+  throw new Error(
+    "memory chunk durability must be one of: ephemeral, durable, archived",
+  );
+}
+
+function mapMemoryKind(value: unknown): string {
+  if (value === "decision" || value === "fact" || value === "summary") {
+    return value;
+  }
+  throw new Error("memory chunk kind must be one of: decision, summary, fact");
 }
 
 async function replaceChunksForRecordFallback(
