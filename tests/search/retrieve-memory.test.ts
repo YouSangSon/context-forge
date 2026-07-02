@@ -712,6 +712,65 @@ describe("retrieveMemory", () => {
     expect(results.map((result) => result.id)).toEqual([44]);
   });
 
+  it("skips lexical search for whitespace-only direct queries", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      searchMemory: vi.fn().mockResolvedValue([]),
+      getMemoryRecordsByIds: vi.fn(),
+    };
+
+    const results = await retrieveMemory({
+      vectorIndex: vectorIndex as never,
+      repository: repository as never,
+      vector: [0.1, 0.2, 0.3],
+      query: " \n\t ",
+      organizationId: "dev-team",
+      projectKey: "project-alpha",
+      limit: 5,
+    });
+
+    expect(repository.searchMemory).not.toHaveBeenCalled();
+    expect(repository.getMemoryRecordsByIds).not.toHaveBeenCalled();
+    expect(results).toEqual([]);
+  });
+
+  it("trims direct lexical queries before calling the repository", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      searchMemory: vi.fn().mockResolvedValue([]),
+      getMemoryRecordsByIds: vi.fn(),
+    };
+
+    await retrieveMemory({
+      vectorIndex: vectorIndex as never,
+      repository: repository as never,
+      vector: [0.1, 0.2, 0.3],
+      query: " timeout retry backoff ",
+      organizationId: "dev-team",
+      projectKey: "project-alpha",
+      limit: 5,
+    });
+
+    expect(repository.searchMemory).toHaveBeenCalledWith({
+      query: "timeout retry backoff",
+      scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+      organizationId: "dev-team",
+      limit: 20,
+    });
+  });
+
   it("caps lexical oversampling before calling the repository", async () => {
     const vectorIndex = {
       query: vi.fn().mockResolvedValue([]),

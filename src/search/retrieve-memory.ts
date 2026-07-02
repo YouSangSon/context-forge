@@ -43,6 +43,7 @@ export async function retrieveMemory(
 
   const organizationId = input.organizationId ?? "";
   const scopes = retrievalScopes(input);
+  const lexicalQuery = normalizeOptionalText(input.query);
   const lexicalLimit = Math.min(
     Math.max(input.limit * 4, input.limit),
     MAX_REPOSITORY_LEXICAL_LIMIT,
@@ -53,7 +54,7 @@ export async function retrieveMemory(
     input.userScopeId
       ? queryScope(input, organizationId, scopes[1]!, null)
       : Promise.resolve([]),
-    queryLexicalCandidates(input, scopes, lexicalLimit),
+    queryLexicalCandidates(input, scopes, lexicalLimit, lexicalQuery),
   ]);
 
   const hits = [...projectVectorHits, ...userVectorHits];
@@ -85,7 +86,7 @@ export async function retrieveMemory(
       .sort((left, right) => right[1] - left[1])
       .map(([id]) => id),
   );
-  const lexicalScores = scoreLexicalRecords(input.query, lexicalRecords);
+  const lexicalScores = scoreLexicalRecords(lexicalQuery, lexicalRecords);
   const lexicalRanks = rankMap(lexicalScores.keys());
   const newestUpdatedAt = newestUpdatedAtFor([...recordsById.values()]);
 
@@ -222,13 +223,14 @@ async function queryLexicalCandidates(
   input: RetrieveMemoryInput,
   scopes: ScopeRef[],
   limit: number,
+  query: string | undefined,
 ): Promise<SearchMemoryResult[]> {
-  if (!input.query || !input.repository.searchMemory) {
+  if (!query || !input.repository.searchMemory) {
     return [];
   }
 
   const records = await input.repository.searchMemory({
-    query: input.query,
+    query,
     scopes,
     organizationId: input.organizationId,
     limit,
@@ -344,6 +346,15 @@ function scoreLexicalRecords(
   return new Map(
     [...scores.entries()].sort((left, right) => right[1] - left[1]),
   );
+}
+
+function normalizeOptionalText(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized.length === 0 ? undefined : normalized;
 }
 
 function rankMap(ids: Iterable<number>): Map<number, number> {

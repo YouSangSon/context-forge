@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 15:57 KST - Hardened retrieveMemory query normalization:
+  - `src/search/retrieve-memory.ts` now trims direct lexical queries before
+    repository search and lexical scoring.
+  - Whitespace-only direct queries now skip lexical repository search instead
+    of issuing an empty search.
+  - `tests/search/retrieve-memory.test.ts` covers blank and trimmed direct
+    query boundaries.
+
+RED/GREEN:
+- RED: `npx vitest run tests/search/retrieve-memory.test.ts --reporter=dot`
+  failed the new query normalization cases because raw query strings reached
+  `repository.searchMemory`.
+- GREEN: `npx vitest run tests/search/retrieve-memory.test.ts --reporter=dot`
+  (`1` file passed; `37` tests passed)
+
+Verification:
+- `npx vitest run tests/search/retrieve-memory.test.ts tests/search/lexical-score.test.ts tests/search/rank-results.test.ts tests/mcp/server.test.ts tests/eval/retrieval.eval.test.ts --reporter=dot`
+  (`4` files passed, `1` skipped; `202` tests passed, `1` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2414`
+  tests passed, `34` skipped)
+
 - 15:54 KST - Hardened Pg pool connection string normalization:
   - `src/db/connection.ts` now trims direct `connectionString` values before
     constructing the node-postgres pool.

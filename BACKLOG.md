@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `retrieveMemory` now trims direct lexical queries and skips lexical
+  repository search for whitespace-only direct queries.
 - Pg pool construction now trims direct connection strings before
   instantiating the node-postgres pool.
 - Qdrant client construction now validates direct URLs as absolute HTTP(S)
