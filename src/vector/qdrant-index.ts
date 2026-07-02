@@ -16,8 +16,8 @@ import type {
   VectorPoint,
 } from "./vector-index.js";
 import {
-  assertOptionalVectorOrganizationId,
   assertVectorPointOrganizationIds,
+  normalizeOptionalVectorOrganizationId,
 } from "./organization-id.js";
 
 type QdrantFilterClause = {
@@ -41,14 +41,15 @@ type QdrantCollectionExistsResponse = {
 
 function buildQdrantMust(filter: unknown): QdrantFilterClause[] {
   assertQdrantFilter(filter);
-  assertOptionalVectorOrganizationId(filter.organizationId);
+  const organizationId =
+    normalizeOptionalVectorOrganizationId(filter.organizationId);
   assertQdrantFilterScopes(filter.scopes);
   assertQdrantOptionalProjectKey(filter.projectKey);
 
   const must: QdrantFilterClause[] = [];
 
-  if (filter.organizationId) {
-    must.push({ key: "organization_id", match: { value: filter.organizationId } });
+  if (organizationId) {
+    must.push({ key: "organization_id", match: { value: organizationId } });
   }
 
   for (const scope of filter.scopes) {
@@ -126,19 +127,20 @@ export function createQdrantVectorIndex(
     },
 
     async delete(ids: string[], options: VectorDeleteOptions = {}): Promise<void> {
-      assertOptionalVectorOrganizationId(options.organizationId);
+      const organizationId =
+        normalizeOptionalVectorOrganizationId(options.organizationId);
 
       // Guard: Qdrant rejects empty point lists with 400 in some versions.
       assertQdrantPointIds(ids);
       if (ids.length === 0) return;
-      const selector: Schemas["PointsSelector"] = options.organizationId
+      const selector: Schemas["PointsSelector"] = organizationId
         ? {
             filter: {
               must: [
                 { has_id: ids },
                 {
                   key: "organization_id",
-                  match: { value: options.organizationId },
+                  match: { value: organizationId },
                 },
               ],
             },
@@ -152,7 +154,8 @@ export function createQdrantVectorIndex(
       recordIds: number[],
       options: VectorDeleteOptions = {},
     ): Promise<void> {
-      assertOptionalVectorOrganizationId(options.organizationId);
+      const organizationId =
+        normalizeOptionalVectorOrganizationId(options.organizationId);
 
       // Guard: an empty/null filter would delete the entire collection.
       assertQdrantRecordIds(recordIds);
@@ -163,14 +166,14 @@ export function createQdrantVectorIndex(
           match: { value: id },
         })),
       };
-      const selector: Schemas["PointsSelector"] = options.organizationId
+      const selector: Schemas["PointsSelector"] = organizationId
         ? {
             filter: {
               must: [
                 recordIdFilter,
                 {
                   key: "organization_id",
-                  match: { value: options.organizationId },
+                  match: { value: organizationId },
                 },
               ],
             },

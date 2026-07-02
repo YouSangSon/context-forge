@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- 17:24 KST - Hardened Qdrant vector organization normalization:
+  - `src/vector/organization-id.ts` now exposes
+    `normalizeOptionalVectorOrganizationId` for optional vector org filters.
+  - `src/vector/qdrant-index.ts` now trims direct organization identifiers
+    before query filters, point deletes, and record-id deletes.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs, and empty string still preserves legacy unscoped vector behavior.
+  - `tests/vector/qdrant-index.test.ts` covers trimmed query/delete selectors.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  failed the new Qdrant organization trimming cases because raw organization
+  ID text reached backend filters.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `78` tests passed)
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `114` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2444`
+  tests passed, `34` skipped)
+
 - 17:20 KST - Hardened retrieval organization normalization:
   - `src/search/retrieve-memory.ts` now trims direct organization identifiers
     before vector queries, lexical repository search, and hydration calls.

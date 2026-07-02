@@ -96,6 +96,32 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     });
   });
 
+  it("trims organizationId before building query filters", async () => {
+    const client = makeClient();
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await index.query(
+      [0.1, 0.2, 0.3],
+      {
+        organizationId: " dev-team ",
+        scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+        projectKey: "project-alpha",
+      },
+      5,
+    );
+
+    expect(client.query).toHaveBeenCalledWith(
+      "memory_chunks_v1",
+      expect.objectContaining({
+        filter: expect.objectContaining({
+          must: expect.arrayContaining([
+            { key: "organization_id", match: { value: "dev-team" } },
+          ]),
+        }),
+      }),
+    );
+  });
+
   it("builds must clauses for user scope with organizationId", async () => {
     const client = makeClient();
     const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
@@ -917,6 +943,28 @@ describe("createQdrantVectorIndex — delete", () => {
     });
   });
 
+  it("trims organizationId before Qdrant delete filters", async () => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await index.delete(["chunk:1"], { organizationId: " org-a " });
+
+    expect(client.delete).toHaveBeenCalledWith("memory_chunks_v1", {
+      filter: {
+        must: [
+          { has_id: ["chunk:1"] },
+          { key: "organization_id", match: { value: "org-a" } },
+        ],
+      },
+    });
+  });
+
   it("rejects whitespace-only organizationId before Qdrant delete", async () => {
     const client = {
       query: vi.fn(),
@@ -1050,6 +1098,35 @@ describe("createQdrantVectorIndex — deleteByRecordIds", () => {
             should: [
               { key: "memory_record_id", match: { value: 101 } },
               { key: "memory_record_id", match: { value: 202 } },
+            ],
+          },
+          {
+            key: "organization_id",
+            match: { value: "org-a" },
+          },
+        ],
+      },
+    });
+  });
+
+  it("trims organizationId before Qdrant deleteByRecordIds filters", async () => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await index.deleteByRecordIds([101], { organizationId: " org-a " });
+
+    expect(client.delete).toHaveBeenCalledWith("memory_chunks_v1", {
+      filter: {
+        must: [
+          {
+            should: [
+              { key: "memory_record_id", match: { value: 101 } },
             ],
           },
           {

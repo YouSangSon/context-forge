@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant vector queries and deletes now trim direct organization identifiers
+  before building backend filters.
 - Retrieval now trims direct organization identifiers before vector, lexical,
   and hydration calls.
 - Ingest job creation now trims direct organization identifiers before

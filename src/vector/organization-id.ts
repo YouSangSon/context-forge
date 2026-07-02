@@ -52,3 +52,13 @@ export function assertOptionalVectorOrganizationId(
 
   assertVectorOrganizationId(organizationId);
 }
+
+export function normalizeOptionalVectorOrganizationId(
+  organizationId: unknown,
+): string | undefined {
+  assertOptionalVectorOrganizationId(organizationId);
+  if (organizationId === undefined || organizationId === "") {
+    return undefined;
+  }
+  return organizationId.trim();
+}
