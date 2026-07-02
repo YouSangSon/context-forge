@@ -451,12 +451,13 @@ export function createMemoryRepository(
 
     async listMemoryForGovernance(scope, options) {
       assertNonBlankText(options.organizationId, "organizationId");
+      const organizationId = options.organizationId.trim();
 
       const limit = clampListLimit(options.limit);
       const params: unknown[] = [
         scope.scopeType,
         scope.scopeId,
-        options.organizationId,
+        organizationId,
       ];
       let tagJoin = "";
       let tagClause = "";

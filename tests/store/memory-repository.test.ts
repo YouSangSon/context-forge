@@ -1311,6 +1311,25 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(queryCalls[0]?.params).not.toContain(" priority ");
   });
 
+  it("listMemoryForGovernance trims organizationId before querying", async () => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.listMemoryForGovernance(
+      { scopeType: "project", scopeId: "proj-x" },
+      { organizationId: " org-a " },
+    );
+
+    expect(queryCalls[0]?.params).toContain("org-a");
+    expect(queryCalls[0]?.params).not.toContain(" org-a ");
+  });
+
   it("listMemoryForGovernance includes archived rows only when includeArchived is true", async () => {
     const queryCalls: SqlQueryCall[] = [];
     const mockPool = {

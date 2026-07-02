@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 16:45 KST - Hardened governance listing organization normalization:
+  - `src/store/memory-repository.ts` now trims direct organization identifiers
+    before building governance list query parameters.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/store/memory-repository.test.ts` covers trimmed governance list
+    parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed the new governance list organization trimming case because raw
+  organization ID text reached query parameters.
+- GREEN: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `171` tests passed, `7` skipped)
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`2` files passed; `304` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2432`
+  tests passed, `34` skipped)
+
 - 16:42 KST - Hardened memory ID lookup organization normalization:
   - `src/store/memory-repository.ts` now trims direct organization identifiers
     before building ID lookup query parameters.
