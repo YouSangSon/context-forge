@@ -366,6 +366,7 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
 
     async createContextPackRun(input) {
       assertContextPackRunInput(input);
+      const organizationId = input.organizationId.trim();
 
       await pool.query(
         `
@@ -378,7 +379,7 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
           ) VALUES ($1, $2, $3, $4::jsonb, $5)
         `,
         [
-          input.organizationId,
+          organizationId,
           input.projectKey,
           input.task,
           JSON.stringify(input.selectedMemoryIds),

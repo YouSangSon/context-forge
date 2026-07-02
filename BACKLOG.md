@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Context pack run persistence now trims direct organization identifiers before
+  writing run rows.
 - Canonical chunk listing now trims direct organization identifiers before
   building scoped reindex query parameters.
 - Canonical chunk replacement now trims direct record organization identifiers

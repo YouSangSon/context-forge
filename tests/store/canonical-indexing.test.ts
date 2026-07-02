@@ -2339,6 +2339,25 @@ describe("canonical indexing", () => {
     expect(mockPool.query).not.toHaveBeenCalled();
   });
 
+  it("createContextPackRun trims organizationId before querying", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await repo.createContextPackRun({
+      organizationId: " org-a ",
+      projectKey: "project-alpha",
+      task: "Summarize project risks",
+      selectedMemoryIds: ["project:project-alpha:1"],
+      packMarkdown: "# Context Pack",
+    });
+
+    const params = mockPool.query.mock.calls[0]![1] as unknown[];
+    expect(params[0]).toBe("org-a");
+  });
+
   it.each([
     {
       input: null,
