@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Store Governance Tag Filter Normalization
+## Current Loop - Goal Run Start Text Normalization
 
 Status:
-- `listMemoryForGovernance` now validates and trims direct tag filters before
-  querying.
-- Whitespace-only direct tag filters fail before any query is issued.
+- Goal-run start now trims direct goal and termination criteria text before
+  inserting.
+- Existing nonblank validation still rejects whitespace-only goal text.
 
 Verification:
-- Focused memory repository tests passed after RED tag filter trim/blank
-  reproducers.
-- Related MCP server tests passed.
+- Focused goal-run repository tests passed after the RED start text trimming
+  reproducer.
+- Related goal-run handler/context and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

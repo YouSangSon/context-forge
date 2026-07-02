@@ -91,6 +91,11 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
   return {
     async start(input) {
       assertStartInput(input);
+      const terminationCriteria =
+        input.terminationCriteria === undefined ||
+        input.terminationCriteria === null
+          ? null
+          : input.terminationCriteria.trim();
 
       const result = await pool.query<GoalRunRow>(
         `
@@ -106,8 +111,8 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           input.scopeType,
           input.scopeId,
           input.projectKey ?? null,
-          input.goal,
-          input.terminationCriteria ?? null,
+          input.goal.trim(),
+          terminationCriteria,
         ],
       );
 

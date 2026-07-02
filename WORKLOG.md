@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 16:16 KST - Hardened goal-run start text normalization:
+  - `src/goal-run/goal-run-repository.ts` now trims direct goal and
+    termination criteria text before insertion.
+  - Existing nonblank validation still rejects whitespace-only goal text.
+  - `tests/goal-run/goal-run-repository.test.ts` covers trimmed insert
+    parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  failed the new start text trimming case because raw goal text reached the
+  insert parameters.
+- GREEN: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`1` file passed; `62` tests passed)
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/goal-run-handlers.test.ts tests/goal-run/build-goal-context.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `243` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2421`
+  tests passed, `34` skipped)
+
 - 16:14 KST - Hardened governance tag filter normalization:
   - `src/store/memory-repository.ts` now validates and trims direct
     `listMemoryForGovernance` tag filters before querying.
