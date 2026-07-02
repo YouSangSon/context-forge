@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory graph inspection now trims direct organization identifiers before
+  entity and relationship queries.
 - Governance memory listing now trims direct organization identifiers before
   building query parameters.
 - Memory ID lookup now trims direct organization identifiers before building

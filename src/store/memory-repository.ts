@@ -800,13 +800,14 @@ async function inspectPostgresMemoryGraph(
     relationshipLimit?: number;
   },
 ): Promise<MemoryGraphView> {
+  const organizationId = options.organizationId.trim();
   const limit = clampListLimit(options.limit);
   const relationshipLimit = clampListLimit(
     options.relationshipLimit ?? options.limit,
     options.relationshipLimit === undefined ? "limit" : "relationshipLimit",
   );
   const params: unknown[] = [
-    options.organizationId,
+    organizationId,
     scope.scopeType,
     scope.scopeId,
   ];
@@ -874,7 +875,7 @@ async function inspectPostgresMemoryGraph(
   }
 
   const relationshipParams: unknown[] = [
-    options.organizationId,
+    organizationId,
     scope.scopeType,
     scope.scopeId,
     entityIds,

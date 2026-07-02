@@ -1502,6 +1502,43 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     ]);
   });
 
+  it("inspectMemoryGraph trims organizationId before graph queries", async () => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        if (sql.includes("FROM entities e")) {
+          return Promise.resolve({
+            rows: [
+              {
+                id: "91",
+                organization_id: "org-a",
+                kind: "code_symbol",
+                normalized: "qdrant_snapshot_timeout",
+                display_text: "QDRANT_SNAPSHOT_TIMEOUT",
+                first_seen_at: "2026-06-26T00:00:00.000Z",
+                last_seen_at: "2026-06-27T00:00:00.000Z",
+                mention_count: "1",
+                memory_ids: ["42"],
+              },
+            ],
+          });
+        }
+
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.inspectMemoryGraph(
+      { scopeType: "project", scopeId: "proj-x" },
+      { organizationId: " org-a " },
+    );
+
+    expect(queryCalls[0]?.params[0]).toBe("org-a");
+    expect(queryCalls[1]?.params[0]).toBe("org-a");
+  });
+
   it.each([
     {
       rowPatch: { id: "0" },
