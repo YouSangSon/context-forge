@@ -136,7 +136,7 @@ function assertOptionalStringInput(value: unknown, fieldName: string): void {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function countOccurrences(text: string, term: string): number {

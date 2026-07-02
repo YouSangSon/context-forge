@@ -2,6 +2,21 @@
 
 ## 2026-07-02
 
+- Hardened lexical record shape validation:
+  - `src/search/lexical-score.ts` now treats arrays as malformed records rather
+    than generic objects.
+  - `scoreLexicalMatch` now rejects array `source` values before scoring.
+  - `tests/search/lexical-score.test.ts` covers array record and source inputs.
+
+Verification:
+- `npx vitest run tests/search/lexical-score.test.ts tests/search/retrieve-memory.test.ts --reporter=dot`
+  (`2` files passed; `45` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2059` tests passed, `34` skipped)
+- `git diff --check`
+
 - Hardened repository result shape in retrieval:
   - `src/search/retrieve-memory.ts` now checks hydrated
     `getMemoryRecordsByIds` results are arrays before ranking.

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `scoreLexicalMatch` now rejects array values for lexical records and source
+  objects instead of accepting arrays as plain objects.
 - `retrieveMemory` now rejects non-array hydration and lexical repository
   results before ranking, giving repository implementations clear boundary
   errors instead of incidental spread/type failures.

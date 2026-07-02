@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Repository Result Shape Validation
+## Current Loop - Lexical Record Shape Validation
 
 Status:
-- `src/search/retrieve-memory.ts` now rejects non-array hydration and lexical
-  repository results before ranking.
-- `tests/search/retrieve-memory.test.ts` now covers malformed hydrated and
-  lexical repository result shapes.
+- `src/search/lexical-score.ts` now rejects array values when validating
+  lexical record and source objects.
+- `tests/search/lexical-score.test.ts` now covers array record and source
+  inputs.
 
 Verification:
 - Focused vector/search tests passed.

@@ -50,6 +50,9 @@ describe("lexical scoring", () => {
     expect(() =>
       scoreLexicalMatch("retry", null as unknown as SearchMemoryResult),
     ).toThrow("scoreLexicalMatch record must be an object");
+    expect(() =>
+      scoreLexicalMatch("retry", [] as unknown as SearchMemoryResult),
+    ).toThrow("scoreLexicalMatch record must be an object");
   });
 
   it("rejects records without source objects while scoring", () => {
@@ -57,6 +60,12 @@ describe("lexical scoring", () => {
       scoreLexicalMatch("retry", {
         ...makeRecord(),
         source: undefined,
+      } as unknown as SearchMemoryResult),
+    ).toThrow("scoreLexicalMatch record.source must be an object");
+    expect(() =>
+      scoreLexicalMatch("retry", {
+        ...makeRecord(),
+        source: [],
       } as unknown as SearchMemoryResult),
     ).toThrow("scoreLexicalMatch record.source must be an object");
   });
