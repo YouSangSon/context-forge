@@ -9639,3 +9639,28 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`81` files passed, `2` skipped; `2160` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened vector query filter object boundaries:
+  - Added RED coverage showing Qdrant and pgvector queries threw incidental
+    `filter.organizationId` property-access errors for `null` query filters.
+  - Qdrant and pgvector query paths now reject non-object filters with
+    `filter must be an object` before validating organization, scope, and
+    project-key fields.
+  - pgvector query validation now checks vector and limit first, then validates
+    the filter object before reading filter fields; storage clients are still
+    untouched for malformed boundary inputs.
+  - No `DECISIONS.md` entry: this is adapter input hardening for the existing
+    vector query contract, not a new durable architecture decision.
+
+Verification:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed with `Cannot read properties of null (reading 'organizationId')`.
+- GREEN focused: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`2` files passed; `145` tests passed; `12` skipped)
+- Related: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+  (`7` files passed; `323` tests passed; `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2162` tests passed, `34` skipped)
+- `git diff --check` (passed)

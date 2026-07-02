@@ -298,9 +298,10 @@ export function createPgVectorIndex(
     },
 
     async query(vector: number[], filter: VectorFilter, limit: number): Promise<VectorHit[]> {
-      assertOptionalVectorOrganizationId(filter.organizationId);
       assertPgVectorQueryVector(vector);
       assertPgVectorPositiveSafeInteger(limit, "limit");
+      assertPgVectorFilter(filter);
+      assertOptionalVectorOrganizationId(filter.organizationId);
       assertPgVectorFilterScopes(filter.scopes);
       assertPgVectorOptionalProjectKey(filter.projectKey);
 
@@ -549,6 +550,12 @@ function assertPgVectorOptionalProjectKey(value: unknown): void {
     throw new Error("filter.projectKey must be a string or null");
   }
   assertPgVectorNonEmptyString(value, "filter.projectKey");
+}
+
+function assertPgVectorFilter(filter: unknown): asserts filter is VectorFilter {
+  if (typeof filter !== "object" || filter === null || Array.isArray(filter)) {
+    throw new Error("filter must be an object");
+  }
 }
 
 function assertPgVectorQueryVector(vector: unknown): asserts vector is readonly number[] {

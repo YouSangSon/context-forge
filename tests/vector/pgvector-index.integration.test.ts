@@ -441,6 +441,19 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it("query rejects non-object filters before opening a client", async () => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query([0.1, 0.2, 0.3], null as never, 5),
+    ).rejects.toThrow("filter must be an object");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("query rejects non-array filter scopes before opening a client", async () => {
     const { pool, query } = makeMockPool();
     const connect = vi.mocked(pool.connect);

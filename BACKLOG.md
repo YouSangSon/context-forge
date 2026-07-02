@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector queries now validate the filter is an object before
+  reading filter fields, so null filter inputs fail with a clear boundary error
+  instead of incidental property access failures.
 - Qdrant and pgvector upserts now validate each point vector is an array before
   reading `point.vector.length`, so null point vector inputs fail with a clear
   boundary error instead of incidental property access failures.

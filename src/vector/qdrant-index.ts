@@ -39,7 +39,8 @@ type QdrantCollectionExistsResponse = {
   exists: boolean;
 };
 
-function buildQdrantMust(filter: VectorFilter): QdrantFilterClause[] {
+function buildQdrantMust(filter: unknown): QdrantFilterClause[] {
+  assertQdrantFilter(filter);
   assertOptionalVectorOrganizationId(filter.organizationId);
   assertQdrantFilterScopes(filter.scopes);
   assertQdrantOptionalProjectKey(filter.projectKey);
@@ -268,6 +269,12 @@ function assertQdrantOptionalProjectKey(value: unknown): void {
     throw new Error("filter.projectKey must be a string or null");
   }
   assertQdrantNonEmptyString(value, "filter.projectKey");
+}
+
+function assertQdrantFilter(filter: unknown): asserts filter is VectorFilter {
+  if (typeof filter !== "object" || filter === null || Array.isArray(filter)) {
+    throw new Error("filter must be an object");
+  }
 }
 
 function assertQdrantFiniteVectorComponents(

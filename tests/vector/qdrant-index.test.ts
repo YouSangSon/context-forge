@@ -159,6 +159,17 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     expect(client.query).not.toHaveBeenCalled();
   });
 
+  it("rejects non-object query filters before Qdrant query", async () => {
+    const client = makeClient();
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.query([0.1, 0.2, 0.3], null as never, 5),
+    ).rejects.toThrow("filter must be an object");
+
+    expect(client.query).not.toHaveBeenCalled();
+  });
+
   it.each([
     {
       label: "non-array",
