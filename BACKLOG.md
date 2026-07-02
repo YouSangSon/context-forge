@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository apply now rejects malformed direct record-apply
+  inputs before the destructive delete/archive CTE.
 - Memory archive repository completion now rejects malformed direct run
   completion inputs before updating compaction run rows.
 - Unarchive restore now rejects malformed archive scope/kind/durability enum

@@ -10158,3 +10158,27 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2217` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened archive record apply input mapping:
+  - Added RED coverage showing malformed direct `applyCompactionRecord`
+    run/record ids, reason, kept record id, decay score, and timestamp inputs
+    resolved or failed with incidental errors instead of clear pre-SQL errors.
+  - Archive record apply now validates all direct fields before issuing the
+    destructive delete/archive CTE.
+  - No `DECISIONS.md` entry: this is repository input-boundary validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed apply inputs resolved or failed with an incidental
+  timestamp error instead of clear boundary errors.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `97` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/apply-compaction.test.ts tests/compact/compact-memory.test.ts tests/compact/outbox-sweeper.test.ts tests/compact/unarchive-compaction.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`6` files passed; `369` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2223` tests passed, `34` skipped)
+- `git diff --check` (passed)

@@ -223,7 +223,7 @@ export function createMemoryArchiveRepository(
     },
 
     async applyCompactionRecord(input) {
-      assertNonBlankText(input.organizationId, "organizationId");
+      assertApplyCompactionRecordInput(input);
 
       // Single CTE: DELETE canonical row (gated by org + TOCTOU updated_at),
       // INSERT archive row with snapshot of the deleted record + the
@@ -674,6 +674,18 @@ function assertQdrantCleanupClaimInput(value: unknown): asserts value is {
   assertValidDate(candidate.now, "now");
 }
 
+function assertApplyCompactionRecordInput(
+  input: ApplyCompactionRecordInput,
+): void {
+  assertPositiveSafeInteger(input.runId, "runId");
+  assertNonBlankText(input.organizationId, "organizationId");
+  assertPositiveSafeInteger(input.recordId, "recordId");
+  assertArchiveReason(input.reason, "reason");
+  assertOptionalFiniteNumber(input.decayScore, "decayScore");
+  assertOptionalPositiveSafeInteger(input.keptRecordId, "keptRecordId");
+  assertValidDate(input.planGeneratedAt, "planGeneratedAt");
+}
+
 function assertCompleteCompactionRunInput(
   input: CompleteCompactionRunInput,
 ): void {
@@ -775,6 +787,15 @@ function assertCompactionRunStatus(
   }
 }
 
+function assertArchiveReason(
+  value: unknown,
+  fieldName: string,
+): asserts value is ArchiveReason {
+  if (value !== "duplicate" && value !== "decay") {
+    throw new Error(`${fieldName} must be "duplicate" or "decay"`);
+  }
+}
+
 function toArchiveScopeType(value: unknown): string {
   if (value === "user" || value === "project") {
     return value;
@@ -846,6 +867,25 @@ function assertValidDate(
 ): asserts value is Date {
   if (!(value instanceof Date) || !Number.isFinite(value.getTime())) {
     throw new Error(`${fieldName} must be a valid Date`);
+  }
+}
+
+function assertOptionalPositiveSafeInteger(
+  value: unknown,
+  fieldName: string,
+): void {
+  if (value === undefined) {
+    return;
+  }
+  assertPositiveSafeInteger(value, fieldName);
+}
+
+function assertOptionalFiniteNumber(value: unknown, fieldName: string): void {
+  if (value === undefined) {
+    return;
+  }
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${fieldName} must be a finite number when provided`);
   }
 }
 

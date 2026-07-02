@@ -4,13 +4,12 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Compaction Run Completion Input Validation
+## Current Loop - Archive Apply Input Validation
 
 Status:
-- Memory archive repository completion now validates run id, status, outcome
-  counters, and optional error message before updating compaction run rows.
-- Malformed completion inputs fail before SQL instead of being sent to
-  Postgres.
+- Memory archive repository apply now validates run/record ids, archive reason,
+  optional kept record id, optional decay score, and plan timestamp before SQL.
+- Malformed archive apply inputs fail before the destructive delete/archive CTE.
 
 Verification:
 - Focused memory archive repository tests passed after a RED direct-input

@@ -206,6 +206,14 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
 });
 
 describe("MemoryArchiveRepository.applyCompactionRecord", () => {
+  const baseInput = {
+    runId: 7,
+    organizationId: "org-a",
+    recordId: 100,
+    reason: "decay" as const,
+    planGeneratedAt: new Date("2026-04-25T12:00:00.000Z"),
+  };
+
   it("returns archived=true with archiveId and qdrantPointIds on success", async () => {
     const { pool, query } = makeMockPool(async () => ({
       rows: [{ archive_id: "42", qdrant_point_ids: ["p1", "p2"] }],
@@ -262,6 +270,48 @@ describe("MemoryArchiveRepository.applyCompactionRecord", () => {
         planGeneratedAt: new Date(),
       }),
     ).rejects.toThrow(/organizationId/);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      inputPatch: { runId: 0 },
+      message: "runId must be a positive safe integer",
+    },
+    {
+      inputPatch: { recordId: 0 },
+      message: "recordId must be a positive safe integer",
+    },
+    {
+      inputPatch: { reason: "manual" },
+      message: 'reason must be "duplicate" or "decay"',
+    },
+    {
+      inputPatch: { keptRecordId: 0 },
+      message: "keptRecordId must be a positive safe integer",
+    },
+    {
+      inputPatch: { decayScore: Number.POSITIVE_INFINITY },
+      message: "decayScore must be a finite number when provided",
+    },
+    {
+      inputPatch: { planGeneratedAt: new Date(Number.NaN) },
+      message: "planGeneratedAt must be a valid Date",
+    },
+  ])("rejects malformed direct apply inputs before querying %#", async ({
+    inputPatch,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.applyCompactionRecord({
+        ...baseInput,
+        ...inputPatch,
+      } as never),
+    ).rejects.toThrow(message);
 
     expect(query).not.toHaveBeenCalled();
   });
