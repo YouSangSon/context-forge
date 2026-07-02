@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened Qdrant deleteByRecordIds validation:
+  - `src/vector/qdrant-index.ts` now validates `recordIds` are positive safe
+    integers before building Qdrant delete filters.
+  - Invalid zero, fractional, or `NaN` record IDs now fail with a clear adapter
+    boundary error instead of being sent to Qdrant.
+  - `tests/vector/qdrant-index.test.ts` covers malformed record IDs with a
+    mocked client.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  failed the new record ID cases because the adapter allowed invalid IDs to
+  reach the Qdrant client and resolved successfully.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `43` tests passed)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`3` files passed; `115` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2090` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant upsert vector validation:
   - `src/vector/qdrant-index.ts` now validates upsert vectors are non-empty
     and finite before calling the Qdrant client.

@@ -146,6 +146,7 @@ export function createQdrantVectorIndex(
 
       // Guard: an empty/null filter would delete the entire collection.
       if (recordIds.length === 0) return;
+      assertQdrantRecordIds(recordIds);
       const recordIdFilter = {
         should: recordIds.map((id) => ({
           key: "memory_record_id",
@@ -211,6 +212,12 @@ function assertQdrantPositiveSafeInteger(
     value <= 0
   ) {
     throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+}
+
+function assertQdrantRecordIds(recordIds: readonly unknown[]): void {
+  for (const [index, recordId] of recordIds.entries()) {
+    assertQdrantPositiveSafeInteger(recordId, `recordIds[${index}]`);
   }
 }
 

@@ -712,6 +712,27 @@ describe("createQdrantVectorIndex — deleteByRecordIds", () => {
     expect(client.delete).not.toHaveBeenCalled();
   });
 
+  it.each([
+    { label: "zero", recordIds: [0] },
+    { label: "fractional", recordIds: [1.5] },
+    { label: "NaN", recordIds: [Number.NaN] },
+  ])("rejects malformed recordIds before Qdrant deleteByRecordIds: $label", async ({ recordIds }) => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.deleteByRecordIds(recordIds),
+    ).rejects.toThrow("recordIds[0] must be a positive safe integer");
+
+    expect(client.delete).not.toHaveBeenCalled();
+  });
+
   it("skips Qdrant call when recordIds array is empty (data-loss guard)", async () => {
     const client = {
       query: vi.fn(),

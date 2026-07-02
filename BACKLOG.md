@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant `deleteByRecordIds` now validates record IDs are positive safe
+  integers before building delete filters, so malformed IDs cannot reach the
+  Qdrant client.
 - Qdrant upsert now validates vector arrays are non-empty and finite before
   calling the Qdrant client, matching the pgvector adapter's upsert-vector
   boundary guard.
