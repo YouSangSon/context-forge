@@ -194,6 +194,10 @@ function assertQdrantQueryVector(vector: unknown): asserts vector is readonly nu
 }
 
 function assertQdrantPointVector(point: VectorPoint): void {
+  if (!Array.isArray(point.vector)) {
+    throw new Error(`upsert: point "${point.id}" vector must be an array`);
+  }
+
   if (point.vector.length === 0) {
     throw new Error(
       `upsert: point "${point.id}" has an empty embedding vector. ` +

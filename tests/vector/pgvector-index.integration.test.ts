@@ -343,9 +343,22 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
   });
 
   it.each([
-    { label: "NaN", vector: [0.1, Number.NaN, 0.3] },
-    { label: "Infinity", vector: [0.1, Number.POSITIVE_INFINITY, 0.3] },
-  ])("upsert rejects non-finite vector components before opening a client: $label", async ({ vector }) => {
+    {
+      label: "non-array",
+      vector: null as never,
+      message: 'upsert: point "chunk:bad-vector" vector must be an array',
+    },
+    {
+      label: "NaN",
+      vector: [0.1, Number.NaN, 0.3],
+      message: "vector[1] must be a finite number",
+    },
+    {
+      label: "Infinity",
+      vector: [0.1, Number.POSITIVE_INFINITY, 0.3],
+      message: "vector[1] must be a finite number",
+    },
+  ])("upsert rejects malformed vector components before opening a client: $label", async ({ vector, message }) => {
     const { pool, query } = makeMockPool();
     const connect = vi.mocked(pool.connect);
     const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
@@ -361,7 +374,7 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
           },
         },
       ]),
-    ).rejects.toThrow("vector[1] must be a finite number");
+    ).rejects.toThrow(message);
 
     expect(connect).not.toHaveBeenCalled();
     expect(query).not.toHaveBeenCalled();

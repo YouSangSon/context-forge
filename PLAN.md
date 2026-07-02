@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Query Vector List Validation
+## Current Loop - Vector Upsert Point Vector List Validation
 
 Status:
-- Qdrant and pgvector `query(vector, ...)` now reject non-array query vectors
-  before reading `vector.length`.
-- Null query vectors now fail with a clear boundary error before storage clients
-  are called.
+- Qdrant and pgvector upserts now reject non-array `point.vector` values before
+  reading `point.vector.length`.
+- Null point vectors now fail with a clear boundary error before storage
+  clients are called.
 
 Verification:
 - Focused Qdrant/pgvector tests passed after RED reproducers.

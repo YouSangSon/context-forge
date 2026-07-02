@@ -775,6 +775,11 @@ describe("createQdrantVectorIndex — point building (upsert)", () => {
 
   it.each([
     {
+      label: "non-array",
+      vector: null as never,
+      message: 'upsert: point "chunk:bad-vector" vector must be an array',
+    },
+    {
       label: "empty",
       vector: [],
       message: /empty embedding vector/,
