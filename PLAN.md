@@ -4,16 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Operator Server Test Isolation
+## Current Loop - Recent Apply Count Organization Normalization
 
 Status:
-- `startOperatorServer` now accepts explicit test hooks for the background
-  worker starter and readiness probe pool while preserving production defaults.
-- Operator server worker/metrics tests no longer use module-level mocks for
-  `background-workers`, `background-queue-metrics`, or `db/connection`.
+- Memory archive recent-apply counting now trims direct organization
+  identifiers before rate-limit SQL queries.
+- Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused operator server worker and metrics tests passed.
+- Focused archive repository tests passed after the RED recent-apply count
+  organization trimming reproducer.
+- Related apply-compaction/outbox tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

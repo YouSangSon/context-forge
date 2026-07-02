@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 17:59 KST - Hardened memory archive recent-apply organization normalization:
+  - `src/store/memory-archive-repository.ts` now trims direct organization
+    identifiers before `countRecentApplyRuns` rate-limit SQL queries.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/store/memory-archive-repository.test.ts` covers trimmed
+    recent-apply count parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed the new recent-apply count organization trimming case because raw
+  organization ID text reached query parameters.
+- GREEN: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `149` tests passed)
+
+Verification:
+- `npx vitest run tests/compact/apply-compaction.test.ts tests/compact/outbox-sweeper.test.ts --reporter=dot`
+  (`2` files passed; `73` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2452`
+  tests passed, `34` skipped)
+
 - 17:58 KST - Stabilized operator server worker/metrics tests:
   - `src/app/server.ts` now allows tests to inject the background worker
     starter and readiness probe pool while production keeps the existing

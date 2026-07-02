@@ -448,6 +448,7 @@ export function createMemoryArchiveRepository(
     async countRecentApplyRuns(organizationId, windowMs) {
       assertNonBlankText(organizationId, "organizationId");
       assertPositiveSafeInteger(windowMs, "windowMs");
+      const scopedOrganizationId = organizationId.trim();
 
       // Postgres INTERVAL doesn't accept parameterized text directly; build
       // it from milliseconds via make_interval. windowMs is server-controlled
@@ -462,7 +463,7 @@ export function createMemoryArchiveRepository(
             AND dry_run = false
             AND started_at > NOW() - make_interval(secs => $2)
         `,
-        [organizationId, windowSeconds],
+        [scopedOrganizationId, windowSeconds],
       );
       const raw = result.rows[0]?.count;
       return raw === undefined ? 0 : toRecentApplyRunCount(raw);

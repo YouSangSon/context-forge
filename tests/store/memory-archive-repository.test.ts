@@ -985,6 +985,16 @@ describe("MemoryArchiveRepository.countRecentApplyRuns", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it("trims organizationId before counting recent apply runs", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [{ count: 0 }] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.countRecentApplyRuns(" org-a ", 60_000);
+
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params).toEqual(["org-a", 60]);
+  });
+
   it.each([
     {
       windowMs: 0,

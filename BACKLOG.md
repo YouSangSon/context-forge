@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive recent-apply counting now trims direct organization
+  identifiers before rate-limit SQL queries.
 - Operator server worker/metrics tests now inject worker and probe-pool
   dependencies directly instead of using module-level mocks that can interfere
   during parallel full-suite runs.
