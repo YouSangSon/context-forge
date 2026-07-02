@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 18:41 KST - Hardened goal context organization normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
+    `build_goal_context` and `check_repeat_attempt` load goal runs and scoped
+    memories.
+  - `tests/goal-run/goal-run-handlers.test.ts` covers trimmed organization IDs
+    across goal context and repeat-check handlers.
+
+RED/GREEN:
+- RED: `npx vitest run tests/goal-run/goal-run-handlers.test.ts --reporter=dot`
+  failed the updated context/repeat cases because raw organization ID text
+  reached `goalRuns.get`.
+- GREEN: `npx vitest run tests/goal-run/goal-run-handlers.test.ts --reporter=dot`
+  (`1` file passed; `25` tests passed)
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/build-goal-context.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`3` files passed; `227` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2460`
+  tests passed, `34` skipped)
+
 - 18:38 KST - Hardened goal-run handler organization normalization:
   - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
     goal-run start, iteration, get, list, complete, and abandon service

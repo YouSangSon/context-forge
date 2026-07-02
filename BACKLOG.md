@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Goal context and repeat-check handlers now trim direct organization
+  identifiers before loading goal runs and scoped memories.
 - Goal-run service dispatch handlers now trim direct organization identifiers
   before start, iteration, get, list, complete, and abandon calls.
 - `list_audit_log` now trims direct organization identifiers before audit log

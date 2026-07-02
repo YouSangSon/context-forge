@@ -1030,7 +1030,7 @@ export function createToolHandlers(input: {
       assertPositiveInteger(toolInput.goalRunId, "goalRunId");
       assertOptionalPositiveInteger(toolInput.limit, "limit", 200);
       return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId ?? "default";
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const goalRun = await services.goalRuns.get({
           organizationId,
           goalRunId: toolInput.goalRunId,
@@ -1067,7 +1067,7 @@ export function createToolHandlers(input: {
       assertNoSecrets(toolInput.attempt);
       const threshold = resolveRepeatThreshold(toolInput.threshold);
       return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId ?? "default";
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const goalRun = await services.goalRuns.get({
           organizationId,
           goalRunId: toolInput.goalRunId,

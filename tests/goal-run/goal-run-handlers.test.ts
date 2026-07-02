@@ -495,14 +495,21 @@ describe("goal-run handlers", () => {
         cb({ goalRuns, repository: { listMemory } } as unknown as CanonicalServices)) as never,
     });
 
-    const result = await registry.build_goal_context({ goalRunId: 7 });
+    const result = await registry.build_goal_context({
+      organizationId: " org-a ",
+      goalRunId: 7,
+    });
 
     expect(result.found).toBe(true);
     expect(result.goalRunId).toBe(7);
     expect(result.packMarkdown).toContain("## Goal");
+    expect(goalRuns.get).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      goalRunId: 7,
+    });
     expect(listMemory).toHaveBeenCalledWith(
       { scopeType: "project", scopeId: "proj-x" },
-      expect.objectContaining({ organizationId: "default" }),
+      expect.objectContaining({ organizationId: "org-a" }),
     );
   });
 
@@ -595,6 +602,7 @@ describe("goal-run handlers", () => {
     });
 
     const result = await registry.check_repeat_attempt({
+      organizationId: " org-a ",
       goalRunId: 7,
       attempt: "use a regular expression",
     });
@@ -605,6 +613,10 @@ describe("goal-run handlers", () => {
       "use regex",
       "call api",
     ]);
+    expect(goalRuns.get).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      goalRunId: 7,
+    });
     expect(result.repeat).toBe(true);
     expect(result.matches).toHaveLength(1);
     expect(result.matches[0]?.iterationIndex).toBe(1);
