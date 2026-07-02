@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 18:46 KST - Hardened add memory handler organization normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
+    `add_memory` repository input construction for legacy and service-backed
+    write paths.
+  - `tests/mcp/server.test.ts` covers trimmed service-backed add organization
+    IDs before repository writes and ingest job creation.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed the updated service-backed add case because raw organization ID text
+  reached `repository.addMemory`.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `134` tests passed)
+
+Verification:
+- `npx vitest run tests/store/canonical-indexing.test.ts tests/audit/audit-write.test.ts --reporter=dot`
+  (`2` files passed; `90` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2460`
+  tests passed, `34` skipped)
+
 - 18:44 KST - Hardened compaction handler organization normalization:
   - `src/mcp/tool-handlers.ts` now trims direct organization identifiers once
     in `compact_memory` and reuses the normalized value for memory listing and

@@ -1310,7 +1310,7 @@ function toRepositoryAddMemoryInput(input: AddMemoryToolInput): AddMemoryInput {
       : requireProjectKey(input.projectKey, scope);
 
   return {
-    organizationId: input.organizationId,
+    organizationId: input.organizationId?.trim(),
     scopeType: scope,
     scopeId,
     projectKey: scope === "project" ? scopeId : undefined,

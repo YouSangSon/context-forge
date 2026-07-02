@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `add_memory` now trims direct organization identifiers before repository
+  input construction for legacy and service-backed write paths.
 - `compact_memory` now trims direct organization identifiers once and reuses
   the normalized value for memory listing and compaction apply calls.
 - Goal context and repeat-check handlers now trim direct organization

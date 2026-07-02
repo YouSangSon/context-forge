@@ -991,7 +991,7 @@ describe("createToolRegistry", () => {
     });
 
     await registry.add_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       projectKey: "project-alpha",
       kind: "decision",
       content: "Decision: index canonical memory into the active vector backend.",
