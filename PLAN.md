@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Pgvector Query Row Object Shape Validation
+## Current Loop - Pgvector Query Point Id Validation
 
 Status:
-- `src/vector/pgvector-index.ts` now validates each pgvector query row as an
-  object before reading row fields.
-- `tests/vector/pgvector-index.integration.test.ts` now covers malformed query
-  row objects with a mocked pool.
+- `src/vector/pgvector-index.ts` now validates pgvector query `point_id` values
+  before returning backend-neutral vector hits.
+- `tests/vector/pgvector-index.integration.test.ts` now covers null and
+  whitespace-only `point_id` rows with a mocked pool.
 
 Verification:
 - Focused pgvector tests passed after a RED reproducer.

@@ -235,6 +235,16 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
 
   it.each([
     {
+      label: "point_id null",
+      row: buildPgVectorQueryRow({ point_id: null }),
+      message: "point_id must be a non-empty string",
+    },
+    {
+      label: "point_id blank",
+      row: buildPgVectorQueryRow({ point_id: " \n\t " }),
+      message: "point_id must be a non-empty string",
+    },
+    {
       label: "score null",
       row: buildPgVectorQueryRow({ score: null }),
       message: "score must be a finite number",
@@ -264,7 +274,7 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
       row: buildPgVectorQueryRow({ memory_record_id: "1.5" }),
       message: "memory_record_id must be a positive safe integer",
     },
-  ])("query rejects malformed pgvector row numbers: $label", async ({ row, message }) => {
+  ])("query rejects malformed pgvector row fields: $label", async ({ row, message }) => {
     const { pool, query, client } = makeQueryPool([row]);
     const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
 

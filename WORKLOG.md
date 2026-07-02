@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened pgvector query point id mapping:
+  - `src/vector/pgvector-index.ts` now validates query row `point_id` values
+    before returning backend-neutral `VectorHit` objects.
+  - Malformed null or whitespace-only point ids now fail with a clear adapter
+    boundary error instead of leaking invalid hit ids.
+  - `tests/vector/pgvector-index.integration.test.ts` covers malformed point ids
+    with a mocked pool.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new point-id cases because the adapter resolved hits with
+  `id: null` or blank ids.
+- GREEN: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `25` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`3` files passed; `93` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2068` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened pgvector query row object shape mapping:
   - `src/vector/pgvector-index.ts` now validates each query result row object
     before reading vector-hit fields.

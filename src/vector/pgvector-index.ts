@@ -436,7 +436,7 @@ export function createPgVectorIndex(
 
 function mapPgVectorQueryRow(row: PgVectorQueryRow): VectorHit {
   return {
-    id: row.point_id,
+    id: toPgVectorNonEmptyString(row.point_id, "point_id"),
     score: toPgVectorFiniteNumber(row.score, "score"),
     payload: {
       // node-postgres returns BIGINT (int8) as a string — coerce back to
@@ -472,6 +472,13 @@ function assertPgVectorQueryRows(value: unknown): asserts value is PgVectorQuery
       throw new Error(`query rows[${index}] must be an object`);
     }
   });
+}
+
+function toPgVectorNonEmptyString(value: unknown, fieldName: string): string {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${fieldName} must be a non-empty string`);
+  }
+  return value;
 }
 
 function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {

@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query result mapping now validates returned `point_id` values before
+  returning `VectorHit.id`, so malformed adapter rows cannot leak null or blank
+  hit ids.
 - Pgvector query result mapping now validates each returned row object before
   reading vector-hit fields, replacing incidental field-access failures with a
   clear adapter boundary error.
