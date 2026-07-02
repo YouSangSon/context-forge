@@ -4,13 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Filter Scopes Array Validation
+## Current Loop - Vector Filter Scope Entry Validation
 
 Status:
 - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now validate
-  query `filter.scopes` values are arrays before calling storage clients.
-- Qdrant and pgvector tests now cover non-array `filter.scopes` values with
-  mocked clients.
+  each query `filter.scopes` entry has non-empty `scopeType` and `scopeId`
+  strings before calling storage clients.
+- Qdrant and pgvector tests now cover non-object scopes plus blank `scopeType`
+  and `scopeId` values with mocked clients.
 
 Verification:
 - Focused Qdrant/pgvector tests passed after RED reproducers.

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector queries now validate each `filter.scopes` entry has
+  non-empty `scopeType` and `scopeId` strings before calling storage clients.
 - Qdrant and pgvector queries now validate `filter.scopes` is an array before
   calling storage clients, replacing incidental iterable/client-path failures
   with clear adapter boundary errors.

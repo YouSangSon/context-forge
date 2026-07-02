@@ -196,16 +196,16 @@ function assertQdrantPointVector(point: VectorPoint): void {
 }
 
 function assertQdrantPointId(point: VectorPoint): void {
-  assertQdrantPointIdValue(point.id, "point.id");
+  assertQdrantNonEmptyString(point.id, "point.id");
 }
 
 function assertQdrantPointIds(ids: readonly unknown[]): void {
   for (const [index, id] of ids.entries()) {
-    assertQdrantPointIdValue(id, `ids[${index}]`);
+    assertQdrantNonEmptyString(id, `ids[${index}]`);
   }
 }
 
-function assertQdrantPointIdValue(value: unknown, fieldName: string): void {
+function assertQdrantNonEmptyString(value: unknown, fieldName: string): void {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${fieldName} must be a non-empty string`);
   }
@@ -247,6 +247,22 @@ function assertQdrantFilterScopes(
   if (!Array.isArray(scopes)) {
     throw new Error("filter.scopes must be an array");
   }
+
+  scopes.forEach((scope, index) => {
+    if (typeof scope !== "object" || scope === null || Array.isArray(scope)) {
+      throw new Error(`filter.scopes[${index}] must be an object`);
+    }
+
+    const candidate = scope as Record<string, unknown>;
+    assertQdrantNonEmptyString(
+      candidate.scopeType,
+      `filter.scopes[${index}].scopeType`,
+    );
+    assertQdrantNonEmptyString(
+      candidate.scopeId,
+      `filter.scopes[${index}].scopeId`,
+    );
+  });
 }
 
 function assertQdrantQueryResponse(value: unknown): asserts value is QdrantQueryResponse {

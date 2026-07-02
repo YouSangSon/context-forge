@@ -481,16 +481,16 @@ function assertPgVectorEmbeddingVector(point: VectorPoint): void {
 }
 
 function assertPgVectorPointId(point: VectorPoint): void {
-  assertPgVectorPointIdValue(point.id, "point.id");
+  assertPgVectorNonEmptyString(point.id, "point.id");
 }
 
 function assertPgVectorPointIds(ids: readonly unknown[]): void {
   for (const [index, id] of ids.entries()) {
-    assertPgVectorPointIdValue(id, `ids[${index}]`);
+    assertPgVectorNonEmptyString(id, `ids[${index}]`);
   }
 }
 
-function assertPgVectorPointIdValue(value: unknown, fieldName: string): void {
+function assertPgVectorNonEmptyString(value: unknown, fieldName: string): void {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${fieldName} must be a non-empty string`);
   }
@@ -583,6 +583,22 @@ function assertPgVectorFilterScopes(
   if (!Array.isArray(scopes)) {
     throw new Error("filter.scopes must be an array");
   }
+
+  scopes.forEach((scope, index) => {
+    if (typeof scope !== "object" || scope === null || Array.isArray(scope)) {
+      throw new Error(`filter.scopes[${index}] must be an object`);
+    }
+
+    const candidate = scope as Record<string, unknown>;
+    assertPgVectorNonEmptyString(
+      candidate.scopeType,
+      `filter.scopes[${index}].scopeType`,
+    );
+    assertPgVectorNonEmptyString(
+      candidate.scopeId,
+      `filter.scopes[${index}].scopeId`,
+    );
+  });
 }
 
 function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {
