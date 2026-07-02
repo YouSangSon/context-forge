@@ -173,7 +173,7 @@ describe("createBackgroundQueueMetricsCollector", () => {
     },
   );
 
-  it.each(["not-a-number", "-1", "1.5", Number.NaN])(
+  it.each(["not-a-number", "-1", "1.5", "0x10", Number.NaN])(
     "rejects malformed count values instead of reporting zero: %s",
     async (count) => {
       const { pool } = makeQueryable(async () => ({

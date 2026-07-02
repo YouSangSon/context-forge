@@ -9758,3 +9758,26 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`81` files passed, `2` skipped; `2167` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened background queue count string parsing:
+  - Added RED coverage showing a malformed `COUNT(*)` row value of `"0x10"`
+    was accepted by `Number(value)` and reported as queue backlog `16`.
+  - `toNonNegativeInteger` now permits string inputs only when they are decimal
+    digit strings before numeric conversion; normal Postgres count strings such
+    as `"42"` remain supported.
+  - No `DECISIONS.md` entry: this is metrics row-mapping hardening for the
+    existing background queue metric contract, not a new durable architecture
+    decision.
+
+Verification:
+- RED: `npx vitest run tests/app/background-queue-metrics.test.ts --reporter=dot`
+  failed because `"0x10"` resolved as backlog counts of `16`.
+- GREEN focused: `npx vitest run tests/app/background-queue-metrics.test.ts --reporter=dot`
+  (`1` file passed; `10` tests passed)
+- Related: `npx vitest run tests/app/background-queue-metrics.test.ts tests/app/metrics.test.ts tests/app/start-operator-server-metrics.test.ts tests/scripts/ci-workflow-hygiene.test.ts --reporter=dot`
+  (`4` files passed; `81` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot` (`81` files passed, `2` skipped; `2168` tests passed, `34` skipped)
+- `git diff --check` (passed)

@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Background queue metrics now reject non-decimal count strings before
+  coercion, so malformed values like `0x10` cannot become valid backlog
+  gauges.
 - Shared DB number mapping now rejects non-decimal numeric strings before
   coercion, so repository row mappers cannot accept malformed values like
   `0x10` as finite database numbers.

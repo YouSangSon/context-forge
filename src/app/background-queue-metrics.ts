@@ -160,6 +160,11 @@ function toNonNegativeInteger(value: unknown): number {
       "background queue count must be a non-negative safe integer",
     );
   }
+  if (typeof value === "string" && !/^[0-9]+$/.test(value)) {
+    throw new Error(
+      "background queue count must be a non-negative safe integer",
+    );
+  }
   const numberValue = typeof value === "number" ? value : Number(value);
   if (!Number.isSafeInteger(numberValue) || numberValue < 0) {
     throw new Error(
