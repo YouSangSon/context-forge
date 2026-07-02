@@ -150,6 +150,11 @@ export function createMemoryArchiveRepository(
   return {
     async createCompactionRun(input) {
       assertCreateCompactionRunInput(input);
+      const organizationId = input.organizationId.trim();
+      const actor = input.actor.trim();
+      const scopeType = input.scopeType.trim();
+      const scopeId = input.scopeId.trim();
+      const idempotencyKey = input.idempotencyKey.trim();
 
       // ON CONFLICT on idempotency_key: replay defense. Returns the existing
       // row (with its outcome counters) if a run with this UUID already
@@ -174,13 +179,13 @@ export function createMemoryArchiveRepository(
                     duplicate_count, decay_count, qdrant_failed
         `,
         [
-          input.organizationId,
-          input.actor,
-          input.scopeType,
-          input.scopeId,
+          organizationId,
+          actor,
+          scopeType,
+          scopeId,
           input.dryRun,
           input.planGeneratedAt.toISOString(),
-          input.idempotencyKey,
+          idempotencyKey,
         ],
       );
 
@@ -189,11 +194,11 @@ export function createMemoryArchiveRepository(
       }
 
       // ON CONFLICT path: row already exists. Read it back.
-      const existing = await this.findRunByIdempotencyKey(input.idempotencyKey);
+      const existing = await this.findRunByIdempotencyKey(idempotencyKey);
       if (!existing) {
         throw new Error(
           `compaction_runs insert returned 0 rows but no existing row found ` +
-            `for idempotency_key=${input.idempotencyKey} — check unique constraint`,
+            `for idempotency_key=${idempotencyKey} — check unique constraint`,
         );
       }
       return existing;
@@ -201,6 +206,7 @@ export function createMemoryArchiveRepository(
 
     async findRunByIdempotencyKey(idempotencyKey) {
       assertNonBlankText(idempotencyKey, "idempotencyKey");
+      const normalizedIdempotencyKey = idempotencyKey.trim();
 
       const result = await pool.query<{
         id: number | string;
@@ -217,7 +223,7 @@ export function createMemoryArchiveRepository(
           FROM compaction_runs
           WHERE idempotency_key = $1
         `,
-        [idempotencyKey],
+        [normalizedIdempotencyKey],
       );
       return result.rows.length === 1 ? mapRunRow(result.rows[0]!) : null;
     },

@@ -59,13 +59,13 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
     const repo = createMemoryArchiveRepository(pool);
 
     const result = await repo.createCompactionRun({
-      organizationId: "org-a",
-      actor: "test",
+      organizationId: " org-a ",
+      actor: " test ",
       scopeType: "project",
-      scopeId: "alpha",
+      scopeId: " alpha ",
       dryRun: false,
       planGeneratedAt: new Date("2026-04-25T12:00:00.000Z"),
-      idempotencyKey: "00000000-0000-0000-0000-000000000001",
+      idempotencyKey: " 00000000-0000-0000-0000-000000000001 ",
     });
 
     expect(result).toEqual({
@@ -78,8 +78,11 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
       qdrantFailed: 0,
     });
     const sql = query.mock.calls[0]![0] as string;
+    const params = query.mock.calls[0]![1] as unknown[];
     expect(sql).toContain("INSERT INTO compaction_runs");
     expect(sql).toContain("ON CONFLICT (idempotency_key) DO NOTHING");
+    expect(params.slice(0, 4)).toEqual(["org-a", "test", "project", "alpha"]);
+    expect(params[6]).toBe("00000000-0000-0000-0000-000000000001");
   });
 
   it("falls back to findRunByIdempotencyKey on insert conflict", async () => {
