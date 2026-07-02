@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- MCP scope identifier utilities now return trimmed project and user scope IDs
+  after nonblank validation.
 - `search_memory` handler now trims direct query values before resolving
   records and echoes the normalized query in responses.
 - `retrieveMemory` now trims direct lexical queries and skips lexical

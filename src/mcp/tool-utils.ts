@@ -44,13 +44,14 @@ export function requireProjectKey(
   if (typeof projectKey !== "string") {
     throw new Error("projectKey must be a string");
   }
-  if (projectKey.trim().length === 0) {
+  const normalized = projectKey.trim();
+  if (normalized.length === 0) {
     throw new Error(
       `projectKey is required for ${scope} scope operations and must contain non-whitespace text`,
     );
   }
 
-  return projectKey;
+  return normalized;
 }
 
 export function requireUserScopeId(userScopeId: unknown): string {
@@ -60,11 +61,12 @@ export function requireUserScopeId(userScopeId: unknown): string {
   if (typeof userScopeId !== "string") {
     throw new Error("userScopeId must be a string");
   }
-  if (userScopeId.trim().length === 0) {
+  const normalized = userScopeId.trim();
+  if (normalized.length === 0) {
     throw new Error("userScopeId could not be resolved to non-whitespace text");
   }
 
-  return userScopeId;
+  return normalized;
 }
 
 export function normalizeLimit(limit: number | undefined): number {

@@ -2,6 +2,29 @@
 
 ## 2026-07-02
 
+- 16:03 KST - Hardened MCP scope identifier normalization:
+  - `src/mcp/tool-utils.ts` now returns trimmed project keys and user scope IDs
+    from `requireProjectKey` and `requireUserScopeId`.
+  - Direct MCP handler paths using these helpers now receive normalized scope
+    identifiers after nonblank validation.
+  - `tests/mcp/tool-utils.test.ts` covers the direct utility boundary.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/tool-utils.test.ts --reporter=dot` failed the
+  new scope identifier trimming case because raw identifiers were returned.
+- GREEN: `npx vitest run tests/mcp/tool-utils.test.ts --reporter=dot` (`1`
+  file passed; `31` tests passed)
+
+Verification:
+- `npx vitest run tests/mcp/tool-utils.test.ts tests/mcp/tool-registry.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`3` files passed; `181` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2416`
+  tests passed, `34` skipped)
+
 - 16:00 KST - Hardened MCP search_memory query normalization:
   - `src/mcp/tool-handlers.ts` now trims direct `search_memory` query values
     before resolving records.

@@ -4,17 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - MCP Search Handler Query Normalization
+## Current Loop - MCP Scope Identifier Normalization
 
 Status:
-- `search_memory` handler now trims direct query values before resolving
-  records.
-- Handler responses report the same normalized query value used for retrieval.
+- `requireProjectKey` and `requireUserScopeId` now return trimmed identifiers
+  after nonblank validation.
+- Direct MCP handler paths using these helpers now receive normalized scope
+  identifiers.
 
 Verification:
-- Focused tool handler tests passed after the RED direct query trimming
+- Focused tool utility tests passed after the RED scope identifier trimming
   reproducer.
-- Related MCP server and retrieve-memory tests passed.
+- Related MCP registry/server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.
