@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 16:33 KST - Hardened goal-run list identifier normalization:
+  - `src/goal-run/goal-run-repository.ts` now trims direct organization and
+    scope identifiers before querying.
+  - Existing nonblank validation still rejects whitespace-only identifiers.
+  - `tests/goal-run/goal-run-repository.test.ts` covers trimmed list query
+    parameters with a status filter.
+
+RED/GREEN:
+- RED: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  failed the new list identifier trimming case because raw organization and
+  scope ID text reached the query parameters.
+- GREEN: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`1` file passed; `68` tests passed)
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/goal-run-handlers.test.ts tests/goal-run/build-goal-context.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `249` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2427`
+  tests passed, `34` skipped)
+
 - 16:31 KST - Hardened goal-run get organization normalization:
   - `src/goal-run/goal-run-repository.ts` now trims direct organization
     identifiers before run and iteration queries.

@@ -983,6 +983,27 @@ describe("createGoalRunRepository", () => {
     expect(pool.query).not.toHaveBeenCalled();
   });
 
+  it("list trims organizationId and scopeId before querying", async () => {
+    const calls: SqlQueryCall[] = [];
+    const pool = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        return Promise.resolve({ rows: [] });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await repo.list({
+      organizationId: " org-a ",
+      scopeType: "project",
+      scopeId: " proj-x ",
+      status: "active",
+    });
+
+    expect(calls[0]?.params).toEqual(["org-a", "project", "proj-x", "active"]);
+  });
+
   it("complete rejects whitespace-only organizationId before querying", async () => {
     const pool = {
       query: vi.fn(() => Promise.resolve({ rows: [runRow()] })),

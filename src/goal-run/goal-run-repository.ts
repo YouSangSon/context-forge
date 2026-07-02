@@ -254,9 +254,9 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
       assertListInput(input);
 
       const params: unknown[] = [
-        input.organizationId,
+        input.organizationId.trim(),
         input.scopeType,
-        input.scopeId,
+        input.scopeId.trim(),
       ];
       let statusFilter = "";
       if (input.status) {

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Goal-run list now trims direct organization and scope identifiers before
+  querying.
 - Goal-run get now trims direct organization identifiers before run and
   iteration queries.
 - Goal-run iteration recording now trims direct organization identifiers before
