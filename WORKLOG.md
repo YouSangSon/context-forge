@@ -2,6 +2,33 @@
 
 ## 2026-07-02
 
+- 17:58 KST - Stabilized operator server worker/metrics tests:
+  - `src/app/server.ts` now allows tests to inject the background worker
+    starter and readiness probe pool while production keeps the existing
+    defaults.
+  - `tests/app/start-background-workers-server.test.ts` and
+    `tests/app/start-operator-server-metrics.test.ts` now avoid module-level
+    mocks for worker, queue-metrics, and database modules.
+  - This removes parallel full-suite mock interference that surfaced as
+    operator server timeouts and duplicate worker-start calls.
+
+RED/GREEN:
+- RED: `npm test -- --reporter=dot` twice reproduced unrelated full-suite
+  failures in operator server worker/metrics tests while those files passed in
+  isolation.
+- GREEN: `npx vitest run tests/app/start-background-workers-server.test.ts --reporter=dot`
+  (`1` file passed; `4` tests passed)
+- GREEN: `npx vitest run tests/app/start-operator-server-metrics.test.ts --reporter=dot`
+  (`1` file passed; `1` test passed)
+
+Verification:
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2452`
+  tests passed, `34` skipped)
+
 - 17:50 KST - Hardened unarchive compaction organization normalization:
   - `src/compact/unarchive-compaction.ts` now trims direct organization
     identifiers before archive lookup and carries the normalized value through

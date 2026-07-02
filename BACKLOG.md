@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Operator server worker/metrics tests now inject worker and probe-pool
+  dependencies directly instead of using module-level mocks that can interfere
+  during parallel full-suite runs.
 - Unarchive compaction now trims direct organization identifiers before archive
   lookup, canonical restore, chunk insertion, vector upsert, and compensation
   paths.

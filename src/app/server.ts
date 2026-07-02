@@ -75,6 +75,8 @@ const LOOPBACK_MCP_ALLOWED_HOSTNAMES = [
   "[::1]",
 ] as const;
 
+type BackgroundWorkerStarter = typeof startBackgroundWorkers;
+
 export type CreateOperatorServerOptions = {
   config?: ServiceConfig;
   registry?: ToolRegistry;
@@ -103,6 +105,12 @@ export type CreateOperatorServerOptions = {
   // Optional live backlog collector for /metrics. startOperatorServer wires
   // this to the probe Postgres pool; tests can inject or disable it.
   backgroundQueueMetrics?: BackgroundQueueMetricsCollector | null;
+  // Test hook for startOperatorServer so module-level worker mocks are not
+  // needed in parallel test runs.
+  backgroundWorkerStarter?: BackgroundWorkerStarter;
+  // Test hook for the dedicated readiness probe pool. startOperatorServer
+  // still owns cleanup for injected pools.
+  probePool?: PgPool;
 };
 
 function normalizeTokens(
@@ -484,14 +492,18 @@ export function startOperatorServer(
   // bootstrapping the singleton. Only one `SELECT 1` is issued per probe, so
   // it stays at a single live connection in practice even when the pool's
   // configured maximum is higher.
-  const probePool = createPgPool({
-    connectionString: config.databaseUrl,
-    ...config.postgres.pool,
-  });
+  const probePool =
+    options.probePool ??
+    createPgPool({
+      connectionString: config.databaseUrl,
+      ...config.postgres.pool,
+    });
   const dependencyProbes =
     options.dependencyProbes ?? selectDependencyProbes(config, probePool);
 
   const metrics = options.metrics ?? createMetricsRegistry();
+  const backgroundWorkerStarter =
+    options.backgroundWorkerStarter ?? startBackgroundWorkers;
   const backgroundQueueMetrics =
     options.backgroundQueueMetrics === undefined
       ? createBackgroundQueueMetricsCollector(probePool)
@@ -514,7 +526,7 @@ export function startOperatorServer(
   const startWorkers = (): void => {
     backgroundWorkerStartup = Promise.resolve()
       .then(() =>
-        startBackgroundWorkers({
+        backgroundWorkerStarter({
           logger: log,
           metrics,
           failFast: false,
@@ -664,6 +676,8 @@ function assertOperatorServerOptions(
   assertOptionalNullableOAuthTokenVerifier(candidate.oauthTokenVerifier);
   assertOptionalMetrics(candidate.metrics);
   assertOptionalBackgroundQueueMetrics(candidate.backgroundQueueMetrics);
+  assertOptionalBackgroundWorkerStarter(candidate.backgroundWorkerStarter);
+  assertOptionalProbePool(candidate.probePool);
 }
 
 function assertOptionalObject(value: unknown, fieldName: string): void {
@@ -824,6 +838,22 @@ function assertOptionalBackgroundQueueMetrics(value: unknown): void {
   }
   const collector = assertObject(value, "backgroundQueueMetrics");
   assertFunction(collector.collect, "backgroundQueueMetrics.collect");
+}
+
+function assertOptionalBackgroundWorkerStarter(value: unknown): void {
+  if (value === undefined) {
+    return;
+  }
+  assertFunction(value, "backgroundWorkerStarter");
+}
+
+function assertOptionalProbePool(value: unknown): void {
+  if (value === undefined) {
+    return;
+  }
+  const pool = assertObject(value, "probePool");
+  assertFunction(pool.query, "probePool.query");
+  assertFunction(pool.end, "probePool.end");
 }
 
 function assertString(value: unknown, fieldName: string): asserts value is string {

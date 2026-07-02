@@ -1,19 +1,18 @@
 import { once } from "node:events";
 import http, { type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  closeOperatorServer,
+  startOperatorServer,
+} from "../../src/app/server.js";
 import type { ServiceConfig } from "../../src/config.js";
 import type { BackgroundWorkersHandle } from "../../src/app/background-workers.js";
+import type { PgPool } from "../../src/db/connection.js";
 import type { Logger } from "../../src/logger.js";
 import type { ToolRegistry } from "../../src/mcp/types.js";
 
 const servers: Server[] = [];
-
-beforeEach(() => {
-  vi.doUnmock("../../src/app/background-workers.js");
-  vi.doUnmock("../../src/db/connection.js");
-  vi.resetModules();
-});
 
 afterEach(async () => {
   await Promise.all(
@@ -22,9 +21,6 @@ afterEach(async () => {
         new Promise<void>((resolve) => server.close(() => resolve())),
     ),
   );
-  vi.doUnmock("../../src/app/background-workers.js");
-  vi.doUnmock("../../src/db/connection.js");
-  vi.resetModules();
 });
 
 describe("startOperatorServer background worker startup", () => {
@@ -32,11 +28,7 @@ describe("startOperatorServer background worker startup", () => {
     const startBackgroundWorkers = vi
       .fn()
       .mockRejectedValue(new Error("worker boom"));
-    vi.doMock("../../src/app/background-workers.js", () => ({
-      startBackgroundWorkers,
-    }));
 
-    const { startOperatorServer } = await import("../../src/app/server.js");
     const logger = buildLogger();
     const server = startOperatorServer({
       config: buildTestConfig(),
@@ -47,6 +39,8 @@ describe("startOperatorServer background worker startup", () => {
       backgroundQueueMetrics: null,
       oauthProtectedResource: null,
       oauthTokenVerifier: null,
+      backgroundWorkerStarter: startBackgroundWorkers,
+      probePool: buildProbePool(),
     });
     servers.push(server);
 
@@ -89,20 +83,7 @@ describe("startOperatorServer background worker startup", () => {
           resolveWorkerStartup = resolve;
         }),
     );
-    const createPgPool = vi.fn(() => ({
-      end: probeEnd,
-    }));
 
-    vi.doMock("../../src/app/background-workers.js", () => ({
-      startBackgroundWorkers,
-    }));
-    vi.doMock("../../src/db/connection.js", () => ({
-      createPgPool,
-    }));
-
-    const { closeOperatorServer, startOperatorServer } = await import(
-      "../../src/app/server.js"
-    );
     const server = startOperatorServer({
       config: buildTestConfig(),
       registry: {} as ToolRegistry,
@@ -112,6 +93,8 @@ describe("startOperatorServer background worker startup", () => {
       backgroundQueueMetrics: null,
       oauthProtectedResource: null,
       oauthTokenVerifier: null,
+      backgroundWorkerStarter: startBackgroundWorkers,
+      probePool: buildProbePool(probeEnd),
     });
     servers.push(server);
 
@@ -157,20 +140,7 @@ describe("startOperatorServer background worker startup", () => {
       startedWorkers: ["compaction"],
       stop: stopWorkers,
     });
-    const createPgPool = vi.fn(() => ({
-      end: probeEnd,
-    }));
 
-    vi.doMock("../../src/app/background-workers.js", () => ({
-      startBackgroundWorkers,
-    }));
-    vi.doMock("../../src/db/connection.js", () => ({
-      createPgPool,
-    }));
-
-    const { closeOperatorServer, startOperatorServer } = await import(
-      "../../src/app/server.js"
-    );
     const server = startOperatorServer({
       config: buildTestConfig(),
       registry: {} as ToolRegistry,
@@ -180,6 +150,8 @@ describe("startOperatorServer background worker startup", () => {
       backgroundQueueMetrics: null,
       oauthProtectedResource: null,
       oauthTokenVerifier: null,
+      backgroundWorkerStarter: startBackgroundWorkers,
+      probePool: buildProbePool(probeEnd),
     });
     servers.push(server);
 
@@ -206,21 +178,8 @@ describe("startOperatorServer background worker startup", () => {
     const blockerAddress = blocker.address() as AddressInfo;
 
     const probeEnd = vi.fn().mockResolvedValue(undefined);
-    const createPgPool = vi.fn(() => ({
-      end: probeEnd,
-    }));
     const startBackgroundWorkers = vi.fn();
 
-    vi.doMock("../../src/app/background-workers.js", () => ({
-      startBackgroundWorkers,
-    }));
-    vi.doMock("../../src/db/connection.js", () => ({
-      createPgPool,
-    }));
-
-    const { closeOperatorServer, startOperatorServer } = await import(
-      "../../src/app/server.js"
-    );
     const logger = buildLogger();
     const server = startOperatorServer({
       config: {
@@ -234,6 +193,8 @@ describe("startOperatorServer background worker startup", () => {
       backgroundQueueMetrics: null,
       oauthProtectedResource: null,
       oauthTokenVerifier: null,
+      backgroundWorkerStarter: startBackgroundWorkers,
+      probePool: buildProbePool(probeEnd),
     });
 
     await once(server, "error");
@@ -295,6 +256,16 @@ function buildLogger(): Logger {
     debug: vi.fn(),
     child: vi.fn(() => buildLogger()),
   } as unknown as Logger;
+}
+
+function buildProbePool(
+  end: PgPool["end"] = vi.fn().mockResolvedValue(undefined) as PgPool["end"],
+): PgPool {
+  return {
+    query: vi.fn(),
+    connect: vi.fn(),
+    end,
+  } as unknown as PgPool;
 }
 
 function flushTasks(): Promise<void> {
