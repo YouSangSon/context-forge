@@ -16,6 +16,7 @@ describe("toNumber", () => {
     "",
     " \n\t ",
     "not-a-number",
+    "0x10",
     null,
     undefined,
     false,

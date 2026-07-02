@@ -7,6 +7,13 @@ export function toNumber(value: unknown): number {
     throw new Error("database number must be finite");
   }
 
+  if (
+    typeof value === "string" &&
+    !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value)
+  ) {
+    throw new Error("database number must be finite");
+  }
+
   const numberValue = typeof value === "number" ? value : Number(value);
   if (
     !Number.isFinite(numberValue) ||

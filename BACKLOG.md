@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Shared DB number mapping now rejects non-decimal numeric strings before
+  coercion, so repository row mappers cannot accept malformed values like
+  `0x10` as finite database numbers.
 - Pgvector query row mapping now rejects non-decimal `score` strings before
   numeric coercion, so malformed values like `0x10` cannot map to valid vector
   scores.

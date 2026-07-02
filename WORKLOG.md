@@ -9734,3 +9734,27 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`81` files passed, `2` skipped; `2166` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened shared DB number string parsing:
+  - Added RED coverage showing shared `toNumber("0x10")` was accepted because
+    it delegated directly to `Number(value)`.
+  - `toNumber` now permits string inputs only when they are decimal/exponent
+    numeric strings before numeric conversion; normal node-postgres numeric
+    strings such as `"42"` and `"0.75"` remain supported.
+  - This tightens all repository row mappers that use `toNumber` without
+    adding per-repository code.
+  - No `DECISIONS.md` entry: this is shared row-mapping hardening for the
+    existing database utility contract, not a new durable architecture decision.
+
+Verification:
+- RED: `npx vitest run tests/store/db-utils.test.ts --reporter=dot`
+  failed because `"0x10"` did not throw.
+- GREEN focused: `npx vitest run tests/store/db-utils.test.ts --reporter=dot`
+  (`1` file passed; `16` tests passed)
+- Related: `npx vitest run tests/store/db-utils.test.ts tests/store/memory-repository.test.ts tests/store/memory-archive-repository.test.ts tests/store/canonical-indexing.test.ts tests/jobs/ingest-job-claim.test.ts tests/goal-run/goal-run-repository.test.ts tests/audit/audit-truncation.test.ts tests/audit/audit-write.test.ts --reporter=dot`
+  (`8` files passed; `362` tests passed; `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2167` tests passed, `34` skipped)
+- `git diff --check` (passed)
