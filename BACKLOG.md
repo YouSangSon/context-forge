@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `build_context_pack` now trims direct organization identifiers before
+  service-backed retrieval and context pack run persistence.
 - MCP tool audit instrumentation now trims direct organization identifiers
   before writing success or error audit rows.
 - Context pack run persistence now trims direct organization identifiers before

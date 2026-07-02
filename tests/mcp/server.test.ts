@@ -1051,7 +1051,7 @@ describe("createToolRegistry", () => {
       // Strict-org guard demands either organizationId or the LEGACY_ANONYMOUS_SEARCH
       // escape hatch. Use a non-default tenant so the persistence row proves it
       // keeps the request's org attribution instead of falling back to "default".
-      organizationId: "org-a",
+      organizationId: " org-a ",
       task: "continue work",
     });
 

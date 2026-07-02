@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- 18:22 KST - Hardened context pack handler organization normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
+    `build_context_pack` runs service-backed retrieval and persists context
+    pack run rows.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/mcp/server.test.ts` covers trimmed service-backed context pack run
+    parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed the updated context pack persistence case because raw organization ID
+  text reached `createContextPackRun`.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `133` tests passed)
+
+Verification:
+- `npx vitest run tests/context-pack/build-context-pack.test.ts tests/audit/audit-write.test.ts --reporter=dot`
+  (`2` files passed; `31` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2458`
+  tests passed, `34` skipped)
+
 - 18:20 KST - Hardened MCP audit wrapper organization normalization:
   - `src/mcp/tool-registry.ts` now trims direct organization identifiers before
     best-effort success or error audit rows are written.

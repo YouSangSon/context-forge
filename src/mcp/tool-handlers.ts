@@ -314,13 +314,14 @@ export function createToolHandlers(input: {
       assertNonBlankText(toolInput.task, "context-pack task");
       assertProvidedScopeIdentifiers(toolInput);
       const projectKey = requireProjectKey(toolInput.projectKey, "project");
+      const organizationId = toolInput.organizationId?.trim();
 
       const useServiceBackedPack =
         !hasOverrides && !options.retrieveMemory;
       const builtPack = useServiceBackedPack
         ? await withCanonicalServices(async (services) => {
             const records = await retrieveRecordsWithCanonicalServices(services, {
-              organizationId: toolInput.organizationId,
+              organizationId,
               projectKey,
               query: toolInput.task,
               userScopeId:
@@ -345,7 +346,7 @@ export function createToolHandlers(input: {
             );
 
             await services.chunkRepository.createContextPackRun({
-              organizationId: toolInput.organizationId ?? "default",
+              organizationId: organizationId ?? "default",
               projectKey,
               task: toolInput.task,
               selectedMemoryIds,
@@ -360,7 +361,7 @@ export function createToolHandlers(input: {
           })
         : await (async () => {
             const records = await resolveRecords({
-              organizationId: toolInput.organizationId,
+              organizationId,
               projectKey,
               query: toolInput.task,
               userScopeId: toolInput.userScopeId,
