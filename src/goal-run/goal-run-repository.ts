@@ -91,6 +91,12 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
   return {
     async start(input) {
       assertStartInput(input);
+      const organizationId = input.organizationId.trim();
+      const scopeId = input.scopeId.trim();
+      const projectKey =
+        input.projectKey === undefined || input.projectKey === null
+          ? null
+          : input.projectKey.trim();
       const terminationCriteria =
         input.terminationCriteria === undefined ||
         input.terminationCriteria === null
@@ -107,10 +113,10 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           RETURNING ${RUN_COLUMNS}
         `,
         [
-          input.organizationId,
+          organizationId,
           input.scopeType,
-          input.scopeId,
-          input.projectKey ?? null,
+          scopeId,
+          projectKey,
           input.goal.trim(),
           terminationCriteria,
         ],

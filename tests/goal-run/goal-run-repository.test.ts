@@ -169,6 +169,31 @@ describe("createGoalRunRepository", () => {
     expect(calls[0]?.params[5]).toBe("tests pass");
   });
 
+  it("start trims organizationId, scopeId, and projectKey before inserting", async () => {
+    const calls: SqlQueryCall[] = [];
+    const pool = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        return Promise.resolve({ rows: [runRow()] });
+      }),
+      connect: vi.fn(),
+    };
+
+    const repo = createGoalRunRepository(pool as never);
+    await repo.start({
+      organizationId: " org-a ",
+      scopeType: "project",
+      scopeId: " proj-x ",
+      projectKey: " proj-x ",
+      goal: "ship phase 1",
+      terminationCriteria: "tests pass",
+    });
+
+    expect(calls[0]?.params[0]).toBe("org-a");
+    expect(calls[0]?.params[2]).toBe("proj-x");
+    expect(calls[0]?.params[3]).toBe("proj-x");
+  });
+
   it.each([
     {
       row: runRow({ id: "0" }),

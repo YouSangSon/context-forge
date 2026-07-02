@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 16:25 KST - Hardened goal-run start identifier normalization:
+  - `src/goal-run/goal-run-repository.ts` now trims direct organization,
+    scope, and project identifiers before insertion.
+  - Existing nonblank validation still rejects whitespace-only identifiers.
+  - `tests/goal-run/goal-run-repository.test.ts` covers trimmed start insert
+    identifier parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  failed the new start identifier trimming case because raw organization ID
+  text reached the insert parameters.
+- GREEN: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`1` file passed; `65` tests passed)
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/goal-run-handlers.test.ts tests/goal-run/build-goal-context.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `246` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2424`
+  tests passed, `34` skipped)
+
 - 16:22 KST - Hardened goal-run close note normalization:
   - `src/goal-run/goal-run-repository.ts` now trims direct completion and
     abandonment notes before updating.
