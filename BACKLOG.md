@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `buildVectorPoint` now validates scope metadata fields as non-empty strings
+  before producing vector payloads, preserving nullable `projectKey` while
+  rejecting blank scoping values.
 - Qdrant and pgvector queries now validate optional `filter.projectKey` values
   before calling storage clients, preserving `null`/`undefined` fallback while
   rejecting non-string and blank project keys.

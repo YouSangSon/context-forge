@@ -142,6 +142,28 @@ describe("buildVectorPoint", () => {
 
   it.each([
     [
+      "scopeType",
+      { scopeType: " \n\t " },
+      "scopeType must be a non-empty string",
+    ],
+    [
+      "scopeId",
+      { scopeId: " \n\t " },
+      "scopeId must be a non-empty string",
+    ],
+    [
+      "projectKey",
+      { projectKey: " \n\t " },
+      "projectKey must be a non-empty string",
+    ],
+  ])("rejects blank scope metadata field: %s", (_label, override, message) => {
+    expect(callBuildVectorPoint({ ...buildInput(), ...override })).toThrow(
+      message,
+    );
+  });
+
+  it.each([
+    [
       "projectKey",
       { projectKey: undefined },
       "projectKey must be a string or null",

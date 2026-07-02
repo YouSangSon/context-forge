@@ -67,9 +67,9 @@ function assertVectorPointInput(
   assertFiniteVector(candidate.vector);
   assertPositiveSafeInteger(candidate.memoryRecordId, "memoryRecordId");
   assertVectorOrganizationId(candidate.organizationId);
-  assertStringField(candidate.scopeType, "scopeType");
-  assertStringField(candidate.scopeId, "scopeId");
-  assertStringOrNullField(candidate.projectKey, "projectKey");
+  assertNonEmptyStringField(candidate.scopeType, "scopeType");
+  assertNonEmptyStringField(candidate.scopeId, "scopeId");
+  assertNonEmptyStringOrNullField(candidate.projectKey, "projectKey");
   assertStringField(candidate.kind, "kind");
   assertStringField(candidate.durability, "durability");
   assertOptionalStringOrNullField(candidate.title, "title");
@@ -97,15 +97,38 @@ function assertFiniteVector(value: unknown): void {
   }
 }
 
-function assertStringField(value: unknown, fieldName: string): void {
+function assertStringField(
+  value: unknown,
+  fieldName: string,
+): asserts value is string {
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string`);
   }
 }
 
-function assertStringOrNullField(value: unknown, fieldName: string): void {
+function assertNonEmptyStringField(value: unknown, fieldName: string): void {
+  assertStringField(value, fieldName);
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must be a non-empty string`);
+  }
+}
+
+function assertStringOrNullField(
+  value: unknown,
+  fieldName: string,
+): asserts value is string | null {
   if (typeof value !== "string" && value !== null) {
     throw new Error(`${fieldName} must be a string or null`);
+  }
+}
+
+function assertNonEmptyStringOrNullField(
+  value: unknown,
+  fieldName: string,
+): void {
+  assertStringOrNullField(value, fieldName);
+  if (typeof value === "string" && value.trim().length === 0) {
+    throw new Error(`${fieldName} must be a non-empty string`);
   }
 }
 

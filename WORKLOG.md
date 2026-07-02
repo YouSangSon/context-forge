@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened vector point scope metadata validation:
+  - `src/vector/point-builder.ts` now validates `scopeType`, `scopeId`, and
+    non-null `projectKey` as non-empty strings before building vector payloads.
+  - `projectKey: null` still preserves the existing no-project-key payload
+    behavior, while blank project keys now fail at the builder boundary.
+  - `tests/vector/point-builder.test.ts` covers blank scope metadata values.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/point-builder.test.ts --reporter=dot`
+  failed the new blank metadata cases because `buildVectorPoint` accepted
+  blank `scopeType`, `scopeId`, and `projectKey` values.
+- GREEN: `npx vitest run tests/vector/point-builder.test.ts --reporter=dot`
+  (`1` file passed; `28` tests passed)
+
+Verification plan:
+- `npx vitest run tests/vector/point-builder.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts tests/compact/unarchive-compaction.test.ts tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/point-builder.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts tests/compact/unarchive-compaction.test.ts tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`6` files passed; `272` tests passed, `12` skipped)
+- Initial `npm run typecheck` and `npm run build` caught missing TypeScript
+  assertion narrowing in the new helper; adding assertion signatures fixed it.
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2122` tests passed,
+  `34` skipped)
+
 - Hardened vector query filter project key validation:
   - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now
     validate optional query `filter.projectKey` values before calling storage
