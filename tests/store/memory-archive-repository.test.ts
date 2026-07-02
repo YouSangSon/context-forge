@@ -1151,6 +1151,47 @@ describe("MemoryArchiveRepository.findArchiveByIds", () => {
 
   it.each([
     {
+      rowPatch: { organization_id: null },
+      message: "memory archive organization_id must be a string",
+    },
+    {
+      rowPatch: { scope_id: " \n\t " },
+      message: "memory archive scope_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { project_key: 42 },
+      message: "memory archive project_key must be a string or null",
+    },
+    {
+      rowPatch: { title: 42 },
+      message: "memory archive title must be a string or null",
+    },
+    {
+      rowPatch: { content: null },
+      message: "memory archive content must be a string",
+    },
+    {
+      rowPatch: { content: " \n\t " },
+      message: "memory archive content must contain non-whitespace text",
+    },
+    {
+      rowPatch: { summary: 42 },
+      message: "memory archive summary must be a string or null",
+    },
+  ])("rejects malformed archive scalar rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [archiveRow(rowPatch)],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findArchiveByIds([50], "org-a")).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
       importance: "1.5",
       message: "memory archive importance must be a Postgres integer",
     },

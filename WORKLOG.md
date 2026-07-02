@@ -10398,3 +10398,28 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2261` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened archive lookup row scalar mapping:
+  - Added RED coverage showing malformed archive lookup row organization,
+    scope, content, and nullable text values were returned directly instead of
+    failing at the repository boundary.
+  - Archive lookup rows now pass through a shared mapper that validates row
+    objects, IDs, scalar metadata, enums, integer importance, and timestamps
+    before returning `ArchiveRow` results.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed archive scalar metadata resolved instead of
+  rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `142` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/unarchive-compaction.test.ts tests/compact/apply-compaction.test.ts tests/compact/outbox-sweeper.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`5` files passed; `378` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2268` tests passed, `34` skipped)
+- `git diff --check` (passed)

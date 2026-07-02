@@ -471,22 +471,22 @@ export function createMemoryArchiveRepository(
 
       if (archiveIds.length === 0) return [];
       const result = await pool.query<{
-        id: number | string;
-        organization_id: string;
-        source_record_id: number | string;
-        source_id: number | string | null;
-        scope_type: string;
-        scope_id: string;
-        project_key: string | null;
-        kind: string;
-        title: string | null;
-        content: string;
-        summary: string | null;
-        durability: string;
-        importance: number | string;
-        original_created_at: string | Date;
-        original_updated_at: string | Date;
-        unarchived_at: string | Date | null;
+        id: unknown;
+        organization_id: unknown;
+        source_record_id: unknown;
+        source_id: unknown;
+        scope_type: unknown;
+        scope_id: unknown;
+        project_key: unknown;
+        kind: unknown;
+        title: unknown;
+        content: unknown;
+        summary: unknown;
+        durability: unknown;
+        importance: unknown;
+        original_created_at: unknown;
+        original_updated_at: unknown;
+        unarchived_at: unknown;
       }>(
         `
           SELECT id, organization_id, source_record_id, source_id,
@@ -499,37 +499,7 @@ export function createMemoryArchiveRepository(
         `,
         [archiveIds, organizationId],
       );
-      return result.rows.map((row) => ({
-        id: toPositiveSafeInteger(row.id, "memory archive id"),
-        organizationId: row.organization_id,
-        sourceRecordId: toPositiveSafeInteger(
-          row.source_record_id,
-          "memory archive source_record_id",
-        ),
-        sourceId:
-          row.source_id === null
-            ? null
-            : toPositiveSafeInteger(
-                row.source_id,
-                "memory archive source_id",
-              ),
-        scopeType: toArchiveScopeType(row.scope_type),
-        scopeId: row.scope_id,
-        projectKey: row.project_key,
-        kind: toArchiveKind(row.kind),
-        title: row.title,
-        content: row.content,
-        summary: row.summary,
-        durability: toArchiveDurability(row.durability),
-        importance: toPostgresInteger(
-          row.importance,
-          "memory archive importance",
-        ),
-        originalCreatedAt: toIsoString(row.original_created_at),
-        originalUpdatedAt: toIsoString(row.original_updated_at),
-        unarchivedAt:
-          row.unarchived_at === null ? null : toIsoString(row.unarchived_at),
-      }));
+      return result.rows.map(mapArchiveLookupRow);
     },
 
     async restoreToCanonical(archive, organizationId) {
@@ -761,6 +731,49 @@ function mapRestorableArchive(value: unknown): ArchiveRow {
       candidate.unarchivedAt === null
         ? null
         : toIsoString(candidate.unarchivedAt as string | Date),
+  };
+}
+
+function mapArchiveLookupRow(value: unknown): ArchiveRow {
+  const row = assertObject(value, "memory archive row");
+  return {
+    id: toPositiveSafeInteger(row.id, "memory archive id"),
+    organizationId: assertRequiredNonBlankString(
+      row.organization_id,
+      "memory archive organization_id",
+    ),
+    sourceRecordId: toPositiveSafeInteger(
+      row.source_record_id,
+      "memory archive source_record_id",
+    ),
+    sourceId:
+      row.source_id === null
+        ? null
+        : toPositiveSafeInteger(row.source_id, "memory archive source_id"),
+    scopeType: toArchiveScopeType(row.scope_type),
+    scopeId: assertRequiredNonBlankString(
+      row.scope_id,
+      "memory archive scope_id",
+    ),
+    projectKey: toNullableString(
+      row.project_key,
+      "memory archive project_key",
+    ),
+    kind: toArchiveKind(row.kind),
+    title: toNullableString(row.title, "memory archive title"),
+    content: assertRequiredNonBlankString(
+      row.content,
+      "memory archive content",
+    ),
+    summary: toNullableString(row.summary, "memory archive summary"),
+    durability: toArchiveDurability(row.durability),
+    importance: toPostgresInteger(row.importance, "memory archive importance"),
+    originalCreatedAt: toIsoString(row.original_created_at as string | Date),
+    originalUpdatedAt: toIsoString(row.original_updated_at as string | Date),
+    unarchivedAt:
+      row.unarchived_at === null
+        ? null
+        : toIsoString(row.unarchived_at as string | Date),
   };
 }
 
