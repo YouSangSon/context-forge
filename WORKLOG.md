@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 18:11 KST - Hardened canonical chunk listing organization normalization:
+  - `src/store/canonical-indexing.ts` now trims direct organization
+    identifiers before `listChunks` builds scoped reindex query parameters.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/store/canonical-indexing.test.ts` covers trimmed list query
+    parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  failed the new chunk listing organization trimming case because raw
+  organization ID text reached query parameters.
+- GREEN: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`1` file passed; `81` tests passed)
+
+Verification:
+- `npx vitest run tests/compact/ingest-sweeper.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`2` files passed; `182` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2456`
+  tests passed, `34` skipped)
+
 - 18:08 KST - Hardened canonical chunk replace organization normalization:
   - `src/store/canonical-indexing.ts` now trims direct record organization
     identifiers before `replaceChunksForRecord` transaction DELETE parameters.

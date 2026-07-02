@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Canonical Chunk Replace Organization Normalization
+## Current Loop - Canonical Chunk Listing Organization Normalization
 
 Status:
-- Canonical chunk replacement now trims direct record organization identifiers
-  before transaction DELETEs and pending ingest job writes.
+- Canonical chunk listing now trims direct organization identifiers before
+  building scoped reindex query parameters.
 - Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused canonical indexing tests passed after the RED chunk replace
+- Focused canonical indexing tests passed after the RED chunk listing
   organization trimming reproducer.
-- Related ingest/unarchive/MCP tests passed.
+- Related ingest/MCP tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

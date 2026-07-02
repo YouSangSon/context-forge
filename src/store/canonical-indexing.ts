@@ -264,6 +264,7 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
 
     async listChunks(organizationId, scopes, options) {
       assertNonBlankText(organizationId, "organizationId");
+      const scopedOrganizationId = organizationId.trim();
       assertScopeRefs(scopes, "scopes");
       const listOptions = resolveListChunksOptions(options);
 
@@ -272,7 +273,7 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
       }
 
       // organizationId occupies $1; scope params start at $2.
-      const params: unknown[] = [organizationId];
+      const params: unknown[] = [scopedOrganizationId];
       const scopeClauses = scopes.map((scope) => {
         const scopeTypeIndex = params.push(scope.scopeType);
         const scopeIdIndex = params.push(scope.scopeId);

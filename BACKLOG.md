@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Canonical chunk listing now trims direct organization identifiers before
+  building scoped reindex query parameters.
 - Canonical chunk replacement now trims direct record organization identifiers
   before transaction deletes and pending ingest job writes.
 - Canonical chunk insertion now trims direct record organization identifiers
