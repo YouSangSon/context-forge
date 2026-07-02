@@ -2,6 +2,38 @@
 
 ## 2026-07-02
 
+- Hardened Qdrant point list shape mapping:
+  - `src/vector/qdrant-index.ts` now validates Qdrant query response `points`
+    before mapping backend-neutral `VectorHit` objects.
+  - Malformed non-array point lists now fail with a clear adapter boundary
+    error instead of an incidental `.map` TypeError.
+  - `tests/vector/qdrant-index.test.ts` covers non-array point-list responses.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  failed the new point-list test with `Cannot read properties of null (reading
+  'map')`.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `30` tests passed)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`3` files passed; `86` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2061` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant payload shape mapping:
   - `src/vector/qdrant-index.ts` now excludes array payload values when mapping
     Qdrant query points to backend-neutral `VectorHit` objects.

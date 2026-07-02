@@ -25,6 +25,12 @@ type QdrantFilterClause = {
   match: { value: string };
 };
 
+type QdrantQueryPoint = {
+  id: unknown;
+  score: unknown;
+  payload?: unknown;
+};
+
 function buildQdrantMust(filter: VectorFilter): QdrantFilterClause[] {
   assertOptionalVectorOrganizationId(filter.organizationId);
 
@@ -82,7 +88,10 @@ export function createQdrantVectorIndex(
         with_vector: false,
       });
 
-      return response.points.map((point) => ({
+      const points: unknown = response.points;
+      assertQdrantPoints(points);
+
+      return points.map((point) => ({
         id: toQdrantPointId(point.id, "id"),
         score: toQdrantFiniteNumber(point.score, "score"),
         payload: point.payload && typeof point.payload === "object" && !Array.isArray(point.payload)
@@ -144,6 +153,12 @@ export function createQdrantVectorIndex(
       await client.delete(collectionName, selector);
     },
   };
+}
+
+function assertQdrantPoints(value: unknown): asserts value is QdrantQueryPoint[] {
+  if (!Array.isArray(value)) {
+    throw new Error("points must be an array");
+  }
 }
 
 function toQdrantPointId(value: unknown, fieldName: string): string {

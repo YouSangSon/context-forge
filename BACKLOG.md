@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant vector query response mapping now rejects non-array `points` results
+  before mapping hits, replacing incidental `.map` failures with a clear
+  adapter boundary error.
 - Qdrant vector query row mapping now avoids returning array values as
   `VectorHit.payload` records, preserving the existing empty-payload fallback
   for malformed response payloads.

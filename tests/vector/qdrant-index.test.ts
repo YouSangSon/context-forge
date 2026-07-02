@@ -246,6 +246,24 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     ).rejects.toThrow("id must be a non-empty string or non-negative safe integer");
   });
 
+  it("rejects non-array Qdrant point lists before mapping VectorHit[]", async () => {
+    const client = makeClient();
+    client.query.mockResolvedValue({ points: null });
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.query(
+        [0.1],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "p" }],
+          projectKey: "p",
+        },
+        10,
+      ),
+    ).rejects.toThrow("points must be an array");
+  });
+
   it("rejects non-finite Qdrant scores before returning VectorHit[]", async () => {
     const client = makeClient();
     client.query.mockResolvedValue({

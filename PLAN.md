@@ -4,12 +4,12 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Qdrant Payload Shape Validation
+## Current Loop - Qdrant Point List Shape Validation
 
 Status:
-- `src/vector/qdrant-index.ts` no longer returns array values as
-  `VectorHit.payload` records when mapping Qdrant query points.
-- `tests/vector/qdrant-index.test.ts` now covers array payload responses.
+- `src/vector/qdrant-index.ts` now validates Qdrant query response `points`
+  before mapping `VectorHit[]`.
+- `tests/vector/qdrant-index.test.ts` now covers non-array point lists.
 
 Verification:
 - Focused Qdrant vector tests passed after a RED reproducer.
