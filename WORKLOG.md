@@ -10324,3 +10324,28 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2246` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened archive command object input mapping:
+  - Added RED coverage showing malformed direct `createCompactionRun`,
+    `applyCompactionRecord`, and `completeCompactionRun` input objects failed
+    through incidental property access or field errors instead of clear
+    pre-SQL object validation.
+  - Compaction command entrypoints now validate direct input objects before
+    reading command fields, while preserving the existing field-level guards.
+  - No `DECISIONS.md` entry: this is repository input-boundary validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed command input objects were not rejected with clear
+  object boundary errors.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `126` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/apply-compaction.test.ts tests/compact/compact-memory.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `335` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2252` tests passed, `34` skipped)
+- `git diff --check` (passed)

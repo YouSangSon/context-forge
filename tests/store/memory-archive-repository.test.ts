@@ -180,6 +180,29 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
     ).rejects.toThrow(/idempotency_key/);
   });
 
+  it.each([
+    {
+      input: null,
+      message: "create compaction run input must be an object",
+    },
+    {
+      input: [],
+      message: "create compaction run input must be an object",
+    },
+  ])("rejects malformed direct run input objects before querying %#", async ({
+    input,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [RUN_ROW] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.createCompactionRun(input as never)).rejects.toThrow(
+      message,
+    );
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("rejects whitespace-only organizationId before querying", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [RUN_ROW] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -337,6 +360,29 @@ describe("MemoryArchiveRepository.applyCompactionRecord", () => {
         planGeneratedAt: new Date(),
       }),
     ).rejects.toThrow(/organizationId/);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      input: null,
+      message: "apply compaction record input must be an object",
+    },
+    {
+      input: [],
+      message: "apply compaction record input must be an object",
+    },
+  ])("rejects malformed direct apply input objects before querying %#", async ({
+    input,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.applyCompactionRecord(input as never)).rejects.toThrow(
+      message,
+    );
 
     expect(query).not.toHaveBeenCalled();
   });
@@ -516,6 +562,29 @@ describe("MemoryArchiveRepository.completeCompactionRun", () => {
       0,
       "qdrant cleanup failed",
     ]);
+  });
+
+  it.each([
+    {
+      input: null,
+      message: "complete compaction run input must be an object",
+    },
+    {
+      input: [],
+      message: "complete compaction run input must be an object",
+    },
+  ])("rejects malformed direct completion input objects before querying %#", async ({
+    input,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.completeCompactionRun(input as never)).rejects.toThrow(
+      message,
+    );
+
+    expect(query).not.toHaveBeenCalled();
   });
 
   it.each([

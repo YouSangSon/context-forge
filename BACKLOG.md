@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository compaction command entrypoints now reject malformed
+  direct create/apply/complete input objects before querying Postgres.
 - Memory archive repository advisory lock acquisition now rejects malformed
   direct lock inputs before querying Postgres.
 - Memory archive repository restore now rejects malformed direct archive

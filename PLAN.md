@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Archive Scope Lock Input Validation
+## Current Loop - Archive Command Object Input Validation
 
 Status:
-- Memory archive repository advisory lock acquisition now validates the input
-  object before reading lock fields.
-- Malformed direct lock inputs fail before SQL instead of throwing incidental
-  property-access errors.
+- Memory archive repository compaction command entrypoints now validate direct
+  input objects before reading command fields.
+- Malformed create, apply, and complete command inputs fail before SQL instead
+  of throwing incidental property-access or field errors.
 
 Verification:
 - Focused memory archive repository tests passed after a RED direct-input

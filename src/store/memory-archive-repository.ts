@@ -676,39 +676,42 @@ function assertQdrantCleanupClaimInput(value: unknown): asserts value is {
 }
 
 function assertCreateCompactionRunInput(
-  input: CreateCompactionRunInput,
-): void {
-  assertNonBlankText(input.organizationId, "organizationId");
-  assertNonBlankText(input.actor, "actor");
-  assertNonBlankText(input.scopeType, "scopeType");
-  assertNonBlankText(input.scopeId, "scopeId");
-  assertBoolean(input.dryRun, "dryRun");
-  assertValidDate(input.planGeneratedAt, "planGeneratedAt");
-  assertNonBlankText(input.idempotencyKey, "idempotencyKey");
+  input: unknown,
+): asserts input is CreateCompactionRunInput {
+  const candidate = assertObject(input, "create compaction run input");
+  assertNonBlankText(candidate.organizationId, "organizationId");
+  assertNonBlankText(candidate.actor, "actor");
+  assertNonBlankText(candidate.scopeType, "scopeType");
+  assertNonBlankText(candidate.scopeId, "scopeId");
+  assertBoolean(candidate.dryRun, "dryRun");
+  assertValidDate(candidate.planGeneratedAt, "planGeneratedAt");
+  assertNonBlankText(candidate.idempotencyKey, "idempotencyKey");
 }
 
 function assertApplyCompactionRecordInput(
-  input: ApplyCompactionRecordInput,
-): void {
-  assertPositiveSafeInteger(input.runId, "runId");
-  assertNonBlankText(input.organizationId, "organizationId");
-  assertPositiveSafeInteger(input.recordId, "recordId");
-  assertArchiveReason(input.reason, "reason");
-  assertOptionalFiniteNumber(input.decayScore, "decayScore");
-  assertOptionalPositiveSafeInteger(input.keptRecordId, "keptRecordId");
-  assertValidDate(input.planGeneratedAt, "planGeneratedAt");
+  input: unknown,
+): asserts input is ApplyCompactionRecordInput {
+  const candidate = assertObject(input, "apply compaction record input");
+  assertPositiveSafeInteger(candidate.runId, "runId");
+  assertNonBlankText(candidate.organizationId, "organizationId");
+  assertPositiveSafeInteger(candidate.recordId, "recordId");
+  assertArchiveReason(candidate.reason, "reason");
+  assertOptionalFiniteNumber(candidate.decayScore, "decayScore");
+  assertOptionalPositiveSafeInteger(candidate.keptRecordId, "keptRecordId");
+  assertValidDate(candidate.planGeneratedAt, "planGeneratedAt");
 }
 
 function assertCompleteCompactionRunInput(
-  input: CompleteCompactionRunInput,
-): void {
-  assertPositiveSafeInteger(input.runId, "runId");
-  assertCompactionRunStatus(input.status, "status");
-  assertNonNegativeSafeInteger(input.archivedCount, "archivedCount");
-  assertNonNegativeSafeInteger(input.duplicateCount, "duplicateCount");
-  assertNonNegativeSafeInteger(input.decayCount, "decayCount");
-  assertNonNegativeSafeInteger(input.qdrantFailed, "qdrantFailed");
-  assertOptionalString(input.errorMessage, "errorMessage");
+  input: unknown,
+): asserts input is CompleteCompactionRunInput {
+  const candidate = assertObject(input, "complete compaction run input");
+  assertPositiveSafeInteger(candidate.runId, "runId");
+  assertCompactionRunStatus(candidate.status, "status");
+  assertNonNegativeSafeInteger(candidate.archivedCount, "archivedCount");
+  assertNonNegativeSafeInteger(candidate.duplicateCount, "duplicateCount");
+  assertNonNegativeSafeInteger(candidate.decayCount, "decayCount");
+  assertNonNegativeSafeInteger(candidate.qdrantFailed, "qdrantFailed");
+  assertOptionalString(candidate.errorMessage, "errorMessage");
 }
 
 function assertScopeLockInput(value: unknown): {
