@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Goal-run service dispatch handlers now trim direct organization identifiers
+  before start, iteration, get, list, complete, and abandon calls.
 - `list_audit_log` now trims direct organization identifiers before audit log
   listing calls and response echoing.
 - `update_memory`, `delete_memory`, and `tag_memory` now trim direct

@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 18:38 KST - Hardened goal-run handler organization normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
+    goal-run start, iteration, get, list, complete, and abandon service
+    dispatch.
+  - `tests/goal-run/goal-run-handlers.test.ts` covers trimmed organization IDs
+    across the goal-run dispatch handlers.
+
+RED/GREEN:
+- RED: `npx vitest run tests/goal-run/goal-run-handlers.test.ts --reporter=dot`
+  failed the updated goal-run dispatch cases because raw organization ID text
+  reached goal-run service stubs.
+- GREEN: `npx vitest run tests/goal-run/goal-run-handlers.test.ts --reporter=dot`
+  (`1` file passed; `25` tests passed)
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/build-goal-context.test.ts --reporter=dot`
+  (`2` files passed; `93` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2460`
+  tests passed, `34` skipped)
+
 - 18:36 KST - Hardened MCP audit listing organization normalization:
   - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
     `list_audit_log` calls the audit log repository and echoes the

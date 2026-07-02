@@ -911,7 +911,7 @@ export function createToolHandlers(input: {
       }
       return await withCanonicalServices(async (services) => {
         const goalRun = await services.goalRuns.start({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           scopeType: scope,
           scopeId,
           projectKey: scope === "project" ? scopeId : null,
@@ -943,7 +943,7 @@ export function createToolHandlers(input: {
       }
       return await withCanonicalServices(async (services) => {
         const iteration = await services.goalRuns.recordIteration({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           goalRunId: toolInput.goalRunId,
           attempt: toolInput.attempt,
           outcome: toolInput.outcome,
@@ -960,7 +960,7 @@ export function createToolHandlers(input: {
       assertPositiveInteger(toolInput.goalRunId, "goalRunId");
       return await withCanonicalServices(async (services) => {
         const goalRun = await services.goalRuns.get({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           goalRunId: toolInput.goalRunId,
         });
         return { ok: true, goalRun };
@@ -982,7 +982,7 @@ export function createToolHandlers(input: {
       });
       return await withCanonicalServices(async (services) => {
         const goalRuns = await services.goalRuns.list({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           scopeType: scope,
           scopeId,
           status: toolInput.status,
@@ -1000,7 +1000,7 @@ export function createToolHandlers(input: {
       }
       return await withCanonicalServices(async (services) => {
         const goalRun = await services.goalRuns.complete({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           goalRunId: toolInput.goalRunId,
           note: resolution,
         });
@@ -1017,7 +1017,7 @@ export function createToolHandlers(input: {
       }
       return await withCanonicalServices(async (services) => {
         const goalRun = await services.goalRuns.abandon({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           goalRunId: toolInput.goalRunId,
           note: reason,
         });

@@ -40,7 +40,7 @@ describe("goal-run handlers", () => {
     const registry = registryWith(goalRuns);
 
     await registry.start_goal_run({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       scope: "user",
       userScopeId: "alice",
       goal: "learn rust",
@@ -197,6 +197,7 @@ describe("goal-run handlers", () => {
     const registry = registryWith(goalRuns);
 
     await registry.record_iteration({
+      organizationId: " org-a ",
       goalRunId: 7,
       attempt: "try A",
       outcome: "failure",
@@ -205,7 +206,7 @@ describe("goal-run handlers", () => {
     });
 
     expect(goalRuns.recordIteration).toHaveBeenCalledWith({
-      organizationId: "default",
+      organizationId: "org-a",
       goalRunId: 7,
       attempt: "try A",
       outcome: "failure",
@@ -307,10 +308,14 @@ describe("goal-run handlers", () => {
     const goalRuns = goalRunServicesStub();
     const registry = registryWith(goalRuns);
 
-    await registry.complete_goal_run({ goalRunId: 7, resolution: "done" });
+    await registry.complete_goal_run({
+      organizationId: " org-a ",
+      goalRunId: 7,
+      resolution: "done",
+    });
 
     expect(goalRuns.complete).toHaveBeenCalledWith({
-      organizationId: "default",
+      organizationId: "org-a",
       goalRunId: 7,
       note: "done",
     });
@@ -320,10 +325,14 @@ describe("goal-run handlers", () => {
     const goalRuns = goalRunServicesStub();
     const registry = registryWith(goalRuns);
 
-    await registry.abandon_goal_run({ goalRunId: 7, reason: "stuck" });
+    await registry.abandon_goal_run({
+      organizationId: " org-a ",
+      goalRunId: 7,
+      reason: "stuck",
+    });
 
     expect(goalRuns.abandon).toHaveBeenCalledWith({
-      organizationId: "default",
+      organizationId: "org-a",
       goalRunId: 7,
       note: "stuck",
     });
@@ -417,7 +426,7 @@ describe("goal-run handlers", () => {
     });
 
     await registry.list_goal_runs({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       scope: "user",
       status: "active",
     });
@@ -427,6 +436,18 @@ describe("goal-run handlers", () => {
       scopeType: "user",
       scopeId: "resolved-user",
       status: "active",
+    });
+  });
+
+  it("get_goal_run trims organization IDs before service dispatch", async () => {
+    const goalRuns = goalRunServicesStub();
+    const registry = registryWith(goalRuns);
+
+    await registry.get_goal_run({ organizationId: " org-a ", goalRunId: 7 });
+
+    expect(goalRuns.get).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      goalRunId: 7,
     });
   });
 
