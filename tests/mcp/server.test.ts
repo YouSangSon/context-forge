@@ -287,10 +287,13 @@ describe("createToolRegistry", () => {
   });
 
   it("adds memory using the Task 6 public tool contract", async () => {
-    const registry = createToolRegistry({ repository: createRepository() });
+    const resolveRepository = vi.fn((projectKey: string) =>
+      createProjectRepository(projectKey),
+    );
+    const registry = createToolRegistry({ resolveRepository });
 
     const result = await registry.add_memory({
-      projectKey: "project-alpha",
+      projectKey: " project-alpha ",
       kind: "decision",
       content: "Use Postgres for canonical memory state.",
     });
@@ -300,6 +303,7 @@ describe("createToolRegistry", () => {
       memoryId: "101",
       summary: "Use Postgres for canonical memory state.",
     });
+    expect(resolveRepository).toHaveBeenCalledWith("project-alpha");
   });
 
   it("rejects whitespace-only content through the direct add_memory registry path", async () => {

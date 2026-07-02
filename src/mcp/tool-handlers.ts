@@ -228,6 +228,10 @@ export function createToolHandlers(input: {
       assertAllowedValue(toolInput.kind, "kind", SUPPORTED_MEMORY_KINDS);
 
       const scope = toolInput.scope ?? "project";
+      const projectKey =
+        toolInput.projectKey === undefined
+          ? undefined
+          : requireProjectKey(toolInput.projectKey, "project");
       const userScopeId = resolveUserScopeId({
         cwd,
         explicitUserScopeId: toolInput.userScopeId,
@@ -237,7 +241,7 @@ export function createToolHandlers(input: {
       const createdRecord = hasOverrides
         ? await withRepositories(
             {
-              projectKey: toolInput.projectKey,
+              projectKey,
               userScopeId,
               includeUser: scope === "user",
             },
@@ -252,6 +256,7 @@ export function createToolHandlers(input: {
               return repository.addMemory(
                 toRepositoryAddMemoryInput({
                   ...toolInput,
+                  projectKey,
                   scope,
                   userScopeId,
                 }),
@@ -275,6 +280,7 @@ export function createToolHandlers(input: {
               },
               memory: toRepositoryAddMemoryInput({
                 ...toolInput,
+                projectKey,
                 scope,
                 userScopeId,
               }),

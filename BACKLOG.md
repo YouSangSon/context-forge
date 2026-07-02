@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `add_memory` now trims direct project keys before legacy repository
+  resolution and repository write input construction.
 - `compact_memory` now trims direct project keys once and reuses the
   normalized value for repository resolution, compaction planning, and apply
   results.

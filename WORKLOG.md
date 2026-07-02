@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 19:10 KST - Hardened add memory project key normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct `add_memory` project keys
+    before legacy repository resolution and repository write input
+    construction.
+  - `tests/mcp/server.test.ts` covers trimmed project keys at the legacy
+    `resolveRepository` boundary.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed the updated add-memory case because raw project key text reached
+  `resolveRepository`.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `134` tests passed)
+
+Verification:
+- `npx vitest run tests/store/canonical-indexing.test.ts tests/audit/audit-write.test.ts --reporter=dot`
+  (`2` files passed; `90` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2461`
+  tests passed, `34` skipped)
+
 - 19:08 KST - Hardened compaction project key normalization:
   - `src/mcp/tool-handlers.ts` now trims direct `compact_memory` project keys
     once and reuses the normalized value for repository resolution,
