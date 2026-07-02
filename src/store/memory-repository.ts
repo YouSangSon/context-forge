@@ -34,14 +34,14 @@ const POSTGRES_INTEGER_MAX = 2147483647;
 type PostgresMemoryRow = {
   id: number | string;
   organization_id: string;
-  scope_type: SearchMemoryResult["scopeType"];
+  scope_type: unknown;
   scope_id: string;
   project_key: string | null;
-  kind: SearchMemoryResult["memoryType"];
+  kind: unknown;
   title: string | null;
   content: string;
   summary: string | null;
-  durability: NonNullable<SearchMemoryResult["durability"]>;
+  durability: unknown;
   importance: number | string;
   source_id: number | string;
   created_at: string | Date;
@@ -51,9 +51,9 @@ type PostgresMemoryRow = {
 type PostgresSourceRow = {
   source_id_joined: number | string;
   source_organization_id: string;
-  source_scope_type: MemorySource["scopeType"];
+  source_scope_type: unknown;
   source_scope_id: string;
-  source_type: MemorySource["sourceType"];
+  source_type: unknown;
   source_ref: string;
   source_title: string | null;
   source_created_at: string | Date;
@@ -524,10 +524,12 @@ export function createMemoryRepository(
           input.summary === undefined
             ? currentRow.summary
             : normalizeNullableText(input.summary, "summary");
-        const nextKind = normalizeMemoryType(input.kind, currentRow.kind);
+        const currentKind = mapMemoryType(currentRow.kind);
+        const nextKind = normalizeMemoryType(input.kind, currentKind);
+        const currentDurability = mapDurability(currentRow.durability);
         const nextDurability = normalizeDurability(
           input.durability,
-          currentRow.durability,
+          currentDurability,
         );
         const currentImportance = mapPostgresInteger(
           currentRow.importance,
@@ -598,19 +600,22 @@ export function createMemoryRepository(
         await persistPostgresEntityGraph(client, {
           input: {
             organizationId: input.organizationId,
-            scopeType: updatedRow.scope_type,
+            scopeType: mapScopeType(updatedRow.scope_type, "memory scope_type"),
             scopeId: updatedRow.scope_id,
             projectKey: updatedRow.project_key ?? undefined,
-            memoryType: updatedRow.kind,
+            memoryType: mapMemoryType(updatedRow.kind),
             title: updatedRow.title ?? undefined,
             content: updatedRow.content,
             summary: updatedRow.summary ?? undefined,
-            durability: updatedRow.durability,
+            durability: mapDurability(updatedRow.durability),
             importance: mapPostgresInteger(updatedRow.importance, "importance"),
             source: {
-              scopeType: currentRow.source_scope_type,
+              scopeType: mapScopeType(
+                currentRow.source_scope_type,
+                "memory source.scope_type",
+              ),
               scopeId: currentRow.source_scope_id,
-              sourceType: currentRow.source_type,
+              sourceType: mapSourceType(currentRow.source_type),
               sourceRef: currentSourceMetadata.sourceRef,
               title: currentRow.source_title ?? undefined,
               uri: currentSourceMetadata.uri ?? undefined,
@@ -715,14 +720,14 @@ function mapPostgresSearchResult(row: PostgresHydratedRow): SearchMemoryResult {
     id: mapPositiveSafeInteger(row.id, "memory id"),
     organizationId: row.organization_id,
     sourceId: mapPositiveSafeInteger(row.source_id, "memory source_id"),
-    scopeType: row.scope_type,
+    scopeType: mapScopeType(row.scope_type, "memory scope_type"),
     scopeId: row.scope_id,
     projectKey: row.project_key,
-    memoryType: row.kind,
+    memoryType: mapMemoryType(row.kind),
     title: row.title,
     content: row.content,
     summary: row.summary,
-    durability: row.durability,
+    durability: mapDurability(row.durability),
     importance: mapPostgresInteger(row.importance, "importance"),
     tags: row.tags ?? [],
     createdAt: toIsoString(row.created_at),
@@ -730,9 +735,9 @@ function mapPostgresSearchResult(row: PostgresHydratedRow): SearchMemoryResult {
     source: {
       id: mapPositiveSafeInteger(row.source_id_joined, "memory source.id"),
       organizationId: row.source_organization_id,
-      scopeType: row.source_scope_type,
+      scopeType: mapScopeType(row.source_scope_type, "memory source.scope_type"),
       scopeId: row.source_scope_id,
-      sourceType: row.source_type,
+      sourceType: mapSourceType(row.source_type),
       externalId: sourceMetadata.sourceRef,
       sourceRef: sourceMetadata.sourceRef,
       title: row.source_title,
@@ -1093,6 +1098,41 @@ function mapPositiveSafeInteger(value: unknown, fieldName: string): number {
     throw new Error(`${fieldName} must be a positive safe integer`);
   }
   return numberValue;
+}
+
+function mapScopeType(
+  value: unknown,
+  fieldName: string,
+): SearchMemoryResult["scopeType"] {
+  if (value === "user" || value === "project") {
+    return value;
+  }
+  throw new Error(`${fieldName} must be one of: user, project`);
+}
+
+function mapMemoryType(value: unknown): SearchMemoryResult["memoryType"] {
+  if (value === "decision" || value === "fact" || value === "summary") {
+    return value;
+  }
+  throw new Error("kind must be one of: decision, summary, fact");
+}
+
+function mapDurability(
+  value: unknown,
+): NonNullable<SearchMemoryResult["durability"]> {
+  if (value === "ephemeral" || value === "durable" || value === "archived") {
+    return value;
+  }
+  throw new Error("durability must be one of: ephemeral, durable, archived");
+}
+
+function mapSourceType(value: unknown): MemorySource["sourceType"] {
+  if (value === "decision" || value === "document" || value === "conversation") {
+    return value;
+  }
+  throw new Error(
+    "memory source_type must be one of: decision, document, conversation",
+  );
 }
 
 function mapConfidence(value: unknown, fieldName: string): number {

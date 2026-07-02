@@ -9989,3 +9989,28 @@ Verification:
 - `npm test -- --reporter=dot`
   (`81` files passed, `2` skipped; `2189` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened memory hydrated row enum mapping:
+  - Added RED coverage showing malformed stored `kind`, `durability`,
+    `scope_type`, source scope, and source type values were returned by
+    `listMemory` instead of failing at the repository boundary.
+  - Memory row mapping now treats those DB enum fields as unknown and maps them
+    through explicit guards before returning `SearchMemoryResult`.
+  - Update-memory entity graph re-persistence now also reuses the guarded row
+    values before building graph inputs.
+  - No `DECISIONS.md` entry: this is row boundary validation hardening for
+    existing enum contracts.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed because malformed hydrated enum rows resolved instead of rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `111` tests passed, `7` skipped)
+- Related: `npx vitest run tests/store/memory-repository.test.ts tests/search/retrieve-memory.test.ts tests/mcp/server.test.ts tests/app/server.test.ts tests/compact/compact-memory.test.ts tests/compact/apply-compaction.test.ts --reporter=dot`
+  (`6` files passed; `422` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`81` files passed, `2` skipped; `2194` tests passed, `34` skipped)
+- `git diff --check` (passed)

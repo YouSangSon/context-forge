@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory hydrated row mapping now rejects malformed stored enum fields before
+  returning list/search results.
 - Audit log list row mapping now rejects malformed stored `outcome` values
   before returning repository results.
 - Shared DB timestamp mapping now rejects malformed timestamp values and

@@ -1046,6 +1046,49 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     ).rejects.toThrow(message);
   });
 
+  it.each([
+    {
+      rowPatch: { kind: "note" },
+      message: "kind must be one of: decision, summary, fact",
+    },
+    {
+      rowPatch: { durability: "permanent" },
+      message: "durability must be one of: ephemeral, durable, archived",
+    },
+    {
+      rowPatch: { scope_type: "team" },
+      message: "memory scope_type must be one of: user, project",
+    },
+    {
+      rowPatch: { source_scope_type: "team" },
+      message: "memory source.scope_type must be one of: user, project",
+    },
+    {
+      rowPatch: { source_type: "ticket" },
+      message: "memory source_type must be one of: decision, document, conversation",
+    },
+  ])("listMemory rejects malformed hydrated enum rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          ...hydratedMemoryRow(),
+          ...rowPatch,
+        }],
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.listMemory(
+        { scopeType: "project", scopeId: "proj-x" },
+        { organizationId: "org-a" },
+      ),
+    ).rejects.toThrow(message);
+  });
+
   it("getMemoryRecordsByIds excludes archived rows during public hydration", async () => {
     const queryCalls: SqlQueryCall[] = [];
     const mockPool = {
