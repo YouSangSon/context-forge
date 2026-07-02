@@ -1098,4 +1098,32 @@ describe("createGoalRunRepository", () => {
 
     expect(calls[0]?.params[3]).toBe("done");
   });
+
+  it("complete trims organizationId before closing a run", async () => {
+    const calls: SqlQueryCall[] = [];
+    const pool = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        return Promise.resolve({
+          rows: [
+            runRow({
+              status: "completed",
+              closed_at: "2026-06-27T01:00:00.000Z",
+              close_note: "done",
+            }),
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await repo.complete({
+      organizationId: " org-a ",
+      goalRunId: 7,
+      note: "done",
+    });
+
+    expect(calls[0]?.params).toEqual([7, "org-a", "completed", "done"]);
+  });
 });

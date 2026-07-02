@@ -4,15 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Goal Run List Scope Normalization
+## Current Loop - Goal Run Close Organization Normalization
 
 Status:
-- Goal-run list operations now trim direct organization and scope identifiers
-  before querying.
-- Existing nonblank validation still rejects whitespace-only identifiers.
+- Goal-run close operations now trim direct organization identifiers before
+  updating completed or abandoned runs.
+- Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused goal-run repository tests passed after the RED list identifier
+- Focused goal-run repository tests passed after the RED close organization
   trimming reproducer.
 - Related goal-run handler/context and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.

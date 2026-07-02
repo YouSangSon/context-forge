@@ -296,6 +296,7 @@ async function closeRun(
   status: "completed" | "abandoned",
 ): Promise<GoalRun> {
   assertCloseInput(input);
+  const organizationId = input.organizationId.trim();
   const note =
     input.note === undefined || input.note === null ? null : input.note.trim();
 
@@ -311,7 +312,7 @@ async function closeRun(
         AND status = 'active'
       RETURNING ${RUN_COLUMNS}
     `,
-    [input.goalRunId, input.organizationId, status, note],
+    [input.goalRunId, organizationId, status, note],
   );
 
   const row = result.rows[0];
