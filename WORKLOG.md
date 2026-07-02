@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened pgvector query tags mapping:
+  - `src/vector/pgvector-index.ts` now validates query row `tags` values before
+    returning backend-neutral `VectorHit` payloads.
+  - `null` tags still map to `[]`, while non-array tags or non-string tag
+    entries now fail with clear adapter boundary errors.
+  - `tests/vector/pgvector-index.integration.test.ts` covers malformed tags
+    with a mocked pool.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new tags cases because the adapter resolved hits with malformed
+  `payload.tags`.
+- GREEN: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `27` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`3` files passed; `95` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2070` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened pgvector query point id mapping:
   - `src/vector/pgvector-index.ts` now validates query row `point_id` values
     before returning backend-neutral `VectorHit` objects.

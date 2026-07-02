@@ -456,7 +456,7 @@ function mapPgVectorQueryRow(row: PgVectorQueryRow): VectorHit {
       durability: row.durability,
       title: row.title,
       summary: row.summary,
-      tags: row.tags ?? [],
+      tags: toPgVectorStringArray(row.tags, "tags"),
       updated_at: row.updated_at,
       embedding_version: row.embedding_version,
     },
@@ -479,6 +479,21 @@ function toPgVectorNonEmptyString(value: unknown, fieldName: string): string {
     throw new Error(`${fieldName} must be a non-empty string`);
   }
   return value;
+}
+
+function toPgVectorStringArray(value: unknown, fieldName: string): string[] {
+  if (value === null) {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+  return value.map((entry, index) => {
+    if (typeof entry !== "string") {
+      throw new Error(`${fieldName}[${index}] must be a string`);
+    }
+    return entry;
+  });
 }
 
 function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {

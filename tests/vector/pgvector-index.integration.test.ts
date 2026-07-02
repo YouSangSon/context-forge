@@ -274,6 +274,16 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
       row: buildPgVectorQueryRow({ memory_record_id: "1.5" }),
       message: "memory_record_id must be a positive safe integer",
     },
+    {
+      label: "tags string",
+      row: buildPgVectorQueryRow({ tags: "ops" }),
+      message: "tags must be an array",
+    },
+    {
+      label: "tags entry number",
+      row: buildPgVectorQueryRow({ tags: ["ops", 12] }),
+      message: "tags[1] must be a string",
+    },
   ])("query rejects malformed pgvector row fields: $label", async ({ row, message }) => {
     const { pool, query, client } = makeQueryPool([row]);
     const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });

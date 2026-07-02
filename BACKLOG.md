@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query result mapping now validates returned `tags` values before
+  returning vector-hit payloads, preserving the null-to-empty-array fallback
+  while rejecting malformed non-array or non-string tag rows.
 - Pgvector query result mapping now validates returned `point_id` values before
   returning `VectorHit.id`, so malformed adapter rows cannot leak null or blank
   hit ids.
