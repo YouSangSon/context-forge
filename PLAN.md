@@ -4,15 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Goal Run Start Identifier Normalization
+## Current Loop - Goal Run Iteration Organization Normalization
 
 Status:
-- Goal-run start operations now trim direct organization, scope, and project
-  identifiers before inserting.
-- Existing nonblank validation still rejects whitespace-only identifiers.
+- Goal-run iteration recording now trims direct organization identifiers before
+  run updates, iteration inserts, and memory linking.
+- Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused goal-run repository tests passed after the RED start identifier
+- Focused goal-run repository tests passed after the RED iteration organization
   trimming reproducer.
 - Related goal-run handler/context and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.

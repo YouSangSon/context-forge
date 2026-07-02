@@ -127,6 +127,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
 
     async recordIteration(input) {
       assertRecordIterationInput(input);
+      const organizationId = input.organizationId.trim();
       const summary =
         input.summary === undefined || input.summary === null
           ? null
@@ -152,7 +153,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
               AND status = 'active'
             RETURNING iteration_count
           `,
-          [input.goalRunId, input.organizationId],
+          [input.goalRunId, organizationId],
         );
 
         const bumped = bump.rows[0];
@@ -177,7 +178,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           `,
           [
             input.goalRunId,
-            input.organizationId,
+            organizationId,
             iterationIndex,
             input.attempt.trim(),
             input.outcome,
@@ -197,7 +198,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
               WHERE id = ANY($2::bigint[])
                 AND organization_id = $3
             `,
-            [input.goalRunId, input.memoryIds, input.organizationId],
+            [input.goalRunId, input.memoryIds, organizationId],
           );
         }
 

@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 16:29 KST - Hardened goal-run iteration organization normalization:
+  - `src/goal-run/goal-run-repository.ts` now trims direct organization
+    identifiers before run updates, iteration inserts, and memory linking.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/goal-run/goal-run-repository.test.ts` covers trimmed organization
+    parameters across iteration recording queries.
+
+RED/GREEN:
+- RED: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  failed the new iteration organization trimming case because raw organization
+  ID text reached the active-run update parameters.
+- GREEN: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`1` file passed; `66` tests passed)
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/goal-run-handlers.test.ts tests/goal-run/build-goal-context.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `247` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2425`
+  tests passed, `34` skipped)
+
 - 16:25 KST - Hardened goal-run start identifier normalization:
   - `src/goal-run/goal-run-repository.ts` now trims direct organization,
     scope, and project identifiers before insertion.

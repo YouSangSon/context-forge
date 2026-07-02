@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Goal-run iteration recording now trims direct organization identifiers before
+  run updates, iteration inserts, and memory linking.
 - Goal-run start now trims direct organization, scope, and project identifiers
   before insertion.
 - Goal-run close operations now trim direct completion/abandonment notes before
