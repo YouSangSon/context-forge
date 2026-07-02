@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Governance memory listing now validates and trims direct tag filters before
+  querying.
 - Store nullable text normalization now trims nonblank title/summary values
   while preserving blank-to-null behavior.
 - Shared MCP optional text normalization now trims nonblank values while

@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 16:14 KST - Hardened governance tag filter normalization:
+  - `src/store/memory-repository.ts` now validates and trims direct
+    `listMemoryForGovernance` tag filters before querying.
+  - Whitespace-only direct tag filters fail before any query is issued.
+  - `tests/store/memory-repository.test.ts` covers tag trim and blank-tag
+    rejection.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed the new tag filter cases because raw tags reached query parameters
+  and whitespace-only tags queried instead of failing early.
+- GREEN: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `167` tests passed, `7` skipped)
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`2` files passed; `300` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2420`
+  tests passed, `34` skipped)
+
 - 16:11 KST - Hardened store nullable text normalization:
   - `src/store/memory-repository.ts` now trims nonblank nullable text values
     before persistence.

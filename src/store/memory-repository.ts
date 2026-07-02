@@ -451,7 +451,8 @@ export function createMemoryRepository(
       let tagJoin = "";
       let tagClause = "";
       if (options.tag !== undefined) {
-        const tagIndex = params.push(options.tag);
+        assertNonBlankText(options.tag, "tag");
+        const tagIndex = params.push(options.tag.trim());
         tagJoin = `
           JOIN memory_tags filter_tags
             ON filter_tags.memory_record_id = mr.id

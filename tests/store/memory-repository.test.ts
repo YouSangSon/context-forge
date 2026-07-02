@@ -1253,6 +1253,29 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(params).toEqual(["project", "proj-x", "org-a", "priority", 25]);
   });
 
+  it("listMemoryForGovernance trims direct tag filters before querying", async () => {
+    const queryCalls: { sql: string; params: unknown[] }[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.listMemoryForGovernance(
+      { scopeType: "project", scopeId: "proj-x" },
+      {
+        organizationId: "org-a",
+        tag: " priority ",
+      },
+    );
+
+    expect(queryCalls).toHaveLength(1);
+    expect(queryCalls[0]?.params).toContain("priority");
+    expect(queryCalls[0]?.params).not.toContain(" priority ");
+  });
+
   it("listMemoryForGovernance includes archived rows only when includeArchived is true", async () => {
     const queryCalls: SqlQueryCall[] = [];
     const mockPool = {
@@ -1285,6 +1308,20 @@ describe("createMemoryRepository (unit — no PG required)", () => {
         { organizationId: " \n\t " },
       ),
     ).rejects.toThrow(/organizationId/);
+
+    expect(mockPool.query).not.toHaveBeenCalled();
+  });
+
+  it("listMemoryForGovernance rejects whitespace-only tag filters before querying", async () => {
+    const mockPool = { query: vi.fn() };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.listMemoryForGovernance(
+        { scopeType: "project", scopeId: "proj-x" },
+        { organizationId: "org-a", tag: " \n\t " },
+      ),
+    ).rejects.toThrow("tag must contain non-whitespace text");
 
     expect(mockPool.query).not.toHaveBeenCalled();
   });

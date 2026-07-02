@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Store Nullable Text Normalization
+## Current Loop - Store Governance Tag Filter Normalization
 
 Status:
-- Store nullable text normalization now trims nonblank title/summary values
-  before persistence.
-- Blank nullable text still normalizes to `null`.
+- `listMemoryForGovernance` now validates and trims direct tag filters before
+  querying.
+- Whitespace-only direct tag filters fail before any query is issued.
 
 Verification:
-- Focused memory repository tests passed after the RED nullable text trimming
-  reproducer.
-- Related canonical indexing and MCP server tests passed.
+- Focused memory repository tests passed after RED tag filter trim/blank
+  reproducers.
+- Related MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.
