@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory creation now trims direct organization identifiers before source and
+  memory writes.
 - Memory graph inspection now trims direct organization identifiers before
   entity and relationship queries.
 - Governance memory listing now trims direct organization identifiers before

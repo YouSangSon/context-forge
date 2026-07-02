@@ -187,8 +187,9 @@ export function createMemoryRepository(
         content: input.content,
         summary,
       });
-      const organizationId = input.organizationId ?? DEFAULT_ORG_ID;
-      assertNonBlankText(organizationId, "organizationId");
+      const rawOrganizationId = input.organizationId ?? DEFAULT_ORG_ID;
+      assertNonBlankText(rawOrganizationId, "organizationId");
+      const organizationId = rawOrganizationId.trim();
       const client = await pool.connect();
 
       try {
