@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 17:30 KST - Hardened lifecycle init organization normalization:
+  - `src/lifecycle/init.ts` now trims direct organization identifiers before
+    generated hook scripts and README content are rendered.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/cli.test.ts` covers trimmed generated `DEFAULT_ORGANIZATION_ID`
+    values and README defaults.
+
+RED/GREEN:
+- RED: `npx vitest run tests/cli.test.ts --reporter=dot` failed the new
+  lifecycle init organization trimming case because raw organization ID text
+  reached generated hook content.
+- GREEN: `npx vitest run tests/cli.test.ts --reporter=dot`
+  (`1` file passed; `30` tests passed)
+
+Verification:
+- `npx vitest run tests/cli.test.ts tests/scripts/package-manifest.test.ts --reporter=dot`
+  (`2` files passed; `69` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2447`
+  tests passed, `34` skipped)
+
 - 17:27 KST - Hardened PGVector organization normalization:
   - `src/vector/pgvector-index.ts` now uses the shared optional vector org
     normalizer before query filters, point deletes, and record-id deletes.

@@ -149,7 +149,7 @@ function normalizeLifecycleInput(input: LifecycleInitInput) {
     repoDir,
     outDir: path.resolve(repoDir, input.outDir ?? DEFAULT_OUT_DIR),
     projectKey: input.projectKey,
-    organizationId: input.organizationId,
+    organizationId: input.organizationId?.trim(),
     userScopeId: input.userScopeId,
     task: input.task ?? DEFAULT_TASK,
     force: input.force ?? false,

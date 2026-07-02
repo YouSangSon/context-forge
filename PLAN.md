@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - PGVector Organization Normalization
+## Current Loop - Lifecycle Init Organization Normalization
 
 Status:
-- PGVector queries and deletes now trim direct organization identifiers before
-  building SQL filters.
+- Lifecycle init now trims direct organization identifiers before rendering
+  generated hooks and README output.
 - Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused PGVector tests passed after RED query/delete/delete-by-record-id
+- Focused CLI tests passed after the RED lifecycle generated-output
   organization trimming reproducer.
-- Related Qdrant, vector helper, and point-builder tests passed.
+- Related package manifest tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Lifecycle init now trims direct organization identifiers before rendering
+  generated hooks and README output.
 - PGVector queries and deletes now trim direct organization identifiers before
   building SQL filters.
 - Qdrant vector queries and deletes now trim direct organization identifiers

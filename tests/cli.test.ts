@@ -779,7 +779,7 @@ describe("parseCliArgs", () => {
         "--project",
         "project-alpha",
         "--organization-id",
-        "acme",
+        " acme ",
         "--task",
         "continue work",
         "--out-dir",
@@ -833,14 +833,24 @@ describe("parseCliArgs", () => {
       expect(generated).not.toContain("QDRANT_API_KEY");
     }
 
-    expect(fs.readFileSync(sessionStartPath, "utf8")).toContain(" pack ");
-    expect(fs.readFileSync(sessionStartPath, "utf8")).toContain(
-      "--organization-id",
+    const sessionStart = fs.readFileSync(sessionStartPath, "utf8");
+    const sessionEnd = fs.readFileSync(sessionEndPath, "utf8");
+    const readme = fs.readFileSync(
+      path.join(tmpDir, ".akasha", "README.md"),
+      "utf8",
     );
-    expect(fs.readFileSync(sessionEndPath, "utf8")).toContain(" remember ");
-    expect(fs.readFileSync(sessionEndPath, "utf8")).toContain("mktemp");
-    expect(fs.readFileSync(sessionEndPath, "utf8")).toContain("--content-file");
-    expect(fs.readFileSync(sessionEndPath, "utf8")).not.toContain(
+    expect(sessionStart).toContain(" pack ");
+    expect(sessionStart).toContain("--organization-id");
+    expect(sessionStart).toContain("DEFAULT_ORGANIZATION_ID='acme'");
+    expect(sessionEnd).toContain(" remember ");
+    expect(sessionEnd).toContain("DEFAULT_ORGANIZATION_ID='acme'");
+    expect(readme).toContain("- organization: `acme`");
+    expect(sessionStart).not.toContain("DEFAULT_ORGANIZATION_ID=' acme '");
+    expect(sessionEnd).not.toContain("DEFAULT_ORGANIZATION_ID=' acme '");
+    expect(readme).not.toContain("- organization: ` acme `");
+    expect(sessionEnd).toContain("mktemp");
+    expect(sessionEnd).toContain("--content-file");
+    expect(sessionEnd).not.toContain(
       "--content \"$CONTENT\"",
     );
   });
