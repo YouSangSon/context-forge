@@ -1502,6 +1502,51 @@ describe("canonical indexing", () => {
     expect(mockPool.query).not.toHaveBeenCalled();
   });
 
+  it("insertChunks trims record organizationId before querying", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "1",
+          memory_record_id: "10",
+          chunk_index: "0",
+          content: "first chunk",
+          start_offset: "0",
+          end_offset: "5",
+          embedding_version: "v1",
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+    const record = {
+      ...createRecord({ id: 10, content: "first chunk" }),
+      organizationId: " org-a ",
+    };
+
+    await repo.insertChunks({
+      record,
+      chunks: [
+        {
+          chunkIndex: 0,
+          content: "first chunk",
+          startOffset: 0,
+          endOffset: 5,
+        },
+      ],
+      embedding: {
+        provider: "openai",
+        model: "text-embedding-3-small",
+        dimensions: 1536,
+        version: "v1",
+        targetTokens: 800,
+        overlapTokens: 120,
+      },
+    });
+
+    const params = mockPool.query.mock.calls[0]![1] as unknown[];
+    expect(params[0]).toBe("org-a");
+  });
+
   it("deleteChunksForRecord rejects whitespace-only organizationId before querying", async () => {
     const mockPool = {
       query: vi.fn().mockResolvedValue({ rows: [] }),

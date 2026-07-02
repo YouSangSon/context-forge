@@ -756,6 +756,7 @@ async function insertPostgresChunks(
   assertChunkWriteInput(input);
   const orgId = input.record.organizationId ?? "default";
   assertNonBlankText(orgId, "organizationId");
+  const organizationId = orgId.trim();
 
   if (input.chunks.length === 0) {
     return [];
@@ -773,7 +774,7 @@ async function insertPostgresChunks(
   for (const chunk of input.chunks) {
     const base = params.length; // 0-based index before pushing
     params.push(
-      orgId,
+      organizationId,
       recordId,
       chunk.chunkIndex,
       chunk.content,
