@@ -302,12 +302,21 @@ async function closeRun(
 function mapRun(row: GoalRunRow): GoalRun {
   return {
     id: toPositiveSafeInteger(row.id, "goal run id"),
-    organizationId: row.organization_id,
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "goal run organization_id",
+    ),
     scopeType: toGoalRunScopeType(row.scope_type, "goal run scope_type"),
-    scopeId: row.scope_id,
-    projectKey: row.project_key,
-    goal: row.goal,
-    terminationCriteria: row.termination_criteria,
+    scopeId: mapRequiredText(row.scope_id, "goal run scope_id"),
+    projectKey: mapNullableNonBlankText(
+      row.project_key,
+      "goal run project_key",
+    ),
+    goal: mapRequiredText(row.goal, "goal run goal"),
+    terminationCriteria: mapNullableNonBlankText(
+      row.termination_criteria,
+      "goal run termination_criteria",
+    ),
     status: toGoalRunStatus(row.status, "goal run status"),
     iterationCount: toNonNegativeSafeInteger(
       row.iteration_count,
@@ -316,7 +325,7 @@ function mapRun(row: GoalRunRow): GoalRun {
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
     closedAt: row.closed_at === null ? null : toIsoString(row.closed_at),
-    closeNote: row.close_note,
+    closeNote: mapNullableNonBlankText(row.close_note, "goal run close_note"),
   };
 }
 
@@ -327,18 +336,24 @@ function mapIteration(row: GoalRunIterationRow): GoalRunIteration {
       row.goal_run_id,
       "goal run iteration goal_run_id",
     ),
-    organizationId: row.organization_id,
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "goal run iteration organization_id",
+    ),
     iterationIndex: toPositiveSafeInteger(
       row.iteration_index,
       "goal run iteration_index",
     ),
-    attempt: row.attempt,
+    attempt: mapRequiredText(row.attempt, "goal run iteration attempt"),
     outcome: toGoalRunIterationOutcome(
       row.outcome,
       "goal run iteration outcome",
     ),
-    summary: row.summary,
-    error: row.error,
+    summary: mapNullableNonBlankText(
+      row.summary,
+      "goal run iteration summary",
+    ),
+    error: mapNullableNonBlankText(row.error, "goal run iteration error"),
     createdAt: toIsoString(row.created_at),
   };
 }
@@ -355,6 +370,27 @@ function toPositiveSafeInteger(value: unknown, fieldName: string): number {
   const numberValue = toNumber(value);
   assertPositiveSafeInteger(numberValue, fieldName);
   return numberValue;
+}
+
+function mapRequiredText(value: unknown, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value;
+}
+
+function mapNullableNonBlankText(
+  value: unknown,
+  fieldName: string,
+): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string or null`);
+  }
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
+  return value;
 }
 
 function toGoalRunScopeType(

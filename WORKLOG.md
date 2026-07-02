@@ -10654,3 +10654,31 @@ Verification:
 - `git diff --check` (passed)
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2354` tests passed, `34` skipped)
+
+## 2026-07-02 15:19 KST - Goal Run Row Scalar Validation
+
+- Hardened goal-run run and iteration scalar row mapping:
+  - Added RED coverage showing malformed returned run organization/scope/goal
+    text, nullable project/termination/close-note metadata, iteration
+    organization IDs, attempts, summaries, and errors resolved instead of
+    failing at the repository boundary.
+  - Goal-run rows now validate required scalar metadata as non-blank text and
+    nullable text fields as null-or-nonblank text before returning goal state
+    to continuation and repeat-check paths.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  failed with `20` malformed goal-run scalar row cases resolving instead of
+  rejecting.
+- GREEN focused: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`1` file passed; `61` tests passed)
+- Related: `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/goal-run-handlers.test.ts tests/goal-run/build-goal-context.test.ts tests/goal-run/find-repeat-attempts.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`5` files passed; `263` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check` (passed)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2374` tests passed, `34` skipped)

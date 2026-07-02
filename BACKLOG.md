@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Goal-run row mapping now rejects malformed returned run and iteration scalar
+  metadata before exposing goal state.
 - Audit log row mapping now rejects malformed returned organization, actor,
   tool, nullable project/request IDs, and error message types before exposing
   audit entries.

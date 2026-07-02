@@ -560,6 +560,76 @@ describe("createGoalRunRepository", () => {
 
   it.each([
     {
+      rowPatch: { organization_id: null },
+      message: "goal run organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message: "goal run organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { scope_id: 42 },
+      message: "goal run scope_id must be a string",
+    },
+    {
+      rowPatch: { scope_id: " \n\t " },
+      message: "goal run scope_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { project_key: 42 },
+      message: "goal run project_key must be a string or null",
+    },
+    {
+      rowPatch: { project_key: " \n\t " },
+      message: "goal run project_key must contain non-whitespace text",
+    },
+    {
+      rowPatch: { goal: null },
+      message: "goal run goal must be a string",
+    },
+    {
+      rowPatch: { goal: " \n\t " },
+      message: "goal run goal must contain non-whitespace text",
+    },
+    {
+      rowPatch: { termination_criteria: 42 },
+      message: "goal run termination_criteria must be a string or null",
+    },
+    {
+      rowPatch: { termination_criteria: " \n\t " },
+      message:
+        "goal run termination_criteria must contain non-whitespace text",
+    },
+    {
+      rowPatch: { close_note: false },
+      message: "goal run close_note must be a string or null",
+    },
+    {
+      rowPatch: { close_note: " \n\t " },
+      message: "goal run close_note must contain non-whitespace text",
+    },
+  ])("get rejects malformed run scalar rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow(rowPatch)] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.get({ organizationId: "org-a", goalRunId: 7 }),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
       rowPatch: { id: "0" },
       message: "goal run iteration id must be a positive safe integer",
     },
@@ -587,6 +657,75 @@ describe("createGoalRunRepository", () => {
               goal_run_id: "7",
               organization_id: "org-a",
               iteration_index: "0",
+              attempt: "a",
+              outcome: "failure",
+              summary: null,
+              error: "e",
+              created_at: "2026-06-27T00:01:00.000Z",
+              ...rowPatch,
+            },
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.get({ organizationId: "org-a", goalRunId: 7 }),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "goal run iteration organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message:
+        "goal run iteration organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { attempt: null },
+      message: "goal run iteration attempt must be a string",
+    },
+    {
+      rowPatch: { attempt: " \n\t " },
+      message: "goal run iteration attempt must contain non-whitespace text",
+    },
+    {
+      rowPatch: { summary: 42 },
+      message: "goal run iteration summary must be a string or null",
+    },
+    {
+      rowPatch: { summary: " \n\t " },
+      message: "goal run iteration summary must contain non-whitespace text",
+    },
+    {
+      rowPatch: { error: false },
+      message: "goal run iteration error must be a string or null",
+    },
+    {
+      rowPatch: { error: " \n\t " },
+      message: "goal run iteration error must contain non-whitespace text",
+    },
+  ])("get rejects malformed iteration scalar rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow({ iteration_count: "1" })] });
+        }
+        return Promise.resolve({
+          rows: [
+            {
+              id: "1",
+              goal_run_id: "7",
+              organization_id: "org-a",
+              iteration_index: "1",
               attempt: "a",
               outcome: "failure",
               summary: null,
