@@ -233,6 +233,21 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(mockPool.query).not.toHaveBeenCalled();
   });
 
+  it("getMemoryRecordById trims organizationId before querying", async () => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.getMemoryRecordById(42, " org-a ");
+
+    expect(queryCalls[0]?.params).toEqual([42, "org-a"]);
+  });
+
   it("addMemory rejects whitespace-only content before opening a transaction", async () => {
     const mockPool = {
       connect: vi.fn(),

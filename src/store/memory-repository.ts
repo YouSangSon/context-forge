@@ -709,7 +709,11 @@ export function createMemoryRepository(
 
     async getMemoryRecordById(id, organizationId) {
       assertNonBlankText(organizationId, "organizationId");
-      const result = await getPostgresMemoryRecordById(pool, id, organizationId);
+      const result = await getPostgresMemoryRecordById(
+        pool,
+        id,
+        organizationId.trim(),
+      );
       return result ? mapPostgresSearchResult(result) : null;
     },
 
