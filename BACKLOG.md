@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory repository governance archive result mapping now rejects malformed
+  returned status booleans and qdrant point ID arrays.
 - Memory repository hydrated row mapping now rejects malformed returned tag
   arrays before exposing search/list records.
 - Memory archive repository apply result mapping now rejects malformed returned

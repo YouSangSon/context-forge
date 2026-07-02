@@ -2014,6 +2014,49 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     });
   });
 
+  it.each([
+    {
+      rowPatch: { found: "true" },
+      message: "archive memory found must be a boolean",
+    },
+    {
+      rowPatch: { archived: "true" },
+      message: "archive memory archived must be a boolean",
+    },
+    {
+      rowPatch: { qdrant_point_ids: null },
+      message: "archive memory qdrant_point_ids must be an array",
+    },
+    {
+      rowPatch: { qdrant_point_ids: [42] },
+      message: "archive memory qdrant_point_ids[0] must be a string",
+    },
+    {
+      rowPatch: { qdrant_point_ids: [" \n\t "] },
+      message:
+        "archive memory qdrant_point_ids[0] must contain non-whitespace text",
+    },
+  ])("archiveMemoryRecord rejects malformed returned rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          archived: true,
+          found: true,
+          qdrant_point_ids: ["chunk:1"],
+          ...rowPatch,
+        }],
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.archiveMemoryRecord({ id: 55, organizationId: "org-a" }),
+    ).rejects.toThrow(message);
+  });
+
   it("searchMemory tokenizes query terms into parameterized lexical OR clauses", async () => {
     const queryCalls: { sql: string; params: unknown[] }[] = [];
     const mockPool = {

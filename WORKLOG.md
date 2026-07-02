@@ -10469,3 +10469,27 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2275` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened archive memory result row mapping:
+  - Added RED coverage showing malformed `archiveMemoryRecord` result rows
+    resolved by falling back to empty qdrant point IDs or returning invalid
+    boolean status values.
+  - Governance archive results now validate the `found` and `archived`
+    booleans, and validate qdrant point IDs with the shared non-blank string
+    array guard before returning cleanup payloads.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed because malformed archive result rows resolved instead of rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `120` tests passed, `7` skipped)
+- Related: `npx vitest run tests/store/memory-repository.test.ts tests/app/memory-routes-boundary.test.ts tests/mcp/server.test.ts tests/search/retrieve-memory.test.ts tests/context-pack/build-context-pack.test.ts --reporter=dot`
+  (`5` files passed; `324` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2280` tests passed, `34` skipped)
+- `git diff --check` (passed)

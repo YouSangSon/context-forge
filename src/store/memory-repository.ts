@@ -681,13 +681,14 @@ export function createMemoryRepository(
         [input.id, input.organizationId],
       );
 
-      if (!result.rows[0]?.found) {
+      const archiveResult = mapArchiveMemoryRecordRow(result.rows[0]);
+      if (!archiveResult.found) {
         return { archived: false, qdrantPointIds: [] };
       }
 
       return {
-        archived: result.rows[0].archived,
-        qdrantPointIds: result.rows[0]?.qdrant_point_ids ?? [],
+        archived: archiveResult.archived,
+        qdrantPointIds: archiveResult.qdrantPointIds,
       };
     },
 
@@ -1136,22 +1137,59 @@ function mapSourceType(value: unknown): MemorySource["sourceType"] {
 }
 
 function mapStoredTags(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    throw new Error("memory tags must be an array");
+  return mapNonBlankStringArray(value, "memory tags");
+}
+
+function mapArchiveMemoryRecordRow(row: {
+  archived?: unknown;
+  found?: unknown;
+  qdrant_point_ids?: unknown;
+} | undefined): {
+  archived: boolean;
+  found: boolean;
+  qdrantPointIds: string[];
+} {
+  if (row === undefined) {
+    return { archived: false, found: false, qdrantPointIds: [] };
   }
-  const tags: string[] = [];
-  for (const [index, tag] of value.entries()) {
-    if (typeof tag !== "string") {
-      throw new Error(`memory tags[${index}] must be a string`);
+  const found = mapBoolean(row.found, "archive memory found");
+  if (!found) {
+    return { archived: false, found, qdrantPointIds: [] };
+  }
+  return {
+    archived: mapBoolean(row.archived, "archive memory archived"),
+    found,
+    qdrantPointIds: mapNonBlankStringArray(
+      row.qdrant_point_ids,
+      "archive memory qdrant_point_ids",
+    ),
+  };
+}
+
+function mapBoolean(value: unknown, fieldName: string): boolean {
+  if (typeof value !== "boolean") {
+    throw new Error(`${fieldName} must be a boolean`);
+  }
+  return value;
+}
+
+function mapNonBlankStringArray(value: unknown, fieldName: string): string[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+  const values: string[] = [];
+  for (const [index, item] of value.entries()) {
+    if (typeof item !== "string") {
+      throw new Error(`${fieldName}[${index}] must be a string`);
     }
-    if (tag.trim().length === 0) {
+    if (item.trim().length === 0) {
       throw new Error(
-        `memory tags[${index}] must contain non-whitespace text`,
+        `${fieldName}[${index}] must contain non-whitespace text`,
       );
     }
-    tags.push(tag);
+    values.push(item);
   }
-  return tags;
+  return values;
 }
 
 function mapConfidence(value: unknown, fieldName: string): number {
