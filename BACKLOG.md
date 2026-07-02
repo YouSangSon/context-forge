@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Goal-run handlers now trim direct goal and attempt text before service and
+  embedding dispatch.
 - MCP handler tests now guard against raw direct organization ID pass-through
   and raw defaulting patterns at handler boundaries.
 - Remaining raw direct organization ID handler pass-throughs were removed from

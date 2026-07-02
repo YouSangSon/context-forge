@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 18:57 KST - Hardened goal-run text normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct `goal`,
+    `record_iteration.attempt`, and `check_repeat_attempt.attempt` text before
+    service dispatch or embedding.
+  - `tests/goal-run/goal-run-handlers.test.ts` covers trimmed goal and attempt
+    text at the handler boundary.
+
+RED/GREEN:
+- RED: `npx vitest run tests/goal-run/goal-run-handlers.test.ts --reporter=dot`
+  failed the updated goal/attempt cases because raw text reached goal-run
+  service stubs and `embedBatch`.
+- GREEN: `npx vitest run tests/goal-run/goal-run-handlers.test.ts --reporter=dot`
+  (`1` file passed; `25` tests passed)
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/build-goal-context.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`3` files passed; `227` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2461`
+  tests passed, `34` skipped)
+
 - 18:53 KST - Added a handler organization boundary guard:
   - `src/mcp/tool-handlers.ts` no longer contains raw direct
     `toolInput.organizationId` pass-through or raw defaulting patterns at MCP

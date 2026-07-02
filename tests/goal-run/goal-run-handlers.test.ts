@@ -21,8 +21,8 @@ describe("goal-run handlers", () => {
 
     await registry.start_goal_run({
       projectKey: "proj-x",
-      goal: "ship phase 1",
-      terminationCriteria: "tests pass",
+      goal: " ship phase 1 ",
+      terminationCriteria: " tests pass ",
     });
 
     expect(goalRuns.start).toHaveBeenCalledWith({
@@ -199,7 +199,7 @@ describe("goal-run handlers", () => {
     await registry.record_iteration({
       organizationId: " org-a ",
       goalRunId: 7,
-      attempt: "try A",
+      attempt: " try A ",
       outcome: "failure",
       error: "boom",
       memoryIds: [11, 12],
@@ -604,7 +604,7 @@ describe("goal-run handlers", () => {
     const result = await registry.check_repeat_attempt({
       organizationId: " org-a ",
       goalRunId: 7,
-      attempt: "use a regular expression",
+      attempt: " use a regular expression ",
     });
 
     // Only the two FAILED attempts are embedded (plus the candidate).

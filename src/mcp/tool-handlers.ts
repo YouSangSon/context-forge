@@ -898,6 +898,7 @@ export function createToolHandlers(input: {
     async start_goal_run(toolInput) {
       ensureGovernanceCanonicalMode(hasGovernanceOverrides);
       assertNonBlankText(toolInput.goal, "goal");
+      const goal = toolInput.goal.trim();
       assertOptionalAllowedValue(toolInput.scope, "scope", SUPPORTED_SCOPE_TYPES);
       const scope = toolInput.scope ?? "project";
       const scopeId = resolveGoalRunScopeId(scope, toolInput, {
@@ -908,7 +909,7 @@ export function createToolHandlers(input: {
         toolInput.terminationCriteria,
         "terminationCriteria",
       );
-      assertNoSecrets(toolInput.goal);
+      assertNoSecrets(goal);
       if (terminationCriteria) {
         assertNoSecrets(terminationCriteria);
       }
@@ -918,7 +919,7 @@ export function createToolHandlers(input: {
           scopeType: scope,
           scopeId,
           projectKey: scope === "project" ? scopeId : null,
-          goal: toolInput.goal,
+          goal,
           terminationCriteria,
         });
         return { ok: true, goalRun };
@@ -929,6 +930,7 @@ export function createToolHandlers(input: {
       ensureGovernanceCanonicalMode(hasGovernanceOverrides);
       assertPositiveInteger(toolInput.goalRunId, "goalRunId");
       assertNonBlankText(toolInput.attempt, "attempt");
+      const attempt = toolInput.attempt.trim();
       assertAllowedValue(
         toolInput.outcome,
         "outcome",
@@ -937,7 +939,7 @@ export function createToolHandlers(input: {
       assertPositiveIntegerArray(toolInput.memoryIds, "memoryIds");
       const summary = optionalNonBlankText(toolInput.summary, "summary");
       const error = optionalNonBlankText(toolInput.error, "error");
-      assertNoSecrets(toolInput.attempt);
+      assertNoSecrets(attempt);
       if (summary) {
         assertNoSecrets(summary);
       }
@@ -948,7 +950,7 @@ export function createToolHandlers(input: {
         const iteration = await services.goalRuns.recordIteration({
           organizationId: toolInput.organizationId?.trim() ?? "default",
           goalRunId: toolInput.goalRunId,
-          attempt: toolInput.attempt,
+          attempt,
           outcome: toolInput.outcome,
           summary,
           error,
@@ -1067,7 +1069,8 @@ export function createToolHandlers(input: {
       ensureGovernanceCanonicalMode(hasGovernanceOverrides);
       assertPositiveInteger(toolInput.goalRunId, "goalRunId");
       assertNonBlankText(toolInput.attempt, "attempt");
-      assertNoSecrets(toolInput.attempt);
+      const attempt = toolInput.attempt.trim();
+      assertNoSecrets(attempt);
       const threshold = resolveRepeatThreshold(toolInput.threshold);
       return await withCanonicalServices(async (services) => {
         const organizationId = toolInput.organizationId?.trim() ?? "default";
@@ -1088,7 +1091,7 @@ export function createToolHandlers(input: {
         }
 
         const vectors = await services.embeddings.embedBatch([
-          toolInput.attempt,
+          attempt,
           ...failures.map((failure) => failure.attempt),
         ]);
         const candidateEmbedding = vectors[0];
