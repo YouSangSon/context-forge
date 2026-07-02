@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Unarchive restore now rejects malformed archive scope/kind/durability enum
+  values before canonical restore, chunking, embedding, or vector upsert side
+  effects run.
 - Canonical memory chunk row mapping now rejects malformed stored
   scope/kind/durability enum values before returning reindexable chunk results.
 - Memory archive row mapping now rejects malformed stored compaction/archive

@@ -4,18 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Canonical Chunk Row Enum Validation
+## Current Loop - Unarchive Archive Enum Validation
 
 Status:
-- Canonical memory chunk row mapping now validates stored scope/kind/durability
-  enum fields before returning reindexable chunks.
-- Malformed chunk DB enum values fail at the repository boundary before
-  reindex/ingest sweeper code builds vector payloads.
+- Unarchive restore now validates archive scope/kind/durability enum fields
+  before calling canonical restore or building chunk/vector payloads.
+- Malformed archive model enum values fail per archive outcome before restore
+  side effects run.
 
 Verification:
-- Focused canonical indexing tests passed after a RED malformed-row
+- Focused unarchive compaction tests passed after a RED malformed-archive
   reproducer.
-- Related ingest sweeper, retrieval, and MCP server tests passed.
+- Related archive repository, compaction, outbox, and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

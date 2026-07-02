@@ -10112,3 +10112,26 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2206` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened unarchive archive enum mapping:
+  - Added RED coverage showing malformed archive `scopeType`, `kind`, and
+    `durability` values were restored successfully instead of failing before
+    side effects.
+  - `restoreOne` now maps archive enum fields through explicit guards before
+    canonical restore, chunk insertion, embedding, and vector upsert.
+  - No `DECISIONS.md` entry: this is dependency-boundary validation hardening
+    for existing enum contracts.
+
+Verification:
+- RED: `npx vitest run tests/compact/unarchive-compaction.test.ts --reporter=dot`
+  failed because malformed archive enum values restored successfully.
+- GREEN focused: `npx vitest run tests/compact/unarchive-compaction.test.ts --reporter=dot`
+  (`1` file passed; `31` tests passed)
+- Related: `npx vitest run tests/compact/unarchive-compaction.test.ts tests/store/memory-archive-repository.test.ts tests/compact/apply-compaction.test.ts tests/compact/outbox-sweeper.test.ts tests/compact/compact-memory.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`6` files passed; `355` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2209` tests passed, `34` skipped)
+- `git diff --check` (passed)
