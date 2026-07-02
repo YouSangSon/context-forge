@@ -1089,6 +1089,45 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     ).rejects.toThrow(message);
   });
 
+  it.each([
+    {
+      rowPatch: { tags: null },
+      message: "memory tags must be an array",
+    },
+    {
+      rowPatch: { tags: "old" },
+      message: "memory tags must be an array",
+    },
+    {
+      rowPatch: { tags: [42] },
+      message: "memory tags[0] must be a string",
+    },
+    {
+      rowPatch: { tags: [" \n\t "] },
+      message: "memory tags[0] must contain non-whitespace text",
+    },
+  ])("listMemory rejects malformed hydrated tag rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          ...hydratedMemoryRow(),
+          ...rowPatch,
+        }],
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.listMemory(
+        { scopeType: "project", scopeId: "proj-x" },
+        { organizationId: "org-a" },
+      ),
+    ).rejects.toThrow(message);
+  });
+
   it("getMemoryRecordsByIds excludes archived rows during public hydration", async () => {
     const queryCalls: SqlQueryCall[] = [];
     const mockPool = {

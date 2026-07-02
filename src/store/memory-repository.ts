@@ -729,7 +729,7 @@ function mapPostgresSearchResult(row: PostgresHydratedRow): SearchMemoryResult {
     summary: row.summary,
     durability: mapDurability(row.durability),
     importance: mapPostgresInteger(row.importance, "importance"),
-    tags: row.tags ?? [],
+    tags: mapStoredTags(row.tags),
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
     source: {
@@ -1133,6 +1133,25 @@ function mapSourceType(value: unknown): MemorySource["sourceType"] {
   throw new Error(
     "memory source_type must be one of: decision, document, conversation",
   );
+}
+
+function mapStoredTags(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    throw new Error("memory tags must be an array");
+  }
+  const tags: string[] = [];
+  for (const [index, tag] of value.entries()) {
+    if (typeof tag !== "string") {
+      throw new Error(`memory tags[${index}] must be a string`);
+    }
+    if (tag.trim().length === 0) {
+      throw new Error(
+        `memory tags[${index}] must contain non-whitespace text`,
+      );
+    }
+    tags.push(tag);
+  }
+  return tags;
 }
 
 function mapConfidence(value: unknown, fieldName: string): number {

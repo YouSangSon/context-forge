@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory repository hydrated row mapping now rejects malformed returned tag
+  arrays before exposing search/list records.
 - Memory archive repository apply result mapping now rejects malformed returned
   qdrant point ID arrays before exposing cleanup payloads.
 - Memory archive repository archive lookup row mapping now rejects malformed

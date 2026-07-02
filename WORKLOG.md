@@ -10447,3 +10447,25 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2271` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened hydrated memory tag row mapping:
+  - Added RED coverage showing malformed hydrated `tags` rows resolved by
+    falling back to empty arrays or returning invalid tag values.
+  - Hydrated memory row mapping now validates stored tag arrays and each tag as
+    non-blank text before returning list/search records.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed because malformed hydrated tag rows resolved instead of rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `115` tests passed, `7` skipped)
+- Related: `npx vitest run tests/store/memory-repository.test.ts tests/search/retrieve-memory.test.ts tests/context-pack/build-context-pack.test.ts tests/compact/compact-memory.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`5` files passed; `341` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2275` tests passed, `34` skipped)
+- `git diff --check` (passed)
