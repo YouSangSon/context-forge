@@ -2303,7 +2303,7 @@ describe("createToolRegistry", () => {
     const result = await registry.compact_memory({
       projectKey: "project-alpha",
       dryRun: false,
-      organizationId: "dev-team",
+      organizationId: " dev-team ",
       decayThreshold: 0,
     });
 
@@ -2313,6 +2313,10 @@ describe("createToolRegistry", () => {
     expect(result.compactionRunId).toBeTypeOf("string");
     expect(result.applyStats?.archived).toBe(1);
     expect(result.applyStats?.qdrantPointsDeleted).toBe(1);
+    expect(services.repository.listMemory).toHaveBeenCalledWith(
+      { scopeType: "project", scopeId: "project-alpha" },
+      expect.objectContaining({ organizationId: "dev-team" }),
+    );
     expect(services.archiveRepository.createCompactionRun).toHaveBeenCalledWith(
       expect.objectContaining({ organizationId: "dev-team", dryRun: false }),
     );

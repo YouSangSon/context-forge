@@ -457,6 +457,7 @@ export function createToolHandlers(input: {
       );
       const scope = toolInput.scope ?? "project";
       const dryRun = toolInput.dryRun ?? true;
+      const organizationId = toolInput.organizationId?.trim();
       const userScopeId = resolveUserScopeId({
         cwd,
         explicitUserScopeId: toolInput.userScopeId,
@@ -489,7 +490,7 @@ export function createToolHandlers(input: {
 
               return repository.listMemory(scopeRef, {
                 limit: toolInput.limit,
-                organizationId: toolInput.organizationId,
+                organizationId,
                 allowLegacyAnonymous: process.env.LEGACY_ANONYMOUS_SEARCH === "true",
                 excludePinnedGoalRuns: true,
               });
@@ -498,7 +499,7 @@ export function createToolHandlers(input: {
         : await withCanonicalRepository((repository) =>
             repository.listMemory(scopeRef, {
               limit: toolInput.limit,
-              organizationId: toolInput.organizationId,
+              organizationId,
               allowLegacyAnonymous: process.env.LEGACY_ANONYMOUS_SEARCH === "true",
               excludePinnedGoalRuns: true,
             }),
@@ -548,7 +549,7 @@ export function createToolHandlers(input: {
             decayThreshold: toolInput.decayThreshold,
             halfLifeDays: toolInput.halfLifeDays,
             semanticDedupThreshold: toolInput.semanticDedupThreshold,
-            organizationId: toolInput.organizationId ?? "default",
+            organizationId: organizationId ?? "default",
             actor: "compact_memory",
           },
           {

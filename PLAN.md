@@ -4,16 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Goal Context Organization Normalization
+## Current Loop - Compaction Handler Organization Normalization
 
 Status:
-- Goal context and repeat-check handlers now trim direct organization
-  identifiers before loading goal runs and scoped memories.
+- `compact_memory` now trims direct organization identifiers once and reuses
+  the normalized value for memory listing and compaction apply calls.
 
 Verification:
-- Focused goal-run handler tests passed after the RED context/repeat
-  reproducers.
-- Related goal-run repository, context, and MCP server tests passed.
+- Focused MCP server tests passed after the RED compaction list reproducer.
+- Related compaction tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `compact_memory` now trims direct organization identifiers once and reuses
+  the normalized value for memory listing and compaction apply calls.
 - Goal context and repeat-check handlers now trim direct organization
   identifiers before loading goal runs and scoped memories.
 - Goal-run service dispatch handlers now trim direct organization identifiers

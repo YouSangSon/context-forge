@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 18:44 KST - Hardened compaction handler organization normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct organization identifiers once
+    in `compact_memory` and reuses the normalized value for memory listing and
+    compaction apply calls.
+  - `tests/mcp/server.test.ts` covers trimmed compaction organization IDs
+    before list and apply paths.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed the updated compaction apply case because raw organization ID text
+  reached `listMemory`.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `134` tests passed)
+
+Verification:
+- `npx vitest run tests/compact/apply-compaction.test.ts tests/compact/unarchive-compaction.test.ts tests/compact/outbox-sweeper.test.ts --reporter=dot`
+  (`3` files passed; `105` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2460`
+  tests passed, `34` skipped)
+
 - 18:41 KST - Hardened goal context organization normalization:
   - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
     `build_goal_context` and `check_repeat_attempt` load goal runs and scoped
