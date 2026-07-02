@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 15:51 KST - Hardened Qdrant client URL validation:
+  - `src/qdrant/client.ts` now rejects non-absolute and non-HTTP(S) direct URLs
+    before constructing the Qdrant SDK client.
+  - Direct URL and API key values are trimmed before SDK construction.
+  - `tests/qdrant/client.test.ts` covers invalid URL schemes and trimmed
+    values.
+
+RED/GREEN:
+- RED: `npx vitest run tests/qdrant/client.test.ts --reporter=dot` failed the
+  new malformed URL and trimming cases because client construction accepted
+  raw string values.
+- GREEN: `npx vitest run tests/qdrant/client.test.ts --reporter=dot` (`1` file
+  passed; `9` tests passed)
+
+Verification:
+- `npx vitest run tests/qdrant/client.test.ts tests/vector/qdrant-index.test.ts tests/mcp/mcp-server-construction.test.ts tests/config/service-config.test.ts --reporter=dot`
+  (`4` files passed; `165` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2411`
+  tests passed, `34` skipped)
+
 - 15:47 KST - Hardened metrics label string validation:
   - `src/app/metrics.ts` now rejects blank direct HTTP route labels and blank
     dependency check names before storing/rendering metrics.

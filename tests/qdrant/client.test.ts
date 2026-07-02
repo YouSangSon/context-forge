@@ -26,6 +26,14 @@ describe("createQdrantClient", () => {
       message: "url must contain non-whitespace text",
     },
     {
+      input: { url: "not-a-url", apiKey: "local-qdrant-key" },
+      message: "url must be an absolute HTTP(S) URL",
+    },
+    {
+      input: { url: "ftp://qdrant.example.com", apiKey: "local-qdrant-key" },
+      message: "url must be an absolute HTTP(S) URL",
+    },
+    {
       input: { url: "http://127.0.0.1:6333", apiKey: 123 },
       message: "apiKey must be a string",
     },
@@ -42,6 +50,20 @@ describe("createQdrantClient", () => {
       createQdrantClient({
         url: "http://127.0.0.1:6333",
         apiKey: "local-qdrant-key",
+      }),
+    ).toMatchObject({
+      options: {
+        url: "http://127.0.0.1:6333",
+        apiKey: "local-qdrant-key",
+      },
+    });
+  });
+
+  it("trims direct URL and API key values before constructing the client", () => {
+    expect(
+      createQdrantClient({
+        url: " http://127.0.0.1:6333 ",
+        apiKey: " local-qdrant-key ",
       }),
     ).toMatchObject({
       options: {

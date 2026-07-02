@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant client construction now validates direct URLs as absolute HTTP(S)
+  URLs and trims URL/API key values before SDK construction.
 - Metrics registry now rejects blank direct HTTP route labels and dependency
   check names before rendering Prometheus output.
 - OAuth protected-resource challenge helpers now reject blank direct metadata,

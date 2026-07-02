@@ -9,8 +9,8 @@ export function createQdrantClient(input: CreateQdrantClientInput) {
   assertCreateQdrantClientInput(input);
 
   return new QdrantClient({
-    url: input.url,
-    apiKey: input.apiKey,
+    url: input.url.trim(),
+    apiKey: input.apiKey.trim(),
   });
 }
 
@@ -19,7 +19,21 @@ function assertCreateQdrantClientInput(
 ): asserts value is CreateQdrantClientInput {
   const candidate = assertObject(value, "qdrant client input");
   assertNonBlankText(candidate.url, "url");
+  assertAbsoluteHttpUrl(candidate.url, "url");
   assertNonBlankText(candidate.apiKey, "apiKey");
+}
+
+function assertAbsoluteHttpUrl(value: string, fieldName: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(value.trim());
+  } catch (_err: unknown) {
+    throw new Error(`${fieldName} must be an absolute HTTP(S) URL`);
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`${fieldName} must be an absolute HTTP(S) URL`);
+  }
 }
 
 function assertObject(
