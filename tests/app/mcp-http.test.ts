@@ -768,6 +768,36 @@ describe("Streamable HTTP /mcp", () => {
     expect(transportCloseSpy).toHaveBeenCalled();
   });
 
+  it("closes the per-request MCP server when transport cleanup throws synchronously", async () => {
+    const serverCloseSpy = vi.spyOn(McpServer.prototype, "close");
+    const transportCloseSpy = vi
+      .spyOn(StreamableHTTPServerTransport.prototype, "close")
+      .mockImplementationOnce(() => {
+        throw new Error("transport close boom");
+      });
+
+    try {
+      handle = await startServer(["token-a"]);
+
+      const res = await fetch(`${handle.baseUrl}/mcp`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer token-a",
+          "content-type": "application/json",
+          accept: "application/json, text/event-stream",
+        },
+        body: "{",
+      });
+
+      expect(res.status).toBe(400);
+      expect(transportCloseSpy).toHaveBeenCalled();
+      expect(serverCloseSpy).toHaveBeenCalled();
+    } finally {
+      transportCloseSpy.mockRestore();
+      serverCloseSpy.mockRestore();
+    }
+  });
+
   it("closes the per-request MCP server and transport when POST body exceeds the size cap", async () => {
     const serverCloseSpy = vi.spyOn(McpServer.prototype, "close");
     const transportCloseSpy = vi.spyOn(StreamableHTTPServerTransport.prototype, "close");

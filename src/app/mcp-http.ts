@@ -129,8 +129,8 @@ export async function handleMcpHttpRequest(
     }
     cleanedUp = true;
     await Promise.allSettled([
-      transport.close(),
-      server.close(),
+      Promise.resolve().then(() => transport.close()),
+      Promise.resolve().then(() => server.close()),
     ]);
   };
   const cleanupOnClose = () => {

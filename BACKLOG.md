@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- MCP HTTP per-request cleanup now wraps transport and server close calls before
+  settlement, so synchronous transport cleanup failures still allow MCP server
+  cleanup to run.
 - Operator server cleanup now wraps probe-pool and worker-stop shutdown calls
   before settlement, so synchronous cleanup failures still allow remaining
   cleanup tasks to run and surface as rejected cleanup promises.

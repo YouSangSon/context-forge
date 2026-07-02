@@ -4,18 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Operator Server Cleanup Task Wrapping
+## Current Loop - MCP HTTP Cleanup Task Wrapping
 
 Status:
-- Operator server shutdown now wraps probe-pool cleanup and background worker
-  shutdown as promise tasks before passing them to `settleCleanup`.
-- Synchronous probe-pool `end()` failures no longer prevent background worker
-  shutdown; close events now receive a rejected cleanup promise instead of an
-  uncaught synchronous throw.
+- Per-request MCP HTTP cleanup now wraps transport and server close calls as
+  promise tasks before `Promise.allSettled`.
+- Synchronous transport cleanup failures no longer prevent the per-request MCP
+  server from closing.
 
 Verification:
-- Focused operator server startup tests passed after a RED cleanup reproducer.
-- Related operator/server/MCP tests passed.
+- Focused MCP HTTP tests passed after a RED cleanup reproducer.
+- Related MCP HTTP, operator server, and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

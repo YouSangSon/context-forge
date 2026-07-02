@@ -9914,3 +9914,28 @@ Verification:
 - `npm test -- --reporter=dot`
   (`81` files passed, `2` skipped; `2172` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened MCP HTTP per-request cleanup task wrapping:
+  - Added RED coverage showing a `StreamableHTTPServerTransport.close()` method
+    that throws synchronously prevented the per-request `McpServer.close()` from
+    running.
+  - MCP HTTP cleanup now wraps transport and server close calls in
+    `Promise.resolve().then(...)`, so synchronous close failures become settled
+    rejections and remaining cleanup tasks still run.
+  - No `DECISIONS.md` entry: this is request cleanup hardening inside the
+    existing Streamable HTTP path.
+
+Verification:
+- RED: `npx vitest run tests/app/mcp-http.test.ts --reporter=dot`
+  failed because `McpServer.close()` was not called after synchronous transport
+  cleanup failure.
+- GREEN focused: `npx vitest run tests/app/mcp-http.test.ts --reporter=dot`
+  (`1` file passed; `20` tests passed)
+- Related: `npx vitest run tests/app/mcp-http.test.ts tests/app/mcp-http-boundary.test.ts tests/app/server.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `230` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`81` files passed, `2` skipped; `2173` tests passed, `34` skipped)
+- `git diff --check` (passed)
