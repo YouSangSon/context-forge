@@ -92,6 +92,7 @@ export function createQdrantVectorIndex(
         assertQdrantPointVector(point);
         assertQdrantPointMemoryRecordId(point);
         assertQdrantPointScopeType(point);
+        assertQdrantPointProjectKey(point);
       }
 
       await client.upsert(collectionName, { points });
@@ -220,6 +221,17 @@ function assertQdrantPointScopeType(point: VectorPoint): void {
     point.payload.scope_type,
     "point.payload.scope_type",
   );
+}
+
+function assertQdrantPointProjectKey(point: VectorPoint): void {
+  const projectKey = point.payload.project_key;
+  if (projectKey === null) {
+    return;
+  }
+  if (typeof projectKey !== "string") {
+    throw new Error("point.payload.project_key must be a string or null");
+  }
+  assertQdrantNonEmptyString(projectKey, "point.payload.project_key");
 }
 
 function assertQdrantNonEmptyString(value: unknown, fieldName: string): void {

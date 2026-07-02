@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector upserts now validate `payload.project_key` as
+  string-or-null before calling storage clients, preserving `null` while
+  rejecting missing, non-string, and blank project keys.
 - Qdrant and pgvector upserts now validate `payload.scope_type` as a
   non-empty string before calling storage clients, so malformed scope types
   cannot reach Qdrant or SQL.

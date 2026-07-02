@@ -196,6 +196,7 @@ export function createPgVectorIndex(
         assertPgVectorEmbeddingVector(point);
         assertPgVectorPointMemoryRecordId(point);
         assertPgVectorPointScopeType(point);
+        assertPgVectorPointProjectKey(point);
       }
 
       // HIGH 2: Chunk into batches of UPSERT_BATCH_ROWS to stay under the
@@ -505,6 +506,17 @@ function assertPgVectorPointScopeType(point: VectorPoint): void {
     point.payload.scope_type,
     "point.payload.scope_type",
   );
+}
+
+function assertPgVectorPointProjectKey(point: VectorPoint): void {
+  const projectKey = point.payload.project_key;
+  if (projectKey === null) {
+    return;
+  }
+  if (typeof projectKey !== "string") {
+    throw new Error("point.payload.project_key must be a string or null");
+  }
+  assertPgVectorNonEmptyString(projectKey, "point.payload.project_key");
 }
 
 function assertPgVectorNonEmptyString(value: unknown, fieldName: string): void {

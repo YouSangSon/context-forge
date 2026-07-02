@@ -205,6 +205,46 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
   });
 
   it.each([
+    {
+      label: "missing",
+      payload: {},
+      message: "point.payload.project_key must be a string or null",
+    },
+    {
+      label: "non-string",
+      payload: { project_key: 123 },
+      message: "point.payload.project_key must be a string or null",
+    },
+    {
+      label: "blank",
+      payload: { project_key: " \n\t " },
+      message: "point.payload.project_key must be a non-empty string",
+    },
+  ])("upsert rejects malformed point project_key before opening a client: $label", async ({ payload, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-project-key",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
     { label: "empty", id: "" },
     { label: "blank", id: " \n\t " },
   ])("upsert rejects malformed point ids before opening a client: $label", async ({ id }) => {
