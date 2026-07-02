@@ -681,7 +681,7 @@ export function createToolHandlers(input: {
           : optionalNonBlankText(toolInput.summary);
 
       return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId ?? "default";
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const memory = await services.repository.updateMemoryRecord({
           id: toolInput.memoryId,
           organizationId,
@@ -724,7 +724,7 @@ export function createToolHandlers(input: {
       ensureGovernanceCanonicalMode(hasGovernanceOverrides);
       assertPositiveInteger(toolInput.memoryId, "memoryId");
       return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId ?? "default";
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const archived = await services.repository.archiveMemoryRecord({
           id: toolInput.memoryId,
           organizationId,
@@ -775,7 +775,7 @@ export function createToolHandlers(input: {
       assertPositiveInteger(toolInput.memoryId, "memoryId");
       assertNonBlankTags(toolInput.tags);
       return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId ?? "default";
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const memory = await services.repository.updateMemoryRecord({
           id: toolInput.memoryId,
           organizationId,

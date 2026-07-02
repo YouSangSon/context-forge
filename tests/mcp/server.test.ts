@@ -1477,7 +1477,7 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.update_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       memoryId: 501,
       content: "Decision: refresh vectors after governance edits.",
       summary: "Refresh vectors after governance edits.",
@@ -1948,7 +1948,7 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.delete_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       memoryId: 501,
     });
 
@@ -2008,7 +2008,7 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.tag_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       memoryId: 501,
       tags: ["security", "ops"],
     });

@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 18:33 KST - Hardened MCP mutation handler organization normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
+    `update_memory`, `delete_memory`, and `tag_memory` call canonical mutation
+    repository primitives and vector cleanup.
+  - `tests/mcp/server.test.ts` covers trimmed mutation handler organization
+    IDs at the direct registry boundary.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed the updated mutation handler cases because raw organization ID text
+  reached `updateMemoryRecord` and `archiveMemoryRecord`.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `134` tests passed)
+
+Verification:
+- `npx vitest run tests/store/memory-repository.test.ts tests/store/canonical-indexing.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `291` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2459`
+  tests passed, `34` skipped)
+
 - 18:31 KST - Hardened MCP graph inspection handler organization
   normalization:
   - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before

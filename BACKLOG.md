@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `update_memory`, `delete_memory`, and `tag_memory` now trim direct
+  organization identifiers before canonical mutation repository and vector
+  cleanup calls.
 - `inspect_memory_graph` now trims direct organization identifiers before
   canonical graph inspection repository calls.
 - MCP governance handlers now trim direct organization identifiers before
