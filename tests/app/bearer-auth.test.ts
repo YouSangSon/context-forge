@@ -199,6 +199,45 @@ describe("authenticateBearer", () => {
     });
   });
 
+  it.each([
+    {
+      result: null,
+      message: "",
+    },
+    {
+      result: { token: 123 },
+      message: "OAuth verifier result.token must be a string",
+    },
+    {
+      result: { token: "verifier-token", organizationId: " \n\t " },
+      message:
+        "OAuth verifier result.organizationId must contain non-whitespace text",
+    },
+    {
+      result: { token: "verifier-token", scopes: "akasha:read" },
+      message: "OAuth verifier result.scopes must be an array",
+    },
+    {
+      result: { token: "verifier-token", scopes: ["akasha:read", 42] },
+      message: "OAuth verifier result.scopes[1] must be a string",
+    },
+  ])("validates OAuth verifier result %#", async ({ result, message }) => {
+    const oauthVerifier = {
+      verify: vi.fn().mockResolvedValue(result),
+    };
+
+    if (result === null) {
+      await expect(
+        authenticateBearer("Bearer oauth-token", TOKENS, oauthVerifier),
+      ).resolves.toBeNull();
+      return;
+    }
+
+    await expect(
+      authenticateBearer("Bearer oauth-token", TOKENS, oauthVerifier),
+    ).rejects.toThrow(message);
+  });
+
   it("returns null when neither static nor OAuth auth can match", async () => {
     await expect(
       authenticateBearer("Bearer unknown-token", TOKENS, null),

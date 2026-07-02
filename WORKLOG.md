@@ -2,6 +2,34 @@
 
 ## 2026-07-02
 
+- 15:33 KST - Hardened OAuth verifier result validation:
+  - `src/app/middleware/bearer-auth.ts` now validates OAuth verifier fallback
+    results before treating them as authenticated bearer tokens.
+  - Returned verifier tokens must be non-blank strings; optional
+    `organizationId` values must be non-blank strings; optional `scopes` must
+    be arrays of strings.
+  - Valid OAuth matches still use the actual presented bearer token and
+    `authType: "oauth"` after validation.
+  - `tests/app/bearer-auth.test.ts` covers malformed verifier result token,
+    organization, and scopes values.
+
+RED/GREEN:
+- RED: `npx vitest run tests/app/bearer-auth.test.ts --reporter=dot`
+  failed the new malformed verifier result cases because fallback results were
+  accepted without validation.
+- GREEN: `npx vitest run tests/app/bearer-auth.test.ts --reporter=dot`
+  (`1` file passed; `33` tests passed)
+
+Verification:
+- `npx vitest run tests/app/bearer-auth.test.ts tests/app/oauth-token-auth.test.ts tests/app/mcp-http.test.ts tests/app/server.test.ts tests/app/mcp-http-boundary.test.ts tests/app/operator-server-boundary.test.ts --reporter=dot`
+  (`6` files passed; `195` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2390`
+  tests passed, `34` skipped)
+
 - 15:29 KST - Hardened MCP HTTP direct bearer token validation:
   - `src/app/mcp-http.ts` now validates each direct `bearerTokens` entry is an
     object with a non-blank token and, when provided, a non-blank organization

@@ -112,7 +112,54 @@ export async function authenticateBearer(
   }
 
   const oauthMatch = await oauthVerifier.verify(provided);
-  return oauthMatch ? { ...oauthMatch, token: provided, authType: "oauth" } : null;
+  return normalizeOAuthVerifierResult(oauthMatch, provided);
+}
+
+function normalizeOAuthVerifierResult(
+  value: BearerToken | null,
+  providedToken: string,
+): BearerToken | null {
+  if (value === null) {
+    return null;
+  }
+
+  const candidate = assertObject(value, "OAuth verifier result");
+  if (typeof candidate.token !== "string") {
+    throw new Error("OAuth verifier result.token must be a string");
+  }
+  assertNonBlankString(candidate.token, "OAuth verifier result.token");
+
+  const organizationId = candidate.organizationId;
+  if (organizationId !== undefined && typeof organizationId !== "string") {
+    throw new Error("OAuth verifier result.organizationId must be a string");
+  }
+  if (organizationId !== undefined) {
+    assertNonBlankString(
+      organizationId,
+      "OAuth verifier result.organizationId",
+    );
+  }
+
+  const scopes = candidate.scopes;
+  if (scopes !== undefined) {
+    if (!Array.isArray(scopes)) {
+      throw new Error("OAuth verifier result.scopes must be an array");
+    }
+    for (const [index, scope] of scopes.entries()) {
+      if (typeof scope !== "string") {
+        throw new Error(`OAuth verifier result.scopes[${index}] must be a string`);
+      }
+    }
+  }
+
+  return {
+    ...value,
+    token: providedToken,
+    authType: "oauth",
+    ...(organizationId !== undefined
+      ? { organizationId: organizationId.trim() }
+      : {}),
+  };
 }
 
 function extractBearerValue(authHeader: string | undefined): string | null {
@@ -125,6 +172,19 @@ function extractBearerValue(authHeader: string | undefined): string | null {
 
   const provided = authHeader.slice("Bearer ".length).trim();
   return provided.length > 0 ? provided : null;
+}
+
+function assertObject(value: unknown, fieldName: string): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an object`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function assertNonBlankString(value: string, fieldName: string): void {
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
 }
 
 function tokenDigest(token: string): Buffer {

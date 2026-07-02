@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- OAuth verifier fallback results now validate token strings, optional
+  organization bindings, and optional scopes before authentication succeeds.
 - MCP HTTP direct `bearerTokens` options now validate token entry objects,
   token strings, and optional organization bindings before authentication.
 - Operator server direct `bearerTokens` options now reject blank token strings
