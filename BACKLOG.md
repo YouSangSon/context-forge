@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector `deleteByRecordIds` now validates record IDs are positive safe
+  integers before sending SQL, matching the Qdrant adapter's record ID boundary
+  guard.
 - Qdrant `deleteByRecordIds` now validates record IDs are positive safe
   integers before building delete filters, so malformed IDs cannot reach the
   Qdrant client.

@@ -544,6 +544,21 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
 
     expect(query).not.toHaveBeenCalled();
   });
+
+  it.each([
+    { label: "zero", recordIds: [0] },
+    { label: "fractional", recordIds: [1.5] },
+    { label: "NaN", recordIds: [Number.NaN] },
+  ])("deleteByRecordIds rejects malformed recordIds before SQL: $label", async ({ recordIds }) => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.deleteByRecordIds(recordIds),
+    ).rejects.toThrow("recordIds[0] must be a positive safe integer");
+
+    expect(query).not.toHaveBeenCalled();
+  });
 });
 
 describe.skipIf(!HAS_TEST_URL)("pgvector adapter — integration against real pgvector", () => {

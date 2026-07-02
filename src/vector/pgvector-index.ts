@@ -414,6 +414,7 @@ export function createPgVectorIndex(
       assertOptionalVectorOrganizationId(options.organizationId);
 
       if (recordIds.length === 0) return;
+      assertPgVectorRecordIds(recordIds);
       if (options.organizationId) {
         await pool.query(
           `DELETE FROM ${tableName} WHERE memory_record_id = ANY($1) AND organization_id = $2`,
@@ -547,6 +548,12 @@ function assertPgVectorPositiveSafeInteger(
     value <= 0
   ) {
     throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+}
+
+function assertPgVectorRecordIds(recordIds: readonly unknown[]): void {
+  for (const [index, recordId] of recordIds.entries()) {
+    assertPgVectorPositiveSafeInteger(recordId, `recordIds[${index}]`);
   }
 }
 

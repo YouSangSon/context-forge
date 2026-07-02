@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened pgvector deleteByRecordIds validation:
+  - `src/vector/pgvector-index.ts` now validates `recordIds` are positive safe
+    integers before sending pgvector delete SQL.
+  - Invalid zero, fractional, or `NaN` record IDs now fail with a clear adapter
+    boundary error instead of reaching SQL.
+  - `tests/vector/pgvector-index.integration.test.ts` covers malformed record
+    IDs with a mocked pool.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new record ID cases because the adapter sent invalid IDs to SQL
+  and resolved successfully.
+- GREEN: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `40` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`3` files passed; `118` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2093` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant deleteByRecordIds validation:
   - `src/vector/qdrant-index.ts` now validates `recordIds` are positive safe
     integers before building Qdrant delete filters.
