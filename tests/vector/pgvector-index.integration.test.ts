@@ -245,6 +245,16 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
       message: "point_id must be a non-empty string",
     },
     {
+      label: "organization_id null",
+      row: buildPgVectorQueryRow({ organization_id: null }),
+      message: "organization_id must be a non-empty string",
+    },
+    {
+      label: "organization_id blank",
+      row: buildPgVectorQueryRow({ organization_id: " \n\t " }),
+      message: "organization_id must be a non-empty string",
+    },
+    {
       label: "score null",
       row: buildPgVectorQueryRow({ score: null }),
       message: "score must be a finite number",

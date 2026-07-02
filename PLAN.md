@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Pgvector Query Tags Validation
+## Current Loop - Pgvector Query Organization Id Validation
 
 Status:
-- `src/vector/pgvector-index.ts` now validates pgvector query `tags` values
-  before returning backend-neutral vector-hit payloads.
-- `tests/vector/pgvector-index.integration.test.ts` now covers non-array tags
-  and non-string tag entries with a mocked pool.
+- `src/vector/pgvector-index.ts` now validates pgvector query
+  `organization_id` values before returning vector-hit payloads.
+- `tests/vector/pgvector-index.integration.test.ts` now covers null and
+  whitespace-only `organization_id` rows with a mocked pool.
 
 Verification:
 - Focused pgvector tests passed after a RED reproducer.

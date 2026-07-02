@@ -448,7 +448,7 @@ function mapPgVectorQueryRow(row: PgVectorQueryRow): VectorHit {
               row.memory_record_id,
               "memory_record_id",
             ),
-      organization_id: row.organization_id,
+      organization_id: toPgVectorNonEmptyString(row.organization_id, "organization_id"),
       scope_type: row.scope_type,
       scope_id: row.scope_id,
       project_key: row.project_key,

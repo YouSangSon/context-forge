@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query result mapping now validates returned `organization_id` values
+  before returning vector-hit payloads, keeping read-side org metadata aligned
+  with the existing write-side org-id guard.
 - Pgvector query result mapping now validates returned `tags` values before
   returning vector-hit payloads, preserving the null-to-empty-array fallback
   while rejecting malformed non-array or non-string tag rows.
