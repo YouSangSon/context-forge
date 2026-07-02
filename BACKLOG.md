@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Ingest job row mapping now rejects malformed stored job/qdrant status values
+  before returning repository results.
 - Goal-run row mapping now rejects malformed stored scope/status/outcome enum
   values before returning repository results.
 - Memory hydrated row mapping now rejects malformed stored enum fields before

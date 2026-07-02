@@ -10038,3 +10038,28 @@ Verification:
 - `npm test -- --reporter=dot`
   (`81` files passed, `2` skipped; `2197` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened ingest job row enum mapping:
+  - Added RED coverage showing malformed stored `status` and `qdrant_status`
+    values were returned by `create` result mapping instead of failing at the
+    repository boundary.
+  - Ingest job row mapping now treats those DB enum fields as unknown and maps
+    them through explicit guards before returning repository models.
+  - Added a non-PG unit block to the existing Postgres-gated ingest job suite
+    so this boundary stays covered without requiring a database.
+  - No `DECISIONS.md` entry: this is row boundary validation hardening for
+    existing enum contracts.
+
+Verification:
+- RED: `npx vitest run tests/jobs/ingest-job-repository.test.ts --reporter=dot`
+  failed because malformed ingest job enum rows resolved instead of rejecting.
+- GREEN focused: `npx vitest run tests/jobs/ingest-job-repository.test.ts --reporter=dot`
+  (`1` file passed; `2` tests passed, `6` skipped)
+- Related: `npx vitest run tests/jobs/ingest-job-repository.test.ts tests/jobs/ingest-job-claim.test.ts tests/jobs/serialize-error.test.ts tests/compact/ingest-sweeper.test.ts tests/compact/ingest-sweeper-loop.test.ts tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`6` files passed; `154` tests passed, `6` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2199` tests passed, `34` skipped)
+- `git diff --check` (passed)

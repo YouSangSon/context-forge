@@ -4,18 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Goal Run Row Enum Validation
+## Current Loop - Ingest Job Row Enum Validation
 
 Status:
-- Goal-run row mapping now validates stored run scope/status and iteration
-  outcome values before returning repository results.
-- Malformed goal-run DB enum values fail at the repository boundary instead of
-  leaking into MCP/HTTP goal-run responses.
+- Ingest job row mapping now validates stored `status` and `qdrant_status`
+  values before returning repository results.
+- Malformed ingest job DB enum values fail at the repository boundary instead
+  of leaking into sweeper/canonical indexing paths.
 
 Verification:
-- Focused goal-run repository tests passed after a RED malformed-row
+- Focused ingest job repository tests passed after a RED malformed-row
   reproducer.
-- Related goal-run handlers, MCP server, and operator server tests passed.
+- Related ingest job, ingest sweeper, and canonical indexing tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

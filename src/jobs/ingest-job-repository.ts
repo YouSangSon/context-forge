@@ -2,7 +2,12 @@ import type { PgPool } from "../db/connection.js";
 import { rootLogger } from "../logger.js";
 import { requireSingleRow, toIsoString, toNumber } from "../store/db-utils.js";
 import { assertNonBlankText } from "../store/memory-content.js";
-import type { IngestJob, IngestJobRepository } from "../types.js";
+import type {
+  IngestJob,
+  IngestJobQdrantStatus,
+  IngestJobRepository,
+  IngestJobStatus,
+} from "../types.js";
 
 // How long (in ms) a claimed row is "reserved" before it can be re-claimed.
 // A sweeper that claims a row sets qdrant_next_retry_at = now + this window
@@ -21,10 +26,10 @@ type IngestJobRow = {
   id: number | string;
   memory_record_id: number | string;
   organization_id: string;
-  status: IngestJob["status"];
+  status: unknown;
   attempts: number | string;
   last_error: string | null;
-  qdrant_status: IngestJob["qdrantStatus"];
+  qdrant_status: unknown;
   qdrant_attempts: number | string;
   qdrant_next_retry_at: string | Date | null;
   qdrant_last_error: string | null;
@@ -299,10 +304,10 @@ function mapJob(row: IngestJobRow): IngestJob {
       "ingest job memory_record_id",
     ),
     organizationId: row.organization_id,
-    status: row.status,
+    status: toIngestJobStatus(row.status),
     attempts: toNonNegativeSafeInteger(row.attempts, "ingest job attempts"),
     lastError: row.last_error,
-    qdrantStatus: row.qdrant_status,
+    qdrantStatus: toIngestJobQdrantStatus(row.qdrant_status),
     qdrantAttempts: toNonNegativeSafeInteger(
       row.qdrant_attempts,
       "ingest job qdrant_attempts",
@@ -327,6 +332,29 @@ function toPositiveSafeInteger(value: unknown, fieldName: string): number {
   const numberValue = toNumber(value);
   assertPositiveSafeInteger(numberValue, fieldName);
   return numberValue;
+}
+
+function toIngestJobStatus(value: unknown): IngestJobStatus {
+  if (
+    value === "pending" ||
+    value === "processing" ||
+    value === "completed" ||
+    value === "failed"
+  ) {
+    return value;
+  }
+  throw new Error(
+    'ingest job status must be "pending", "processing", "completed", or "failed"',
+  );
+}
+
+function toIngestJobQdrantStatus(value: unknown): IngestJobQdrantStatus {
+  if (value === "pending" || value === "completed" || value === "failed") {
+    return value;
+  }
+  throw new Error(
+    'ingest job qdrant_status must be "pending", "completed", or "failed"',
+  );
 }
 
 function assertObject(

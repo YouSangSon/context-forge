@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createPgPool, type PgPool } from "../../src/db/connection.js";
 import { runMigrations } from "../../src/db/migrate.js";
 import { createIngestJobRepository } from "../../src/jobs/ingest-job-repository.js";
@@ -11,6 +11,53 @@ const adminConnectionString =
   `postgres://memory:memory@127.0.0.1:${postgresPort}/postgres`;
 const testConnectionString =
   `postgres://memory:memory@127.0.0.1:${postgresPort}/${testDatabaseName}`;
+
+function ingestJobRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "1",
+    memory_record_id: "42",
+    organization_id: "org-a",
+    status: "pending",
+    attempts: "0",
+    last_error: null,
+    qdrant_status: "pending",
+    qdrant_attempts: "0",
+    qdrant_next_retry_at: null,
+    qdrant_last_error: null,
+    created_at: "2026-06-27T00:00:00.000Z",
+    updated_at: "2026-06-27T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+describe("createIngestJobRepository row mapping", () => {
+  it.each([
+    {
+      rowPatch: { status: "queued" },
+      message:
+        'ingest job status must be "pending", "processing", "completed", or "failed"',
+    },
+    {
+      rowPatch: { qdrant_status: "deleted" },
+      message:
+        'ingest job qdrant_status must be "pending", "completed", or "failed"',
+    },
+  ])("rejects malformed ingest job enum rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const pool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [ingestJobRow(rowPatch)],
+      }),
+    };
+    const repo = createIngestJobRepository(pool as never);
+
+    await expect(
+      repo.create({ memoryRecordId: 42, organizationId: "org-a" }),
+    ).rejects.toThrow(message);
+  });
+});
 
 async function waitForPostgres() {
   let lastError: unknown;
