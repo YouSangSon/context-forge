@@ -901,6 +901,22 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     ).resolves.toEqual([]);
   });
 
+  it("getMemoryRecordsByIds trims organizationId before querying", async () => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.getMemoryRecordsByIds([1, 2], " org-a ");
+
+    expect(queryCalls[0]?.params).toContain("org-a");
+    expect(queryCalls[0]?.params).not.toContain(" org-a ");
+  });
+
   it("listMemory SQL includes a parameterized LIMIT (PERF-8)", () => {
     // listMemory is a browse/list operation: it must always emit a bounded
     // LIMIT so result sets can't grow without bound.

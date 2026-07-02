@@ -4,15 +4,15 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - List Memory Organization Normalization
+## Current Loop - Memory ID Lookup Organization Normalization
 
 Status:
-- Memory listing now trims direct organization identifiers before building
+- Memory ID lookup now trims direct organization identifiers before building
   query parameters.
 - Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused memory repository tests passed after the RED list organization
+- Focused memory repository tests passed after the RED ID lookup organization
   trimming reproducer.
 - Related memory repository and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.

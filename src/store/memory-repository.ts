@@ -421,14 +421,16 @@ export function createMemoryRepository(
 
     async getMemoryRecordsByIds(ids, organizationId, allowLegacyAnonymous) {
       assertOrganizationId(organizationId, allowLegacyAnonymous, "getMemoryRecordsByIds");
+      const scopedOrganizationId =
+        organizationId === undefined ? undefined : organizationId.trim();
       if (ids.length === 0) {
         return [];
       }
 
       const params: unknown[] = [ids];
       let orgClause = "";
-      if (organizationId !== undefined) {
-        const orgIndex = params.push(organizationId);
+      if (scopedOrganizationId !== undefined) {
+        const orgIndex = params.push(scopedOrganizationId);
         orgClause = ` AND mr.organization_id = $${orgIndex}`;
       }
 

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory ID lookup now trims direct organization identifiers before building
+  query parameters.
 - Memory listing now trims direct organization identifiers before building
   query parameters.
 - Memory lexical search now trims direct organization identifiers before
