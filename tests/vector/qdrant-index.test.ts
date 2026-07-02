@@ -586,6 +586,23 @@ describe("createQdrantVectorIndex — point building (upsert)", () => {
     expect(client.upsert).not.toHaveBeenCalled();
   });
 
+  it("rejects non-array point lists before Qdrant upsert", async () => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.upsert(null as never),
+    ).rejects.toThrow("upsert: points must be an array");
+
+    expect(client.upsert).not.toHaveBeenCalled();
+  });
+
   it.each([
     { label: "missing", memoryRecordId: undefined },
     { label: "zero", memoryRecordId: 0 },

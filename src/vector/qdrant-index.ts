@@ -84,8 +84,8 @@ export function createQdrantVectorIndex(
     },
 
     async upsert(points: VectorPoint[]): Promise<void> {
-      if (points.length === 0) return;
       assertVectorPointOrganizationIds(points);
+      if (points.length === 0) return;
 
       for (const point of points) {
         assertQdrantPointId(point);

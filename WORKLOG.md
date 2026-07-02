@@ -9514,3 +9514,28 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`78` files passed, `2` skipped; `1800` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened vector upsert point-list boundaries:
+  - Added RED coverage showing Qdrant and pgvector upserts threw incidental
+    `points.length` property-access errors for `null` point-list inputs.
+  - `assertVectorPointOrganizationIds` now accepts unknown point-list inputs,
+    rejects non-arrays with `upsert: points must be an array`, and still
+    performs the existing per-point object, payload, and organization checks.
+  - Qdrant and pgvector `upsert` paths now run the shared boundary guard before
+    the empty-list no-op check, preserving `[]` behavior while failing malformed
+    inputs before clients are called.
+  - No `DECISIONS.md` entry: this is adapter input hardening for the existing
+    vector port contract, not a new durable architecture decision.
+
+Verification:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed with `Cannot read properties of null (reading 'length')`.
+- GREEN focused: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`2` files passed; `135` tests passed; `12` skipped)
+- Related: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+  (`7` files passed; `313` tests passed; `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2152` tests passed, `34` skipped)
+- `git diff --check` (passed)

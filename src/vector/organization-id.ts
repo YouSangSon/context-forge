@@ -13,8 +13,12 @@ export function assertVectorOrganizationId(
 }
 
 export function assertVectorPointOrganizationIds(
-  points: readonly VectorPoint[],
-): void {
+  points: unknown,
+): asserts points is readonly VectorPoint[] {
+  if (!Array.isArray(points)) {
+    throw new Error("upsert: points must be an array");
+  }
+
   for (const [index, point] of points.entries()) {
     if (typeof point !== "object" || point === null || Array.isArray(point)) {
       throw new Error(`upsert: points[${index}] must be an object`);
