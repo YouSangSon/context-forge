@@ -31,6 +31,10 @@ type QdrantQueryPoint = {
   payload?: unknown;
 };
 
+type QdrantQueryResponse = {
+  points: unknown;
+};
+
 function buildQdrantMust(filter: VectorFilter): QdrantFilterClause[] {
   assertOptionalVectorOrganizationId(filter.organizationId);
 
@@ -80,13 +84,14 @@ export function createQdrantVectorIndex(
 
     async query(vector: number[], filter: VectorFilter, limit: number): Promise<VectorHit[]> {
       const must = buildQdrantMust(filter);
-      const response = await client.query(collectionName, {
+      const response: unknown = await client.query(collectionName, {
         query: vector,
         limit,
         filter: { must },
         with_payload: ["memory_record_id"],
         with_vector: false,
       });
+      assertQdrantQueryResponse(response);
 
       const points: unknown = response.points;
       assertQdrantPoints(points);
@@ -153,6 +158,12 @@ export function createQdrantVectorIndex(
       await client.delete(collectionName, selector);
     },
   };
+}
+
+function assertQdrantQueryResponse(value: unknown): asserts value is QdrantQueryResponse {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("query response must be an object");
+  }
 }
 
 function assertQdrantPoints(value: unknown): asserts value is QdrantQueryPoint[] {

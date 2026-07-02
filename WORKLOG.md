@@ -2,6 +2,38 @@
 
 ## 2026-07-02
 
+- Hardened Qdrant query response shape mapping:
+  - `src/vector/qdrant-index.ts` now validates Qdrant query responses as
+    objects before reading `points`.
+  - Malformed non-object query responses now fail with a clear adapter boundary
+    error instead of an incidental property-access TypeError.
+  - `tests/vector/qdrant-index.test.ts` covers malformed query responses.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  failed the new query-response test with `Cannot read properties of null
+  (reading 'points')`.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `31` tests passed)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`3` files passed; `87` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2062` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant point list shape mapping:
   - `src/vector/qdrant-index.ts` now validates Qdrant query response `points`
     before mapping backend-neutral `VectorHit` objects.

@@ -159,6 +159,24 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     expect(client.query).not.toHaveBeenCalled();
   });
 
+  it("rejects malformed Qdrant query responses before reading point lists", async () => {
+    const client = makeClient();
+    client.query.mockResolvedValue(null);
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.query(
+        [0.1],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "p" }],
+          projectKey: "p",
+        },
+        10,
+      ),
+    ).rejects.toThrow("query response must be an object");
+  });
+
   it("returns VectorHit[] with id, score, and payload from Qdrant response", async () => {
     const client = makeClient();
     client.query.mockResolvedValue({
