@@ -89,6 +89,7 @@ export function createQdrantVectorIndex(
 
     async query(vector: number[], filter: VectorFilter, limit: number): Promise<VectorHit[]> {
       assertQdrantQueryVector(vector);
+      assertQdrantPositiveSafeInteger(limit, "limit");
       const must = buildQdrantMust(filter);
       const response: unknown = await client.query(collectionName, {
         query: vector,
@@ -175,6 +176,19 @@ function assertQdrantQueryVector(vector: readonly unknown[]): void {
     if (typeof component !== "number" || !Number.isFinite(component)) {
       throw new Error(`query vector[${index}] must be a finite number`);
     }
+  }
+}
+
+function assertQdrantPositiveSafeInteger(
+  value: unknown,
+  fieldName: string,
+): void {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value <= 0
+  ) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
   }
 }
 

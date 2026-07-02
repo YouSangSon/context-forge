@@ -189,6 +189,28 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     expect(client.query).not.toHaveBeenCalled();
   });
 
+  it.each([
+    { label: "zero", limit: 0 },
+    { label: "fractional", limit: 1.5 },
+  ])("rejects malformed query limits before Qdrant query: $label", async ({ limit }) => {
+    const client = makeClient();
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "p" }],
+          projectKey: "p",
+        },
+        limit,
+      ),
+    ).rejects.toThrow("limit must be a positive safe integer");
+
+    expect(client.query).not.toHaveBeenCalled();
+  });
+
   it("rejects malformed Qdrant query responses before reading point lists", async () => {
     const client = makeClient();
     client.query.mockResolvedValue(null);

@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened Qdrant query limit validation:
+  - `src/vector/qdrant-index.ts` now validates query `limit` values are
+    positive safe integers before calling the Qdrant client.
+  - Invalid zero or fractional limits now fail with a clear adapter boundary
+    error instead of being sent to Qdrant.
+  - `tests/vector/qdrant-index.test.ts` covers malformed limits with a mocked
+    client.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  failed the new limit cases because the adapter resolved empty results after
+  calling the Qdrant client.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `37` tests passed)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`3` files passed; `109` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2084` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant query vector validation:
   - `src/vector/qdrant-index.ts` now validates query vectors are non-empty and
     finite before calling the Qdrant client.
