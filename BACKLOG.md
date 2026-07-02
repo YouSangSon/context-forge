@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Background worker startup now validates returned sweeper handles before
+  recording workers as started, so malformed injected starters fail through the
+  existing startup-failure path instead of breaking later cleanup.
 - Background-worker operator server tests now clear module cache and relevant
   mocks before each test, reducing transient full-suite failures from stale
   `vi.doMock` imports.

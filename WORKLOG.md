@@ -9838,3 +9838,28 @@ Verification:
 - `npm test -- --reporter=dot`
   (`81` files passed, `2` skipped; `2169` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened background worker sweeper handle validation:
+  - Added RED coverage showing a compaction sweeper starter that returned
+    `{ stop: null }` was still recorded as a started `compaction` worker.
+  - `startBackgroundWorkers` now validates each returned compaction/ingest
+    sweeper handle before pushing it into the started-worker list.
+  - Malformed handles now flow through the existing worker start failure path;
+    by default other workers can still start, and fail-fast mode still cleans
+    up already-started services before rejecting.
+  - No `DECISIONS.md` entry: this tightens an existing runtime boundary rather
+    than changing worker architecture.
+
+Verification:
+- RED: `npx vitest run tests/app/background-workers.test.ts --reporter=dot`
+  failed because `startedWorkers` included malformed `compaction`.
+- GREEN focused: `npx vitest run tests/app/background-workers.test.ts --reporter=dot`
+  (`1` file passed; `22` tests passed)
+- Related: `npx vitest run tests/app/background-workers.test.ts tests/app/worker.test.ts tests/app/start-background-workers-server.test.ts tests/app/start-operator-server-metrics.test.ts tests/app/operator-server-boundary.test.ts --reporter=dot`
+  (`5` files passed; `76` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`81` files passed, `2` skipped; `2170` tests passed, `34` skipped)
+- `git diff --check` (passed)

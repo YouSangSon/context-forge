@@ -89,15 +89,17 @@ export async function startBackgroundWorkers(
 
   if (enabledWorkers.includes("compaction")) {
     try {
+      const handle = startCompaction({
+        archiveRepository: services.archiveRepository,
+        vectorIndex: services.vectorIndex,
+        logger: options.logger,
+        intervalMs: loadSweeperIntervalMs(env),
+        metrics: options.metrics,
+      });
+      assertSweeperHandle(handle, "compaction sweeper handle");
       started.push({
         name: "compaction",
-        handle: startCompaction({
-          archiveRepository: services.archiveRepository,
-          vectorIndex: services.vectorIndex,
-          logger: options.logger,
-          intervalMs: loadSweeperIntervalMs(env),
-          metrics: options.metrics,
-        }),
+        handle,
       });
     } catch (err: unknown) {
       if (failFast) {
@@ -110,17 +112,19 @@ export async function startBackgroundWorkers(
 
   if (enabledWorkers.includes("ingest")) {
     try {
+      const handle = startIngest({
+        ingestJobs: services.ingestJobs,
+        chunkRepository: services.chunkRepository,
+        embeddings: services.embeddings,
+        vectorIndex: services.vectorIndex,
+        logger: options.logger,
+        intervalMs: loadIngestSweepIntervalMs(env),
+        metrics: options.metrics,
+      });
+      assertSweeperHandle(handle, "ingest sweeper handle");
       started.push({
         name: "ingest",
-        handle: startIngest({
-          ingestJobs: services.ingestJobs,
-          chunkRepository: services.chunkRepository,
-          embeddings: services.embeddings,
-          vectorIndex: services.vectorIndex,
-          logger: options.logger,
-          intervalMs: loadIngestSweepIntervalMs(env),
-          metrics: options.metrics,
-        }),
+        handle,
       });
     } catch (err: unknown) {
       if (failFast) {
@@ -175,6 +179,14 @@ function assertBackgroundWorkerServices(
   assertObject(candidate.ingestJobs, "services.ingestJobs");
   assertObject(candidate.vectorIndex, "services.vectorIndex");
   assertOptionalFunction(candidate.close, "services.close");
+}
+
+function assertSweeperHandle(
+  handle: unknown,
+  fieldName: string,
+): asserts handle is BackgroundSweeperHandle | IngestSweeperHandle {
+  const candidate = assertObject(handle, fieldName);
+  assertFunction(candidate.stop, `${fieldName}.stop`);
 }
 
 function assertOptionalEnv(value: unknown): void {

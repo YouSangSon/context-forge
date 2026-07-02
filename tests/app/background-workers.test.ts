@@ -199,6 +199,36 @@ describe("startBackgroundWorkers", () => {
     expect(close).toHaveBeenCalledOnce();
   });
 
+  it("logs malformed sweeper handles and continues other workers by default", async () => {
+    const logger = buildLogger();
+    const close = vi.fn().mockResolvedValue(undefined);
+    const services = buildServices(close);
+    const stopIngest = vi.fn().mockResolvedValue(undefined);
+
+    const handle = await startBackgroundWorkers({
+      logger,
+      env: enabledEnv(),
+      bootstrapServices: vi.fn().mockResolvedValue(services),
+      startCompactionSweeper: vi.fn<StartCompactionSweeper>(
+        () => ({ stop: null }) as never,
+      ),
+      startIngestSweeper: vi.fn<StartIngestSweeper>(() => ({
+        stop: stopIngest,
+      })),
+    });
+
+    expect(handle.startedWorkers).toEqual(["ingest"]);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ event: "compact.sweep_start_failed" }),
+      "failed to start outbox sweeper; continuing without it",
+    );
+
+    await handle.stop();
+
+    expect(stopIngest).toHaveBeenCalledOnce();
+    expect(close).toHaveBeenCalledOnce();
+  });
+
   it("rejects startup failures in fail-fast mode", async () => {
     await expect(
       startBackgroundWorkers({
