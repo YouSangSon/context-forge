@@ -324,7 +324,7 @@ describe("MemoryArchiveRepository.applyCompactionRecord", () => {
 
     const result = await repo.applyCompactionRecord({
       runId: 7,
-      organizationId: "org-a",
+      organizationId: " org-a ",
       recordId: 100,
       reason: "duplicate",
       keptRecordId: 99,
@@ -341,6 +341,8 @@ describe("MemoryArchiveRepository.applyCompactionRecord", () => {
     expect(sql).toContain("updated_at <= $7"); // TOCTOU guard
     expect(sql).toContain("organization_id = $2"); // org isolation
     expect(sql).toContain("ON CONFLICT (compaction_run_id, source_record_id) DO NOTHING");
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params[1]).toBe("org-a");
   });
 
   it("returns archived=false when canonical DELETE matches 0 rows (TOCTOU / org mismatch)", async () => {

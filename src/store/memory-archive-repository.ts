@@ -230,6 +230,7 @@ export function createMemoryArchiveRepository(
 
     async applyCompactionRecord(input) {
       assertApplyCompactionRecordInput(input);
+      const organizationId = input.organizationId.trim();
 
       // Single CTE: DELETE canonical row (gated by org + TOCTOU updated_at),
       // INSERT archive row with snapshot of the deleted record + the
@@ -291,7 +292,7 @@ export function createMemoryArchiveRepository(
         `,
         [
           input.recordId,
-          input.organizationId,
+          organizationId,
           input.runId,
           input.reason,
           input.decayScore ?? null,

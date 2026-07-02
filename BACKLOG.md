@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive record apply now trims direct organization IDs before the
+  destructive delete/archive CTE.
 - Memory archive run creation now trims direct run metadata before SQL insert
   and replay lookup parameters.
 - Compaction apply now trims direct organization IDs once before rate-limit,
