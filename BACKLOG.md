@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query now validates query vectors are non-empty and finite before
+  opening a database client, so invalid query vector literals do not reach
+  pgvector SQL.
 - Pgvector upsert now validates vector components are finite numbers before
   opening a database client, so invalid `[NaN]`/`[Infinity]` vector literals do
   not reach pgvector SQL.

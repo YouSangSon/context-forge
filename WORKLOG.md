@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened pgvector query vector validation:
+  - `src/vector/pgvector-index.ts` now validates query vectors are non-empty
+    and finite before opening a database client.
+  - Invalid empty or `NaN` query vectors now fail with clear adapter boundary
+    errors instead of reaching pgvector SQL as malformed vector literals.
+  - `tests/vector/pgvector-index.integration.test.ts` covers malformed query
+    vectors with a mocked pool.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new query-vector cases because validation happened after the
+  adapter tried to open/use a database client.
+- GREEN: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `35` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`3` files passed; `103` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2078` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened pgvector upsert vector component validation:
   - `src/vector/pgvector-index.ts` now validates every upsert vector component
     as a finite number before opening a database client.

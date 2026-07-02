@@ -293,6 +293,7 @@ export function createPgVectorIndex(
 
     async query(vector: number[], filter: VectorFilter, limit: number): Promise<VectorHit[]> {
       assertOptionalVectorOrganizationId(filter.organizationId);
+      assertPgVectorQueryVector(vector);
 
       // HIGH 1(b): Run inside a transaction so SET LOCAL is scoped to this query.
       // hnsw.iterative_scan='strict_order' (pgvector 0.8+) makes HNSW keep
@@ -470,11 +471,24 @@ function assertPgVectorEmbeddingVector(point: VectorPoint): void {
     );
   }
 
-  for (const [index, component] of point.vector.entries()) {
+  assertPgVectorFiniteVectorComponents(point.vector, "vector");
+}
+
+function assertPgVectorQueryVector(vector: number[]): void {
+  if (vector.length === 0) {
+    throw new Error("query vector must be a non-empty array");
+  }
+
+  assertPgVectorFiniteVectorComponents(vector, "query vector");
+}
+
+function assertPgVectorFiniteVectorComponents(
+  vector: readonly unknown[],
+  fieldName: string,
+): void {
+  for (const [index, component] of vector.entries()) {
     if (typeof component !== "number" || !Number.isFinite(component)) {
-      throw new Error(
-        `upsert: point "${point.id}" vector[${index}] must be a finite number`,
-      );
+      throw new Error(`${fieldName}[${index}] must be a finite number`);
     }
   }
 }

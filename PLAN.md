@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Pgvector Upsert Vector Component Validation
+## Current Loop - Pgvector Query Vector Validation
 
 Status:
-- `src/vector/pgvector-index.ts` now validates pgvector upsert vector
-  components are finite numbers before opening a database client.
-- `tests/vector/pgvector-index.integration.test.ts` now covers `NaN` and
-  `Infinity` vector components with a mocked pool.
+- `src/vector/pgvector-index.ts` now validates pgvector query vectors are
+  non-empty and finite before opening a database client.
+- `tests/vector/pgvector-index.integration.test.ts` now covers empty and `NaN`
+  query vectors with a mocked pool.
 
 Verification:
 - Focused pgvector tests passed after a RED reproducer.
