@@ -316,6 +316,38 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      label: "non-string",
+      projectKey: 123,
+      message: "filter.projectKey must be a string or null",
+    },
+    {
+      label: "blank",
+      projectKey: " \n\t ",
+      message: "filter.projectKey must be a non-empty string",
+    },
+  ])("query rejects malformed filter projectKey before opening a client: $label", async ({ projectKey, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey,
+        } as never,
+        5,
+      ),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("query treats empty organizationId as legacy unscoped lookup", async () => {
     const query = vi.fn().mockResolvedValue({ rows: [] });
     const client = {

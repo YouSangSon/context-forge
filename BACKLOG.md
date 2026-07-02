@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector queries now validate optional `filter.projectKey` values
+  before calling storage clients, preserving `null`/`undefined` fallback while
+  rejecting non-string and blank project keys.
 - Qdrant and pgvector queries now validate each `filter.scopes` entry has
   non-empty `scopeType` and `scopeId` strings before calling storage clients.
 - Qdrant and pgvector queries now validate `filter.scopes` is an array before

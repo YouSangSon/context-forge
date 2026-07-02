@@ -298,6 +298,7 @@ export function createPgVectorIndex(
       assertPgVectorQueryVector(vector);
       assertPgVectorPositiveSafeInteger(limit, "limit");
       assertPgVectorFilterScopes(filter.scopes);
+      assertPgVectorOptionalProjectKey(filter.projectKey);
 
       // HIGH 1(b): Run inside a transaction so SET LOCAL is scoped to this query.
       // hnsw.iterative_scan='strict_order' (pgvector 0.8+) makes HNSW keep
@@ -494,6 +495,16 @@ function assertPgVectorNonEmptyString(value: unknown, fieldName: string): void {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${fieldName} must be a non-empty string`);
   }
+}
+
+function assertPgVectorOptionalProjectKey(value: unknown): void {
+  if (value == null) {
+    return;
+  }
+  if (typeof value !== "string") {
+    throw new Error("filter.projectKey must be a string or null");
+  }
+  assertPgVectorNonEmptyString(value, "filter.projectKey");
 }
 
 function assertPgVectorQueryVector(vector: number[]): void {

@@ -42,6 +42,7 @@ type QdrantCollectionExistsResponse = {
 function buildQdrantMust(filter: VectorFilter): QdrantFilterClause[] {
   assertOptionalVectorOrganizationId(filter.organizationId);
   assertQdrantFilterScopes(filter.scopes);
+  assertQdrantOptionalProjectKey(filter.projectKey);
 
   const must: QdrantFilterClause[] = [];
 
@@ -209,6 +210,16 @@ function assertQdrantNonEmptyString(value: unknown, fieldName: string): void {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${fieldName} must be a non-empty string`);
   }
+}
+
+function assertQdrantOptionalProjectKey(value: unknown): void {
+  if (value == null) {
+    return;
+  }
+  if (typeof value !== "string") {
+    throw new Error("filter.projectKey must be a string or null");
+  }
+  assertQdrantNonEmptyString(value, "filter.projectKey");
 }
 
 function assertQdrantFiniteVectorComponents(

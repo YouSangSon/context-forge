@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened vector query filter project key validation:
+  - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now
+    validate optional query `filter.projectKey` values before calling storage
+    clients.
+  - `null` and `undefined` still use the existing scope_id fallback path, while
+    non-string and blank string project keys now fail with clear adapter
+    boundary errors.
+  - Qdrant and pgvector tests cover malformed project keys with mocked clients.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new project key cases because Qdrant queried successfully and
+  pgvector continued into the SQL client path.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`2` files passed; `109` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`3` files passed; `144` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2119` tests passed,
+  `34` skipped)
+
 - Hardened vector query filter scope entry validation:
   - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now
     validate each query `filter.scopes` entry has non-empty `scopeType` and
