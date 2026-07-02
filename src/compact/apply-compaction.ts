@@ -108,6 +108,7 @@ export async function applyCompaction(
   const startedAt = nowFromDeps(deps);
   const idempotencyKey = (deps.generateRunId ?? randomUUID)();
   assertNonBlankText(idempotencyKey, "compactionRunId");
+  const organizationId = input.organizationId.trim();
 
   // Optional: semantic dedup REPLACES exact match when threshold is set
   // (semantic with threshold ≤ 1.0 subsumes exact match anyway). Embedding
@@ -146,7 +147,7 @@ export async function applyCompaction(
   const limit = deps.applyRateLimit ?? DEFAULT_APPLY_RATE_LIMIT;
   if (limit.windowMs > 0) {
     const recentCount = await deps.archiveRepository.countRecentApplyRuns(
-      input.organizationId,
+      organizationId,
       limit.windowMs,
     );
     if (recentCount >= limit.maxRuns) {
@@ -156,7 +157,7 @@ export async function applyCompaction(
 
   // Open or replay the run.
   const run = await deps.archiveRepository.createCompactionRun({
-    organizationId: input.organizationId,
+    organizationId,
     actor: input.actor,
     scopeType: input.scope,
     scopeId: input.scopeLabel,
@@ -202,7 +203,7 @@ export async function applyCompaction(
     try {
       archiveResult = await deps.archiveRepository.applyCompactionRecord({
         runId: run.id,
-        organizationId: input.organizationId,
+        organizationId,
         recordId: candidate.recordId,
         reason: candidate.reason,
         decayScore: candidate.decayScore,
@@ -242,7 +243,7 @@ export async function applyCompaction(
     // Sequential Qdrant deletes — see design §4.4.
     try {
       await deps.vectorIndex.delete(archiveResult.qdrantPointIds, {
-        organizationId: input.organizationId,
+        organizationId,
       });
       qdrantPointsDeleted += archiveResult.qdrantPointIds.length;
       await deps.archiveRepository.markQdrantStatus(

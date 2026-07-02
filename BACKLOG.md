@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Compaction apply now trims direct organization IDs once before rate-limit,
+  compaction-run, archive, and vector-delete side effects.
 - MCP HTTP bound-token organization checks now trim direct organization IDs
   before comparing them with the token binding.
 - `add_memory_interactive` now trims direct organization, project, and user
