@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened vector upsert kind validation:
+  - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now
+    validate upsert `payload.kind` values as non-empty strings before calling
+    storage clients.
+  - Missing and blank kind values now fail with clear adapter boundary errors
+    instead of reaching Qdrant or SQL.
+  - Qdrant and pgvector tests cover malformed upsert kind values with mocked
+    clients.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new upsert kind cases because Qdrant accepted malformed payloads
+  and pgvector continued into the SQL client path.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`2` files passed; `129` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+  (`6` files passed; `303` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2146` tests passed,
+  `34` skipped)
+
 - Hardened vector upsert project key validation:
   - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now
     validate upsert `payload.project_key` values before calling storage

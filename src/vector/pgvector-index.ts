@@ -197,6 +197,7 @@ export function createPgVectorIndex(
         assertPgVectorPointMemoryRecordId(point);
         assertPgVectorPointScopeType(point);
         assertPgVectorPointProjectKey(point);
+        assertPgVectorPointKind(point);
       }
 
       // HIGH 2: Chunk into batches of UPSERT_BATCH_ROWS to stay under the
@@ -517,6 +518,13 @@ function assertPgVectorPointProjectKey(point: VectorPoint): void {
     throw new Error("point.payload.project_key must be a string or null");
   }
   assertPgVectorNonEmptyString(projectKey, "point.payload.project_key");
+}
+
+function assertPgVectorPointKind(point: VectorPoint): void {
+  assertPgVectorNonEmptyString(
+    point.payload.kind,
+    "point.payload.kind",
+  );
 }
 
 function assertPgVectorNonEmptyString(value: unknown, fieldName: string): void {
