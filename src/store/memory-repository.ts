@@ -643,6 +643,7 @@ export function createMemoryRepository(
     },
 
     async archiveMemoryRecord(input) {
+      assertPositiveSafeInteger(input.id, "id");
       assertNonBlankText(input.organizationId, "organizationId");
 
       const result = await pool.query<{
@@ -1099,6 +1100,16 @@ function mapPositiveSafeInteger(value: unknown, fieldName: string): number {
     throw new Error(`${fieldName} must be a positive safe integer`);
   }
   return numberValue;
+}
+
+function assertPositiveSafeInteger(value: unknown, fieldName: string): void {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value <= 0
+  ) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
 }
 
 function mapScopeType(

@@ -4,19 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Archive Memory Result Row Validation
+## Current Loop - Archive Memory Direct Id Validation
 
 Status:
-- Memory repository governance archive result mapping now validates returned
-  boolean status fields and qdrant point ID arrays.
-- Malformed archive result rows fail at the repository boundary instead of
-  falling back to empty cleanup IDs or leaking invalid status/point values.
+- Memory repository governance archive entrypoint now validates direct memory
+  IDs before querying.
+- Malformed archive IDs fail at the repository boundary instead of reaching the
+  Postgres archive query.
 
 Verification:
-- Focused memory repository tests passed after a RED archive result row
+- Focused memory repository tests passed after a RED direct-id
   reproducer.
-- Related HTTP memory route, MCP server, retrieval, and context-pack tests
-  passed.
+- Related HTTP memory route and MCP server tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

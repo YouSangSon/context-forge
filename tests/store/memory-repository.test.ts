@@ -1974,6 +1974,25 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(mockPool.query).not.toHaveBeenCalled();
   });
 
+  it.each([0, -1, 1.5, Number.NaN, "55"])(
+    "archiveMemoryRecord rejects malformed direct ids before querying: %s",
+    async (id) => {
+      const mockPool = {
+        query: vi.fn(),
+      };
+      const repo = createMemoryRepository(mockPool as never);
+
+      await expect(
+        repo.archiveMemoryRecord({
+          id: id as never,
+          organizationId: "org-a",
+        }),
+      ).rejects.toThrow("id must be a positive safe integer");
+
+      expect(mockPool.query).not.toHaveBeenCalled();
+    },
+  );
+
   it("archiveMemoryRecord returns point ids with archived false when the row is already archived", async () => {
     const mockPool = {
       query: vi.fn().mockResolvedValue({

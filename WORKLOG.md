@@ -10493,3 +10493,26 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2280` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened archive memory direct id mapping:
+  - Added RED coverage showing malformed direct `archiveMemoryRecord` IDs
+    reached the Postgres query and failed incidentally instead of failing with
+    a clear pre-SQL boundary error.
+  - Governance archive now validates direct memory IDs as positive safe
+    integers before querying.
+  - No `DECISIONS.md` entry: this is repository input-boundary validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed because malformed archive IDs reached the query path.
+- GREEN focused: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `125` tests passed, `7` skipped)
+- Related: `npx vitest run tests/store/memory-repository.test.ts tests/app/memory-routes-boundary.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`3` files passed; `271` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2285` tests passed, `34` skipped)
+- `git diff --check` (passed)
