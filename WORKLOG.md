@@ -10573,3 +10573,30 @@ Verification:
 - `git diff --check` (passed)
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2324` tests passed, `34` skipped)
+
+## 2026-07-02 15:08 KST - Reindexable Memory Chunk Row Scalar Validation
+
+- Hardened stored and reindexable memory chunk row mapping:
+  - Added RED coverage showing malformed returned chunk content, embedding
+    versions, organization/scope metadata, nullable text fields, and tag arrays
+    resolved instead of failing at the repository boundary.
+  - Stored chunk row mapping now validates content and embedding version as
+    non-blank text; reindexable chunk rows now validate organization/scope
+    metadata, nullable text fields, and non-blank tag arrays before returning
+    indexing results.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  failed with `15` malformed chunk row cases resolving instead of rejecting.
+- GREEN focused: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`1` file passed; `76` tests passed)
+- Related: `npx vitest run tests/store/canonical-indexing.test.ts tests/jobs/ingest-sweeper.test.ts tests/context-pack/build-context-pack.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `131` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check` (passed)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2339` tests passed, `34` skipped)

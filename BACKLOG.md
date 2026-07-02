@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Canonical memory chunk row mapping now rejects malformed returned content,
+  embedding version, organization/scope metadata, nullable text fields, and
+  tags before exposing stored or reindexable chunk results.
 - Memory repository graph row mapping now rejects malformed returned scalar
   metadata and entity kind values before exposing graph inspection results.
 - Memory repository hydrated row mapping now rejects malformed returned

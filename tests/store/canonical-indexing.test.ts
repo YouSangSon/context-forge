@@ -1173,6 +1173,14 @@ describe("canonical indexing", () => {
       message: "memory chunk memory_record_id must be a positive safe integer",
     },
     {
+      rowPatch: { content: null },
+      message: "memory chunk content must be a string",
+    },
+    {
+      rowPatch: { content: " \n\t " },
+      message: "memory chunk content must contain non-whitespace text",
+    },
+    {
       rowPatch: { chunk_index: "1.5" },
       message: "memory chunk chunk_index must be a non-negative safe integer",
     },
@@ -1184,6 +1192,14 @@ describe("canonical indexing", () => {
       rowPatch: { start_offset: "6", end_offset: "5" },
       message:
         "memory chunk end_offset must be greater than or equal to start_offset",
+    },
+    {
+      rowPatch: { embedding_version: 42 },
+      message: "memory chunk embedding_version must be a string",
+    },
+    {
+      rowPatch: { embedding_version: " \n\t " },
+      message: "memory chunk embedding_version must contain non-whitespace text",
     },
   ])("insertChunks rejects malformed returned chunk rows %#", async ({
     rowPatch,
@@ -1912,7 +1928,7 @@ describe("canonical indexing", () => {
           kind: "summary",
           title: null,
           summary: null,
-          tags: null,
+          tags: [],
           updated_at: "2026-01-01T00:00:00.000Z",
         }],
       }),
@@ -1972,7 +1988,90 @@ describe("canonical indexing", () => {
           kind: "summary",
           title: null,
           summary: null,
-          tags: null,
+          tags: [],
+          updated_at: "2026-01-01T00:00:00.000Z",
+          ...rowPatch,
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await expect(
+      repo.listChunks("org-a", [
+        { scopeType: "project", scopeId: "shared-project" },
+      ]),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "memory chunk organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message: "memory chunk organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { scope_id: 42 },
+      message: "memory chunk scope_id must be a string",
+    },
+    {
+      rowPatch: { scope_id: " \n\t " },
+      message: "memory chunk scope_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { project_key: 42 },
+      message: "memory chunk project_key must be a string or null",
+    },
+    {
+      rowPatch: { title: 42 },
+      message: "memory chunk title must be a string or null",
+    },
+    {
+      rowPatch: { summary: 42 },
+      message: "memory chunk summary must be a string or null",
+    },
+    {
+      rowPatch: { tags: null },
+      message: "memory chunk tags must be an array",
+    },
+    {
+      rowPatch: { tags: "ops" },
+      message: "memory chunk tags must be an array",
+    },
+    {
+      rowPatch: { tags: [42] },
+      message: "memory chunk tags[0] must be a string",
+    },
+    {
+      rowPatch: { tags: [" \n\t "] },
+      message: "memory chunk tags[0] must contain non-whitespace text",
+    },
+  ])("listChunks rejects malformed reindex row scalar values %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "701",
+          memory_record_id: "501",
+          chunk_index: "0",
+          content: "stored chunk",
+          start_offset: "0",
+          end_offset: "12",
+          embedding_version: "v1",
+          organization_id: "org-a",
+          scope_type: "project",
+          scope_id: "shared-project",
+          project_key: "shared-project",
+          durability: "durable",
+          kind: "summary",
+          title: null,
+          summary: null,
+          tags: [],
           updated_at: "2026-01-01T00:00:00.000Z",
           ...rowPatch,
         }],

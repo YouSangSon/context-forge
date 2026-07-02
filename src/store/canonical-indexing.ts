@@ -857,10 +857,13 @@ function mapStoredMemoryChunkRow(row: StoredMemoryChunkRow): StoredMemoryChunk {
       row.chunk_index,
       "memory chunk chunk_index",
     ),
-    content: row.content,
+    content: mapRequiredText(row.content, "memory chunk content"),
     startOffset,
     endOffset,
-    embeddingVersion: row.embedding_version,
+    embeddingVersion: mapRequiredText(
+      row.embedding_version,
+      "memory chunk embedding_version",
+    ),
   };
 }
 
@@ -869,15 +872,18 @@ function mapReindexableMemoryChunkRow(
 ): ReindexableMemoryChunk {
   return {
     ...mapStoredMemoryChunkRow(row),
-    organizationId: row.organization_id,
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "memory chunk organization_id",
+    ),
     scopeType: mapScopeType(row.scope_type),
-    scopeId: row.scope_id,
-    projectKey: row.project_key,
+    scopeId: mapRequiredText(row.scope_id, "memory chunk scope_id"),
+    projectKey: mapNullableText(row.project_key, "memory chunk project_key"),
     durability: mapDurability(row.durability),
     kind: mapMemoryKind(row.kind),
-    title: row.title,
-    summary: row.summary,
-    tags: row.tags ?? [],
+    title: mapNullableText(row.title, "memory chunk title"),
+    summary: mapNullableText(row.summary, "memory chunk summary"),
+    tags: mapNonBlankStringArray(row.tags, "memory chunk tags"),
     updatedAt: toIsoString(row.updated_at),
   };
 }
@@ -892,6 +898,26 @@ function toPositiveSafeInteger(value: unknown, fieldName: string): number {
   const numberValue = toNumber(value);
   assertPositiveSafeInteger(numberValue, fieldName);
   return numberValue;
+}
+
+function mapRequiredText(value: unknown, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value;
+}
+
+function mapNullableText(value: unknown, fieldName: string): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
+}
+
+function mapNonBlankStringArray(value: unknown, fieldName: string): string[] {
+  assertStringArray(value, fieldName);
+  return value;
 }
 
 function mapScopeType(value: unknown): SearchMemoryResult["scopeType"] {
