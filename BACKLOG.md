@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query row mapping now rejects non-decimal `score` strings before
+  numeric coercion, so malformed values like `0x10` cannot map to valid vector
+  scores.
 - Pgvector query row mapping now rejects non-decimal `memory_record_id` strings
   before numeric coercion, so malformed values like `0x10` cannot map to valid
   memory record IDs.

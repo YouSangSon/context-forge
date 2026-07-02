@@ -4,11 +4,11 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Pgvector Row Record ID String Validation
+## Current Loop - Pgvector Row Score String Validation
 
 Status:
-- Pgvector query row mapping now accepts only decimal integer strings for
-  returned `memory_record_id` values.
+- Pgvector query row mapping now accepts only decimal/exponent numeric strings
+  for returned `score` values.
 - Malformed numeric-looking strings such as `0x10` now fail closed instead of
   being coerced with `Number()`.
 

@@ -678,6 +678,11 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
       message: "score must be a finite number",
     },
     {
+      label: "score hex string",
+      row: buildPgVectorQueryRow({ score: "0x10" }),
+      message: "score must be a finite number",
+    },
+    {
       label: "memory_record_id boolean",
       row: buildPgVectorQueryRow({ memory_record_id: false }),
       message: "memory_record_id must be a positive safe integer",

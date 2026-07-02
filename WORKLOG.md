@@ -9712,3 +9712,25 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`81` files passed, `2` skipped; `2165` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened pgvector query `score` string parsing:
+  - Added RED coverage showing a malformed row value of `"0x10"` was accepted
+    by `Number(value)` and returned as `score: 16`.
+  - `toPgVectorFiniteNumber` now permits string inputs only when they are
+    decimal/exponent numeric strings before numeric conversion; normal
+    pgvector score strings such as `"0.875"` remain supported.
+  - No `DECISIONS.md` entry: this is adapter row-mapping hardening for the
+    existing pgvector read contract, not a new durable architecture decision.
+
+Verification:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed because `"0x10"` resolved as `score: 16`.
+- GREEN focused: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `74` tests passed; `12` skipped)
+- Related: `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/vector/qdrant-index.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+  (`7` files passed; `327` tests passed; `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2166` tests passed, `34` skipped)
+- `git diff --check` (passed)

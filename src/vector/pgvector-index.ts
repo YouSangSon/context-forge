@@ -679,6 +679,13 @@ function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {
     throw new Error(`${fieldName} must be a finite number`);
   }
 
+  if (
+    typeof value === "string" &&
+    !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value)
+  ) {
+    throw new Error(`${fieldName} must be a finite number`);
+  }
+
   const numberValue = typeof value === "number" ? value : Number(value);
   if (
     !Number.isFinite(numberValue) ||
