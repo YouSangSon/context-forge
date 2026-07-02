@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `buildVectorPoint` now validates required payload metadata fields as
+  non-empty strings before producing vector payloads, rejecting blank `kind`,
+  `durability`, `updatedAt`, and `embeddingVersion` values.
 - `buildVectorPoint` now validates scope metadata fields as non-empty strings
   before producing vector payloads, preserving nullable `projectKey` while
   rejecting blank scoping values.

@@ -70,13 +70,13 @@ function assertVectorPointInput(
   assertNonEmptyStringField(candidate.scopeType, "scopeType");
   assertNonEmptyStringField(candidate.scopeId, "scopeId");
   assertNonEmptyStringOrNullField(candidate.projectKey, "projectKey");
-  assertStringField(candidate.kind, "kind");
-  assertStringField(candidate.durability, "durability");
+  assertNonEmptyStringField(candidate.kind, "kind");
+  assertNonEmptyStringField(candidate.durability, "durability");
   assertOptionalStringOrNullField(candidate.title, "title");
   assertOptionalStringOrNullField(candidate.summary, "summary");
   assertOptionalStringArray(candidate.tags, "tags");
-  assertStringField(candidate.updatedAt, "updatedAt");
-  assertStringField(candidate.embeddingVersion, "embeddingVersion");
+  assertNonEmptyStringField(candidate.updatedAt, "updatedAt");
+  assertNonEmptyStringField(candidate.embeddingVersion, "embeddingVersion");
 }
 
 function assertPositiveSafeInteger(value: unknown, fieldName: string): void {

@@ -163,6 +163,29 @@ describe("buildVectorPoint", () => {
   });
 
   it.each([
+    ["kind", { kind: " \n\t " }, "kind must be a non-empty string"],
+    [
+      "durability",
+      { durability: " \n\t " },
+      "durability must be a non-empty string",
+    ],
+    [
+      "updatedAt",
+      { updatedAt: " \n\t " },
+      "updatedAt must be a non-empty string",
+    ],
+    [
+      "embeddingVersion",
+      { embeddingVersion: " \n\t " },
+      "embeddingVersion must be a non-empty string",
+    ],
+  ])("rejects blank required metadata field: %s", (_label, override, message) => {
+    expect(callBuildVectorPoint({ ...buildInput(), ...override })).toThrow(
+      message,
+    );
+  });
+
+  it.each([
     [
       "projectKey",
       { projectKey: undefined },

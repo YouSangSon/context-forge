@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened vector point required metadata validation:
+  - `src/vector/point-builder.ts` now validates `kind`, `durability`,
+    `updatedAt`, and `embeddingVersion` as non-empty strings before building
+    vector payloads.
+  - Existing missing/non-string type errors stay unchanged, while blank
+    required metadata now fails at the builder boundary.
+  - `tests/vector/point-builder.test.ts` covers blank required metadata values.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/point-builder.test.ts --reporter=dot`
+  failed the new blank required metadata cases because `buildVectorPoint`
+  accepted blank `kind`, `durability`, `updatedAt`, and `embeddingVersion`
+  values.
+- GREEN: `npx vitest run tests/vector/point-builder.test.ts --reporter=dot`
+  (`1` file passed; `32` tests passed)
+
+Verification plan:
+- `npx vitest run tests/vector/point-builder.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts tests/compact/unarchive-compaction.test.ts tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/point-builder.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts tests/compact/unarchive-compaction.test.ts tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`6` files passed; `276` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2126` tests passed,
+  `34` skipped)
+
 - Hardened vector point scope metadata validation:
   - `src/vector/point-builder.ts` now validates `scopeType`, `scopeId`, and
     non-null `projectKey` as non-empty strings before building vector payloads.

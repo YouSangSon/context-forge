@@ -4,13 +4,14 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Point Scope Metadata Validation
+## Current Loop - Vector Point Required Metadata Validation
 
 Status:
-- `src/vector/point-builder.ts` now rejects blank `scopeType`, `scopeId`, and
-  non-null `projectKey` values before building vector point payloads.
-- Existing type checks remain intact: `projectKey` still accepts `null`, while
-  non-string values fail with the previous string-or-null error.
+- `src/vector/point-builder.ts` now rejects blank `kind`, `durability`,
+  `updatedAt`, and `embeddingVersion` values before building vector point
+  payloads.
+- Existing type checks remain intact for missing or non-string required
+  metadata fields.
 
 Verification:
 - Focused point-builder tests passed after RED reproducers.
