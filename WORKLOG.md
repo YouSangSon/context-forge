@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 15:47 KST - Hardened metrics label string validation:
+  - `src/app/metrics.ts` now rejects blank direct HTTP route labels and blank
+    dependency check names before storing/rendering metrics.
+  - This prevents malformed direct observations from producing empty
+    Prometheus labels.
+  - `tests/app/metrics.test.ts` covers blank route and dependency check name
+    reproducers.
+
+RED/GREEN:
+- RED: `npx vitest run tests/app/metrics.test.ts --reporter=dot` failed the
+  new blank-label cases because metrics validators only checked string types.
+- GREEN: `npx vitest run tests/app/metrics.test.ts --reporter=dot` (`1` file
+  passed; `51` tests passed)
+
+Verification:
+- `npx vitest run tests/app/metrics.test.ts tests/app/server.test.ts tests/app/start-operator-server-metrics.test.ts tests/app/background-queue-metrics.test.ts --reporter=dot`
+  (`4` files passed; `129` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2408`
+  tests passed, `34` skipped)
+
 - 15:44 KST - Hardened OAuth protected-resource direct string validation:
   - `src/app/oauth-protected-resource.ts` now rejects blank direct metadata
     URL, resource, authorization server, supported-scope, insufficient-scope,

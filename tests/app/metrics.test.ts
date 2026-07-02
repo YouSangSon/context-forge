@@ -340,6 +340,15 @@ describe("createMetricsRegistry HTTP metrics", () => {
     {
       input: {
         method: "GET",
+        route: " \n\t ",
+        statusCode: 200,
+        durationSeconds: 0.1,
+      },
+      message: "route must contain non-whitespace text",
+    },
+    {
+      input: {
+        method: "GET",
         route: null,
         statusCode: 200,
         durationSeconds: 0.1,
@@ -584,6 +593,14 @@ describe("createMetricsRegistry dependency metrics", () => {
         checks: [{ name: null, status: "ok", durationMs: 1 }],
       },
       message: "dependency report.checks[0].name must be a string",
+    },
+    {
+      input: {
+        status: "ok",
+        checks: [{ name: " \n\t ", status: "ok", durationMs: 1 }],
+      },
+      message:
+        "dependency report.checks[0].name must contain non-whitespace text",
     },
     {
       input: {

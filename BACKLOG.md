@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Metrics registry now rejects blank direct HTTP route labels and dependency
+  check names before rendering Prometheus output.
 - OAuth protected-resource challenge helpers now reject blank direct metadata,
   resource, authorization server, and scope strings.
 - Operator server direct `ServiceConfig` now validates port and Postgres pool

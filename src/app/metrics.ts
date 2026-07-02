@@ -492,7 +492,7 @@ function assertHttpRequestObservation(
 ): asserts value is HttpRequestObservation {
   const candidate = assertObject(value, "HTTP request observation");
   assertOptionalString(candidate.method, "method");
-  assertString(candidate.route, "route");
+  assertNonBlankString(candidate.route, "route");
   assertHttpStatusCode(candidate.statusCode, "statusCode");
   assertNonNegativeFiniteNumber(candidate.durationSeconds, "durationSeconds");
 }
@@ -530,7 +530,7 @@ function assertDependencyReport(
   for (const [index, checkValue] of candidate.checks.entries()) {
     const prefix = `dependency report.checks[${index}]`;
     const check = assertObject(checkValue, prefix);
-    assertString(check.name, `${prefix}.name`);
+    assertNonBlankString(check.name, `${prefix}.name`);
     assertDependencyStatus(check.status, `${prefix}.status`);
     assertNonNegativeFiniteNumber(check.durationMs, `${prefix}.durationMs`);
     if (check.message !== undefined) {
@@ -604,6 +604,16 @@ function assertObject(
 function assertString(value: unknown, fieldName: string): asserts value is string {
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string`);
+  }
+}
+
+function assertNonBlankString(
+  value: unknown,
+  fieldName: string,
+): asserts value is string {
+  assertString(value, fieldName);
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
   }
 }
 
