@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Canonical chunk deletion now trims direct organization identifiers before
+  deleting chunks for a memory record.
 - Memory archive recent-apply counting now trims direct organization
   identifiers before rate-limit SQL queries.
 - Operator server worker/metrics tests now inject worker and probe-pool

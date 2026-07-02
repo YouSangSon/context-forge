@@ -1516,6 +1516,19 @@ describe("canonical indexing", () => {
     expect(mockPool.query).not.toHaveBeenCalled();
   });
 
+  it("deleteChunksForRecord trims organizationId before querying", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await repo.deleteChunksForRecord(501, " org-a ");
+
+    const params = mockPool.query.mock.calls[0]![1] as unknown[];
+    expect(params).toEqual([501, "org-a"]);
+  });
+
   it("deleteChunksForRecord rejects invalid recordId before querying", async () => {
     const mockPool = {
       query: vi.fn().mockResolvedValue({ rows: [] }),

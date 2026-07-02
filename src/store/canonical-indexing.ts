@@ -166,6 +166,7 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
     async deleteChunksForRecord(recordId, organizationId) {
       assertPositiveSafeInteger(recordId, "recordId");
       assertNonBlankText(organizationId, "organizationId");
+      const scopedOrganizationId = organizationId.trim();
 
       await pool.query(
         `
@@ -173,7 +174,7 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
           WHERE memory_record_id = $1
             AND organization_id = $2
         `,
-        [recordId, organizationId],
+        [recordId, scopedOrganizationId],
       );
     },
 

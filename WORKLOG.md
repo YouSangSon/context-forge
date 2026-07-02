@@ -2,6 +2,31 @@
 
 ## 2026-07-02
 
+- 18:02 KST - Hardened canonical chunk delete organization normalization:
+  - `src/store/canonical-indexing.ts` now trims direct organization
+    identifiers before `deleteChunksForRecord` DELETE parameters.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/store/canonical-indexing.test.ts` covers trimmed chunk-delete
+    parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  failed the new chunk delete organization trimming case because raw
+  organization ID text reached DELETE parameters.
+- GREEN: `npx vitest run tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`1` file passed; `78` tests passed)
+
+Verification:
+- `npx vitest run tests/compact/ingest-sweeper.test.ts tests/compact/unarchive-compaction.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`3` files passed; `214` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2453`
+  tests passed, `34` skipped)
+
 - 17:59 KST - Hardened memory archive recent-apply organization normalization:
   - `src/store/memory-archive-repository.ts` now trims direct organization
     identifiers before `countRecentApplyRuns` rate-limit SQL queries.
