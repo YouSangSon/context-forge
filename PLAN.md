@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Lexical Record Shape Validation
+## Current Loop - Qdrant Payload Shape Validation
 
 Status:
-- `src/search/lexical-score.ts` now rejects array values when validating
-  lexical record and source objects.
-- `tests/search/lexical-score.test.ts` now covers array record and source
-  inputs.
+- `src/vector/qdrant-index.ts` no longer returns array values as
+  `VectorHit.payload` records when mapping Qdrant query points.
+- `tests/vector/qdrant-index.test.ts` now covers array payload responses.
 
 Verification:
-- Focused vector/search tests passed.
+- Focused Qdrant vector tests passed after a RED reproducer.
+- Related vector/search tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push or merge from

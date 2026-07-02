@@ -85,7 +85,7 @@ export function createQdrantVectorIndex(
       return response.points.map((point) => ({
         id: toQdrantPointId(point.id, "id"),
         score: toQdrantFiniteNumber(point.score, "score"),
-        payload: point.payload && typeof point.payload === "object"
+        payload: point.payload && typeof point.payload === "object" && !Array.isArray(point.payload)
           ? (point.payload as Record<string, unknown>)
           : {},
       }));

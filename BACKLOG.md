@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant vector query row mapping now avoids returning array values as
+  `VectorHit.payload` records, preserving the existing empty-payload fallback
+  for malformed response payloads.
 - `scoreLexicalMatch` now rejects array values for lexical records and source
   objects instead of accepting arrays as plain objects.
 - `retrieveMemory` now rejects non-array hydration and lexical repository

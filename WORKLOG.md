@@ -2,6 +2,38 @@
 
 ## 2026-07-02
 
+- Hardened Qdrant payload shape mapping:
+  - `src/vector/qdrant-index.ts` now excludes array payload values when mapping
+    Qdrant query points to backend-neutral `VectorHit` objects.
+  - Malformed array payloads now follow the existing empty-payload fallback
+    instead of escaping as `Record<string, unknown>` values.
+  - `tests/vector/qdrant-index.test.ts` covers array payload responses.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  failed the new array-payload test because the adapter returned the array as
+  `payload`.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `29` tests passed)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`3` files passed; `85` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2060` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened lexical record shape validation:
   - `src/search/lexical-score.ts` now treats arrays as malformed records rather
     than generic objects.
