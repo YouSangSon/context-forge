@@ -10252,3 +10252,25 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2236` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened compaction run lookup key mapping:
+  - Added RED coverage showing malformed direct `findRunByIdempotencyKey`
+    keys resolved after querying instead of failing before SQL.
+  - Run lookup now validates idempotency keys as non-blank text before querying
+    compaction run rows.
+  - No `DECISIONS.md` entry: this is repository input-boundary validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed idempotency keys resolved instead of rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `112` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/apply-compaction.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`3` files passed; `285` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2238` tests passed, `34` skipped)
+- `git diff --check` (passed)

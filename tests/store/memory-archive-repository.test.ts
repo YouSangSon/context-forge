@@ -108,6 +108,29 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
 
   it.each([
     {
+      idempotencyKey: null,
+      message: "idempotencyKey must be a string",
+    },
+    {
+      idempotencyKey: " \n\t ",
+      message: "idempotencyKey must contain non-whitespace text",
+    },
+  ])("rejects malformed direct idempotency keys before querying %#", async ({
+    idempotencyKey,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [RUN_ROW] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.findRunByIdempotencyKey(idempotencyKey as never),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
       rowPatch: { id: "0" },
       message: "compaction run id must be a positive safe integer",
     },

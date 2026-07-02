@@ -200,6 +200,8 @@ export function createMemoryArchiveRepository(
     },
 
     async findRunByIdempotencyKey(idempotencyKey) {
+      assertNonBlankText(idempotencyKey, "idempotencyKey");
+
       const result = await pool.query<{
         id: number | string;
         organization_id: string;
