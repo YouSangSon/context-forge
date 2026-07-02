@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive repository apply result mapping now rejects malformed returned
+  qdrant point ID arrays before exposing cleanup payloads.
 - Memory archive repository archive lookup row mapping now rejects malformed
   returned organization, scope, content, and nullable text metadata.
 - Memory archive repository compaction run row mapping now rejects malformed

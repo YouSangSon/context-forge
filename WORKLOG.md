@@ -10423,3 +10423,27 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2268` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened archive apply qdrant point row mapping:
+  - Added RED coverage showing malformed apply result `qdrant_point_ids` rows
+    resolved by falling back to empty cleanup payloads or returning invalid
+    point IDs.
+  - Apply result rows now validate qdrant point ID arrays with the same
+    non-blank string array guard used by pending cleanup row mapping.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed apply qdrant point rows resolved instead of
+  rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `145` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/apply-compaction.test.ts tests/compact/outbox-sweeper.test.ts tests/compact/compact-memory.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`5` files passed; `386` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2271` tests passed, `34` skipped)
+- `git diff --check` (passed)

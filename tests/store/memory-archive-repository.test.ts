@@ -472,6 +472,40 @@ describe("MemoryArchiveRepository.applyCompactionRecord", () => {
       }),
     ).rejects.toThrow("memory archive id must be a positive safe integer");
   });
+
+  it.each([
+    {
+      qdrantPointIds: null,
+      message: "memory archive qdrant_point_ids must be an array",
+    },
+    {
+      qdrantPointIds: [42],
+      message: "memory archive qdrant_point_ids[0] must be a string",
+    },
+    {
+      qdrantPointIds: [" \n\t "],
+      message:
+        "memory archive qdrant_point_ids[0] must contain non-whitespace text",
+    },
+  ])("rejects malformed returned qdrant point rows %#", async ({
+    qdrantPointIds,
+    message,
+  }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [{ archive_id: "42", qdrant_point_ids: qdrantPointIds }],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.applyCompactionRecord({
+        runId: 7,
+        organizationId: "org-a",
+        recordId: 100,
+        reason: "decay",
+        planGeneratedAt: new Date(),
+      }),
+    ).rejects.toThrow(message);
+  });
 });
 
 describe("MemoryArchiveRepository.markQdrantStatus", () => {

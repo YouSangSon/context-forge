@@ -235,7 +235,7 @@ export function createMemoryArchiveRepository(
       // RETURNING payload and result.rows is empty.
       const result = await pool.query<{
         archive_id: number | string;
-        qdrant_point_ids: string[];
+        qdrant_point_ids: unknown;
       }>(
         `
           WITH deleted AS (
@@ -301,7 +301,10 @@ export function createMemoryArchiveRepository(
       return {
         archived: true,
         archiveId: toPositiveSafeInteger(row.archive_id, "memory archive id"),
-        qdrantPointIds: row.qdrant_point_ids ?? [],
+        qdrantPointIds: toNonBlankStringArray(
+          row.qdrant_point_ids,
+          "memory archive qdrant_point_ids",
+        ),
       };
     },
 
