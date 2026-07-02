@@ -86,6 +86,7 @@ export async function unarchiveCompaction(
   deps: Readonly<UnarchiveCompactionDeps>,
 ): Promise<UnarchiveResult> {
   assertUnarchiveCompactionInput(input);
+  const scopedOrganizationId = input.organizationId.trim();
 
   const startedAt = (deps.now ?? (() => new Date()))();
 
@@ -101,7 +102,7 @@ export async function unarchiveCompaction(
 
   const archives = await deps.archiveRepository.findArchiveByIds(
     input.archiveIds,
-    input.organizationId,
+    scopedOrganizationId,
   );
 
   // Map by id so we can report "not found" for archive ids that weren't
@@ -137,7 +138,7 @@ export async function unarchiveCompaction(
     }
 
     try {
-      const outcome = await restoreOne(archive, input.organizationId, deps);
+      const outcome = await restoreOne(archive, scopedOrganizationId, deps);
       outcomes.push(outcome);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);

@@ -322,6 +322,32 @@ describe("unarchiveCompaction (happy path)", () => {
       "finance-team",
     );
   });
+
+  it("trims organizationId before forwarding restored side effects", async () => {
+    const archive = makeArchive({ organizationId: "finance-team" });
+    const repo = makeRepo([archive]);
+    const deps = makeDeps(repo);
+
+    await unarchiveCompaction(
+      { archiveIds: [50], organizationId: " finance-team ", actor: "ops" },
+      deps,
+    );
+
+    expect(repo.findArchiveByIds).toHaveBeenCalledWith([50], "finance-team");
+    expect(repo.restoreToCanonical).toHaveBeenCalledWith(
+      archive,
+      "finance-team",
+    );
+
+    const insertChunksInput = (deps.chunkRepository.insertChunks as ReturnType<
+      typeof vi.fn
+    >).mock.calls[0]![0] as { record: { organizationId: string } };
+    expect(insertChunksInput.record.organizationId).toBe("finance-team");
+
+    const upsertedPoints = (deps.vectorIndex.upsert as ReturnType<typeof vi.fn>)
+      .mock.calls[0]![0] as Array<{ payload: Record<string, unknown> }>;
+    expect(upsertedPoints[0]!.payload.organization_id).toBe("finance-team");
+  });
 });
 
 describe("unarchiveCompaction (skip cases)", () => {

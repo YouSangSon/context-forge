@@ -4,17 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Memory Archive Restore Organization Normalization
+## Current Loop - Unarchive Compaction Organization Normalization
 
 Status:
-- Memory archive restore and restored-record compensation delete now trim
-  direct organization identifiers before ownership checks and SQL writes.
+- Unarchive compaction now trims direct organization identifiers before
+  archive lookup, canonical restore, chunk insertion, vector upsert, and
+  compensation paths.
 - Existing nonblank validation still rejects whitespace-only organization IDs.
 
 Verification:
-- Focused archive repository tests passed after RED restore/delete organization
-  trimming reproducers.
-- Related unarchive/outbox tests passed.
+- Focused unarchive compaction tests passed after the RED restored side-effect
+  organization trimming reproducer.
+- Related archive repository/outbox tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

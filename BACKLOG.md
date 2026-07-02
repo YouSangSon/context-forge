@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Unarchive compaction now trims direct organization identifiers before archive
+  lookup, canonical restore, chunk insertion, vector upsert, and compensation
+  paths.
 - Memory archive restore and restored-record compensation delete now trim
   direct organization identifiers before ownership checks and SQL writes.
 - Memory archive lookup now trims direct organization identifiers before

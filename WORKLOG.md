@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- 17:50 KST - Hardened unarchive compaction organization normalization:
+  - `src/compact/unarchive-compaction.ts` now trims direct organization
+    identifiers before archive lookup and carries the normalized value through
+    canonical restore, chunk insertion, vector upsert, and compensation paths.
+  - Existing nonblank validation still rejects whitespace-only organization
+    IDs.
+  - `tests/compact/unarchive-compaction.test.ts` covers normalized repository
+    calls, restored record metadata, and vector payload organization IDs.
+
+RED/GREEN:
+- RED: `npx vitest run tests/compact/unarchive-compaction.test.ts --reporter=dot`
+  failed the new restored side-effect organization trimming case because raw
+  organization ID text reached `findArchiveByIds`.
+- GREEN: `npx vitest run tests/compact/unarchive-compaction.test.ts --reporter=dot`
+  (`1` file passed; `32` tests passed)
+
+Verification:
+- `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/outbox-sweeper.test.ts --reporter=dot`
+  (`2` files passed; `180` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2451`
+  tests passed, `34` skipped)
+
 - 17:47 KST - Hardened memory archive restore organization normalization:
   - `src/store/memory-archive-repository.ts` now trims direct organization
     identifiers before `restoreToCanonical` ownership checks and INSERT
