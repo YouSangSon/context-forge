@@ -10516,3 +10516,31 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2285` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+## 2026-07-02 15:00 KST - Hydrated Memory Scalar Row Validation
+
+- Hardened hydrated memory scalar row mapping:
+  - Added RED coverage showing malformed hydrated organization, scope,
+    content, and nullable scalar metadata resolved instead of failing at the
+    repository boundary.
+  - Hydrated memory row mapping now validates required memory/source scalar
+    fields as non-blank text, content with the memory-content guard, and
+    nullable text fields as string-or-null before returning list/search
+    records.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  failed with `14` malformed hydrated scalar row cases resolving instead of
+  rejecting.
+- GREEN focused: `npx vitest run tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `139` tests passed, `7` skipped)
+- Related: `npx vitest run tests/store/memory-repository.test.ts tests/search/retrieve-memory.test.ts tests/context-pack/build-context-pack.test.ts tests/compact/compact-memory.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`5` files passed; `365` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check` (passed)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2299` tests passed, `34` skipped)

@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory repository hydrated row mapping now rejects malformed returned
+  organization, scope, content, and nullable scalar metadata before exposing
+  search/list records.
 - Memory repository governance archive entrypoint now rejects malformed direct
   memory IDs before querying Postgres.
 - Memory repository governance archive result mapping now rejects malformed

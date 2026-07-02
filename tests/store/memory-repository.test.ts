@@ -1091,6 +1091,85 @@ describe("createMemoryRepository (unit — no PG required)", () => {
 
   it.each([
     {
+      rowPatch: { organization_id: null },
+      message: "memory organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message: "memory organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { scope_id: 42 },
+      message: "memory scope_id must be a string",
+    },
+    {
+      rowPatch: { scope_id: " \n\t " },
+      message: "memory scope_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { project_key: 42 },
+      message: "memory project_key must be a string or null",
+    },
+    {
+      rowPatch: { title: 42 },
+      message: "memory title must be a string or null",
+    },
+    {
+      rowPatch: { content: null },
+      message: "memory content must be a string",
+    },
+    {
+      rowPatch: { content: " \n\t " },
+      message: "memory content must contain non-whitespace text",
+    },
+    {
+      rowPatch: { summary: 42 },
+      message: "memory summary must be a string or null",
+    },
+    {
+      rowPatch: { source_organization_id: null },
+      message: "memory source.organization_id must be a string",
+    },
+    {
+      rowPatch: { source_organization_id: " \n\t " },
+      message: "memory source.organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { source_scope_id: 42 },
+      message: "memory source.scope_id must be a string",
+    },
+    {
+      rowPatch: { source_scope_id: " \n\t " },
+      message: "memory source.scope_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { source_title: 42 },
+      message: "memory source.title must be a string or null",
+    },
+  ])("listMemory rejects malformed hydrated scalar rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          ...hydratedMemoryRow(),
+          ...rowPatch,
+        }],
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.listMemory(
+        { scopeType: "project", scopeId: "proj-x" },
+        { organizationId: "org-a" },
+      ),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
       rowPatch: { tags: null },
       message: "memory tags must be an array",
     },

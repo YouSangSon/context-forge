@@ -720,15 +720,18 @@ function mapPostgresSearchResult(row: PostgresHydratedRow): SearchMemoryResult {
 
   return {
     id: mapPositiveSafeInteger(row.id, "memory id"),
-    organizationId: row.organization_id,
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "memory organization_id",
+    ),
     sourceId: mapPositiveSafeInteger(row.source_id, "memory source_id"),
     scopeType: mapScopeType(row.scope_type, "memory scope_type"),
-    scopeId: row.scope_id,
-    projectKey: row.project_key,
+    scopeId: mapRequiredText(row.scope_id, "memory scope_id"),
+    projectKey: mapNullableText(row.project_key, "memory project_key"),
     memoryType: mapMemoryType(row.kind),
-    title: row.title,
-    content: row.content,
-    summary: row.summary,
+    title: mapNullableText(row.title, "memory title"),
+    content: mapMemoryContent(row.content),
+    summary: mapNullableText(row.summary, "memory summary"),
     durability: mapDurability(row.durability),
     importance: mapPostgresInteger(row.importance, "importance"),
     tags: mapStoredTags(row.tags),
@@ -736,13 +739,16 @@ function mapPostgresSearchResult(row: PostgresHydratedRow): SearchMemoryResult {
     updatedAt: toIsoString(row.updated_at),
     source: {
       id: mapPositiveSafeInteger(row.source_id_joined, "memory source.id"),
-      organizationId: row.source_organization_id,
+      organizationId: mapRequiredText(
+        row.source_organization_id,
+        "memory source.organization_id",
+      ),
       scopeType: mapScopeType(row.source_scope_type, "memory source.scope_type"),
-      scopeId: row.source_scope_id,
+      scopeId: mapRequiredText(row.source_scope_id, "memory source.scope_id"),
       sourceType: mapSourceType(row.source_type),
       externalId: sourceMetadata.sourceRef,
       sourceRef: sourceMetadata.sourceRef,
-      title: row.source_title,
+      title: mapNullableText(row.source_title, "memory source.title"),
       uri: sourceMetadata.uri,
       createdAt: toIsoString(row.source_created_at),
     },
@@ -1100,6 +1106,26 @@ function mapPositiveSafeInteger(value: unknown, fieldName: string): number {
     throw new Error(`${fieldName} must be a positive safe integer`);
   }
   return numberValue;
+}
+
+function mapRequiredText(value: unknown, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value;
+}
+
+function mapMemoryContent(value: unknown): string {
+  assertNonBlankMemoryContent(value);
+  return value;
+}
+
+function mapNullableText(value: unknown, fieldName: string): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
 }
 
 function assertPositiveSafeInteger(value: unknown, fieldName: string): void {
