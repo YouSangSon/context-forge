@@ -404,8 +404,8 @@ export function createPgVectorIndex(
     async delete(ids: string[], options: VectorDeleteOptions = {}): Promise<void> {
       assertOptionalVectorOrganizationId(options.organizationId);
 
-      if (ids.length === 0) return;
       assertPgVectorPointIds(ids);
+      if (ids.length === 0) return;
       if (options.organizationId) {
         await pool.query(
           `DELETE FROM ${tableName} WHERE point_id = ANY($1) AND organization_id = $2`,
@@ -489,7 +489,11 @@ function assertPgVectorPointId(point: VectorPoint): void {
   assertPgVectorNonEmptyString(point.id, "point.id");
 }
 
-function assertPgVectorPointIds(ids: readonly unknown[]): void {
+function assertPgVectorPointIds(ids: unknown): asserts ids is readonly string[] {
+  if (!Array.isArray(ids)) {
+    throw new Error("delete: ids must be an array");
+  }
+
   for (const [index, id] of ids.entries()) {
     assertPgVectorNonEmptyString(id, `ids[${index}]`);
   }

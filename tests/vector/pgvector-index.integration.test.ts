@@ -1298,6 +1298,17 @@ describe("pgvector adapter — delete SQL", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it("rejects non-array point id lists before SQL delete", async () => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "test_memory_vectors" });
+
+    await expect(
+      index.delete(null as never),
+    ).rejects.toThrow("delete: ids must be an array");
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("skips SQL when ids are empty", async () => {
     const { pool, query } = makeMockPool();
     const index = createPgVectorIndex(pool, { tableName: "test_memory_vectors" });

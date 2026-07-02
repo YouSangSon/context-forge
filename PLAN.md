@@ -4,13 +4,13 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Upsert Point List Validation
+## Current Loop - Vector Delete Point ID List Validation
 
 Status:
-- `src/vector/organization-id.ts` now rejects non-array point lists before
-  iterating or reading `points.length`.
-- Qdrant and pgvector upserts now fail with a clear boundary error for null
-  point lists instead of throwing incidental property-access errors.
+- Qdrant and pgvector `delete(ids)` now reject non-array ID lists before
+  reading `ids.length`.
+- Null point-ID lists now fail with a clear boundary error before storage
+  clients are called.
 
 Verification:
 - Focused Qdrant/pgvector tests passed after RED reproducers.

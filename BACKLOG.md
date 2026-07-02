@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector deletes now validate the point-ID list is an array before
+  reading `ids.length`, so null delete inputs fail with a clear boundary error
+  instead of incidental property access failures.
 - Qdrant and pgvector upserts now validate the point list is an array before
   reading `points.length`, so null point-list inputs fail with a clear boundary
   error instead of incidental property access failures.

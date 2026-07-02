@@ -128,8 +128,8 @@ export function createQdrantVectorIndex(
       assertOptionalVectorOrganizationId(options.organizationId);
 
       // Guard: Qdrant rejects empty point lists with 400 in some versions.
-      if (ids.length === 0) return;
       assertQdrantPointIds(ids);
+      if (ids.length === 0) return;
       const selector: Schemas["PointsSelector"] = options.organizationId
         ? {
             filter: {
@@ -204,7 +204,11 @@ function assertQdrantPointId(point: VectorPoint): void {
   assertQdrantNonEmptyString(point.id, "point.id");
 }
 
-function assertQdrantPointIds(ids: readonly unknown[]): void {
+function assertQdrantPointIds(ids: unknown): asserts ids is readonly string[] {
+  if (!Array.isArray(ids)) {
+    throw new Error("delete: ids must be an array");
+  }
+
   for (const [index, id] of ids.entries()) {
     assertQdrantNonEmptyString(id, `ids[${index}]`);
   }
