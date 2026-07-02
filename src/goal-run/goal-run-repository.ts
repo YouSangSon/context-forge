@@ -217,6 +217,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
 
     async get(input) {
       assertGetInput(input);
+      const organizationId = input.organizationId.trim();
 
       const runResult = await pool.query<GoalRunRow>(
         `
@@ -224,7 +225,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           FROM goal_runs
           WHERE id = $1 AND organization_id = $2
         `,
-        [input.goalRunId, input.organizationId],
+        [input.goalRunId, organizationId],
       );
 
       const runRow = runResult.rows[0];
@@ -239,7 +240,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           WHERE goal_run_id = $1 AND organization_id = $2
           ORDER BY iteration_index ASC
         `,
-        [input.goalRunId, input.organizationId],
+        [input.goalRunId, organizationId],
       );
 
       const withIterations: GoalRunWithIterations = {

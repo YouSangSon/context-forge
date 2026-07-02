@@ -680,6 +680,26 @@ describe("createGoalRunRepository", () => {
     expect(result?.iterations[0]?.outcome).toBe("failure");
   });
 
+  it("get trims organizationId before querying run and iterations", async () => {
+    const calls: SqlQueryCall[] = [];
+    const pool = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow({ iteration_count: "1" })] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      connect: vi.fn(),
+    };
+
+    const repo = createGoalRunRepository(pool as never);
+    await repo.get({ organizationId: " org-a ", goalRunId: 7 });
+
+    expect(calls[0]?.params).toEqual([7, "org-a"]);
+    expect(calls[1]?.params).toEqual([7, "org-a"]);
+  });
+
   it.each([
     {
       rowPatch: { scope_type: "team" },
