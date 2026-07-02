@@ -366,7 +366,7 @@ function withAuthenticatedRegistry(
       if (
         auth.organizationId !== undefined &&
         input.organizationId !== undefined &&
-        input.organizationId !== auth.organizationId
+        input.organizationId.trim() !== auth.organizationId
       ) {
         throw new Error(ORGANIZATION_MISMATCH_ERROR);
       }
@@ -431,7 +431,7 @@ function createMcpToolAuthorizer(
     if (
       auth.organizationId !== undefined &&
       typeof input.organizationId === "string" &&
-      input.organizationId !== auth.organizationId
+      input.organizationId.trim() !== auth.organizationId
     ) {
       throw new Error(ORGANIZATION_MISMATCH_ERROR);
     }

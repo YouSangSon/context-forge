@@ -558,6 +558,30 @@ describe("Streamable HTTP /mcp", () => {
     await client.close();
   });
 
+  it("accepts MCP tool calls when a bound token org matches after trimming", async () => {
+    handle = await startServer([
+      { token: "bound-token", organizationId: "org-a" },
+    ]);
+    const client = await connectMcp(handle.baseUrl, "bound-token");
+
+    const result = await client.callTool({
+      name: "search_memory",
+      arguments: {
+        organizationId: " org-a ",
+        projectKey: "p",
+        query: "q",
+      },
+    });
+    await client.close();
+
+    expect(result.isError).not.toBe(true);
+    expect(handle.registry.search_memory).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      projectKey: "p",
+      query: "q",
+    });
+  });
+
   it("injects the bound token org into MCP tool calls that omit organizationId", async () => {
     handle = await startServer([
       { token: "bound-token", organizationId: "org-a" },
@@ -682,7 +706,7 @@ describe("Streamable HTTP /mcp", () => {
 
     const roots = await client.callTool({
       name: "list_workspace_roots",
-      arguments: {},
+      arguments: { organizationId: " org-oauth " },
     });
     expect(roots.isError).not.toBe(true);
 

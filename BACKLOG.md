@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- MCP HTTP bound-token organization checks now trim direct organization IDs
+  before comparing them with the token binding.
 - `add_memory_interactive` now trims direct organization, project, and user
   scope identifiers before registry dispatch and structured response echoes.
 - `add_memory` now trims direct project keys before legacy repository
