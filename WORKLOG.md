@@ -2,6 +2,32 @@
 
 ## 2026-07-02
 
+- 15:29 KST - Hardened MCP HTTP direct bearer token validation:
+  - `src/app/mcp-http.ts` now validates each direct `bearerTokens` entry is an
+    object with a non-blank token and, when provided, a non-blank organization
+    binding.
+  - Malformed static token entries now fail during `handleMcpHttpRequest`
+    option validation instead of reaching token digest/authentication logic.
+  - `tests/app/mcp-http-boundary.test.ts` covers malformed direct token
+    entries, token scalar types, blank tokens, and malformed org bindings.
+
+RED/GREEN:
+- RED: `npx vitest run tests/app/mcp-http-boundary.test.ts --reporter=dot`
+  failed the new direct bearer token cases because token entries were not
+  validated.
+- GREEN: `npx vitest run tests/app/mcp-http-boundary.test.ts --reporter=dot`
+  (`1` file passed; `16` tests passed)
+
+Verification:
+- `npx vitest run tests/app/mcp-http-boundary.test.ts tests/app/mcp-http.test.ts tests/app/server.test.ts tests/app/bearer-auth.test.ts tests/app/operator-server-boundary.test.ts --reporter=dot`
+  (`5` files passed; `169` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2385`
+  tests passed, `34` skipped)
+
 - 15:27 KST - Hardened operator server direct bearer token validation:
   - `src/app/server.ts` now rejects blank direct `bearerTokens` string entries
     and blank `BearerToken.token` / `BearerToken.organizationId` values before

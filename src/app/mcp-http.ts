@@ -173,7 +173,7 @@ function assertHandleMcpHttpRequestOptions(
   assertFunction(res.once, "res.once");
 
   assertObject(candidate.registry, "registry");
-  assertArray(candidate.bearerTokens, "bearerTokens");
+  assertBearerTokens(candidate.bearerTokens);
   assertNullableObject(candidate.oauthTokenVerifier, "oauthTokenVerifier");
   if (candidate.oauthTokenVerifier !== null) {
     assertFunction(
@@ -219,12 +219,43 @@ function assertStringArray(
   }
 }
 
+function assertBearerTokens(value: unknown): asserts value is BearerToken[] {
+  assertArray(value, "bearerTokens");
+  for (const [index, token] of value.entries()) {
+    const entry = assertObject(token, `bearerTokens[${index}]`);
+    if (typeof entry.token !== "string") {
+      throw new Error(`bearerTokens[${index}].token must be a string`);
+    }
+    assertNonBlankString(entry.token, `bearerTokens[${index}].token`);
+    if (
+      entry.organizationId !== undefined &&
+      typeof entry.organizationId !== "string"
+    ) {
+      throw new Error(
+        `bearerTokens[${index}].organizationId must be a string`,
+      );
+    }
+    if (entry.organizationId !== undefined) {
+      assertNonBlankString(
+        entry.organizationId,
+        `bearerTokens[${index}].organizationId`,
+      );
+    }
+  }
+}
+
 function assertNullableObject(
   value: unknown,
   fieldName: string,
 ): asserts value is Record<string, unknown> | null {
   if (value !== null) {
     assertObject(value, fieldName);
+  }
+}
+
+function assertNonBlankString(value: string, fieldName: string): void {
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
   }
 }
 

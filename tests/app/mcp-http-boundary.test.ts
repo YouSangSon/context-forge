@@ -54,6 +54,32 @@ describe("handleMcpHttpRequest boundary validation", () => {
       message: "bearerTokens must be an array",
     },
     {
+      input: { ...baseOptions(), bearerTokens: [null] },
+      message: "bearerTokens[0] must be an object",
+    },
+    {
+      input: { ...baseOptions(), bearerTokens: [{ token: 123 }] },
+      message: "bearerTokens[0].token must be a string",
+    },
+    {
+      input: { ...baseOptions(), bearerTokens: [{ token: " \n\t " }] },
+      message: "bearerTokens[0].token must contain non-whitespace text",
+    },
+    {
+      input: {
+        ...baseOptions(),
+        bearerTokens: [{ token: "token-a", organizationId: 123 }],
+      },
+      message: "bearerTokens[0].organizationId must be a string",
+    },
+    {
+      input: {
+        ...baseOptions(),
+        bearerTokens: [{ token: "token-a", organizationId: "" }],
+      },
+      message: "bearerTokens[0].organizationId must contain non-whitespace text",
+    },
+    {
       input: { ...baseOptions(), oauthTokenVerifier: {} },
       message: "oauthTokenVerifier.verify must be a function",
     },

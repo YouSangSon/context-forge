@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- MCP HTTP direct `bearerTokens` options now validate token entry objects,
+  token strings, and optional organization bindings before authentication.
 - Operator server direct `bearerTokens` options now reject blank token strings
   and blank organization bindings before server construction/startup.
 - Goal-run row mapping now rejects malformed returned run and iteration scalar
