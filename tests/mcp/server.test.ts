@@ -2302,13 +2302,14 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.compact_memory({
-      projectKey: "project-alpha",
+      projectKey: " project-alpha ",
       dryRun: false,
       organizationId: " dev-team ",
       decayThreshold: 0,
     });
 
     expect(result.ok).toBe(true);
+    expect(result.projectKey).toBe("project-alpha");
     expect(result.dryRun).toBe(false);
     expect(result.archivedIds).toEqual(["902"]);
     expect(result.compactionRunId).toBeTypeOf("string");
@@ -2319,7 +2320,10 @@ describe("createToolRegistry", () => {
       expect.objectContaining({ organizationId: "dev-team" }),
     );
     expect(services.archiveRepository.createCompactionRun).toHaveBeenCalledWith(
-      expect.objectContaining({ organizationId: "dev-team", dryRun: false }),
+      expect.objectContaining({
+        organizationId: "dev-team",
+        dryRun: false,
+      }),
     );
     expect(services.vectorIndex.delete).toHaveBeenCalledWith(["pt-902"], {
       organizationId: "dev-team",

@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 19:08 KST - Hardened compaction project key normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct `compact_memory` project keys
+    once and reuses the normalized value for repository resolution,
+    compaction planning, and apply results.
+  - `tests/mcp/server.test.ts` covers trimmed compaction project keys in the
+    apply-path result.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed the updated compaction apply case because the result echoed a raw
+  project key.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `134` tests passed)
+
+Verification:
+- `npx vitest run tests/compact/apply-compaction.test.ts tests/compact/compact-memory.test.ts --reporter=dot`
+  (`2` files passed; `77` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2461`
+  tests passed, `34` skipped)
+
 - 19:03 KST - Hardened governance filter text normalization:
   - `src/mcp/tool-handlers.ts` now trims direct `list_memory` tag filters and
     `inspect_memory_graph` query filters before canonical repository calls.

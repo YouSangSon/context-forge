@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `compact_memory` now trims direct project keys once and reuses the
+  normalized value for repository resolution, compaction planning, and apply
+  results.
 - `list_memory` tag filters and `inspect_memory_graph` query filters now trim
   direct text before canonical repository calls.
 - `build_context_pack` now trims direct task text before retrieval, markdown

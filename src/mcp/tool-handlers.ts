@@ -460,6 +460,10 @@ export function createToolHandlers(input: {
       const scope = toolInput.scope ?? "project";
       const dryRun = toolInput.dryRun ?? true;
       const organizationId = toolInput.organizationId?.trim();
+      const projectKey =
+        toolInput.projectKey === undefined
+          ? undefined
+          : requireProjectKey(toolInput.projectKey, "project");
       const userScopeId = resolveUserScopeId({
         cwd,
         explicitUserScopeId: toolInput.userScopeId,
@@ -473,12 +477,12 @@ export function createToolHandlers(input: {
             }
           : {
               scopeType: "project" as const,
-              scopeId: requireProjectKey(toolInput.projectKey, scope),
+              scopeId: requireProjectKey(projectKey, scope),
             };
       const records = hasOverrides
         ? await withRepositories(
             {
-              projectKey: toolInput.projectKey,
+              projectKey,
               userScopeId,
               includeUser: scope === "user",
             },
@@ -509,7 +513,7 @@ export function createToolHandlers(input: {
       const targetLabel =
         scope === "user"
           ? requireUserScopeId(userScopeId)
-          : requireProjectKey(toolInput.projectKey, scope);
+          : requireProjectKey(projectKey, scope);
 
       // Legacy override mode (in-process MemoryRepository, no Postgres):
       // dry-run only; no semantic dedup; no apply path.
@@ -530,7 +534,7 @@ export function createToolHandlers(input: {
           records,
           scope,
           scopeLabel: targetLabel,
-          projectKey: toolInput.projectKey,
+          projectKey,
           dryRun: true,
           decayThreshold: toolInput.decayThreshold,
           halfLifeDays: toolInput.halfLifeDays,
@@ -546,7 +550,7 @@ export function createToolHandlers(input: {
             records,
             scope,
             scopeLabel: targetLabel,
-            projectKey: toolInput.projectKey,
+            projectKey,
             dryRun,
             decayThreshold: toolInput.decayThreshold,
             halfLifeDays: toolInput.halfLifeDays,
