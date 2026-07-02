@@ -288,6 +288,8 @@ async function closeRun(
   status: "completed" | "abandoned",
 ): Promise<GoalRun> {
   assertCloseInput(input);
+  const note =
+    input.note === undefined || input.note === null ? null : input.note.trim();
 
   const result = await pool.query<GoalRunRow>(
     `
@@ -301,7 +303,7 @@ async function closeRun(
         AND status = 'active'
       RETURNING ${RUN_COLUMNS}
     `,
-    [input.goalRunId, input.organizationId, status, input.note ?? null],
+    [input.goalRunId, input.organizationId, status, note],
   );
 
   const row = result.rows[0];

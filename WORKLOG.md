@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 16:22 KST - Hardened goal-run close note normalization:
+  - `src/goal-run/goal-run-repository.ts` now trims direct completion and
+    abandonment notes before updating.
+  - Existing nonblank validation still rejects whitespace-only notes.
+  - `tests/goal-run/goal-run-repository.test.ts` covers trimmed close note
+    update parameters.
+
+RED/GREEN:
+- RED: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  failed the new close note trimming case because raw note text reached the
+  update parameters.
+- GREEN: `npx vitest run tests/goal-run/goal-run-repository.test.ts --reporter=dot`
+  (`1` file passed; `64` tests passed)
+
+Verification:
+- `npx vitest run tests/goal-run/goal-run-repository.test.ts tests/goal-run/goal-run-handlers.test.ts tests/goal-run/build-goal-context.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`4` files passed; `245` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2423`
+  tests passed, `34` skipped)
+
 - 16:19 KST - Hardened goal-run iteration text normalization:
   - `src/goal-run/goal-run-repository.ts` now trims direct attempt, summary,
     and error text before insertion.
