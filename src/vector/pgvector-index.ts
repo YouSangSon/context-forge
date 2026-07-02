@@ -547,7 +547,11 @@ function assertPgVectorOptionalProjectKey(value: unknown): void {
   assertPgVectorNonEmptyString(value, "filter.projectKey");
 }
 
-function assertPgVectorQueryVector(vector: number[]): void {
+function assertPgVectorQueryVector(vector: unknown): asserts vector is readonly number[] {
+  if (!Array.isArray(vector)) {
+    throw new Error("query vector must be an array");
+  }
+
   if (vector.length === 0) {
     throw new Error("query vector must be a non-empty array");
   }

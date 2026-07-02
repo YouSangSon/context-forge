@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector queries now validate the query vector is an array before
+  reading `vector.length`, so null query vector inputs fail with a clear
+  boundary error instead of incidental property access failures.
 - Qdrant and pgvector `deleteByRecordIds` now validate the record-ID list is an
   array before reading `recordIds.length`, so null delete-by-record inputs fail
   with a clear boundary error instead of incidental property access failures.

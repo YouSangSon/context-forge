@@ -181,7 +181,11 @@ export function createQdrantVectorIndex(
   };
 }
 
-function assertQdrantQueryVector(vector: readonly unknown[]): void {
+function assertQdrantQueryVector(vector: unknown): asserts vector is readonly number[] {
+  if (!Array.isArray(vector)) {
+    throw new Error("query vector must be an array");
+  }
+
   if (vector.length === 0) {
     throw new Error("query vector must be a non-empty array");
   }

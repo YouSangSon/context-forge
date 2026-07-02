@@ -161,6 +161,11 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
 
   it.each([
     {
+      label: "non-array",
+      vector: null as never,
+      message: "query vector must be an array",
+    },
+    {
       label: "empty",
       vector: [],
       message: "query vector must be a non-empty array",

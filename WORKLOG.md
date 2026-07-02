@@ -9590,3 +9590,27 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`81` files passed, `2` skipped; `2156` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened vector query vector list boundaries:
+  - Added RED coverage showing Qdrant and pgvector queries threw incidental
+    `vector.length` property-access errors for `null` query vector inputs.
+  - Qdrant and pgvector query vector guards now accept unknown inputs, reject
+    non-arrays with `query vector must be an array`, and still validate empty
+    vectors plus finite numeric components.
+  - Both adapters now fail malformed query vector inputs before Qdrant or SQL
+    calls, preserving existing empty-vector and finite-component behavior.
+  - No `DECISIONS.md` entry: this is adapter input hardening for the existing
+    vector query contract, not a new durable architecture decision.
+
+Verification:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed with `Cannot read properties of null (reading 'length')`.
+- GREEN focused: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`2` files passed; `141` tests passed; `12` skipped)
+- Related: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+  (`7` files passed; `319` tests passed; `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2158` tests passed, `34` skipped)
+- `git diff --check` (passed)
