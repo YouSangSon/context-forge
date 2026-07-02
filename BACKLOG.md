@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query row mapping now rejects non-decimal `memory_record_id` strings
+  before numeric coercion, so malformed values like `0x10` cannot map to valid
+  memory record IDs.
 - Qdrant and pgvector queries now validate `filter.scopes` is non-empty before
   building backend filters, so empty scope lists cannot widen vector queries.
 - Qdrant and pgvector queries now validate the filter is an object before

@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Query Scope Non-Empty Validation
+## Current Loop - Pgvector Row Record ID String Validation
 
 Status:
-- Qdrant and pgvector queries now reject empty `filter.scopes` arrays before
-  building backend filters.
-- Empty scope lists now fail with a clear boundary error before storage clients
-  are called.
+- Pgvector query row mapping now accepts only decimal integer strings for
+  returned `memory_record_id` values.
+- Malformed numeric-looking strings such as `0x10` now fail closed instead of
+  being coerced with `Number()`.
 
 Verification:
-- Focused Qdrant/pgvector tests passed after RED reproducers.
+- Focused pgvector tests passed after a RED reproducer.
 - Related vector/search/canonical-indexing/compaction tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.

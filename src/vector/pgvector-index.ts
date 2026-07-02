@@ -697,6 +697,10 @@ function toPgVectorPositiveSafeInteger(
     throw new Error(`${fieldName} must be a positive safe integer`);
   }
 
+  if (typeof value === "string" && !/^[0-9]+$/.test(value)) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+
   const numberValue = typeof value === "number" ? value : Number(value);
   if (
     !Number.isSafeInteger(numberValue) ||

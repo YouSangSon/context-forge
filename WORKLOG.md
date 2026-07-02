@@ -9690,3 +9690,25 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`81` files passed, `2` skipped; `2164` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened pgvector query `memory_record_id` string parsing:
+  - Added RED coverage showing a malformed row value of `"0x10"` was accepted
+    by `Number(value)` and returned as `memory_record_id: 16`.
+  - `toPgVectorPositiveSafeInteger` now permits string inputs only when they
+    are decimal digit strings before numeric conversion; normal node-postgres
+    BIGINT strings such as `"42"` remain supported.
+  - No `DECISIONS.md` entry: this is adapter row-mapping hardening for the
+    existing pgvector read contract, not a new durable architecture decision.
+
+Verification:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed because `"0x10"` resolved as `memory_record_id: 16`.
+- GREEN focused: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `73` tests passed; `12` skipped)
+- Related: `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/vector/qdrant-index.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+  (`7` files passed; `326` tests passed; `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2165` tests passed, `34` skipped)
+- `git diff --check` (passed)

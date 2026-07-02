@@ -698,6 +698,11 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
       message: "memory_record_id must be a positive safe integer",
     },
     {
+      label: "memory_record_id hex string",
+      row: buildPgVectorQueryRow({ memory_record_id: "0x10" }),
+      message: "memory_record_id must be a positive safe integer",
+    },
+    {
       label: "kind boolean",
       row: buildPgVectorQueryRow({ kind: false }),
       message: "kind must be a string or null",
