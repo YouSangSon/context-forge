@@ -479,6 +479,7 @@ export function createMemoryArchiveRepository(
     },
 
     async findArchiveByIds(archiveIds, organizationId) {
+      assertPositiveSafeIntegerArray(archiveIds, "archiveIds");
       assertNonBlankText(organizationId, "organizationId");
 
       if (archiveIds.length === 0) return [];
@@ -842,6 +843,26 @@ function assertObject(
 function assertFunction(value: unknown, fieldName: string): void {
   if (typeof value !== "function") {
     throw new Error(`${fieldName} must be a function`);
+  }
+}
+
+function assertPositiveSafeIntegerArray(
+  value: unknown,
+  fieldName: string,
+): asserts value is number[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+  for (const [index, item] of value.entries()) {
+    if (
+      typeof item !== "number" ||
+      !Number.isSafeInteger(item) ||
+      item <= 0
+    ) {
+      throw new Error(
+        `${fieldName}[${index}] must be a positive safe integer`,
+      );
+    }
   }
 }
 

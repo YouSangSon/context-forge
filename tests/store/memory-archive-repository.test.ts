@@ -863,6 +863,37 @@ describe("MemoryArchiveRepository.findArchiveByIds", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      archiveIds: null,
+      message: "archiveIds must be an array",
+    },
+    {
+      archiveIds: [0],
+      message: "archiveIds[0] must be a positive safe integer",
+    },
+    {
+      archiveIds: [1.5],
+      message: "archiveIds[0] must be a positive safe integer",
+    },
+    {
+      archiveIds: [Number.MAX_SAFE_INTEGER + 1],
+      message: "archiveIds[0] must be a positive safe integer",
+    },
+  ])("rejects malformed direct archive id lists before querying %#", async ({
+    archiveIds,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.findArchiveByIds(archiveIds as never, "org-a"),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("maps rows including null source_id and unarchived_at", async () => {
     const { pool } = makeMockPool(async () => ({
       rows: [archiveRow()],

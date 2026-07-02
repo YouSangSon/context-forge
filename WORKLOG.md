@@ -10206,3 +10206,27 @@ Verification:
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2227` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened archive lookup id input mapping:
+  - Added RED coverage showing malformed direct `findArchiveByIds`
+    archive id lists either threw incidental property-access errors or resolved
+    after querying instead of failing before SQL.
+  - Archive lookup now validates the id list and each id as a positive safe
+    integer before querying archive rows.
+  - No `DECISIONS.md` entry: this is repository input-boundary validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  failed because malformed archive id lists were not rejected with clear
+  pre-SQL boundary errors.
+- GREEN focused: `npx vitest run tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `105` tests passed)
+- Related: `npx vitest run tests/store/memory-archive-repository.test.ts tests/compact/unarchive-compaction.test.ts tests/compact/apply-compaction.test.ts tests/compact/outbox-sweeper.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`5` files passed; `341` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2231` tests passed, `34` skipped)
+- `git diff --check` (passed)
