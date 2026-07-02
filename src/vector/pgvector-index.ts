@@ -448,17 +448,23 @@ function mapPgVectorQueryRow(row: PgVectorQueryRow): VectorHit {
               row.memory_record_id,
               "memory_record_id",
             ),
-      organization_id: toPgVectorNonEmptyString(row.organization_id, "organization_id"),
-      scope_type: row.scope_type,
-      scope_id: row.scope_id,
-      project_key: row.project_key,
-      kind: row.kind,
-      durability: row.durability,
-      title: row.title,
-      summary: row.summary,
+      organization_id: toPgVectorNonEmptyString(
+        row.organization_id,
+        "organization_id",
+      ),
+      scope_type: toPgVectorStringOrNull(row.scope_type, "scope_type"),
+      scope_id: toPgVectorStringOrNull(row.scope_id, "scope_id"),
+      project_key: toPgVectorStringOrNull(row.project_key, "project_key"),
+      kind: toPgVectorStringOrNull(row.kind, "kind"),
+      durability: toPgVectorStringOrNull(row.durability, "durability"),
+      title: toPgVectorStringOrNull(row.title, "title"),
+      summary: toPgVectorStringOrNull(row.summary, "summary"),
       tags: toPgVectorStringArray(row.tags, "tags"),
-      updated_at: row.updated_at,
-      embedding_version: row.embedding_version,
+      updated_at: toPgVectorStringOrNull(row.updated_at, "updated_at"),
+      embedding_version: toPgVectorStringOrNull(
+        row.embedding_version,
+        "embedding_version",
+      ),
     },
   };
 }
@@ -479,6 +485,16 @@ function toPgVectorNonEmptyString(value: unknown, fieldName: string): string {
     throw new Error(`${fieldName} must be a non-empty string`);
   }
   return value;
+}
+
+function toPgVectorStringOrNull(
+  value: unknown,
+  fieldName: string,
+): string | null {
+  if (typeof value === "string" || value === null) {
+    return value;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
 }
 
 function toPgVectorStringArray(value: unknown, fieldName: string): string[] {

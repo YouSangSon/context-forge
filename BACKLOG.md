@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query result mapping now validates nullable string payload fields
+  before returning vector hits, so malformed scalar metadata cannot leak from
+  adapter rows into `VectorHit.payload`.
 - Pgvector query result mapping now validates returned `organization_id` values
   before returning vector-hit payloads, keeping read-side org metadata aligned
   with the existing write-side org-id guard.

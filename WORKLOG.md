@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened pgvector query nullable string payload mapping:
+  - `src/vector/pgvector-index.ts` now validates nullable string payload fields
+    before returning backend-neutral `VectorHit` payloads.
+  - Malformed non-string scalar metadata now fails with clear adapter boundary
+    errors instead of leaking into `VectorHit.payload`.
+  - `tests/vector/pgvector-index.integration.test.ts` covers malformed `kind`
+    and `updated_at` values with a mocked pool.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new nullable-string cases because the adapter resolved hits with
+  malformed scalar metadata.
+- GREEN: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `31` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`3` files passed; `99` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2074` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened pgvector query organization id mapping:
   - `src/vector/pgvector-index.ts` now validates query row `organization_id`
     values before returning backend-neutral `VectorHit` payloads.

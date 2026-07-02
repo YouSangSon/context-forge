@@ -285,6 +285,16 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
       message: "memory_record_id must be a positive safe integer",
     },
     {
+      label: "kind boolean",
+      row: buildPgVectorQueryRow({ kind: false }),
+      message: "kind must be a string or null",
+    },
+    {
+      label: "updated_at number",
+      row: buildPgVectorQueryRow({ updated_at: 123 }),
+      message: "updated_at must be a string or null",
+    },
+    {
       label: "tags string",
       row: buildPgVectorQueryRow({ tags: "ops" }),
       message: "tags must be an array",
