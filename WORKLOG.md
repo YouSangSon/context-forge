@@ -9664,3 +9664,29 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test` (`81` files passed, `2` skipped; `2162` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened vector query scope-list boundaries:
+  - Added RED coverage showing Qdrant queries accepted empty `filter.scopes`
+    and pgvector queries reached the DB client path for the same malformed
+    filter.
+  - Qdrant and pgvector filter-scope guards now reject empty arrays with
+    `filter.scopes must be a non-empty array`, preserving the existing
+    non-array and per-scope object/string checks.
+  - This keeps vector queries scoped to at least one caller-provided scope,
+    matching `retrieveMemory`'s project/user query contract.
+  - No `DECISIONS.md` entry: this is adapter input hardening for the existing
+    vector query contract, not a new durable architecture decision.
+
+Verification:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed because Qdrant resolved and pgvector reached client-path property
+  access for empty `filter.scopes`.
+- GREEN focused: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`2` files passed; `147` tests passed; `12` skipped)
+- Related: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/organization-id.test.ts tests/vector/point-builder.test.ts tests/search/retrieve-memory.test.ts tests/store/canonical-indexing.test.ts tests/compact/ingest-sweeper.test.ts --reporter=dot`
+  (`7` files passed; `325` tests passed; `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2164` tests passed, `34` skipped)
+- `git diff --check` (passed)

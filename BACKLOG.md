@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector queries now validate `filter.scopes` is non-empty before
+  building backend filters, so empty scope lists cannot widen vector queries.
 - Qdrant and pgvector queries now validate the filter is an object before
   reading filter fields, so null filter inputs fail with a clear boundary error
   instead of incidental property access failures.

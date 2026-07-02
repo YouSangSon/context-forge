@@ -653,6 +653,9 @@ function assertPgVectorFilterScopes(
   if (!Array.isArray(scopes)) {
     throw new Error("filter.scopes must be an array");
   }
+  if (scopes.length === 0) {
+    throw new Error("filter.scopes must be a non-empty array");
+  }
 
   scopes.forEach((scope, index) => {
     if (typeof scope !== "object" || scope === null || Array.isArray(scope)) {

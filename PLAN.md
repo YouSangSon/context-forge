@@ -4,12 +4,12 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Query Filter Object Validation
+## Current Loop - Vector Query Scope Non-Empty Validation
 
 Status:
-- Qdrant and pgvector queries now reject non-object filters before reading
-  `filter.organizationId`, `filter.scopes`, or `filter.projectKey`.
-- Null query filters now fail with a clear boundary error before storage clients
+- Qdrant and pgvector queries now reject empty `filter.scopes` arrays before
+  building backend filters.
+- Empty scope lists now fail with a clear boundary error before storage clients
   are called.
 
 Verification:
