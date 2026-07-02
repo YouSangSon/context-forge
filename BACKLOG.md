@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query now validates `limit` values are positive safe integers before
+  opening a database client, so invalid SQL `LIMIT` values do not reach
+  pgvector queries.
 - Pgvector query now validates query vectors are non-empty and finite before
   opening a database client, so invalid query vector literals do not reach
   pgvector SQL.

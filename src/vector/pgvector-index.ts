@@ -294,6 +294,7 @@ export function createPgVectorIndex(
     async query(vector: number[], filter: VectorFilter, limit: number): Promise<VectorHit[]> {
       assertOptionalVectorOrganizationId(filter.organizationId);
       assertPgVectorQueryVector(vector);
+      assertPgVectorPositiveSafeInteger(limit, "limit");
 
       // HIGH 1(b): Run inside a transaction so SET LOCAL is scoped to this query.
       // hnsw.iterative_scan='strict_order' (pgvector 0.8+) makes HNSW keep
@@ -534,6 +535,19 @@ function toPgVectorStringArray(value: unknown, fieldName: string): string[] {
     }
     return entry;
   });
+}
+
+function assertPgVectorPositiveSafeInteger(
+  value: unknown,
+  fieldName: string,
+): void {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value <= 0
+  ) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
 }
 
 function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {
