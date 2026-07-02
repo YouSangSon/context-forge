@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Audit log list row mapping now rejects malformed stored `outcome` values
+  before returning repository results.
 - Shared DB timestamp mapping now rejects malformed timestamp values and
   canonicalizes valid timestamp strings before repository results expose them.
 - MCP HTTP per-request cleanup now wraps transport and server close calls before

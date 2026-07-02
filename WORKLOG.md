@@ -9966,3 +9966,26 @@ Verification:
 - `npm test -- --reporter=dot`
   (`81` files passed, `2` skipped; `2186` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened audit log row outcome mapping:
+  - Added RED coverage showing malformed stored audit `outcome` values were
+    returned by `listByOrganization` instead of failing at the repository
+    boundary.
+  - Audit row mapping now treats DB `outcome` as unknown and reuses the
+    existing `"ok" | "error"` guard before returning `StoredAuditLogEntry`.
+  - No `DECISIONS.md` entry: this is row boundary validation hardening for an
+    existing enum contract.
+
+Verification:
+- RED: `npx vitest run tests/audit/audit-truncation.test.ts --reporter=dot`
+  failed because malformed audit row outcomes resolved instead of rejecting.
+- GREEN focused: `npx vitest run tests/audit/audit-truncation.test.ts --reporter=dot`
+  (`1` file passed; `41` tests passed)
+- Related: `npx vitest run tests/audit/audit-truncation.test.ts tests/audit/audit-write.test.ts tests/mcp/server.test.ts tests/app/server.test.ts --reporter=dot`
+  (`4` files passed; `247` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`81` files passed, `2` skipped; `2189` tests passed, `34` skipped)
+- `git diff --check` (passed)

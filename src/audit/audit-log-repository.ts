@@ -34,7 +34,7 @@ type AuditLogRow = {
   actor: string;
   tool: string;
   project_key: string | null;
-  outcome: AuditOutcome;
+  outcome: unknown;
   error_message: string | null;
   duration_ms: number | string;
   request_id: string | null;
@@ -113,7 +113,7 @@ function mapAuditLogRow(row: AuditLogRow): StoredAuditLogEntry {
     actor: row.actor,
     tool: row.tool,
     projectKey: row.project_key,
-    outcome: row.outcome,
+    outcome: toAuditOutcome(row.outcome),
     errorMessage: row.error_message,
     durationMs: toNonNegativeSafeInteger(
       row.duration_ms,
@@ -138,6 +138,11 @@ function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
     throw new Error(`${fieldName} must be a non-negative safe integer`);
   }
   return numberValue;
+}
+
+function toAuditOutcome(value: unknown): AuditOutcome {
+  assertAuditOutcome(value, "audit log outcome");
+  return value;
 }
 
 const DEFAULT_AUDIT_LIMIT = 100;

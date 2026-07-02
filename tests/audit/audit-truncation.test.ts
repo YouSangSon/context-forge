@@ -266,6 +266,26 @@ describe("createAuditLogRepository — error_message truncation", () => {
     },
   );
 
+  it.each([
+    { label: "unknown", outcome: "skipped" },
+    { label: "null", outcome: null },
+    { label: "boolean", outcome: false },
+  ])(
+    "listByOrganization rejects malformed audit row outcomes: $label",
+    async ({ outcome }) => {
+      const fakePool = {
+        query: vi.fn().mockResolvedValue({
+          rows: [buildAuditRow({ outcome })],
+        }),
+      };
+      const repo = createAuditLogRepository(fakePool as never);
+
+      await expect(repo.listByOrganization("org-1")).rejects.toThrow(
+        'audit log outcome must be "ok" or "error"',
+      );
+    },
+  );
+
   it("truncates error_message to 1024 chars before persistence", async () => {
     let capturedParams: unknown[] | undefined;
 
