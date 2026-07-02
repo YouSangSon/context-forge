@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector upserts now validate each `VectorPoint` entry is an
+  object before reading payload metadata, so null point entries fail with a
+  clear boundary error instead of incidental property access failures.
 - Qdrant and pgvector upserts now validate `VectorPoint.payload` is an object
   before reading organization metadata, so null payloads fail with a clear
   boundary error instead of incidental property access failures.
