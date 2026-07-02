@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 18:50 KST - Hardened search handler organization normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
+    `search_memory` record resolution dispatches to retrieve overrides, legacy
+    collection, or canonical retrieval.
+  - `tests/mcp/tool-registry.test.ts` covers trimmed organization IDs at the
+    retrieve override boundary.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/tool-registry.test.ts --reporter=dot`
+  failed the updated search case because raw organization ID text reached
+  `retrieveMemory`.
+- GREEN: `npx vitest run tests/mcp/tool-registry.test.ts tests/mcp/server.test.ts --reporter=dot`
+  (`2` files passed; `152` tests passed)
+
+Verification:
+- `npx vitest run tests/search/retrieve-memory.test.ts tests/store/memory-repository.test.ts --reporter=dot`
+  (`2` files passed; `215` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2460`
+  tests passed, `34` skipped)
+
 - 18:46 KST - Hardened add memory handler organization normalization:
   - `src/mcp/tool-handlers.ts` now trims direct organization identifiers before
     `add_memory` repository input construction for legacy and service-backed

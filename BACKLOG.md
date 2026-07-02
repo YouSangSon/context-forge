@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `search_memory` record resolution now trims direct organization identifiers
+  before retrieve overrides, legacy collection, and canonical retrieval.
 - `add_memory` now trims direct organization identifiers before repository
   input construction for legacy and service-backed write paths.
 - `compact_memory` now trims direct organization identifiers once and reuses

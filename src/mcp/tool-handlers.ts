@@ -166,6 +166,7 @@ export function createToolHandlers(input: {
     assertProvidedScopeIdentifiers(input);
     const limit = normalizeLimit(input.limit);
     const projectKey = requireProjectKey(input.projectKey, "project");
+    const organizationId = input.organizationId?.trim();
     const userScopeId =
       input.includeUser === false
         ? undefined
@@ -179,7 +180,7 @@ export function createToolHandlers(input: {
 
     if (options.retrieveMemory) {
       return options.retrieveMemory({
-        organizationId: input.organizationId,
+        organizationId,
         projectKey,
         userScopeId,
         query: input.query,
@@ -198,7 +199,7 @@ export function createToolHandlers(input: {
           collectRecords({
             query: input.query,
             limit,
-            organizationId: input.organizationId,
+            organizationId,
             projectKey,
             projectRepository,
             userScopeId,
@@ -210,7 +211,7 @@ export function createToolHandlers(input: {
 
     return withCanonicalServices((services) =>
       retrieveRecordsWithCanonicalServices(services, {
-        organizationId: input.organizationId,
+        organizationId,
         projectKey,
         query: input.query,
         userScopeId,

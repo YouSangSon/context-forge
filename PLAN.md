@@ -4,15 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Add Memory Handler Organization Normalization
+## Current Loop - Search Handler Organization Normalization
 
 Status:
-- `add_memory` now trims direct organization identifiers before repository
-  input construction for legacy and service-backed write paths.
+- `search_memory` record resolution now trims direct organization identifiers
+  before retrieve overrides, legacy collection, and canonical retrieval.
 
 Verification:
-- Focused MCP server tests passed after the RED service-backed add reproducer.
-- Related canonical indexing and audit tests passed.
+- Focused tool-registry and MCP server tests passed after the RED retrieval
+  override reproducer.
+- Related search retrieval and memory repository tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

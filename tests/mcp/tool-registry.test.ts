@@ -121,13 +121,14 @@ describe("createToolHandlers", () => {
     });
 
     const result = await handlers.search_memory({
+      organizationId: " org-a ",
       projectKey: "project-alpha",
       query: " timeout retry ",
       includeUser: false,
     });
 
     expect(retrieveMemory).toHaveBeenCalledWith({
-      organizationId: undefined,
+      organizationId: "org-a",
       projectKey: "project-alpha",
       userScopeId: undefined,
       query: "timeout retry",
