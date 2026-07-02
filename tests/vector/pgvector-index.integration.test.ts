@@ -285,6 +285,36 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     expect(client.release).toHaveBeenCalledOnce();
   });
 
+  it("query rejects non-array pgvector row results before mapping", async () => {
+    const query = vi.fn().mockResolvedValue({ rows: null });
+    const client = {
+      query,
+      release: vi.fn(),
+    };
+    const pool = {
+      query: vi.fn(),
+      connect: vi.fn().mockResolvedValue(client),
+      end: vi.fn(),
+    } as unknown as PgPool;
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        1,
+      ),
+    ).rejects.toThrow("query rows must be an array");
+
+    expect(query).not.toHaveBeenCalledWith("COMMIT");
+    expect(query).toHaveBeenCalledWith("ROLLBACK");
+    expect(client.release).toHaveBeenCalledOnce();
+  });
+
   it("query rejects whitespace-only organizationId before opening a client", async () => {
     const { pool, query } = makeMockPool();
     const connect = vi.mocked(pool.connect);

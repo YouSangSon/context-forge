@@ -378,7 +378,9 @@ export function createPgVectorIndex(
         `;
 
         const result = await client.query<PgVectorQueryRow>(sql, params);
-        const hits = result.rows.map(mapPgVectorQueryRow);
+        const rows: unknown = result.rows;
+        assertPgVectorQueryRows(rows);
+        const hits = rows.map(mapPgVectorQueryRow);
         await client.query("COMMIT");
 
         return hits;
@@ -459,6 +461,12 @@ function mapPgVectorQueryRow(row: PgVectorQueryRow): VectorHit {
       embedding_version: row.embedding_version,
     },
   };
+}
+
+function assertPgVectorQueryRows(value: unknown): asserts value is PgVectorQueryRow[] {
+  if (!Array.isArray(value)) {
+    throw new Error("query rows must be an array");
+  }
 }
 
 function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {

@@ -2,6 +2,39 @@
 
 ## 2026-07-02
 
+- Hardened pgvector query rows shape mapping:
+  - `src/vector/pgvector-index.ts` now validates query result `rows` before
+    mapping backend-neutral `VectorHit` objects.
+  - Malformed non-array row lists now fail with a clear adapter boundary error
+    instead of an incidental `.map` TypeError.
+  - `tests/vector/pgvector-index.integration.test.ts` covers non-array rows
+    with a mocked pool.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new query-rows test with `Cannot read properties of null (reading
+  'map')`.
+- GREEN: `npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `22` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/pgvector-index.integration.test.ts tests/search/retrieve-memory.test.ts tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`3` files passed; `90` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2065` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant collection-exists shape mapping:
   - `src/vector/qdrant-index.ts` now validates Qdrant `collectionExists`
     responses before deciding whether to create the collection.

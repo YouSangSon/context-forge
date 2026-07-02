@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pgvector query result mapping now validates returned `rows` before mapping
+  vector hits, replacing incidental `.map` failures with a clear adapter
+  boundary error.
 - Qdrant collection bootstrap now validates `collectionExists` responses before
   create/no-create decisions, so malformed non-boolean `exists` values cannot
   silently skip collection creation.
