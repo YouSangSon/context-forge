@@ -56,7 +56,7 @@ export function createPgPool(input: CreatePgPoolInput): PgPool {
   const options = resolvePgPoolOptions(input);
 
   return new NodePostgresPool({
-    connectionString: input.connectionString,
+    connectionString: input.connectionString.trim(),
     ...options,
   });
 }

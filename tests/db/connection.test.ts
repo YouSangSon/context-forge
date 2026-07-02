@@ -71,6 +71,22 @@ describe("createPgPool", () => {
     }
   });
 
+  it("trims direct connection strings before constructing the pool", async () => {
+    const pool = createPgPool({
+      connectionString: " postgres://user:pass@localhost:5432/db ",
+    }) as unknown as InspectablePgPool;
+
+    try {
+      expect(pool.options).toEqual(
+        expect.objectContaining({
+          connectionString: "postgres://user:pass@localhost:5432/db",
+        }),
+      );
+    } finally {
+      await pool.end();
+    }
+  });
+
   it("applies explicit pool tuning options", async () => {
     const pool = createPgPool({
       connectionString: "postgres://user:pass@localhost:5432/db",

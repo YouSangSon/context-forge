@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Pg pool construction now trims direct connection strings before
+  instantiating the node-postgres pool.
 - Qdrant client construction now validates direct URLs as absolute HTTP(S)
   URLs and trims URL/API key values before SDK construction.
 - Metrics registry now rejects blank direct HTTP route labels and dependency

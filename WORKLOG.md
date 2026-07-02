@@ -2,6 +2,30 @@
 
 ## 2026-07-02
 
+- 15:54 KST - Hardened Pg pool connection string normalization:
+  - `src/db/connection.ts` now trims direct `connectionString` values before
+    constructing the node-postgres pool.
+  - Pool option validation and defaults remain unchanged.
+  - `tests/db/connection.test.ts` covers the direct connection string trimming
+    boundary.
+
+RED/GREEN:
+- RED: `npx vitest run tests/db/connection.test.ts --reporter=dot` failed the
+  new trimming case because the raw connection string reached the pool
+  constructor.
+- GREEN: `npx vitest run tests/db/connection.test.ts --reporter=dot` (`1` file
+  passed; `10` tests passed)
+
+Verification:
+- `npx vitest run tests/db/connection.test.ts tests/config/service-config.test.ts tests/app/operator-server-boundary.test.ts --reporter=dot`
+  (`3` files passed; `130` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2412`
+  tests passed, `34` skipped)
+
 - 15:51 KST - Hardened Qdrant client URL validation:
   - `src/qdrant/client.ts` now rejects non-absolute and non-HTTP(S) direct URLs
     before constructing the Qdrant SDK client.
