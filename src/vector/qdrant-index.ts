@@ -41,6 +41,7 @@ type QdrantCollectionExistsResponse = {
 
 function buildQdrantMust(filter: VectorFilter): QdrantFilterClause[] {
   assertOptionalVectorOrganizationId(filter.organizationId);
+  assertQdrantFilterScopes(filter.scopes);
 
   const must: QdrantFilterClause[] = [];
 
@@ -237,6 +238,14 @@ function assertQdrantPositiveSafeInteger(
 function assertQdrantRecordIds(recordIds: readonly unknown[]): void {
   for (const [index, recordId] of recordIds.entries()) {
     assertQdrantPositiveSafeInteger(recordId, `recordIds[${index}]`);
+  }
+}
+
+function assertQdrantFilterScopes(
+  scopes: unknown,
+): asserts scopes is VectorFilter["scopes"] {
+  if (!Array.isArray(scopes)) {
+    throw new Error("filter.scopes must be an array");
   }
 }
 

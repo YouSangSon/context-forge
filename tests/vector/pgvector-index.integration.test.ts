@@ -258,6 +258,27 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it("query rejects non-array filter scopes before opening a client", async () => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: null,
+          projectKey: "project-alpha",
+        } as never,
+        5,
+      ),
+    ).rejects.toThrow("filter.scopes must be an array");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("query treats empty organizationId as legacy unscoped lookup", async () => {
     const query = vi.fn().mockResolvedValue({ rows: [] });
     const client = {

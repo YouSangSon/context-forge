@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and pgvector queries now validate `filter.scopes` is an array before
+  calling storage clients, replacing incidental iterable/client-path failures
+  with clear adapter boundary errors.
 - Qdrant and pgvector collection bootstrap now validates dimensions are
   positive safe integers before calling storage clients, so malformed dimensions
   cannot reach Qdrant or SQL.

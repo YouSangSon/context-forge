@@ -297,6 +297,7 @@ export function createPgVectorIndex(
       assertOptionalVectorOrganizationId(filter.organizationId);
       assertPgVectorQueryVector(vector);
       assertPgVectorPositiveSafeInteger(limit, "limit");
+      assertPgVectorFilterScopes(filter.scopes);
 
       // HIGH 1(b): Run inside a transaction so SET LOCAL is scoped to this query.
       // hnsw.iterative_scan='strict_order' (pgvector 0.8+) makes HNSW keep
@@ -573,6 +574,14 @@ function assertPgVectorPositiveSafeInteger(
 function assertPgVectorRecordIds(recordIds: readonly unknown[]): void {
   for (const [index, recordId] of recordIds.entries()) {
     assertPgVectorPositiveSafeInteger(recordId, `recordIds[${index}]`);
+  }
+}
+
+function assertPgVectorFilterScopes(
+  scopes: unknown,
+): asserts scopes is VectorFilter["scopes"] {
+  if (!Array.isArray(scopes)) {
+    throw new Error("filter.scopes must be an array");
   }
 }
 

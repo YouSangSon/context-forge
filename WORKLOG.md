@@ -2,6 +2,40 @@
 
 ## 2026-07-02
 
+- Hardened vector query filter scopes validation:
+  - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now
+    validate query `filter.scopes` values are arrays before calling storage
+    clients.
+  - Invalid non-array scopes now fail with clear adapter boundary errors
+    instead of incidental iterable or client-path failures.
+  - Qdrant and pgvector tests cover malformed `filter.scopes` values with
+    mocked clients.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  failed the new filter scopes cases because Qdrant threw an incidental
+  iterable error and pgvector continued into the SQL client path.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`2` files passed; `99` tests passed, `12` skipped)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/search/retrieve-memory.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`3` files passed; `134` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2109` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened vector collection dimension validation:
   - `src/vector/qdrant-index.ts` and `src/vector/pgvector-index.ts` now
     validate `ensureCollection(dimensions)` values are positive safe integers
