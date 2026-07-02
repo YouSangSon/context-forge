@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `build_context_pack` now trims direct task text before retrieval, markdown
+  rendering, and context-pack run persistence.
 - Goal-run handlers now trim direct goal and attempt text before service and
   embedding dispatch.
 - MCP handler tests now guard against raw direct organization ID pass-through

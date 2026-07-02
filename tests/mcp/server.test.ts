@@ -1069,10 +1069,11 @@ describe("createToolRegistry", () => {
       // escape hatch. Use a non-default tenant so the persistence row proves it
       // keeps the request's org attribution instead of falling back to "default".
       organizationId: " org-a ",
-      task: "continue work",
+      task: " continue work ",
     });
 
     expect(result.selectedMemoryIds).toEqual(["project:project-alpha:12"]);
+    expect(result.packMarkdown).toContain("Task: continue work");
     expect(services.chunkRepository.createContextPackRun).toHaveBeenCalledWith({
       organizationId: "org-a",
       projectKey: "project-alpha",

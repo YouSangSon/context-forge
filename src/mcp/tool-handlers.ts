@@ -316,6 +316,7 @@ export function createToolHandlers(input: {
       assertProvidedScopeIdentifiers(toolInput);
       const projectKey = requireProjectKey(toolInput.projectKey, "project");
       const organizationId = toolInput.organizationId?.trim();
+      const task = toolInput.task.trim();
 
       const useServiceBackedPack =
         !hasOverrides && !options.retrieveMemory;
@@ -324,7 +325,7 @@ export function createToolHandlers(input: {
             const records = await retrieveRecordsWithCanonicalServices(services, {
               organizationId,
               projectKey,
-              query: toolInput.task,
+              query: task,
               userScopeId:
                 toolInput.includeUser === false
                   ? undefined
@@ -339,7 +340,7 @@ export function createToolHandlers(input: {
             });
             const pack = buildContextPack({ records });
             const packMarkdown = renderContextPackMarkdown(
-              toolInput.task,
+              task,
               pack.markdown,
             );
             const selectedMemoryIds = pack.selectionRationale.map(
@@ -349,7 +350,7 @@ export function createToolHandlers(input: {
             await services.chunkRepository.createContextPackRun({
               organizationId: organizationId ?? "default",
               projectKey,
-              task: toolInput.task,
+              task,
               selectedMemoryIds,
               packMarkdown,
             });
@@ -364,7 +365,7 @@ export function createToolHandlers(input: {
             const records = await resolveRecords({
               organizationId,
               projectKey,
-              query: toolInput.task,
+              query: task,
               userScopeId: toolInput.userScopeId,
               includeUser: toolInput.includeUser,
               limit: toolInput.limit,
@@ -374,7 +375,7 @@ export function createToolHandlers(input: {
             return {
               pack,
               packMarkdown: renderContextPackMarkdown(
-                toolInput.task,
+                task,
                 pack.markdown,
               ),
               selectedMemoryIds: pack.selectionRationale.map(

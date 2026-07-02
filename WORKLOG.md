@@ -2,6 +2,29 @@
 
 ## 2026-07-02
 
+- 19:00 KST - Hardened context pack task normalization:
+  - `src/mcp/tool-handlers.ts` now trims direct `build_context_pack` task text
+    before retrieval, markdown rendering, and context-pack run persistence.
+  - `tests/mcp/server.test.ts` covers trimmed service-backed context-pack task
+    text in rendered markdown and persisted run rows.
+
+RED/GREEN:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed the updated context-pack case because raw task text reached rendered
+  markdown.
+- GREEN: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `134` tests passed)
+
+Verification:
+- `npx vitest run tests/context-pack/build-context-pack.test.ts tests/mcp/tool-registry.test.ts --reporter=dot`
+  (`2` files passed; `42` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2461`
+  tests passed, `34` skipped)
+
 - 18:57 KST - Hardened goal-run text normalization:
   - `src/mcp/tool-handlers.ts` now trims direct `goal`,
     `record_iteration.attempt`, and `check_repeat_attempt.attempt` text before
