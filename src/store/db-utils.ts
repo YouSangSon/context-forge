@@ -1,5 +1,33 @@
+const DATABASE_TIMESTAMP_PATTERN =
+  /^\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}(?::?\d{2})?)$/;
+
 export function toIsoString(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : value;
+  if (value instanceof Date) {
+    assertValidTimestamp(value);
+    return value.toISOString();
+  }
+
+  if (typeof value !== "string") {
+    throw new Error("database timestamp must be a valid timestamp");
+  }
+
+  const normalized = value.trim();
+  if (
+    normalized.length === 0 ||
+    !DATABASE_TIMESTAMP_PATTERN.test(normalized)
+  ) {
+    throw new Error("database timestamp must be a valid timestamp");
+  }
+
+  const parsed = new Date(normalized);
+  assertValidTimestamp(parsed);
+  return parsed.toISOString();
+}
+
+function assertValidTimestamp(value: Date): void {
+  if (!Number.isFinite(value.getTime())) {
+    throw new Error("database timestamp must be a valid timestamp");
+  }
 }
 
 export function toNumber(value: unknown): number {

@@ -9939,3 +9939,30 @@ Verification:
 - `npm test -- --reporter=dot`
   (`81` files passed, `2` skipped; `2173` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened shared DB timestamp mapping:
+  - Added RED coverage showing `toIsoString` returned malformed timestamp
+    strings as-is and did not canonicalize valid timestamp strings without
+    milliseconds.
+  - `toIsoString` now accepts valid `Date` values and timezone-qualified
+    timestamp strings, rejects malformed values with a clear database timestamp
+    error, and returns canonical ISO strings.
+  - This tightens repository row mapping for memory, archive, chunk, ingest
+    job, goal-run, and audit-log records that share `toIsoString`.
+  - No `DECISIONS.md` entry: this is boundary validation hardening for an
+    existing shared mapper.
+
+Verification:
+- RED: `npx vitest run tests/store/db-utils.test.ts --reporter=dot`
+  failed because malformed timestamp strings were returned and a valid
+  timestamp string without milliseconds was not canonicalized.
+- GREEN focused: `npx vitest run tests/store/db-utils.test.ts --reporter=dot`
+  (`1` file passed; `29` tests passed)
+- Related: `npx vitest run tests/store/db-utils.test.ts tests/store/memory-repository.test.ts tests/store/memory-archive-repository.test.ts tests/store/canonical-indexing.test.ts tests/jobs/ingest-job-repository.test.ts tests/goal-run/goal-run-repository.test.ts tests/audit/audit-write.test.ts tests/audit/audit-truncation.test.ts --reporter=dot`
+  (`7` files passed, `1` skipped; `355` tests passed, `13` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`81` files passed, `2` skipped; `2186` tests passed, `34` skipped)
+- `git diff --check` (passed)

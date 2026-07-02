@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Shared DB timestamp mapping now rejects malformed timestamp values and
+  canonicalizes valid timestamp strings before repository results expose them.
 - MCP HTTP per-request cleanup now wraps transport and server close calls before
   settlement, so synchronous transport cleanup failures still allow MCP server
   cleanup to run.
