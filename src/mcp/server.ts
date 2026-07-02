@@ -15,7 +15,11 @@ import {
   assertNonBlankString,
   assertObject,
 } from "./tool-registry-validation.js";
-import { SUPPORTED_MEMORY_KINDS } from "./tool-utils.js";
+import {
+  requireProjectKey,
+  requireUserScopeId,
+  SUPPORTED_MEMORY_KINDS,
+} from "./tool-utils.js";
 import type {
   AddMemoryInteractiveToolInput,
   ClassifyMemoryCandidateToolInput,
@@ -263,7 +267,20 @@ function registerMcpContextTools(
       }
 
       const parsed = ELICITED_MEMORY_SCHEMA.parse(elicited.content ?? {});
-      const projectKey = input.projectKey ?? parsed.projectKey;
+      const rawProjectKey = input.projectKey ?? parsed.projectKey;
+      let organizationId: string | undefined;
+      if (input.organizationId !== undefined) {
+        assertNonBlankString(input.organizationId, "organizationId");
+        organizationId = input.organizationId.trim();
+      }
+      const projectKey =
+        rawProjectKey === undefined
+          ? undefined
+          : requireProjectKey(rawProjectKey, "project");
+      const userScopeId =
+        input.userScopeId === undefined
+          ? undefined
+          : requireUserScopeId(input.userScopeId);
       const kind = input.kind ?? parsed.kind;
       if (input.scope !== "user" && !projectKey) {
         throw new Error("projectKey is required to store project memory.");
@@ -273,10 +290,10 @@ function registerMcpContextTools(
       }
 
       const stored = await registry.add_memory({
-        ...(input.organizationId ? { organizationId: input.organizationId } : {}),
+        ...(organizationId ? { organizationId } : {}),
         ...(projectKey ? { projectKey } : {}),
         ...(input.scope ? { scope: input.scope } : {}),
-        ...(input.userScopeId ? { userScopeId: input.userScopeId } : {}),
+        ...(userScopeId ? { userScopeId } : {}),
         kind,
         content: parsed.content,
       });

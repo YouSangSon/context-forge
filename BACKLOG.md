@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `add_memory_interactive` now trims direct organization, project, and user
+  scope identifiers before registry dispatch and structured response echoes.
 - `add_memory` now trims direct project keys before legacy repository
   resolution and repository write input construction.
 - `compact_memory` now trims direct project keys once and reuses the

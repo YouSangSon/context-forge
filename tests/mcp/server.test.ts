@@ -3435,7 +3435,7 @@ describe("createMcpServer structured outputs", () => {
           return {
             action: "accept",
             content: {
-              projectKey: "project-alpha",
+              projectKey: " project-alpha ",
               kind: "decision",
               content: "Decision: use MCP elicitation for user-confirmed memory.",
             },
@@ -3464,6 +3464,55 @@ describe("createMcpServer structured outputs", () => {
         projectKey: "project-alpha",
         kind: "decision",
         content: "Decision: use MCP elicitation for user-confirmed memory.",
+      },
+    });
+
+    await client.close();
+    await server.close();
+  });
+
+  it("stores accepted user-scoped elicited memory with normalized identifiers", async () => {
+    const registry = buildRegistryForMcpProtocol();
+    const server = createMcpServer({ registry });
+    const client = await createInMemoryClient(
+      server,
+      { capabilities: { elicitation: { form: {} } } },
+      (candidate) => {
+        candidate.setRequestHandler(ElicitRequestSchema, async () => ({
+          action: "accept",
+          content: {
+            content: "Always answer in Korean unless the repo says otherwise.",
+          },
+        }));
+      },
+    );
+
+    const result = await client.callTool({
+      name: "add_memory_interactive",
+      arguments: {
+        organizationId: " org-a ",
+        scope: "user",
+        userScopeId: " alice ",
+        kind: "fact",
+      },
+    });
+
+    expect(registry.add_memory).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      scope: "user",
+      userScopeId: "alice",
+      kind: "fact",
+      content: "Always answer in Korean unless the repo says otherwise.",
+    });
+    expect(result.structuredContent).toEqual({
+      ok: true,
+      action: "accept",
+      stored: true,
+      memoryId: "101",
+      summary: "stored",
+      collected: {
+        kind: "fact",
+        content: "Always answer in Korean unless the repo says otherwise.",
       },
     });
 
