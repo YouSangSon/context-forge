@@ -35,6 +35,10 @@ type QdrantQueryResponse = {
   points: unknown;
 };
 
+type QdrantCollectionExistsResponse = {
+  exists: boolean;
+};
+
 function buildQdrantMust(filter: VectorFilter): QdrantFilterClause[] {
   assertOptionalVectorOrganizationId(filter.organizationId);
 
@@ -67,8 +71,9 @@ export function createQdrantVectorIndex(
     // must pass through unchanged. The pgvector adapter's ensureCollection
     // will follow the same create-if-not-exists contract.
     async ensureCollection(dimensions: number): Promise<void> {
-      const { exists } = await client.collectionExists(collectionName);
-      if (!exists) {
+      const response: unknown = await client.collectionExists(collectionName);
+      assertQdrantCollectionExistsResponse(response);
+      if (!response.exists) {
         await client.createCollection(collectionName, {
           vectors: { size: dimensions, distance: "Cosine" },
         });
@@ -163,6 +168,17 @@ export function createQdrantVectorIndex(
 function assertQdrantQueryResponse(value: unknown): asserts value is QdrantQueryResponse {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error("query response must be an object");
+  }
+}
+
+function assertQdrantCollectionExistsResponse(
+  value: unknown,
+): asserts value is QdrantCollectionExistsResponse {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("collectionExists response must be an object");
+  }
+  if (typeof (value as Record<string, unknown>).exists !== "boolean") {
+    throw new Error("collectionExists.exists must be a boolean");
   }
 }
 

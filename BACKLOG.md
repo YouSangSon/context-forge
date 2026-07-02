@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant collection bootstrap now validates `collectionExists` responses before
+  create/no-create decisions, so malformed non-boolean `exists` values cannot
+  silently skip collection creation.
 - Qdrant vector query response mapping now validates each point object before
   reading `id`, `score`, or `payload`, replacing incidental field-access
   failures with a clear adapter boundary error.

@@ -2,6 +2,38 @@
 
 ## 2026-07-02
 
+- Hardened Qdrant collection-exists shape mapping:
+  - `src/vector/qdrant-index.ts` now validates Qdrant `collectionExists`
+    responses before deciding whether to create the collection.
+  - Malformed non-boolean `exists` values now fail with a clear adapter
+    boundary error instead of silently skipping collection creation.
+  - `tests/vector/qdrant-index.test.ts` covers malformed `exists` values.
+
+RED/GREEN:
+- RED: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  failed the new collection-exists test because `exists: "false"` resolved and
+  skipped the create decision.
+- GREEN: `npx vitest run tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `33` tests passed)
+
+Verification plan:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/mcp/mcp-server-construction.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate`
+- `npm test`
+- `git diff --check`
+
+Verification:
+- `npx vitest run tests/vector/qdrant-index.test.ts tests/mcp/mcp-server-construction.test.ts tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`3` files passed; `61` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2064` tests passed,
+  `34` skipped)
+- `git diff --check`
+
 - Hardened Qdrant point object shape mapping:
   - `src/vector/qdrant-index.ts` now validates each Qdrant query point object
     before reading `id`, `score`, or `payload`.

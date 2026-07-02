@@ -667,6 +667,22 @@ describe("createQdrantVectorIndex — ensureCollection", () => {
     expect(client.collectionExists).toHaveBeenCalledWith("memory_chunks_v1");
     expect(client.createCollection).not.toHaveBeenCalled();
   });
+
+  it("rejects malformed collectionExists responses before create decisions", async () => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      collectionExists: vi.fn().mockResolvedValue({ exists: "false" }),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(index.ensureCollection(1536)).rejects.toThrow(
+      "collectionExists.exists must be a boolean",
+    );
+    expect(client.createCollection).not.toHaveBeenCalled();
+  });
 });
 
 describe("FakeVectorIndex", () => {
