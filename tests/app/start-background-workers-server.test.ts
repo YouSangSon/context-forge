@@ -1,13 +1,19 @@
 import { once } from "node:events";
 import http, { type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ServiceConfig } from "../../src/config.js";
 import type { BackgroundWorkersHandle } from "../../src/app/background-workers.js";
 import type { Logger } from "../../src/logger.js";
 import type { ToolRegistry } from "../../src/mcp/types.js";
 
 const servers: Server[] = [];
+
+beforeEach(() => {
+  vi.doUnmock("../../src/app/background-workers.js");
+  vi.doUnmock("../../src/db/connection.js");
+  vi.resetModules();
+});
 
 afterEach(async () => {
   await Promise.all(

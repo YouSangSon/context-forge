@@ -1,7 +1,7 @@
 import { once } from "node:events";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ServiceConfig } from "../../src/config.js";
 import type { Logger } from "../../src/logger.js";
 import type { ToolRegistry } from "../../src/mcp/types.js";
@@ -11,6 +11,12 @@ const originalEnv = {
   COMPACTION_SWEEP_ENABLED: process.env.COMPACTION_SWEEP_ENABLED,
   INGEST_SWEEP_ENABLED: process.env.INGEST_SWEEP_ENABLED,
 };
+
+beforeEach(() => {
+  vi.doUnmock("../../src/app/background-queue-metrics.js");
+  vi.doUnmock("../../src/app/background-workers.js");
+  vi.resetModules();
+});
 
 afterEach(async () => {
   await Promise.all(

@@ -9813,3 +9813,28 @@ Verification:
 - Rerun: `npm test -- --reporter=dot`
   (`81` files passed, `2` skipped; `2169` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened background-worker operator server test isolation:
+  - Observed a transient full-suite failure in
+    `tests/app/start-background-workers-server.test.ts` and
+    `tests/app/start-operator-server-metrics.test.ts` after the MCP prompt
+    loop; both files passed when rerun in isolation and the full suite passed
+    on immediate rerun.
+  - Added per-test `vi.doUnmock(...)` and `vi.resetModules()` setup in the two
+    files that import `startOperatorServer` after `vi.doMock`, ensuring their
+    mocked `background-workers`, `background-queue-metrics`, and `db/connection`
+    modules are applied before each dynamic server import.
+  - No `DECISIONS.md` entry: this is test harness isolation hardening, not a
+    runtime architecture decision.
+
+Verification:
+- Focused: `npx vitest run tests/app/start-background-workers-server.test.ts tests/app/start-operator-server-metrics.test.ts --reporter=dot`
+  (`2` files passed; `4` tests passed)
+- Related: `npx vitest run tests/app/start-background-workers-server.test.ts tests/app/start-operator-server-metrics.test.ts tests/app/background-workers.test.ts tests/app/operator-server-boundary.test.ts tests/app/server.test.ts --reporter=dot`
+  (`5` files passed; `124` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test -- --reporter=dot`
+  (`81` files passed, `2` skipped; `2169` tests passed, `34` skipped)
+- `git diff --check` (passed)

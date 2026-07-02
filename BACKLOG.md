@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Background-worker operator server tests now clear module cache and relevant
+  mocks before each test, reducing transient full-suite failures from stale
+  `vi.doMock` imports.
 - MCP session-start prompt limits now reject non-decimal numeric strings before
   schema dispatch, so malformed values like `0x10` cannot be coerced to a valid
   context-pack limit.
