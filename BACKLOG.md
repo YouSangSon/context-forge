@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `retrieveMemory` now rejects non-array hydration and lexical repository
+  results before ranking, giving repository implementations clear boundary
+  errors instead of incidental spread/type failures.
 - `retrieveMemory` now rejects non-array `VectorIndex.query` results before
   hydration, giving custom vector-index implementations a clear boundary error
   instead of an incidental spread/type failure.

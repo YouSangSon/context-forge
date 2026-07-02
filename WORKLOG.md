@@ -2,6 +2,25 @@
 
 ## 2026-07-02
 
+- Hardened repository result shape in retrieval:
+  - `src/search/retrieve-memory.ts` now checks hydrated
+    `getMemoryRecordsByIds` results are arrays before ranking.
+  - Lexical `searchMemory` results now get the same array boundary check before
+    they are merged with hydrated vector records.
+  - Malformed repository implementations now fail with clear boundary errors
+    instead of incidental spread/type failures.
+  - `tests/search/retrieve-memory.test.ts` covers non-array hydrated and lexical
+    repository results.
+
+Verification:
+- `npx vitest run tests/search/retrieve-memory.test.ts tests/search/rank-results.test.ts --reporter=dot`
+  (`2` files passed; `58` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `npm test` (`81` files passed, `2` skipped; `2059` tests passed, `34` skipped)
+- `git diff --check`
+
 - Hardened vector query result shape in retrieval:
   - `src/search/retrieve-memory.ts` now checks that each `VectorIndex.query`
     result is an array before hydration.

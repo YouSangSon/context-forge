@@ -68,11 +68,7 @@ export async function retrieveMemory(
   const hydratedRecords =
     ids.length === 0
       ? []
-      : await input.repository.getMemoryRecordsByIds(
-          ids,
-          input.organizationId,
-          input.allowLegacyAnonymous,
-        );
+      : await hydrateMemoryRecords(input, ids);
 
   const recordsById = new Map<number, SearchMemoryResult>();
   for (const record of [...hydratedRecords, ...lexicalRecords]) {
@@ -231,12 +227,33 @@ async function queryLexicalCandidates(
     return [];
   }
 
-  return input.repository.searchMemory({
+  const records = await input.repository.searchMemory({
     query: input.query,
     scopes,
     organizationId: input.organizationId,
     limit,
   });
+  assertArray(records, "repository.searchMemory result");
+  return records;
+}
+
+async function hydrateMemoryRecords(
+  input: RetrieveMemoryInput,
+  ids: number[],
+): Promise<SearchMemoryResult[]> {
+  const records = await input.repository.getMemoryRecordsByIds(
+    ids,
+    input.organizationId,
+    input.allowLegacyAnonymous,
+  );
+  assertArray(records, "repository.getMemoryRecordsByIds result");
+  return records;
+}
+
+function assertArray(value: unknown, fieldName: string): asserts value is unknown[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
 }
 
 async function queryScope(

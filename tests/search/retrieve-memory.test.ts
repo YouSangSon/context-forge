@@ -190,6 +190,59 @@ describe("retrieveMemory", () => {
     expect(repository.getMemoryRecordsByIds).not.toHaveBeenCalled();
   });
 
+  it("rejects non-array hydrated record results before ranking", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([
+        { id: "chunk:12", score: 0.9, payload: { memory_record_id: 12 } },
+      ]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      getMemoryRecordsByIds: vi.fn().mockResolvedValue(null),
+    };
+
+    await expect(
+      retrieveMemory({
+        vectorIndex: vectorIndex as never,
+        repository: repository as never,
+        vector: [0.1, 0.2, 0.3],
+        organizationId: "dev-team",
+        projectKey: "project-alpha",
+        limit: 5,
+      }),
+    ).rejects.toThrow("repository.getMemoryRecordsByIds result must be an array");
+  });
+
+  it("rejects non-array lexical record results before ranking", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      getMemoryRecordsByIds: vi.fn(),
+      searchMemory: vi.fn().mockResolvedValue(null),
+    };
+
+    await expect(
+      retrieveMemory({
+        vectorIndex: vectorIndex as never,
+        repository: repository as never,
+        vector: [0.1, 0.2, 0.3],
+        query: "ranking",
+        organizationId: "dev-team",
+        projectKey: "project-alpha",
+        limit: 5,
+      }),
+    ).rejects.toThrow("repository.searchMemory result must be an array");
+    expect(repository.getMemoryRecordsByIds).not.toHaveBeenCalled();
+  });
+
   it("keeps project hits ahead when limit is smaller than the combined candidate set", async () => {
     const vectorIndex = {
       query: vi
