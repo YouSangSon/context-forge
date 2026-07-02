@@ -10600,3 +10600,30 @@ Verification:
 - `git diff --check` (passed)
 - `npm test -- --reporter=dot`
   (`82` files passed, `1` skipped; `2339` tests passed, `34` skipped)
+
+## 2026-07-02 15:11 KST - Ingest Job Row Scalar Validation
+
+- Hardened ingest job scalar row mapping:
+  - Added RED coverage showing malformed returned organization IDs and
+    nullable ingest/qdrant error values resolved instead of failing at the
+    repository boundary.
+  - Ingest job rows now validate organization IDs as non-blank text and
+    nullable error fields as string-or-null before returning job state to
+    retry and background worker paths.
+  - No `DECISIONS.md` entry: this is repository row-mapping validation
+    hardening for an existing contract.
+
+Verification:
+- RED: `npx vitest run tests/jobs/ingest-job-repository.test.ts --reporter=dot`
+  failed with `4` malformed ingest job scalar row cases resolving instead of
+  rejecting.
+- GREEN focused: `npx vitest run tests/jobs/ingest-job-repository.test.ts --reporter=dot`
+  (`1` file passed; `6` tests passed, `6` skipped)
+- Related: `npx vitest run tests/jobs/ingest-job-repository.test.ts tests/jobs/ingest-job-claim.test.ts tests/jobs/serialize-error.test.ts tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`4` files passed; `104` tests passed, `6` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check` (passed)
+- `npm test -- --reporter=dot`
+  (`82` files passed, `1` skipped; `2343` tests passed, `34` skipped)

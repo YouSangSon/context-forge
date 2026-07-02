@@ -57,6 +57,39 @@ describe("createIngestJobRepository row mapping", () => {
       repo.create({ memoryRecordId: 42, organizationId: "org-a" }),
     ).rejects.toThrow(message);
   });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "ingest job organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message: "ingest job organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { last_error: 42 },
+      message: "ingest job last_error must be a string or null",
+    },
+    {
+      rowPatch: { qdrant_last_error: false },
+      message: "ingest job qdrant_last_error must be a string or null",
+    },
+  ])("rejects malformed ingest job scalar rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const pool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [ingestJobRow(rowPatch)],
+      }),
+    };
+    const repo = createIngestJobRepository(pool as never);
+
+    await expect(
+      repo.create({ memoryRecordId: 42, organizationId: "org-a" }),
+    ).rejects.toThrow(message);
+  });
 });
 
 async function waitForPostgres() {

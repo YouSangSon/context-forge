@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Ingest job row mapping now rejects malformed returned organization IDs and
+  nullable ingest/qdrant error strings before exposing job state.
 - Canonical memory chunk row mapping now rejects malformed returned content,
   embedding version, organization/scope metadata, nullable text fields, and
   tags before exposing stored or reindexable chunk results.

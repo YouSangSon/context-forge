@@ -303,10 +303,13 @@ function mapJob(row: IngestJobRow): IngestJob {
       row.memory_record_id,
       "ingest job memory_record_id",
     ),
-    organizationId: row.organization_id,
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "ingest job organization_id",
+    ),
     status: toIngestJobStatus(row.status),
     attempts: toNonNegativeSafeInteger(row.attempts, "ingest job attempts"),
-    lastError: row.last_error,
+    lastError: mapNullableText(row.last_error, "ingest job last_error"),
     qdrantStatus: toIngestJobQdrantStatus(row.qdrant_status),
     qdrantAttempts: toNonNegativeSafeInteger(
       row.qdrant_attempts,
@@ -316,7 +319,10 @@ function mapJob(row: IngestJobRow): IngestJob {
       row.qdrant_next_retry_at === null
         ? null
         : toIsoString(row.qdrant_next_retry_at),
-    qdrantLastError: row.qdrant_last_error,
+    qdrantLastError: mapNullableText(
+      row.qdrant_last_error,
+      "ingest job qdrant_last_error",
+    ),
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
   };
@@ -332,6 +338,21 @@ function toPositiveSafeInteger(value: unknown, fieldName: string): number {
   const numberValue = toNumber(value);
   assertPositiveSafeInteger(numberValue, fieldName);
   return numberValue;
+}
+
+function mapRequiredText(value: unknown, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value;
+}
+
+function mapNullableText(value: unknown, fieldName: string): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
 }
 
 function toIngestJobStatus(value: unknown): IngestJobStatus {

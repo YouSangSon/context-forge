@@ -4,18 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Reindexable Memory Chunk Row Scalar Validation
+## Current Loop - Ingest Job Row Scalar Validation
 
 Status:
-- Canonical memory chunk row mapping now validates returned content,
-  embedding version, organization/scope metadata, nullable text fields, and tag
-  arrays before exposing stored or reindexable chunk results.
-- Malformed chunk rows fail at the repository boundary instead of leaking
-  invalid indexing metadata to vector rebuild paths.
+- Ingest job row mapping now validates returned organization IDs and nullable
+  ingest/qdrant error strings before exposing job state.
+- Malformed job scalar rows fail at the repository boundary instead of leaking
+  invalid retry metadata to background workers.
 
 Verification:
-- Focused canonical indexing tests passed after RED chunk row reproducers.
-- Related ingest/reindex/context-pack/vector tests passed.
+- Focused ingest job repository tests passed after RED scalar-row reproducers.
+- Related ingest claim, serialize-error, and canonical indexing tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.
