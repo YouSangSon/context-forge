@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Pgvector Upsert Point Id Validation
+## Current Loop - Qdrant Upsert Point Id Validation
 
 Status:
-- `src/vector/pgvector-index.ts` now validates pgvector upsert point IDs are
-  non-empty strings before opening a database client.
-- `tests/vector/pgvector-index.integration.test.ts` now covers empty and blank
-  point IDs with a mocked pool.
+- `src/vector/qdrant-index.ts` now validates Qdrant upsert point IDs are
+  non-empty strings before calling the Qdrant client.
+- `tests/vector/qdrant-index.test.ts` now covers empty and blank point IDs with
+  a mocked client.
 
 Verification:
-- Focused pgvector tests passed after a RED reproducer.
+- Focused Qdrant tests passed after a RED reproducer.
 - Related vector/search tests passed.
 - Typecheck passed.
 - Build, audit, full tests, and diff check passed.

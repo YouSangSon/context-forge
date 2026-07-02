@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant upsert now validates point IDs are non-empty strings before calling
+  the Qdrant client, matching the pgvector adapter's point ID boundary guard.
 - Pgvector upsert now validates point IDs are non-empty strings before opening
   a database client, so malformed `VectorPoint.id` values cannot reach SQL.
 - Pgvector `deleteByRecordIds` now validates record IDs are positive safe

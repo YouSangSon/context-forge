@@ -85,6 +85,7 @@ export function createQdrantVectorIndex(
       assertVectorPointOrganizationIds(points);
 
       for (const point of points) {
+        assertQdrantPointId(point);
         assertQdrantPointVector(point);
       }
 
@@ -189,6 +190,12 @@ function assertQdrantPointVector(point: VectorPoint): void {
   }
 
   assertQdrantFiniteVectorComponents(point.vector, "vector");
+}
+
+function assertQdrantPointId(point: VectorPoint): void {
+  if (typeof point.id !== "string" || point.id.trim().length === 0) {
+    throw new Error("point.id must be a non-empty string");
+  }
 }
 
 function assertQdrantFiniteVectorComponents(
