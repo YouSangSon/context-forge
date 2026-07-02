@@ -9781,3 +9781,35 @@ Verification:
 - `npm audit --audit-level=moderate` (`0` vulnerabilities)
 - `npm test -- --reporter=dot` (`81` files passed, `2` skipped; `2168` tests passed, `34` skipped)
 - `git diff --check` (passed)
+
+- Hardened MCP session prompt limit parsing:
+  - Added RED coverage showing `akasha_session_start` accepted a prompt
+    `limit` argument of `"0x10"` because `z.coerce.number()` converted it to
+    `16` before dispatching to `build_context_pack`.
+  - Replaced the prompt limit coercion with a schema that accepts numbers or
+    decimal digit strings only, then applies the existing positive integer and
+    max-100 bounds.
+  - The existing decimal string prompt path (`"3"`) remains supported.
+  - No `DECISIONS.md` entry: this is MCP prompt input hardening for the
+    existing context-pack prompt contract, not a new durable architecture
+    decision.
+
+Verification:
+- RED: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  failed because `"0x10"` resolved and dispatched instead of rejecting.
+- GREEN focused: `npx vitest run tests/mcp/server.test.ts --reporter=dot`
+  (`1` file passed; `132` tests passed)
+- Related: `npx vitest run tests/mcp/server.test.ts tests/app/mcp-http.test.ts tests/app/server.test.ts --reporter=dot`
+  (`3` files passed; `218` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- Initial `npm test -- --reporter=dot` run failed in
+  `tests/app/start-background-workers-server.test.ts` and
+  `tests/app/start-operator-server-metrics.test.ts` with transient worker
+  startup expectations/timeouts.
+- Isolated rerun: `npx vitest run tests/app/start-background-workers-server.test.ts tests/app/start-operator-server-metrics.test.ts --reporter=dot`
+  (`2` files passed; `4` tests passed)
+- Rerun: `npm test -- --reporter=dot`
+  (`81` files passed, `2` skipped; `2169` tests passed, `34` skipped)
+- `git diff --check` (passed)

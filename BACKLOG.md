@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- MCP session-start prompt limits now reject non-decimal numeric strings before
+  schema dispatch, so malformed values like `0x10` cannot be coerced to a valid
+  context-pack limit.
 - Background queue metrics now reject non-decimal count strings before
   coercion, so malformed values like `0x10` cannot become valid backlog
   gauges.

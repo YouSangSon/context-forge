@@ -3928,6 +3928,27 @@ describe("createMcpServer resources and prompts", () => {
     await server.close();
   });
 
+  it("rejects non-decimal session prompt limits before dispatch", async () => {
+    const registry = buildRegistryForMcpProtocol();
+    const server = createMcpServer({ registry });
+    const client = await createInMemoryClient(server);
+
+    await expect(
+      client.getPrompt({
+        name: "akasha_session_start",
+        arguments: {
+          projectKey: "project-alpha",
+          task: "continue implementation",
+          limit: "0x10",
+        },
+      }),
+    ).rejects.toThrow();
+    expect(registry.build_context_pack).not.toHaveBeenCalled();
+
+    await client.close();
+    await server.close();
+  });
+
   it("rejects whitespace-only prompt identifiers before dispatch", async () => {
     const registry = buildRegistryForMcpProtocol();
     const server = createMcpServer({ registry });

@@ -4,19 +4,21 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Background Queue Count String Validation
+## Current Loop - MCP Session Prompt Limit Validation
 
 Status:
-- Background queue metric count mapping now accepts only decimal digit strings
-  before numeric conversion.
-- Malformed numeric-looking strings such as `0x10` now fail closed in backlog
-  gauge collection instead of being coerced with `Number()`.
+- `akasha_session_start` prompt limits now accept only positive safe integer
+  numbers or decimal digit strings up to the shared maximum.
+- Malformed numeric-looking strings such as `0x10` now fail schema validation
+  instead of being coerced with `z.coerce.number()`.
 
 Verification:
-- Focused background queue metric tests passed after a RED reproducer.
-- Related metrics tests passed.
+- Focused MCP server prompt tests passed after a RED reproducer.
+- Related MCP HTTP/server tests passed.
 - Typecheck passed.
-- Build, audit, full tests, and diff check passed.
+- Build, audit, full tests, and diff check passed. One full-test run exposed
+  transient background-worker test failures; the failed files passed in
+  isolation and the full suite passed on rerun.
 - Local commit is expected/done by the controller; do not push or merge from
   this loop.
 

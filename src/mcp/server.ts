@@ -69,6 +69,15 @@ const MEMORY_CLASSIFICATION_SCHEMA = z.object({
   confidence: z.number().min(0).max(1).optional(),
 });
 
+const sessionPromptLimitSchema = z.union([
+  z.number().int().positive().max(100),
+  z
+    .string()
+    .regex(/^\d+$/)
+    .transform((value) => Number(value))
+    .pipe(z.number().int().positive().max(100)),
+]);
+
 export function createMcpServer(
   options: CreateMcpServerOptions = {},
 ): McpServer {
@@ -603,7 +612,7 @@ function registerAkashaPrompts(server: McpServer, registry: ToolRegistry): void 
         organizationId: nonBlankTextInputSchema.optional(),
         projectKey: nonBlankTextInputSchema,
         task: nonBlankTextInputSchema,
-        limit: z.coerce.number().int().positive().max(100).optional(),
+        limit: sessionPromptLimitSchema.optional(),
       },
     },
     async ({ organizationId, projectKey, task, limit }) => {
