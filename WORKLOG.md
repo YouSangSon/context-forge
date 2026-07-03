@@ -2,6 +2,34 @@
 
 ## 2026-07-03
 
+- 22:54 KST - Hardened vector point builder tag metadata normalization:
+  - `buildVectorPoint` now trims direct tag entries before building vector
+    payloads.
+  - Direct builder calls now reject blank tag entries before Qdrant/pgvector
+    backend writes.
+  - Existing tag type validation, scope validation, and memory metadata enum
+    validation remain unchanged.
+  - Scoped reviewer agent passed the diff.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/point-builder.test.ts -t "tags|scope payload" --reporter=dot`
+  failed `2` tests because raw tag whitespace reached payloads and blank tag
+  entries passed the builder.
+- GREEN: same command passed (`1` file passed; `2` tests passed, `34`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/point-builder.test.ts --reporter=dot`
+  (`1` file passed; `36` tests passed)
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `213` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2532`
+  tests passed, `34` skipped)
+
 - 22:49 KST - Hardened vector point builder scope type enum validation:
   - `buildVectorPoint` now rejects direct `scopeType` values outside `user`
     and `project` before building vector payloads.

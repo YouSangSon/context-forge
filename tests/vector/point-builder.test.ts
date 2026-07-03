@@ -82,6 +82,7 @@ describe("buildVectorPoint", () => {
       projectKey: " project-alpha ",
       kind: " decision ",
       durability: " durable ",
+      tags: [" ops ", "security "],
     }));
 
     expect(point.payload.organization_id).toBe("dev-team");
@@ -90,6 +91,7 @@ describe("buildVectorPoint", () => {
     expect(point.payload.project_key).toBe("project-alpha");
     expect(point.payload.kind).toBe("decision");
     expect(point.payload.durability).toBe("durable");
+    expect(point.payload.tags).toEqual(["ops", "security"]);
   });
 
   it("rejects whitespace-only organizationId before building payload", () => {
@@ -244,5 +246,9 @@ describe("buildVectorPoint", () => {
     expect(
       callBuildVectorPoint({ ...buildInput(), tags: ["ops", 12] }),
     ).toThrow("tags[1] must be a string");
+
+    expect(
+      callBuildVectorPoint({ ...buildInput(), tags: ["ops", " \n\t "] }),
+    ).toThrow("tags[1] must contain non-whitespace text");
   });
 });

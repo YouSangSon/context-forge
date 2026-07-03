@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `buildVectorPoint` now trims direct tag metadata and rejects blank tag entries
+  before returning vector points.
 - `buildVectorPoint` now rejects direct `scopeType` values outside `user` and
   `project` before returning vector points.
 - `buildVectorPoint` now trims direct `kind` and `durability` metadata and

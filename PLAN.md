@@ -4,17 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Point Scope Type Enum Validation
+## Current Loop - Vector Point Tag Metadata Normalization
 
 Status:
-- `buildVectorPoint` now rejects direct `scopeType` values outside `user` and
-  `project` before building vector payloads.
-- Existing scope payload trimming and metadata enum validation remain
+- `buildVectorPoint` now trims direct tag metadata before building vector
+  payloads.
+- Direct builder calls now reject blank tag entries before backend writes.
+- Existing tag type validation and vector metadata validation remain
   unchanged.
 
 Verification:
-- Focused point-builder `scopeType` test passed after RED coverage showed
-  invalid direct scope types passing the builder.
+- Focused point-builder tags tests passed after RED coverage showed raw tag
+  whitespace and blank tag pass-through.
 - Full point-builder tests, related Qdrant/pgvector vector tests, and
   typecheck passed.
 - Scoped reviewer agent passed the diff.

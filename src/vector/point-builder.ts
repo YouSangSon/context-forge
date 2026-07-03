@@ -53,7 +53,7 @@ export function buildVectorPoint(input: VectorPointInput): VectorPoint {
       durability,
       title: input.title ?? null,
       summary: input.summary ?? null,
-      tags: [...(input.tags ?? [])],
+      tags: (input.tags ?? []).map((tag) => tag.trim()),
       updated_at: input.updatedAt,
       embedding_version: input.embeddingVersion,
     },
@@ -197,6 +197,9 @@ function assertOptionalStringArray(value: unknown, fieldName: string): void {
   for (const [index, entry] of value.entries()) {
     if (typeof entry !== "string") {
       throw new Error(`${fieldName}[${index}] must be a string`);
+    }
+    if (entry.trim().length === 0) {
+      throw new Error(`${fieldName}[${index}] must contain non-whitespace text`);
     }
   }
 }
