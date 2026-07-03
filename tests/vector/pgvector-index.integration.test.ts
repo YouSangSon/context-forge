@@ -538,6 +538,63 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
   });
 
   it.each([
+    {
+      label: "updated_at undefined",
+      payload: { updated_at: undefined },
+      message: "point.payload.updated_at must be a string or null",
+    },
+    {
+      label: "updated_at non-string",
+      payload: { updated_at: 12 },
+      message: "point.payload.updated_at must be a string or null",
+    },
+    {
+      label: "updated_at blank",
+      payload: { updated_at: " \n\t " },
+      message: "point.payload.updated_at must be a non-empty string",
+    },
+    {
+      label: "embedding_version undefined",
+      payload: { embedding_version: undefined },
+      message: "point.payload.embedding_version must be a string or null",
+    },
+    {
+      label: "embedding_version non-string",
+      payload: { embedding_version: false },
+      message: "point.payload.embedding_version must be a string or null",
+    },
+    {
+      label: "embedding_version blank",
+      payload: { embedding_version: " \n\t " },
+      message: "point.payload.embedding_version must be a non-empty string",
+    },
+  ])("upsert rejects malformed provided point storage metadata before opening a client: $label", async ({ payload, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-storage",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            kind: "fact",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
     { label: "empty", id: "" },
     { label: "blank", id: " \n\t " },
   ])("upsert rejects malformed point ids before opening a client: $label", async ({ id }) => {

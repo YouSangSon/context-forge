@@ -2,6 +2,30 @@
 
 ## 2026-07-03
 
+- 23:27 KST - Hardened vector adapter provided storage text validation:
+  - Qdrant and PGVector upserts now reject provided `payload.updated_at` and
+    `payload.embedding_version` unless they are explicit `null` or nonblank
+    strings.
+  - Missing storage text keys remain allowed for direct adapter compatibility.
+  - Scoped reviewer passed the diff.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts -t "point storage metadata" --reporter=dot`
+  failed `12` tests because malformed provided storage text metadata reached
+  Qdrant upsert or pgvector client paths.
+- GREEN: same command passed (`2` files passed; `12` tests passed, `207`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `244` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2563`
+  tests passed, `34` skipped)
+
 - 23:18 KST - Hardened vector adapter provided text metadata validation:
   - Qdrant and PGVector upserts now reject provided `payload.title` and
     `payload.summary` unless they are explicit `null` or nonblank strings.

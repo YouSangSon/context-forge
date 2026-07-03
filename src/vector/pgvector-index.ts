@@ -202,6 +202,8 @@ export function createPgVectorIndex(
         assertPgVectorPointDurability(point);
         assertPgVectorOptionalPayloadText(point.payload, "title");
         assertPgVectorOptionalPayloadText(point.payload, "summary");
+        assertPgVectorOptionalPayloadText(point.payload, "updated_at");
+        assertPgVectorOptionalPayloadText(point.payload, "embedding_version");
         assertPgVectorPointTags(point);
       }
 
@@ -616,7 +618,7 @@ function assertPgVectorPointTags(point: VectorPoint): void {
 
 function assertPgVectorOptionalPayloadText(
   payload: Record<string, unknown>,
-  key: "title" | "summary",
+  key: "title" | "summary" | "updated_at" | "embedding_version",
 ): void {
   if (!(key in payload)) {
     return;

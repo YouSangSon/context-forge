@@ -100,6 +100,8 @@ export function createQdrantVectorIndex(
         assertQdrantPointDurability(point);
         assertQdrantOptionalPayloadText(point.payload, "title");
         assertQdrantOptionalPayloadText(point.payload, "summary");
+        assertQdrantOptionalPayloadText(point.payload, "updated_at");
+        assertQdrantOptionalPayloadText(point.payload, "embedding_version");
         assertQdrantPointTags(point);
       }
 
@@ -335,7 +337,7 @@ function assertQdrantPointTags(point: VectorPoint): void {
 
 function assertQdrantOptionalPayloadText(
   payload: Record<string, unknown>,
-  key: "title" | "summary",
+  key: "title" | "summary" | "updated_at" | "embedding_version",
 ): void {
   if (!(key in payload)) {
     return;

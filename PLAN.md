@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Adapter Provided Text Validation
+## Current Loop - Vector Adapter Provided Storage Text Validation
 
 Status:
 - Qdrant and PGVector upserts now reject malformed provided point
-  `payload.title` and `payload.summary` before backend writes.
+  `payload.updated_at` and `payload.embedding_version` before backend writes.
 - Missing keys and explicit `null` remain allowed for direct adapter
   compatibility.
 
 Verification:
-- Focused Qdrant/pgvector text metadata tests passed after RED coverage showed
-  malformed provided title/summary reaching backend paths.
+- Focused Qdrant/pgvector storage text tests passed after RED coverage showed
+  malformed provided updated_at/embedding_version reaching backend paths.
 - Related vector tests and typecheck passed.
 - Scoped reviewer agent passed the diff.
 - Build, audit, full tests, and diff check passed.
