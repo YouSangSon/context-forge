@@ -2,6 +2,33 @@
 
 ## 2026-07-03
 
+- 23:18 KST - Hardened vector adapter provided text metadata validation:
+  - Qdrant and PGVector upserts now reject provided `payload.title` and
+    `payload.summary` unless they are explicit `null` or nonblank strings.
+  - Missing title/summary keys remain allowed for direct adapter compatibility.
+  - Scoped reviewer initially caught provided `undefined`; follow-up tests and
+    key-aware helpers now reject it before backend paths.
+  - Scoped re-review passed the diff.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts -t "point text metadata" --reporter=dot`
+  failed `8` tests because malformed provided text metadata reached Qdrant
+  upsert or pgvector client paths.
+- RED follow-up: same command failed `4` tests because provided `undefined`
+  was still treated as missing.
+- GREEN: same command passed (`2` files passed; `12` tests passed, `195`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `232` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2551`
+  tests passed, `34` skipped)
+
 - 23:09 KST - Hardened vector adapter provided tags validation:
   - Qdrant and PGVector upserts now reject provided `payload.tags` unless it is
     an array of nonblank strings.

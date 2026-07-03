@@ -481,6 +481,63 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
   });
 
   it.each([
+    {
+      label: "title undefined",
+      payload: { title: undefined },
+      message: "point.payload.title must be a string or null",
+    },
+    {
+      label: "title non-string",
+      payload: { title: 12 },
+      message: "point.payload.title must be a string or null",
+    },
+    {
+      label: "title blank",
+      payload: { title: " \n\t " },
+      message: "point.payload.title must be a non-empty string",
+    },
+    {
+      label: "summary non-string",
+      payload: { summary: false },
+      message: "point.payload.summary must be a string or null",
+    },
+    {
+      label: "summary undefined",
+      payload: { summary: undefined },
+      message: "point.payload.summary must be a string or null",
+    },
+    {
+      label: "summary blank",
+      payload: { summary: " \n\t " },
+      message: "point.payload.summary must be a non-empty string",
+    },
+  ])("upsert rejects malformed provided point text metadata before opening a client: $label", async ({ payload, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-text",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            kind: "fact",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
     { label: "empty", id: "" },
     { label: "blank", id: " \n\t " },
   ])("upsert rejects malformed point ids before opening a client: $label", async ({ id }) => {

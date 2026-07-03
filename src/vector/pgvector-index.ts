@@ -200,6 +200,8 @@ export function createPgVectorIndex(
         assertPgVectorPointProjectKey(point);
         assertPgVectorPointKind(point);
         assertPgVectorPointDurability(point);
+        assertPgVectorOptionalPayloadText(point.payload, "title");
+        assertPgVectorOptionalPayloadText(point.payload, "summary");
         assertPgVectorPointTags(point);
       }
 
@@ -610,6 +612,24 @@ function assertPgVectorPointTags(point: VectorPoint): void {
       );
     }
   }
+}
+
+function assertPgVectorOptionalPayloadText(
+  payload: Record<string, unknown>,
+  key: "title" | "summary",
+): void {
+  if (!(key in payload)) {
+    return;
+  }
+  const value = payload[key];
+  const fieldName = `point.payload.${key}`;
+  if (value === null) {
+    return;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string or null`);
+  }
+  assertPgVectorNonEmptyString(value, fieldName);
 }
 
 function assertPgVectorNonEmptyString(

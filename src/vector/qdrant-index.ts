@@ -98,6 +98,8 @@ export function createQdrantVectorIndex(
         assertQdrantPointProjectKey(point);
         assertQdrantPointKind(point);
         assertQdrantPointDurability(point);
+        assertQdrantOptionalPayloadText(point.payload, "title");
+        assertQdrantOptionalPayloadText(point.payload, "summary");
         assertQdrantPointTags(point);
       }
 
@@ -329,6 +331,24 @@ function assertQdrantPointTags(point: VectorPoint): void {
       );
     }
   }
+}
+
+function assertQdrantOptionalPayloadText(
+  payload: Record<string, unknown>,
+  key: "title" | "summary",
+): void {
+  if (!(key in payload)) {
+    return;
+  }
+  const value = payload[key];
+  const fieldName = `point.payload.${key}`;
+  if (value === null) {
+    return;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string or null`);
+  }
+  assertQdrantNonEmptyString(value, fieldName);
 }
 
 function assertQdrantNonEmptyString(

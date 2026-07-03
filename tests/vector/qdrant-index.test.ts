@@ -1038,6 +1038,67 @@ describe("createQdrantVectorIndex — point building (upsert)", () => {
   });
 
   it.each([
+    {
+      label: "title undefined",
+      payload: { title: undefined },
+      message: "point.payload.title must be a string or null",
+    },
+    {
+      label: "title non-string",
+      payload: { title: 12 },
+      message: "point.payload.title must be a string or null",
+    },
+    {
+      label: "title blank",
+      payload: { title: " \n\t " },
+      message: "point.payload.title must be a non-empty string",
+    },
+    {
+      label: "summary non-string",
+      payload: { summary: false },
+      message: "point.payload.summary must be a string or null",
+    },
+    {
+      label: "summary undefined",
+      payload: { summary: undefined },
+      message: "point.payload.summary must be a string or null",
+    },
+    {
+      label: "summary blank",
+      payload: { summary: " \n\t " },
+      message: "point.payload.summary must be a non-empty string",
+    },
+  ])("rejects malformed provided point text metadata before Qdrant upsert: $label", async ({ payload, message }) => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-text",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            kind: "fact",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(client.upsert).not.toHaveBeenCalled();
+  });
+
+  it.each([
     { label: "empty", id: "" },
     { label: "blank", id: " \n\t " },
   ])("rejects malformed point ids before Qdrant upsert: $label", async ({ id }) => {
