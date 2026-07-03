@@ -562,6 +562,116 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(memoryInsert?.params[0]).toBe("org-a");
   });
 
+  it("addMemory trims source provenance before lookup and insert", async () => {
+    const sourceRow = {
+      source_id_joined: 9,
+      source_organization_id: "org-a",
+      source_scope_type: "project",
+      source_scope_id: "proj-x",
+      source_type: "document",
+      source_ref: "{\"sourceRef\":\"docs/spec.md\",\"uri\":\"file:///spec.md\"}",
+      source_title: "Spec",
+      source_created_at: "2026-06-26T00:00:00.000Z",
+    };
+    const memoryRow = {
+      id: 42,
+      organization_id: "org-a",
+      scope_type: "project",
+      scope_id: "proj-x",
+      project_key: "proj-x",
+      kind: "fact",
+      title: null,
+      content: "plain text only",
+      summary: "plain text only",
+      durability: "ephemeral",
+      importance: 0,
+      source_id: 9,
+      created_at: "2026-06-26T00:00:00.000Z",
+      updated_at: "2026-06-26T00:00:00.000Z",
+    };
+    const clientQueryCalls: SqlQueryCall[] = [];
+    const mockClient = {
+      query: vi.fn().mockImplementation((sql: string, params?: unknown[]) => {
+        clientQueryCalls.push({ sql, params: params ?? [] });
+        if (sql === "BEGIN" || sql === "COMMIT") {
+          return Promise.resolve({ rows: [] });
+        }
+        if (sql.includes("SELECT") && sql.includes("FROM sources")) {
+          return Promise.resolve({ rows: [] });
+        }
+        if (sql.includes("INSERT INTO sources")) {
+          return Promise.resolve({ rows: [sourceRow] });
+        }
+        if (sql.includes("INSERT INTO memory_records")) {
+          return Promise.resolve({ rows: [memoryRow] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const mockPool = {
+      connect: vi.fn().mockResolvedValue(mockClient),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    const created = await repo.addMemory({
+      organizationId: "org-a",
+      scopeType: "project",
+      scopeId: "proj-x",
+      projectKey: "proj-x",
+      memoryType: "fact",
+      content: "plain text only",
+      source: {
+        scopeType: "project",
+        scopeId: "proj-x",
+        sourceType: "document",
+        sourceRef: " docs/spec.md ",
+        title: " Spec ",
+        uri: " file:///spec.md ",
+      },
+    });
+
+    const sourceSelect = clientQueryCalls.find(
+      ({ sql }) => sql.includes("SELECT") && sql.includes("FROM sources"),
+    );
+    const sourceInsert = clientQueryCalls.find(({ sql }) =>
+      sql.includes("INSERT INTO sources"),
+    );
+    expect(sourceSelect?.params[4]).toBe("docs/spec.md");
+    expect(JSON.parse(String(sourceInsert?.params[4]))).toEqual({
+      sourceRef: "docs/spec.md",
+      uri: "file:///spec.md",
+    });
+    expect(sourceInsert?.params[5]).toBe("Spec");
+    expect(created.source.sourceRef).toBe("docs/spec.md");
+    expect(created.source.uri).toBe("file:///spec.md");
+    expect(created.source.title).toBe("Spec");
+  });
+
+  it("addMemory rejects whitespace-only source provenance before opening a transaction", async () => {
+    const mockPool = {
+      connect: vi.fn(),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.addMemory({
+        scopeType: "project",
+        scopeId: "proj-x",
+        memoryType: "fact",
+        content: "plain text only",
+        source: {
+          scopeType: "project",
+          scopeId: "proj-x",
+          sourceType: "document",
+          sourceRef: " \n\t ",
+        },
+      }),
+    ).rejects.toThrow("sourceRef or externalId");
+
+    expect(mockPool.connect).not.toHaveBeenCalled();
+  });
+
   it.each([
     {
       sourceId: "0",

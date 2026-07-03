@@ -190,6 +190,7 @@ export function createMemoryRepository(
       const rawOrganizationId = input.organizationId ?? DEFAULT_ORG_ID;
       assertNonBlankText(rawOrganizationId, "organizationId");
       const organizationId = rawOrganizationId.trim();
+      requireSourceKey(input.source);
       const client = await pool.connect();
 
       try {
@@ -1029,13 +1030,14 @@ function mapPostgresGraphRelationship(
 function requireSourceKey(input: AddMemoryInput["source"]): string {
   const sourceKey = input.sourceRef ?? input.externalId;
 
-  if (!sourceKey) {
+  if (sourceKey === undefined) {
     throw new Error(
       "Memory source provenance is required: provide sourceRef or externalId",
     );
   }
 
-  return sourceKey;
+  assertNonBlankText(sourceKey, "sourceRef or externalId");
+  return sourceKey.trim();
 }
 
 function summarize(content: string): string {
@@ -1339,6 +1341,14 @@ async function upsertPostgresSource(
   organizationId: string,
 ): Promise<PostgresSourceRow> {
   const sourceKey = requireSourceKey(input.source);
+  const sourceTitle = normalizeNullableText(
+    input.source.title ?? null,
+    "source.title",
+  );
+  const sourceUri = normalizeNullableText(
+    input.source.uri ?? null,
+    "source.uri",
+  );
   // Push the source_ref match into the DB — source_ref is stored as JSON
   // {"sourceRef":...,"uri":...}, so we extract with ::jsonb->>'sourceRef'.
   // LIMIT 1 + ORDER BY id ASC preserves the lowest-id-match semantics of
@@ -1369,7 +1379,7 @@ async function upsertPostgresSource(
   const nextSourceRef = serializeStoredPostgresSourceRef({
     sourceRef: sourceKey,
     uri:
-      input.source.uri
+      sourceUri
       ?? (existingRow
         ? parseStoredPostgresSourceRef(existingRow.source_ref).uri
         : null),
@@ -1386,7 +1396,7 @@ async function upsertPostgresSource(
       `,
       [
         existingRow.source_id_joined,
-        input.source.title ?? null,
+        sourceTitle,
         nextSourceRef,
       ],
     );
@@ -1413,7 +1423,7 @@ async function upsertPostgresSource(
       input.source.scopeId,
       input.source.sourceType,
       nextSourceRef,
-      input.source.title ?? null,
+      sourceTitle,
       createHash("sha256").update(input.content).digest("hex"),
     ],
   );

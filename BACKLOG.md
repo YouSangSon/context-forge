@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Source provenance writes now trim direct `sourceRef`, `source.title`, and
+  `uri` metadata, and reject blank source provenance before transactions.
 - Stored Postgres source metadata parsing now trims valid JSON `sourceRef` and
   `uri` text before returning provenance fields.
 - Memory repository row mapping now trims stored hydrated memory, graph, and

@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- 21:18 KST - Hardened source provenance write normalization:
+  - `addMemory` now rejects blank source provenance before opening a
+    transaction.
+  - `upsertPostgresSource` trims direct `sourceRef`, `source.title`, and `uri`
+    metadata before source lookup and insert SQL.
+  - `tests/store/memory-repository.test.ts` covers trimmed SQL params and
+    fail-fast blank source provenance validation.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/memory-repository.test.ts -t "trims source provenance|whitespace-only source provenance" --reporter=dot`
+  failed `2` tests because raw source provenance reached SQL params and blank
+  provenance opened the transaction path.
+- GREEN: same command passed (`1` file passed; `2` tests passed, `187`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `182` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2480`
+  tests passed, `34` skipped)
+
 - 21:13 KST - Hardened stored Postgres source metadata normalization:
   - `parseStoredPostgresSourceRef` now trims valid JSON `sourceRef` and `uri`
     fields before returning provenance metadata.
