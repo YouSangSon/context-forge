@@ -224,9 +224,22 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
   });
 
   it.each([
-    { label: "missing", payload: {} },
-    { label: "blank", payload: { scope_type: " \n\t " } },
-  ])("upsert rejects malformed point scope_type before opening a client: $label", async ({ payload }) => {
+    {
+      label: "missing",
+      payload: {},
+      message: "point.payload.scope_type must be a non-empty string",
+    },
+    {
+      label: "blank",
+      payload: { scope_type: " \n\t " },
+      message: "point.payload.scope_type must be a non-empty string",
+    },
+    {
+      label: "invalid",
+      payload: { scope_type: "team", project_key: null, kind: "fact" },
+      message: "point.payload.scope_type must be one of: user, project",
+    },
+  ])("upsert rejects malformed point scope_type before opening a client: $label", async ({ payload, message }) => {
     const { pool, query } = makeMockPool();
     const connect = vi.mocked(pool.connect);
     const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
@@ -243,7 +256,7 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
           },
         },
       ]),
-    ).rejects.toThrow("point.payload.scope_type must be a non-empty string");
+    ).rejects.toThrow(message);
 
     expect(connect).not.toHaveBeenCalled();
     expect(query).not.toHaveBeenCalled();

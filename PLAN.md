@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Point Payload Metadata Normalization
+## Current Loop - Vector Upsert Scope Type Validation
 
 Status:
-- `buildVectorPoint` now trims direct organization, scope, and project-key
-  payload metadata before returning vector points.
-- Existing blank scoping metadata validation remains unchanged.
+- Qdrant and PGVector upserts now reject direct point `payload.scope_type`
+  values outside `user` and `project` before backend writes.
+- Existing missing and blank scope-type validation remains unchanged.
 
 Verification:
-- Focused point-builder test passed after RED coverage showed raw payload
-  metadata reaching vector points.
-- Full point-builder test file and related vector adapter tests passed.
+- Focused vector adapter tests passed after RED coverage showed invalid
+  `scope_type` values reaching backend client paths.
+- Related vector adapter and point-builder tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and PGVector upserts now reject direct point `payload.scope_type`
+  values outside `user` and `project` before backend writes.
 - `buildVectorPoint` now trims direct organization, scope, and project-key
   payload metadata before returning vector points.
 - Canonical chunk listing now trims direct scope IDs before SQL params are

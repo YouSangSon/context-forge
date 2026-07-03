@@ -519,6 +519,14 @@ function assertPgVectorPointScopeType(point: VectorPoint): void {
     point.payload.scope_type,
     "point.payload.scope_type",
   );
+  if (
+    point.payload.scope_type !== "user" &&
+    point.payload.scope_type !== "project"
+  ) {
+    throw new Error(
+      "point.payload.scope_type must be one of: user, project",
+    );
+  }
 }
 
 function assertPgVectorPointProjectKey(point: VectorPoint): void {

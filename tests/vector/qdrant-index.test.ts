@@ -753,9 +753,22 @@ describe("createQdrantVectorIndex — point building (upsert)", () => {
   });
 
   it.each([
-    { label: "missing", payload: {} },
-    { label: "blank", payload: { scope_type: " \n\t " } },
-  ])("rejects malformed point scope_type before Qdrant upsert: $label", async ({ payload }) => {
+    {
+      label: "missing",
+      payload: {},
+      message: "point.payload.scope_type must be a non-empty string",
+    },
+    {
+      label: "blank",
+      payload: { scope_type: " \n\t " },
+      message: "point.payload.scope_type must be a non-empty string",
+    },
+    {
+      label: "invalid",
+      payload: { scope_type: "team", project_key: null, kind: "fact" },
+      message: "point.payload.scope_type must be one of: user, project",
+    },
+  ])("rejects malformed point scope_type before Qdrant upsert: $label", async ({ payload, message }) => {
     const client = {
       query: vi.fn(),
       upsert: vi.fn(),
@@ -777,7 +790,7 @@ describe("createQdrantVectorIndex — point building (upsert)", () => {
           },
         },
       ]),
-    ).rejects.toThrow("point.payload.scope_type must be a non-empty string");
+    ).rejects.toThrow(message);
 
     expect(client.upsert).not.toHaveBeenCalled();
   });
