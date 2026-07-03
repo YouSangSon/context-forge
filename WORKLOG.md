@@ -1,5 +1,31 @@
 # WORKLOG
 
+## 2026-07-04
+
+- 01:10 KST - Hardened `retrieveMemory` direct scope identifier normalization:
+  - `retrieveMemory` now trims direct `projectKey` and `userScopeId` once after
+    validation.
+  - Vector filters and lexical repository scopes now receive normalized scope
+    identifiers.
+  - Scoped reviewer agent timed out after interrupt; no reviewer PASS is
+    recorded for this loop.
+
+RED/GREEN:
+- RED: `npm test -- tests/search/retrieve-memory.test.ts -t "scope identifiers" --reporter=dot`
+  failed `1` test because raw `projectKey` whitespace reached vector filters.
+- GREEN: same command passed (`1` file passed; `1` test passed, `38`
+  skipped).
+
+Verification:
+- `npm test -- tests/search/retrieve-memory.test.ts tests/search/rank-results.test.ts tests/search/lexical-score.test.ts --reporter=dot`
+  (`3` files passed; `72` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2567`
+  tests passed, `34` skipped)
+
 ## 2026-07-03
 
 - 23:32 KST - Hardened Qdrant hit record ID validation:

@@ -818,6 +818,61 @@ describe("retrieveMemory", () => {
     });
   });
 
+  it("trims direct scope identifiers before vector and lexical retrieval", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      searchMemory: vi.fn().mockResolvedValue([]),
+      getMemoryRecordsByIds: vi.fn(),
+    };
+
+    await retrieveMemory({
+      vectorIndex: vectorIndex as never,
+      repository: repository as never,
+      vector: [0.1, 0.2, 0.3],
+      query: "timeout retry backoff",
+      organizationId: "dev-team",
+      projectKey: " project-alpha ",
+      userScopeId: " alice ",
+      limit: 5,
+    });
+
+    expect(vectorIndex.query).toHaveBeenNthCalledWith(
+      1,
+      [0.1, 0.2, 0.3],
+      {
+        organizationId: "dev-team",
+        scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+        projectKey: "project-alpha",
+      },
+      5,
+    );
+    expect(vectorIndex.query).toHaveBeenNthCalledWith(
+      2,
+      [0.1, 0.2, 0.3],
+      {
+        organizationId: "dev-team",
+        scopes: [{ scopeType: "user", scopeId: "alice" }],
+        projectKey: null,
+      },
+      5,
+    );
+    expect(repository.searchMemory).toHaveBeenCalledWith({
+      query: "timeout retry backoff",
+      scopes: [
+        { scopeType: "project", scopeId: "project-alpha" },
+        { scopeType: "user", scopeId: "alice" },
+      ],
+      organizationId: "dev-team",
+      limit: 20,
+    });
+  });
+
   it("caps lexical oversampling before calling the repository", async () => {
     const vectorIndex = {
       query: vi.fn().mockResolvedValue([]),

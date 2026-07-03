@@ -44,9 +44,11 @@ export async function retrieveMemory(
   const normalizedInput: RetrieveMemoryInput = {
     ...input,
     organizationId: input.organizationId?.trim(),
+    projectKey: input.projectKey.trim(),
+    userScopeId: input.userScopeId?.trim(),
   };
   const organizationId = normalizedInput.organizationId ?? "";
-  const scopes = retrievalScopes(input);
+  const scopes = retrievalScopes(normalizedInput);
   const lexicalQuery = normalizeOptionalText(input.query);
   const lexicalLimit = Math.min(
     Math.max(input.limit * 4, input.limit),
@@ -54,8 +56,8 @@ export async function retrieveMemory(
   );
 
   const [projectVectorHits, userVectorHits, lexicalRecords] = await Promise.all([
-    queryScope(normalizedInput, organizationId, scopes[0]!, input.projectKey),
-    input.userScopeId
+    queryScope(normalizedInput, organizationId, scopes[0]!, normalizedInput.projectKey),
+    normalizedInput.userScopeId
       ? queryScope(normalizedInput, organizationId, scopes[1]!, null)
       : Promise.resolve([]),
     queryLexicalCandidates(normalizedInput, scopes, lexicalLimit, lexicalQuery),

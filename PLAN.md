@@ -4,18 +4,19 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Qdrant Hit Record ID Validation
+## Current Loop - RetrieveMemory Scope Identifier Trim
 
 Status:
-- Qdrant query mapping now rejects object payloads with malformed
-  `memory_record_id` before returning `VectorHit[]`.
-- Non-object Qdrant payloads still map to `{}` for existing compatibility.
+- `retrieveMemory` now trims direct `projectKey` and `userScopeId` once after
+  validation.
+- Vector filters and lexical repository scopes now receive normalized scope
+  identifiers.
 
 Verification:
-- Focused Qdrant hit `memory_record_id` tests passed after RED coverage showed
-  malformed IDs leaking into `VectorHit.payload`.
-- Qdrant vector tests, related vector tests, and typecheck passed.
-- Scoped reviewer agent passed the diff.
+- Focused scope identifier test passed after RED coverage showed raw whitespace
+  reaching vector filters.
+- Related search tests and typecheck passed.
+- Scoped reviewer agent timed out; no reviewer PASS is recorded for this loop.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.
