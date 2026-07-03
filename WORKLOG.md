@@ -2,6 +2,29 @@
 
 ## 2026-07-03
 
+- 20:49 KST - Hardened audit log direct text normalization:
+  - `src/audit/audit-log-repository.ts` now trims direct organization, actor,
+    tool, project key, request ID, and error-message text before SQL writes.
+  - `listByOrganization` now trims direct organization IDs before querying.
+  - `tests/audit/audit-truncation.test.ts` covers trimmed SQL parameters and
+    blank direct error-message nulling.
+
+RED/GREEN:
+- RED: `npm test -- tests/audit/audit-truncation.test.ts -t "trims direct|blank direct" --reporter=dot`
+  failed `3` tests because raw audit text reached SQL parameters.
+- GREEN: `npm test -- tests/audit/audit-truncation.test.ts -t "trims direct|blank direct" --reporter=dot`
+  (`1` file passed; `3` tests passed, `52` skipped)
+
+Verification:
+- `npm test -- tests/audit/audit-truncation.test.ts tests/audit/audit-write.test.ts --reporter=dot`
+  (`2` files passed; `63` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2468`
+  tests passed, `34` skipped)
+
 - 20:46 KST - Hardened memory archive error message normalization:
   - `src/store/memory-archive-repository.ts` now trims optional Qdrant status
     and compaction-run completion error messages before SQL writes.

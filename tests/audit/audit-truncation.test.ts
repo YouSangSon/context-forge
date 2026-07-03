@@ -173,6 +173,22 @@ describe("createAuditLogRepository — error_message truncation", () => {
     },
   );
 
+  it("listByOrganization trims direct organizationId before querying", async () => {
+    const fakePool = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+    };
+    const repo = createAuditLogRepository(fakePool as never);
+
+    await expect(
+      repo.listByOrganization(" org-1 ", { limit: 10 }),
+    ).resolves.toEqual([]);
+
+    expect(fakePool.query).toHaveBeenCalledWith(
+      expect.any(String),
+      ["org-1", 10],
+    );
+  });
+
   it("listByOrganization maps numeric audit row values through shared DB helpers", async () => {
     const fakePool = {
       query: vi.fn().mockResolvedValue({
@@ -380,6 +396,65 @@ describe("createAuditLogRepository — error_message truncation", () => {
     const storedMessage = capturedParams?.[5] as string;
     expect(storedMessage).toHaveLength(MAX_ERROR_MESSAGE_LENGTH);
     expect(storedMessage).toBe("x".repeat(MAX_ERROR_MESSAGE_LENGTH));
+  });
+
+  it("trims direct audit entry text before persistence", async () => {
+    let capturedParams: unknown[] | undefined;
+
+    const fakePool = {
+      query: vi.fn().mockImplementation((_sql: string, params: unknown[]) => {
+        capturedParams = params;
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+
+    const repo = createAuditLogRepository(fakePool as never);
+
+    await repo.record({
+      organizationId: " org-1 ",
+      actor: " alice ",
+      tool: " add_memory ",
+      projectKey: " project-alpha ",
+      outcome: "error",
+      errorMessage: " repository down ",
+      durationMs: 42,
+      requestId: " req-1 ",
+    });
+
+    expect(capturedParams).toEqual([
+      "org-1",
+      "alice",
+      "add_memory",
+      "project-alpha",
+      "error",
+      "repository down",
+      42,
+      "req-1",
+    ]);
+  });
+
+  it("stores blank direct error messages as null", async () => {
+    let capturedParams: unknown[] | undefined;
+
+    const fakePool = {
+      query: vi.fn().mockImplementation((_sql: string, params: unknown[]) => {
+        capturedParams = params;
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+
+    const repo = createAuditLogRepository(fakePool as never);
+
+    await repo.record({
+      organizationId: "org-1",
+      actor: "alice",
+      tool: "add_memory",
+      outcome: "error",
+      errorMessage: " \n\t ",
+      durationMs: 42,
+    });
+
+    expect(capturedParams?.[5]).toBeNull();
   });
 
   it("preserves error_message at exactly 1024 chars (boundary — no truncation)", async () => {

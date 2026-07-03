@@ -47,6 +47,15 @@ export function createAuditLogRepository(pool: PgPool): AuditLogRepository {
   return {
     async record(entry) {
       assertAuditLogEntry(entry);
+      const organizationId = normalizeRequiredText(
+        entry.organizationId,
+        "organizationId",
+      );
+      const actor = normalizeRequiredText(entry.actor, "actor");
+      const tool = normalizeRequiredText(entry.tool, "tool");
+      const projectKey = normalizeOptionalNonBlankText(entry.projectKey);
+      const errorMessage = normalizeOptionalText(entry.errorMessage);
+      const requestId = normalizeOptionalNonBlankText(entry.requestId);
 
       await pool.query(
         `
@@ -62,22 +71,26 @@ export function createAuditLogRepository(pool: PgPool): AuditLogRepository {
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         `,
         [
-          entry.organizationId,
-          entry.actor,
-          entry.tool,
-          entry.projectKey ?? null,
+          organizationId,
+          actor,
+          tool,
+          projectKey,
           entry.outcome,
-          entry.errorMessage != null
-            ? entry.errorMessage.slice(0, MAX_ERROR_MESSAGE_LENGTH)
+          errorMessage != null
+            ? errorMessage.slice(0, MAX_ERROR_MESSAGE_LENGTH)
             : null,
           entry.durationMs,
-          entry.requestId ?? null,
+          requestId,
         ],
       );
     },
 
     async listByOrganization(organizationId, options) {
       assertNonBlankText(organizationId, "organizationId");
+      const normalizedOrganizationId = normalizeRequiredText(
+        organizationId,
+        "organizationId",
+      );
 
       const limit = resolveAuditLimit(options);
       const result = await pool.query<AuditLogRow>(
@@ -98,7 +111,7 @@ export function createAuditLogRepository(pool: PgPool): AuditLogRepository {
           ORDER BY id DESC
           LIMIT $2
         `,
-        [organizationId, limit],
+        [normalizedOrganizationId, limit],
       );
 
       return result.rows.map(mapAuditLogRow);
@@ -186,6 +199,28 @@ function mapNullableNonBlankText(
 function toAuditOutcome(value: unknown): AuditOutcome {
   assertAuditOutcome(value, "audit log outcome");
   return value;
+}
+
+function normalizeRequiredText(value: string, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value.trim();
+}
+
+function normalizeOptionalNonBlankText(
+  value: string | null | undefined,
+): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  return value.trim();
+}
+
+function normalizeOptionalText(value: string | null | undefined): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  const normalized = value.trim();
+  return normalized ? normalized : null;
 }
 
 const DEFAULT_AUDIT_LIMIT = 100;
