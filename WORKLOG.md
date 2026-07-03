@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- 22:21 KST - Hardened vector upsert kind validation:
+  - Qdrant and PGVector upserts now reject direct point `payload.kind` values
+    outside `decision`, `summary`, and `fact` before backend writes.
+  - Existing missing and blank kind validation remains unchanged.
+  - `tests/vector/qdrant-index.test.ts` and
+    `tests/vector/pgvector-index.integration.test.ts` cover invalid vector
+    point kinds.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts -t "point kind" --reporter=dot`
+  failed `2` tests because invalid `kind` values reached Qdrant or pgvector
+  client paths.
+- GREEN: same command passed (`2` files passed; `6` tests passed, `179`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `206` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2521`
+  tests passed, `34` skipped)
+
 - 22:18 KST - Hardened vector upsert project identity validation:
   - Qdrant and PGVector upserts now reject project-scope points when
     `payload.project_key` is `null` and `payload.scope_id` is missing or blank.

@@ -4,17 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Upsert Project Identity Validation
+## Current Loop - Vector Upsert Kind Validation
 
 Status:
-- Qdrant and PGVector upserts now reject project-scope points when
-  `payload.project_key` is `null` and `payload.scope_id` is missing or blank.
-- Existing project points with a nonblank `project_key` can still use nullable
-  `scope_id`.
+- Qdrant and PGVector upserts now reject direct point `payload.kind` values
+  outside `decision`, `summary`, and `fact` before backend writes.
+- Existing missing and blank kind validation remains unchanged.
 
 Verification:
-- Focused vector adapter tests passed after RED coverage showed project points
-  without a usable `project_key` or `scope_id` reaching backend client paths.
+- Focused vector adapter tests passed after RED coverage showed invalid
+  `kind` values reaching backend client paths.
 - Related vector adapter and point-builder tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or

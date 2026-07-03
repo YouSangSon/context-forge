@@ -562,6 +562,15 @@ function assertPgVectorPointKind(point: VectorPoint): void {
     point.payload.kind,
     "point.payload.kind",
   );
+  if (
+    point.payload.kind !== "decision" &&
+    point.payload.kind !== "summary" &&
+    point.payload.kind !== "fact"
+  ) {
+    throw new Error(
+      "point.payload.kind must be one of: decision, summary, fact",
+    );
+  }
 }
 
 function assertPgVectorNonEmptyString(

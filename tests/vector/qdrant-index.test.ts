@@ -906,9 +906,22 @@ describe("createQdrantVectorIndex — point building (upsert)", () => {
   });
 
   it.each([
-    { label: "missing", payload: {} },
-    { label: "blank", payload: { kind: " \n\t " } },
-  ])("rejects malformed point kind before Qdrant upsert: $label", async ({ payload }) => {
+    {
+      label: "missing",
+      payload: {},
+      message: "point.payload.kind must be a non-empty string",
+    },
+    {
+      label: "blank",
+      payload: { kind: " \n\t " },
+      message: "point.payload.kind must be a non-empty string",
+    },
+    {
+      label: "invalid",
+      payload: { kind: "note" },
+      message: "point.payload.kind must be one of: decision, summary, fact",
+    },
+  ])("rejects malformed point kind before Qdrant upsert: $label", async ({ payload, message }) => {
     const client = {
       query: vi.fn(),
       upsert: vi.fn(),
@@ -932,7 +945,7 @@ describe("createQdrantVectorIndex — point building (upsert)", () => {
           },
         },
       ]),
-    ).rejects.toThrow("point.payload.kind must be a non-empty string");
+    ).rejects.toThrow(message);
 
     expect(client.upsert).not.toHaveBeenCalled();
   });

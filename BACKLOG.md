@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and PGVector upserts now reject direct point `payload.kind` values
+  outside `decision`, `summary`, and `fact` before backend writes.
 - Qdrant and PGVector upserts now reject project-scope points when both
   `payload.project_key` and `payload.scope_id` are unusable.
 - Qdrant and PGVector upserts now reject user-scope points with missing or
