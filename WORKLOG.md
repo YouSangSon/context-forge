@@ -1,5 +1,30 @@
 # WORKLOG
 
+## 2026-07-03
+
+- 20:46 KST - Hardened memory archive error message normalization:
+  - `src/store/memory-archive-repository.ts` now trims optional Qdrant status
+    and compaction-run completion error messages before SQL writes.
+  - `tests/store/memory-archive-repository.test.ts` covers trimmed nonblank
+    messages and whitespace-only blank-to-null behavior.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/memory-archive-repository.test.ts -t "records error message|schedules the next retry|updates run outcome counters"`
+  failed the updated cases because raw error-message text reached SQL
+  parameters.
+- GREEN: `npm test -- tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `151` tests passed)
+
+Verification:
+- `npm test -- tests/scripts/backup-verify.test.ts --reporter=dot`
+  (`1` file passed; `60` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2465`
+  tests passed, `34` skipped)
+
 ## 2026-07-02
 
 - 19:10 KST - Hardened add memory project key normalization:

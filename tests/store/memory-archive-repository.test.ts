@@ -554,7 +554,7 @@ describe("MemoryArchiveRepository.markQdrantStatus", () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
 
-    await repo.markQdrantStatus(42, "failed", "Qdrant 503");
+    await repo.markQdrantStatus(42, "failed", " Qdrant 503 ");
 
     const sql = query.mock.calls[0]![0] as string;
     const params = query.mock.calls[0]![1] as unknown[];
@@ -567,13 +567,23 @@ describe("MemoryArchiveRepository.markQdrantStatus", () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
 
-    await repo.markQdrantStatus(42, "pending", "Qdrant 503");
+    await repo.markQdrantStatus(42, "pending", " Qdrant 503 ");
 
     const sql = query.mock.calls[0]![0] as string;
     const params = query.mock.calls[0]![1] as unknown[];
     expect(sql).toContain("qdrant_status = 'pending'");
     expect(sql).toContain("qdrant_next_retry_at = NOW() + INTERVAL '30 seconds'");
     expect(params).toEqual([42, "Qdrant 503"]);
+  });
+
+  it("stores blank qdrant error messages as null", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.markQdrantStatus(42, "failed", " \n\t ");
+
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params).toEqual([42, null]);
   });
 });
 
@@ -594,7 +604,7 @@ describe("MemoryArchiveRepository.completeCompactionRun", () => {
     await repo.completeCompactionRun({
       ...baseInput,
       status: "failed",
-      errorMessage: "qdrant cleanup failed",
+      errorMessage: " qdrant cleanup failed ",
     });
 
     const sql = query.mock.calls[0]![0] as string;
@@ -610,6 +620,20 @@ describe("MemoryArchiveRepository.completeCompactionRun", () => {
       0,
       "qdrant cleanup failed",
     ]);
+  });
+
+  it("stores blank completion error messages as null", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.completeCompactionRun({
+      ...baseInput,
+      status: "failed",
+      errorMessage: " \n\t ",
+    });
+
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params[6]).toBeNull();
   });
 
   it.each([

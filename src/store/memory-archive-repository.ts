@@ -319,6 +319,7 @@ export function createMemoryArchiveRepository(
       assertPositiveSafeInteger(archiveId, "archiveId");
       assertQdrantStatus(status, "status");
       assertOptionalString(errorMessage, "errorMessage");
+      const normalizedErrorMessage = normalizeOptionalErrorMessage(errorMessage);
 
       if (status === "deleted") {
         await pool.query(
@@ -344,7 +345,7 @@ export function createMemoryArchiveRepository(
                 qdrant_next_retry_at = NULL
             WHERE id = $1
           `,
-          [archiveId, errorMessage ?? null],
+          [archiveId, normalizedErrorMessage],
         );
         return;
       }
@@ -357,12 +358,13 @@ export function createMemoryArchiveRepository(
               qdrant_next_retry_at = NOW() + INTERVAL '30 seconds'
           WHERE id = $1
         `,
-        [archiveId, errorMessage ?? null],
+        [archiveId, normalizedErrorMessage],
       );
     },
 
     async completeCompactionRun(input) {
       assertCompleteCompactionRunInput(input);
+      const errorMessage = normalizeOptionalErrorMessage(input.errorMessage);
 
       await pool.query(
         `
@@ -383,7 +385,7 @@ export function createMemoryArchiveRepository(
           input.duplicateCount,
           input.decayCount,
           input.qdrantFailed,
-          input.errorMessage ?? null,
+          errorMessage,
         ],
       );
     },
@@ -1056,4 +1058,9 @@ function assertOptionalString(value: unknown, fieldName: string): void {
     return;
   }
   throw new Error(`${fieldName} must be a string when provided`);
+}
+
+function normalizeOptionalErrorMessage(value: string | undefined): string | null {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
 }

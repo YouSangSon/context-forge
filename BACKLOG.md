@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory archive Qdrant status and compaction-run completion now trim optional
+  error messages before SQL writes while preserving blank-to-null behavior.
 - Memory archive record apply now trims direct organization IDs before the
   destructive delete/archive CTE.
 - Memory archive run creation now trims direct run metadata before SQL insert
