@@ -4,17 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Memory Repository Row Text Normalization
+## Current Loop - Source Ref Metadata Text Normalization
 
 Status:
-- Memory repository row mapping now trims stored hydrated memory, graph, and
-  archive point-id text before returning results.
-- Raw memory `content` remains unchanged so saved payload text is preserved.
+- Stored Postgres source metadata parsing now trims valid JSON `sourceRef` and
+  `uri` text before returning provenance fields.
+- Blank parsed `sourceRef` values still fall back to the raw stored value
+  instead of returning an empty provenance identifier.
 
 Verification:
-- Focused memory repository tests passed after RED coverage showed raw stored
-  row text reaching returned results.
-- Full memory repository test file passed.
+- Focused parser tests passed after RED coverage showed raw parsed provenance
+  text reaching returned results.
+- Parser and memory repository test files passed together.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

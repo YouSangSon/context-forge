@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Stored Postgres source metadata parsing now trims valid JSON `sourceRef` and
+  `uri` text before returning provenance fields.
 - Memory repository row mapping now trims stored hydrated memory, graph, and
   archive point-id text while preserving raw memory content.
 - Canonical chunk row mapping now trims stored metadata text while preserving

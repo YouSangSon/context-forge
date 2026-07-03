@@ -2,6 +2,28 @@
 
 ## 2026-07-03
 
+- 21:13 KST - Hardened stored Postgres source metadata normalization:
+  - `parseStoredPostgresSourceRef` now trims valid JSON `sourceRef` and `uri`
+    fields before returning provenance metadata.
+  - Blank parsed `sourceRef` values still fall back to the raw stored value
+    instead of returning an empty provenance identifier.
+  - `tests/store/parse-source-ref.test.ts` covers parsed metadata trimming.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/parse-source-ref.test.ts -t "trims valid JSON" --reporter=dot`
+  failed because raw parsed source metadata reached returned provenance fields.
+- GREEN: same command passed (`1` file passed; `1` test passed, `6` skipped).
+
+Verification:
+- `npm test -- tests/store/parse-source-ref.test.ts tests/store/memory-repository.test.ts --reporter=dot`
+  (`2` files passed; `187` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2478`
+  tests passed, `34` skipped)
+
 - 21:10 KST - Hardened memory repository row text normalization:
   - `src/store/memory-repository.ts` now trims stored hydrated memory,
     graph, and archive point-id text before returning mapped results.

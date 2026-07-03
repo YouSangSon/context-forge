@@ -1879,9 +1879,20 @@ export function parseStoredPostgresSourceRef(
           uri: null,
         };
       }
+      const sourceRef = metadata.sourceRef.trim();
+      if (sourceRef.length === 0) {
+        return {
+          sourceRef: value,
+          uri: null,
+        };
+      }
+      const uri =
+        typeof metadata.uri === "string" && metadata.uri.trim().length > 0
+          ? metadata.uri.trim()
+          : null;
       return {
-        sourceRef: metadata.sourceRef,
-        uri: typeof metadata.uri === "string" ? metadata.uri : null,
+        sourceRef,
+        uri,
       };
     }
   } catch (err: unknown) {
