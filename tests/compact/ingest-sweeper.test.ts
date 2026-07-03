@@ -345,6 +345,18 @@ describe("runIngestSweep", () => {
       "getChunksByRecordId result[0].content must contain non-whitespace text",
     ],
     [
+      { scopeType: "team" },
+      "getChunksByRecordId result[0].scopeType must be one of: user, project",
+    ],
+    [
+      { kind: "note" },
+      "getChunksByRecordId result[0].kind must be one of: decision, summary, fact",
+    ],
+    [
+      { durability: "permanent" },
+      "getChunksByRecordId result[0].durability must be one of: ephemeral, durable, archived",
+    ],
+    [
       { tags: [12] },
       "getChunksByRecordId result[0].tags[0] must be a string",
     ],

@@ -2,6 +2,30 @@
 
 ## 2026-07-03
 
+- 22:29 KST - Hardened ingest sweeper chunk enum validation:
+  - The ingest sweeper now rejects malformed chunk `scopeType`, `kind`, and
+    `durability` enum values before embedding or vector side effects.
+  - Existing malformed chunk retry behavior remains unchanged.
+  - `tests/compact/ingest-sweeper.test.ts` covers malformed chunk enums in the
+    no-vector-side-effects path.
+
+RED/GREEN:
+- RED: `npm test -- tests/compact/ingest-sweeper.test.ts -t "malformed chunks" --reporter=dot`
+  failed `3` tests because malformed chunk enum values were treated as
+  successful sweeps.
+- GREEN: same command passed (`1` file passed; `8` tests passed, `44`
+  skipped).
+
+Verification:
+- `npm test -- tests/compact/ingest-sweeper.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`2` files passed; `85` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2528`
+  tests passed, `34` skipped)
+
 - 22:25 KST - Hardened vector upsert durability validation:
   - Qdrant and PGVector upserts now reject provided `payload.durability`
     values outside `ephemeral`, `durable`, and `archived` before backend

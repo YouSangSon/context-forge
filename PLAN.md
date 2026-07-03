@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Upsert Durability Validation
+## Current Loop - Ingest Sweeper Chunk Enum Validation
 
 Status:
-- Qdrant and PGVector upserts now reject provided `payload.durability` values
-  outside `ephemeral`, `durable`, and `archived` before backend writes.
-- Missing durability remains allowed for direct adapter compatibility.
+- The ingest sweeper now rejects malformed chunk `scopeType`, `kind`, and
+  `durability` enum values before embedding or vector side effects.
+- Existing malformed chunk retry behavior remains unchanged.
 
 Verification:
-- Focused vector adapter tests passed after RED coverage showed malformed
-  provided durability values reaching backend client paths.
-- Related vector adapter and point-builder tests passed.
+- Focused ingest-sweeper tests passed after RED coverage showed malformed chunk
+  enums being treated as successful sweeps.
+- Full ingest-sweeper and point-builder tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.
