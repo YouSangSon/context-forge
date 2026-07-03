@@ -199,6 +199,7 @@ export function createPgVectorIndex(
         assertPgVectorPointScopeId(point);
         assertPgVectorPointProjectKey(point);
         assertPgVectorPointKind(point);
+        assertPgVectorPointDurability(point);
       }
 
       // HIGH 2: Chunk into batches of UPSERT_BATCH_ROWS to stay under the
@@ -569,6 +570,23 @@ function assertPgVectorPointKind(point: VectorPoint): void {
   ) {
     throw new Error(
       "point.payload.kind must be one of: decision, summary, fact",
+    );
+  }
+}
+
+function assertPgVectorPointDurability(point: VectorPoint): void {
+  const durability = point.payload.durability;
+  if (durability == null) {
+    return;
+  }
+  assertPgVectorNonEmptyString(durability, "point.payload.durability");
+  if (
+    durability !== "ephemeral" &&
+    durability !== "durable" &&
+    durability !== "archived"
+  ) {
+    throw new Error(
+      "point.payload.durability must be one of: ephemeral, durable, archived",
     );
   }
 }

@@ -97,6 +97,7 @@ export function createQdrantVectorIndex(
         assertQdrantPointScopeId(point);
         assertQdrantPointProjectKey(point);
         assertQdrantPointKind(point);
+        assertQdrantPointDurability(point);
       }
 
       await client.upsert(collectionName, { points });
@@ -288,6 +289,23 @@ function assertQdrantPointKind(point: VectorPoint): void {
   ) {
     throw new Error(
       "point.payload.kind must be one of: decision, summary, fact",
+    );
+  }
+}
+
+function assertQdrantPointDurability(point: VectorPoint): void {
+  const durability = point.payload.durability;
+  if (durability == null) {
+    return;
+  }
+  assertQdrantNonEmptyString(durability, "point.payload.durability");
+  if (
+    durability !== "ephemeral" &&
+    durability !== "durable" &&
+    durability !== "archived"
+  ) {
+    throw new Error(
+      "point.payload.durability must be one of: ephemeral, durable, archived",
     );
   }
 }

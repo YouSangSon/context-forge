@@ -951,6 +951,47 @@ describe("createQdrantVectorIndex — point building (upsert)", () => {
   });
 
   it.each([
+    {
+      label: "blank",
+      durability: " \n\t ",
+      message: "point.payload.durability must be a non-empty string",
+    },
+    {
+      label: "invalid",
+      durability: "permanent",
+      message: "point.payload.durability must be one of: ephemeral, durable, archived",
+    },
+  ])("rejects malformed provided point durability before Qdrant upsert: $label", async ({ durability, message }) => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-durability",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            kind: "fact",
+            durability,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(client.upsert).not.toHaveBeenCalled();
+  });
+
+  it.each([
     { label: "empty", id: "" },
     { label: "blank", id: " \n\t " },
   ])("rejects malformed point ids before Qdrant upsert: $label", async ({ id }) => {

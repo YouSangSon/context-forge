@@ -402,6 +402,43 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
   });
 
   it.each([
+    {
+      label: "blank",
+      durability: " \n\t ",
+      message: "point.payload.durability must be a non-empty string",
+    },
+    {
+      label: "invalid",
+      durability: "permanent",
+      message: "point.payload.durability must be one of: ephemeral, durable, archived",
+    },
+  ])("upsert rejects malformed provided point durability before opening a client: $label", async ({ durability, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-durability",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            kind: "fact",
+            durability,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
     { label: "empty", id: "" },
     { label: "blank", id: " \n\t " },
   ])("upsert rejects malformed point ids before opening a client: $label", async ({ id }) => {
