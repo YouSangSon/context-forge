@@ -182,6 +182,26 @@ export function createMemoryRepository(
         input.summary === undefined
           ? summarize(input.content)
           : normalizeNullableText(input.summary, "summary");
+      const scopeType = mapScopeType(input.scopeType, "scopeType");
+      const scopeId = mapRequiredText(input.scopeId, "scopeId");
+      const sourceScopeType = mapScopeType(
+        input.source.scopeType,
+        "source.scopeType",
+      );
+      const sourceScopeId = mapRequiredText(
+        input.source.scopeId,
+        "source.scopeId",
+      );
+      const scopedInput = {
+        ...input,
+        scopeType,
+        scopeId,
+        source: {
+          ...input.source,
+          scopeType: sourceScopeType,
+          scopeId: sourceScopeId,
+        },
+      };
       assertNoSecretsInMemoryFields({
         title,
         content: input.content,
@@ -190,9 +210,9 @@ export function createMemoryRepository(
       const rawOrganizationId = input.organizationId ?? DEFAULT_ORG_ID;
       assertNonBlankText(rawOrganizationId, "organizationId");
       const organizationId = rawOrganizationId.trim();
-      requireSourceKey(input.source);
-      normalizeNullableText(input.source.title ?? null, "source.title");
-      normalizeNullableText(input.source.uri ?? null, "source.uri");
+      requireSourceKey(scopedInput.source);
+      normalizeNullableText(scopedInput.source.title ?? null, "source.title");
+      normalizeNullableText(scopedInput.source.uri ?? null, "source.uri");
       const client = await pool.connect();
 
       try {
@@ -200,7 +220,7 @@ export function createMemoryRepository(
 
         const sourceRow = await upsertPostgresSource(
           client,
-          input,
+          scopedInput,
           organizationId,
         );
         const sourceId = mapPositiveSafeInteger(
@@ -241,8 +261,8 @@ export function createMemoryRepository(
           `,
           [
             organizationId,
-            input.scopeType,
-            input.scopeId,
+            scopedInput.scopeType,
+            scopedInput.scopeId,
             input.projectKey ?? null,
             memoryType,
             title,
@@ -260,7 +280,7 @@ export function createMemoryRepository(
           "memory id",
         );
         await persistPostgresEntityGraph(client, {
-          input,
+          input: scopedInput,
           organizationId,
           memoryRecordId,
           sourceRow,

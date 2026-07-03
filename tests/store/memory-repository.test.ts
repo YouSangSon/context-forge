@@ -347,6 +347,53 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(mockPool.connect).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      patch: { scopeType: "team" as never },
+      message: "scopeType must be one of: user, project",
+    },
+    {
+      patch: { scopeId: " \n\t " },
+      message: "scopeId must contain non-whitespace text",
+    },
+    {
+      sourcePatch: { scopeType: "team" as never },
+      message: "source.scopeType must be one of: user, project",
+    },
+    {
+      sourcePatch: { scopeId: " \n\t " },
+      message: "source.scopeId must contain non-whitespace text",
+    },
+  ])("addMemory rejects malformed scope values before opening a transaction %#", async ({
+    patch,
+    sourcePatch,
+    message,
+  }) => {
+    const mockPool = {
+      connect: vi.fn(),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.addMemory({
+        scopeType: "project",
+        scopeId: "proj-x",
+        memoryType: "fact",
+        content: "plain text only",
+        source: {
+          scopeType: "project",
+          scopeId: "proj-x",
+          sourceType: "document",
+          sourceRef: "docs/spec.md",
+          ...sourcePatch,
+        },
+        ...patch,
+      }),
+    ).rejects.toThrow(message);
+
+    expect(mockPool.connect).not.toHaveBeenCalled();
+  });
+
   it("addMemory rejects secret-shaped content before opening a transaction", async () => {
     await expectAddSecretRejection(
       { content: `Rotate AWS key ${exampleAwsAccessKey} immediately.` },
@@ -592,6 +639,87 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(sourceSelect?.params[0]).toBe("org-a");
     expect(sourceInsert?.params[0]).toBe("org-a");
     expect(memoryInsert?.params[0]).toBe("org-a");
+  });
+
+  it("addMemory trims direct memory and source scope IDs before writes", async () => {
+    const sourceRow = {
+      source_id_joined: 9,
+      source_organization_id: "org-a",
+      source_scope_type: "project",
+      source_scope_id: "proj-x",
+      source_type: "document",
+      source_ref: "{\"sourceRef\":\"docs/spec.md\",\"uri\":null}",
+      source_title: null,
+      source_created_at: "2026-06-26T00:00:00.000Z",
+    };
+    const memoryRow = {
+      id: 42,
+      organization_id: "org-a",
+      scope_type: "project",
+      scope_id: "proj-x",
+      project_key: "proj-x",
+      kind: "fact",
+      title: null,
+      content: "plain text only",
+      summary: "plain text only",
+      durability: "ephemeral",
+      importance: 0,
+      source_id: 9,
+      created_at: "2026-06-26T00:00:00.000Z",
+      updated_at: "2026-06-26T00:00:00.000Z",
+    };
+    const clientQueryCalls: SqlQueryCall[] = [];
+    const mockClient = {
+      query: vi.fn().mockImplementation((sql: string, params?: unknown[]) => {
+        clientQueryCalls.push({ sql, params: params ?? [] });
+        if (sql === "BEGIN" || sql === "COMMIT") {
+          return Promise.resolve({ rows: [] });
+        }
+        if (sql.includes("SELECT") && sql.includes("FROM sources")) {
+          return Promise.resolve({ rows: [] });
+        }
+        if (sql.includes("INSERT INTO sources")) {
+          return Promise.resolve({ rows: [sourceRow] });
+        }
+        if (sql.includes("INSERT INTO memory_records")) {
+          return Promise.resolve({ rows: [memoryRow] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const mockPool = {
+      connect: vi.fn().mockResolvedValue(mockClient),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.addMemory({
+      organizationId: "org-a",
+      scopeType: "project",
+      scopeId: " proj-x ",
+      projectKey: "proj-x",
+      memoryType: "fact",
+      content: "plain text only",
+      source: {
+        scopeType: "project",
+        scopeId: " proj-x ",
+        sourceType: "document",
+        sourceRef: "docs/spec.md",
+      },
+    });
+
+    const sourceSelect = clientQueryCalls.find(
+      ({ sql }) => sql.includes("SELECT") && sql.includes("FROM sources"),
+    );
+    const sourceInsert = clientQueryCalls.find(({ sql }) =>
+      sql.includes("INSERT INTO sources"),
+    );
+    const memoryInsert = clientQueryCalls.find(({ sql }) =>
+      sql.includes("INSERT INTO memory_records"),
+    );
+    expect(sourceSelect?.params[2]).toBe("proj-x");
+    expect(sourceInsert?.params[2]).toBe("proj-x");
+    expect(memoryInsert?.params[2]).toBe("proj-x");
   });
 
   it("addMemory trims source provenance before lookup and insert", async () => {

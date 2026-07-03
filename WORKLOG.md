@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- 21:27 KST - Hardened add-memory scope normalization:
+  - `addMemory` now validates direct memory/source scope types and scope IDs
+    before opening a transaction.
+  - Direct memory/source scope IDs are trimmed before source lookup, source
+    insert, memory insert, and entity graph persistence.
+  - `tests/store/memory-repository.test.ts` covers fail-fast malformed scope
+    values and trimmed SQL scope params.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/memory-repository.test.ts -t "malformed scope values|trims direct memory and source scope" --reporter=dot`
+  failed `5` tests because malformed scope values reached the transaction path
+  and raw scope IDs reached SQL params.
+- GREEN: same command passed (`1` file passed; `5` tests passed, `190`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `188` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2486`
+  tests passed, `34` skipped)
+
 - 21:21 KST - Hardened source metadata fail-fast validation:
   - `addMemory` now rejects non-string `source.title` and `source.uri` values
     before opening a transaction.

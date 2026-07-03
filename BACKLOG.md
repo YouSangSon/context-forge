@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `addMemory` now validates direct memory/source scope fields before
+  transactions and trims scope IDs before SQL writes.
 - `addMemory` now rejects non-string source title and URI metadata before
   opening a transaction.
 - Source provenance writes now trim direct `sourceRef`, `source.title`, and
