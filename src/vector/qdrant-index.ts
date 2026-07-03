@@ -127,9 +127,7 @@ export function createQdrantVectorIndex(
       return points.map((point) => ({
         id: toQdrantPointId(point.id, "id"),
         score: toQdrantFiniteNumber(point.score, "score"),
-        payload: point.payload && typeof point.payload === "object" && !Array.isArray(point.payload)
-          ? (point.payload as Record<string, unknown>)
-          : {},
+        payload: toQdrantHitPayload(point.payload),
       }));
     },
 
@@ -502,4 +500,18 @@ function toQdrantFiniteNumber(value: unknown, fieldName: string): number {
     throw new Error(`${fieldName} must be a finite number`);
   }
   return value;
+}
+
+function toQdrantHitPayload(payload: unknown): Record<string, unknown> {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return {};
+  }
+  const result = payload as Record<string, unknown>;
+  if ("memory_record_id" in result) {
+    assertQdrantPositiveSafeInteger(
+      result.memory_record_id,
+      "memory_record_id",
+    );
+  }
+  return result;
 }

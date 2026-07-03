@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant query mapping now rejects malformed returned payload
+  `memory_record_id` values before returning vector hits.
 - Qdrant and PGVector upserts now reject malformed provided point
   `payload.updated_at` and `payload.embedding_version` before backend writes.
 - Qdrant and PGVector upserts now reject malformed provided point

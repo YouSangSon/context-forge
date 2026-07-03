@@ -4,18 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Adapter Provided Storage Text Validation
+## Current Loop - Qdrant Hit Record ID Validation
 
 Status:
-- Qdrant and PGVector upserts now reject malformed provided point
-  `payload.updated_at` and `payload.embedding_version` before backend writes.
-- Missing keys and explicit `null` remain allowed for direct adapter
-  compatibility.
+- Qdrant query mapping now rejects object payloads with malformed
+  `memory_record_id` before returning `VectorHit[]`.
+- Non-object Qdrant payloads still map to `{}` for existing compatibility.
 
 Verification:
-- Focused Qdrant/pgvector storage text tests passed after RED coverage showed
-  malformed provided updated_at/embedding_version reaching backend paths.
-- Related vector tests and typecheck passed.
+- Focused Qdrant hit `memory_record_id` tests passed after RED coverage showed
+  malformed IDs leaking into `VectorHit.payload`.
+- Qdrant vector tests, related vector tests, and typecheck passed.
 - Scoped reviewer agent passed the diff.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or

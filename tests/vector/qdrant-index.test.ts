@@ -497,6 +497,32 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     expect(hits[0]).toEqual({ id: "15", score: 0.92, payload: { memory_record_id: 15 } });
   });
 
+  it.each([
+    { label: "string", memoryRecordId: "15" },
+    { label: "zero", memoryRecordId: 0 },
+    { label: "unsafe integer", memoryRecordId: Number.MAX_SAFE_INTEGER + 1 },
+  ])("rejects malformed Qdrant hit memory_record_id before returning VectorHit[]: $label", async ({ memoryRecordId }) => {
+    const client = makeClient();
+    client.query.mockResolvedValue({
+      points: [
+        { id: "chunk:15", score: 0.92, payload: { memory_record_id: memoryRecordId } },
+      ],
+    });
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.query(
+        [0.1],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "p" }],
+          projectKey: "p",
+        },
+        10,
+      ),
+    ).rejects.toThrow("memory_record_id must be a positive safe integer");
+  });
+
   it("rejects malformed Qdrant point ids before returning VectorHit[]", async () => {
     const client = makeClient();
     client.query.mockResolvedValue({

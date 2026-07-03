@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- 23:32 KST - Hardened Qdrant hit record ID validation:
+  - Qdrant query mapping now rejects object payloads with malformed
+    `memory_record_id` before returning `VectorHit[]`.
+  - Non-object Qdrant payloads still map to `{}` for existing compatibility.
+  - Scoped reviewer passed the diff.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/qdrant-index.test.ts -t "Qdrant hit memory_record_id" --reporter=dot`
+  failed `3` tests because malformed returned `memory_record_id` values leaked
+  into `VectorHit.payload`.
+- GREEN: same command passed (`1` file passed; `3` tests passed, `104`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `107` tests passed)
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `247` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2566`
+  tests passed, `34` skipped)
+
 - 23:27 KST - Hardened vector adapter provided storage text validation:
   - Qdrant and PGVector upserts now reject provided `payload.updated_at` and
     `payload.embedding_version` unless they are explicit `null` or nonblank
