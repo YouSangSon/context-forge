@@ -400,6 +400,38 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     }
   });
 
+  it("addMemory rejects non-string source metadata before opening a transaction", async () => {
+    const cases = [
+      { field: "source.title", sourcePatch: { title: 42 as never } },
+      { field: "source.uri", sourcePatch: { uri: 42 as never } },
+    ];
+
+    for (const { field, sourcePatch } of cases) {
+      const mockPool = {
+        connect: vi.fn(),
+      };
+      const repo = createMemoryRepository(mockPool as never);
+
+      await expect(
+        repo.addMemory({
+          scopeType: "project",
+          scopeId: "proj-x",
+          memoryType: "fact",
+          content: "plain text only",
+          source: {
+            scopeType: "project",
+            scopeId: "proj-x",
+            sourceType: "document",
+            sourceRef: "docs/spec.md",
+            ...sourcePatch,
+          },
+        }),
+      ).rejects.toThrow(`${field} must be a string`);
+
+      expect(mockPool.connect).not.toHaveBeenCalled();
+    }
+  });
+
   it("addMemory normalizes whitespace-only title and summary to null", async () => {
     const sourceRow = {
       source_id_joined: 9,

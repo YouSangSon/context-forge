@@ -191,6 +191,8 @@ export function createMemoryRepository(
       assertNonBlankText(rawOrganizationId, "organizationId");
       const organizationId = rawOrganizationId.trim();
       requireSourceKey(input.source);
+      normalizeNullableText(input.source.title ?? null, "source.title");
+      normalizeNullableText(input.source.uri ?? null, "source.uri");
       const client = await pool.connect();
 
       try {

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `addMemory` now rejects non-string source title and URI metadata before
+  opening a transaction.
 - Source provenance writes now trim direct `sourceRef`, `source.title`, and
   `uri` metadata, and reject blank source provenance before transactions.
 - Stored Postgres source metadata parsing now trims valid JSON `sourceRef` and

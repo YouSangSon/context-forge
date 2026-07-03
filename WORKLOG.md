@@ -2,6 +2,30 @@
 
 ## 2026-07-03
 
+- 21:21 KST - Hardened source metadata fail-fast validation:
+  - `addMemory` now rejects non-string `source.title` and `source.uri` values
+    before opening a transaction.
+  - The early validation reuses the nullable text normalization used by
+    `upsertPostgresSource`.
+  - `tests/store/memory-repository.test.ts` covers non-string source metadata
+    without opening a transaction.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/memory-repository.test.ts -t "non-string source metadata" --reporter=dot`
+  failed because invalid source metadata reached the transaction path.
+- GREEN: same command passed (`1` file passed; `1` test passed, `189`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `183` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2481`
+  tests passed, `34` skipped)
+
 - 21:18 KST - Hardened source provenance write normalization:
   - `addMemory` now rejects blank source provenance before opening a
     transaction.
