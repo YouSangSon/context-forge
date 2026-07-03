@@ -2,6 +2,35 @@
 
 ## 2026-07-03
 
+- 22:43 KST - Hardened vector point builder metadata enum validation:
+  - `buildVectorPoint` now trims direct `kind` and `durability` metadata
+    before building vector payloads.
+  - Direct builder calls now reject `kind` values outside `decision`,
+    `summary`, and `fact`, and `durability` values outside `ephemeral`,
+    `durable`, and `archived`.
+  - Existing scope, project, and organization metadata validation remains
+    unchanged.
+  - Spec and code-quality reviewer agents both passed the scoped diff.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/point-builder.test.ts -t "metadata" --reporter=dot`
+  failed `3` tests because raw `kind`/`durability` values reached payloads and
+  invalid enum values passed the builder.
+- GREEN: same command passed (`1` file passed; `12` tests passed, `23`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/point-builder.test.ts --reporter=dot`
+  (`1` file passed; `35` tests passed)
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `212` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2531`
+  tests passed, `34` skipped)
+
 - 22:33 KST - Hardened ingest sweeper job organization normalization:
   - The ingest sweeper now trims claimed job organization IDs before vector
     delete filters are built.

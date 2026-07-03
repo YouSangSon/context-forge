@@ -36,6 +36,8 @@ export function buildVectorPoint(input: VectorPointInput): VectorPoint {
   const scopeType = input.scopeType.trim();
   const scopeId = input.scopeId.trim();
   const projectKey = input.projectKey === null ? null : input.projectKey.trim();
+  const kind = input.kind.trim();
+  const durability = input.durability.trim();
 
   return {
     id: `chunk:${input.chunkId}`,
@@ -47,8 +49,8 @@ export function buildVectorPoint(input: VectorPointInput): VectorPoint {
       scope_type: scopeType,
       scope_id: scopeId,
       project_key: projectKey,
-      kind: input.kind,
-      durability: input.durability,
+      kind,
+      durability,
       title: input.title ?? null,
       summary: input.summary ?? null,
       tags: [...(input.tags ?? [])],
@@ -75,12 +77,38 @@ function assertVectorPointInput(
   assertNonEmptyStringField(candidate.scopeId, "scopeId");
   assertNonEmptyStringOrNullField(candidate.projectKey, "projectKey");
   assertNonEmptyStringField(candidate.kind, "kind");
+  assertMemoryKind(candidate.kind);
   assertNonEmptyStringField(candidate.durability, "durability");
+  assertDurability(candidate.durability);
   assertOptionalStringOrNullField(candidate.title, "title");
   assertOptionalStringOrNullField(candidate.summary, "summary");
   assertOptionalStringArray(candidate.tags, "tags");
   assertNonEmptyStringField(candidate.updatedAt, "updatedAt");
   assertNonEmptyStringField(candidate.embeddingVersion, "embeddingVersion");
+}
+
+function assertMemoryKind(value: string): void {
+  const normalized = value.trim();
+  if (
+    normalized === "decision" ||
+    normalized === "summary" ||
+    normalized === "fact"
+  ) {
+    return;
+  }
+  throw new Error("kind must be one of: decision, summary, fact");
+}
+
+function assertDurability(value: string): void {
+  const normalized = value.trim();
+  if (
+    normalized === "ephemeral" ||
+    normalized === "durable" ||
+    normalized === "archived"
+  ) {
+    return;
+  }
+  throw new Error("durability must be one of: ephemeral, durable, archived");
 }
 
 function assertPositiveSafeInteger(value: unknown, fieldName: string): void {
@@ -110,7 +138,10 @@ function assertStringField(
   }
 }
 
-function assertNonEmptyStringField(value: unknown, fieldName: string): void {
+function assertNonEmptyStringField(
+  value: unknown,
+  fieldName: string,
+): asserts value is string {
   assertStringField(value, fieldName);
   if (value.trim().length === 0) {
     throw new Error(`${fieldName} must be a non-empty string`);

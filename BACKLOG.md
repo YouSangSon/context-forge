@@ -18,6 +18,9 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `buildVectorPoint` now trims direct `kind` and `durability` metadata and
+  rejects values outside the memory metadata enums before returning vector
+  points.
 - Ingest sweeper vector cleanup now trims claimed job organization IDs before
   building delete filters.
 - Ingest sweeper chunk parsing now rejects malformed `scopeType`, `kind`, and

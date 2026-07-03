@@ -80,12 +80,16 @@ describe("buildVectorPoint", () => {
       scopeType: " user ",
       scopeId: " alice ",
       projectKey: " project-alpha ",
+      kind: " decision ",
+      durability: " durable ",
     }));
 
     expect(point.payload.organization_id).toBe("dev-team");
     expect(point.payload.scope_type).toBe("user");
     expect(point.payload.scope_id).toBe("alice");
     expect(point.payload.project_key).toBe("project-alpha");
+    expect(point.payload.kind).toBe("decision");
+    expect(point.payload.durability).toBe("durable");
   });
 
   it("rejects whitespace-only organizationId before building payload", () => {
@@ -194,6 +198,19 @@ describe("buildVectorPoint", () => {
       "embeddingVersion must be a non-empty string",
     ],
   ])("rejects blank required metadata field: %s", (_label, override, message) => {
+    expect(callBuildVectorPoint({ ...buildInput(), ...override })).toThrow(
+      message,
+    );
+  });
+
+  it.each([
+    ["kind", { kind: "note" }, "kind must be one of: decision, summary, fact"],
+    [
+      "durability",
+      { durability: "permanent" },
+      "durability must be one of: ephemeral, durable, archived",
+    ],
+  ])("rejects invalid metadata enum field: %s", (_label, override, message) => {
     expect(callBuildVectorPoint({ ...buildInput(), ...override })).toThrow(
       message,
     );

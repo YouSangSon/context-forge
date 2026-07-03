@@ -4,20 +4,22 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Ingest Sweeper Job Organization Normalization
+## Current Loop - Vector Point Metadata Enum Validation
 
 Status:
-- The ingest sweeper now trims claimed job organization IDs before vector
-  delete filters are built.
-- Existing claimed-job blank organization validation remains unchanged.
+- `buildVectorPoint` now trims direct `kind` and `durability` metadata before
+  building vector payloads.
+- Direct builder calls now reject memory metadata enum values outside the
+  existing Qdrant/pgvector adapter contract.
 
 Verification:
-- Focused ingest-sweeper test passed after RED coverage showed raw job
-  organization IDs reaching vector delete filters.
-- Full ingest-sweeper tests passed.
+- Focused point-builder metadata tests passed after RED coverage showed raw
+  `kind`/`durability` payload values and invalid enum pass-through.
+- Full point-builder tests and related Qdrant/pgvector vector tests passed.
+- Spec and code-quality reviewer agents passed the scoped diff.
 - Typecheck, build, audit, full tests, and diff check passed.
-- Local commit is expected/done by the controller; do not push, merge, or
-  delete remote branches from this loop.
+- Local commit is expected/done by the controller; do not push, merge, or delete
+  remote branches from this loop.
 
 ## Next Loop Candidates
 
