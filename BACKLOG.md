@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and PGVector upserts now reject malformed provided point
+  `payload.tags` before backend writes.
 - `buildVectorPoint` now trims direct `updatedAt` and `embeddingVersion`
   metadata before returning vector points.
 - `buildVectorPoint` now trims direct nullable `title` and `summary` metadata

@@ -2,6 +2,29 @@
 
 ## 2026-07-03
 
+- 23:09 KST - Hardened vector adapter provided tags validation:
+  - Qdrant and PGVector upserts now reject provided `payload.tags` unless it is
+    an array of nonblank strings.
+  - Missing or `null` tags remain allowed for direct adapter compatibility.
+  - Scoped reviewer agent passed the diff.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts -t "point tags" --reporter=dot`
+  failed `6` tests because malformed provided tags reached Qdrant upsert or
+  pgvector client paths.
+- GREEN: same command passed (`2` files passed; `6` tests passed, `189`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `220` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2539`
+  tests passed, `34` skipped)
+
 - 23:03 KST - Hardened vector point builder required metadata trimming:
   - `buildVectorPoint` now trims direct `updatedAt` and `embeddingVersion`
     metadata before building vector payloads.

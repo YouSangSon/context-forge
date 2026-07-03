@@ -98,6 +98,7 @@ export function createQdrantVectorIndex(
         assertQdrantPointProjectKey(point);
         assertQdrantPointKind(point);
         assertQdrantPointDurability(point);
+        assertQdrantPointTags(point);
       }
 
       await client.upsert(collectionName, { points });
@@ -307,6 +308,26 @@ function assertQdrantPointDurability(point: VectorPoint): void {
     throw new Error(
       "point.payload.durability must be one of: ephemeral, durable, archived",
     );
+  }
+}
+
+function assertQdrantPointTags(point: VectorPoint): void {
+  const tags = point.payload.tags;
+  if (tags == null) {
+    return;
+  }
+  if (!Array.isArray(tags)) {
+    throw new Error("point.payload.tags must be an array");
+  }
+  for (const [index, tag] of tags.entries()) {
+    if (typeof tag !== "string") {
+      throw new Error(`point.payload.tags[${index}] must be a string`);
+    }
+    if (tag.trim().length === 0) {
+      throw new Error(
+        `point.payload.tags[${index}] must contain non-whitespace text`,
+      );
+    }
   }
 }
 

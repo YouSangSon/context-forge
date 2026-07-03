@@ -992,6 +992,52 @@ describe("createQdrantVectorIndex — point building (upsert)", () => {
   });
 
   it.each([
+    {
+      label: "non-array",
+      tags: "ops",
+      message: "point.payload.tags must be an array",
+    },
+    {
+      label: "non-string entry",
+      tags: ["ops", 12],
+      message: "point.payload.tags[1] must be a string",
+    },
+    {
+      label: "blank entry",
+      tags: ["ops", " \n\t "],
+      message: "point.payload.tags[1] must contain non-whitespace text",
+    },
+  ])("rejects malformed provided point tags before Qdrant upsert: $label", async ({ tags, message }) => {
+    const client = {
+      query: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      collectionExists: vi.fn(),
+      createCollection: vi.fn(),
+    };
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-tags",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            kind: "fact",
+            tags,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(client.upsert).not.toHaveBeenCalled();
+  });
+
+  it.each([
     { label: "empty", id: "" },
     { label: "blank", id: " \n\t " },
   ])("rejects malformed point ids before Qdrant upsert: $label", async ({ id }) => {
