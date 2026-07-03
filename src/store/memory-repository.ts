@@ -413,8 +413,10 @@ export function createMemoryRepository(
         options?.organizationId === undefined
           ? undefined
           : options.organizationId.trim();
+      const scopeType = mapScopeType(scope.scopeType, "scopeType");
+      const scopeId = mapRequiredText(scope.scopeId, "scopeId");
       const limit = clampListLimit(options?.limit);
-      const params: unknown[] = [scope.scopeType, scope.scopeId];
+      const params: unknown[] = [scopeType, scopeId];
       let orgClause = "";
       if (organizationId !== undefined) {
         const orgIndex = params.push(organizationId);
@@ -480,11 +482,13 @@ export function createMemoryRepository(
     async listMemoryForGovernance(scope, options) {
       assertNonBlankText(options.organizationId, "organizationId");
       const organizationId = options.organizationId.trim();
+      const scopeType = mapScopeType(scope.scopeType, "scopeType");
+      const scopeId = mapRequiredText(scope.scopeId, "scopeId");
 
       const limit = clampListLimit(options.limit);
       const params: unknown[] = [
-        scope.scopeType,
-        scope.scopeId,
+        scopeType,
+        scopeId,
         organizationId,
       ];
       let tagJoin = "";

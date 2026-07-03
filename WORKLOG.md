@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- 21:37 KST - Hardened list scope normalization:
+  - `listMemory` and `listMemoryForGovernance` now validate direct scope types
+    and scope IDs before querying.
+  - Direct list scope IDs are trimmed before SQL scope filter params are
+    built.
+  - `tests/store/memory-repository.test.ts` covers fail-fast malformed list
+    scopes and trimmed query scope params.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/memory-repository.test.ts -t "listMemory rejects malformed direct scopes|listMemory trims direct scope IDs|listMemoryForGovernance rejects malformed direct scopes|listMemoryForGovernance trims direct scope IDs" --reporter=dot`
+  failed `6` tests because malformed list scopes reached the query path and
+  raw scope IDs reached SQL params.
+- GREEN: same command passed (`1` file passed; `6` tests passed, `198`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `197` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2495`
+  tests passed, `34` skipped)
+
 - 21:31 KST - Hardened search scope normalization:
   - `searchMemory` now validates direct scope types and scope IDs before
     querying.

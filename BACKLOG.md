@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `listMemory` and `listMemoryForGovernance` now validate direct scope fields
+  before querying and trim scope IDs before SQL filter params are built.
 - `searchMemory` now validates direct scope fields before querying and trims
   scope IDs before SQL filter params are built.
 - `addMemory` now validates direct memory/source scope fields before

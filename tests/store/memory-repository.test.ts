@@ -1240,6 +1240,48 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(queryCalls[0]?.params).not.toContain(" org-a ");
   });
 
+  it.each([
+    {
+      scope: { scopeType: "team" as never, scopeId: "proj-x" },
+      message: "scopeType must be one of: user, project",
+    },
+    {
+      scope: { scopeType: "project", scopeId: " \n\t " },
+      message: "scopeId must contain non-whitespace text",
+    },
+  ])("listMemory rejects malformed direct scopes before querying %#", async ({
+    scope,
+    message,
+  }) => {
+    const mockPool = { query: vi.fn() };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.listMemory(scope as never, { organizationId: "org-a" }),
+    ).rejects.toThrow(message);
+
+    expect(mockPool.query).not.toHaveBeenCalled();
+  });
+
+  it("listMemory trims direct scope IDs before querying", async () => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.listMemory(
+      { scopeType: "project", scopeId: " proj-x " },
+      { organizationId: "org-a" },
+    );
+
+    expect(queryCalls[0]?.params).toContain("proj-x");
+    expect(queryCalls[0]?.params).not.toContain(" proj-x ");
+  });
+
   it("getMemoryRecordsByIds throws when organizationId is undefined and allowLegacyAnonymous is not set (SEC-read)", () => {
     const mockPool = { query: vi.fn() };
     const repo = createMemoryRepository(mockPool as never);
@@ -1752,6 +1794,48 @@ describe("createMemoryRepository (unit — no PG required)", () => {
 
     expect(queryCalls[0]?.params).toContain("org-a");
     expect(queryCalls[0]?.params).not.toContain(" org-a ");
+  });
+
+  it.each([
+    {
+      scope: { scopeType: "team" as never, scopeId: "proj-x" },
+      message: "scopeType must be one of: user, project",
+    },
+    {
+      scope: { scopeType: "project", scopeId: " \n\t " },
+      message: "scopeId must contain non-whitespace text",
+    },
+  ])(
+    "listMemoryForGovernance rejects malformed direct scopes before querying %#",
+    async ({ scope, message }) => {
+      const mockPool = { query: vi.fn() };
+      const repo = createMemoryRepository(mockPool as never);
+
+      await expect(
+        repo.listMemoryForGovernance(scope as never, { organizationId: "org-a" }),
+      ).rejects.toThrow(message);
+
+      expect(mockPool.query).not.toHaveBeenCalled();
+    },
+  );
+
+  it("listMemoryForGovernance trims direct scope IDs before querying", async () => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.listMemoryForGovernance(
+      { scopeType: "project", scopeId: " proj-x " },
+      { organizationId: "org-a" },
+    );
+
+    expect(queryCalls[0]?.params).toContain("proj-x");
+    expect(queryCalls[0]?.params).not.toContain(" proj-x ");
   });
 
   it("listMemoryForGovernance includes archived rows only when includeArchived is true", async () => {

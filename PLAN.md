@@ -4,16 +4,16 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Search Scope Normalization
+## Current Loop - List Scope Normalization
 
 Status:
-- `searchMemory` now validates direct scope types and scope IDs before
-  querying.
-- Direct search scope IDs are trimmed before SQL scope filter params are built.
+- `listMemory` and `listMemoryForGovernance` now validate direct scope types
+  and scope IDs before querying.
+- Direct list scope IDs are trimmed before SQL scope filter params are built.
 
 Verification:
 - Focused memory repository tests passed after RED coverage showed malformed
-  search scopes reaching the query path and raw scope IDs reaching SQL.
+  list scopes reaching the query path and raw scope IDs reaching SQL.
 - Full memory repository test file passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
