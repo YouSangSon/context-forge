@@ -219,6 +219,45 @@ describe("createAuditLogRepository — error_message truncation", () => {
     ]);
   });
 
+  it("listByOrganization trims audit row text values before returning them", async () => {
+    const fakePool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [
+          buildAuditRow({
+            organization_id: " org-1 ",
+            actor: " alice ",
+            tool: " add_memory ",
+            project_key: " project-alpha ",
+            error_message: " repository down ",
+            request_id: " req-1 ",
+          }),
+          buildAuditRow({
+            id: 2,
+            error_message: " \n\t ",
+            request_id: null,
+          }),
+        ],
+      }),
+    };
+    const repo = createAuditLogRepository(fakePool as never);
+
+    await expect(repo.listByOrganization("org-1")).resolves.toEqual([
+      expect.objectContaining({
+        organizationId: "org-1",
+        actor: "alice",
+        tool: "add_memory",
+        projectKey: "project-alpha",
+        errorMessage: "repository down",
+        requestId: "req-1",
+      }),
+      expect.objectContaining({
+        id: 2,
+        errorMessage: null,
+        requestId: null,
+      }),
+    ]);
+  });
+
   it.each([
     {
       label: "id null",

@@ -2,6 +2,28 @@
 
 ## 2026-07-03
 
+- 20:51 KST - Hardened audit log row text normalization:
+  - `src/audit/audit-log-repository.ts` now trims stored audit row text before
+    returning list results.
+  - Blank stored audit `error_message` values now map to `null`.
+  - `tests/audit/audit-truncation.test.ts` covers trimmed row mapping.
+
+RED/GREEN:
+- RED: `npm test -- tests/audit/audit-truncation.test.ts -t "trims audit row" --reporter=dot`
+  failed because raw stored row text reached returned audit entries.
+- GREEN: `npm test -- tests/audit/audit-truncation.test.ts -t "trims audit row" --reporter=dot`
+  (`1` file passed; `1` test passed, `55` skipped)
+
+Verification:
+- `npm test -- tests/audit/audit-truncation.test.ts tests/audit/audit-write.test.ts --reporter=dot`
+  (`2` files passed; `64` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2469`
+  tests passed, `34` skipped)
+
 - 20:49 KST - Hardened audit log direct text normalization:
   - `src/audit/audit-log-repository.ts` now trims direct organization, actor,
     tool, project key, request ID, and error-message text before SQL writes.

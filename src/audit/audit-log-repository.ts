@@ -167,7 +167,7 @@ function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
 
 function mapRequiredText(value: unknown, fieldName: string): string {
   assertNonBlankText(value, fieldName);
-  return value;
+  return value.trim();
 }
 
 function mapNullableText(value: unknown, fieldName: string): string | null {
@@ -175,7 +175,8 @@ function mapNullableText(value: unknown, fieldName: string): string | null {
     return null;
   }
   if (typeof value === "string") {
-    return value;
+    const normalized = value.trim();
+    return normalized ? normalized : null;
   }
   throw new Error(`${fieldName} must be a string or null`);
 }
@@ -193,7 +194,7 @@ function mapNullableNonBlankText(
   if (value.trim().length === 0) {
     throw new Error(`${fieldName} must contain non-whitespace text`);
   }
-  return value;
+  return value.trim();
 }
 
 function toAuditOutcome(value: unknown): AuditOutcome {

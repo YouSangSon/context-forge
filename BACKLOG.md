@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Audit log row mapping now trims stored text values before returning API
+  results and normalizes blank stored error messages to `null`.
 - Audit log writes now trim direct organization, actor, tool, project key,
   request ID, and error-message text before SQL writes and list filters.
 - Memory archive Qdrant status and compaction-run completion now trim optional
