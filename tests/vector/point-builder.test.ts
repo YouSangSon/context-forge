@@ -82,6 +82,8 @@ describe("buildVectorPoint", () => {
       projectKey: " project-alpha ",
       kind: " decision ",
       durability: " durable ",
+      title: " Decision title ",
+      summary: " Short summary ",
       tags: [" ops ", "security "],
     }));
 
@@ -91,7 +93,19 @@ describe("buildVectorPoint", () => {
     expect(point.payload.project_key).toBe("project-alpha");
     expect(point.payload.kind).toBe("decision");
     expect(point.payload.durability).toBe("durable");
+    expect(point.payload.title).toBe("Decision title");
+    expect(point.payload.summary).toBe("Short summary");
     expect(point.payload.tags).toEqual(["ops", "security"]);
+  });
+
+  it("normalizes blank nullable payload metadata to null", () => {
+    const point = buildVectorPoint(buildInput({
+      title: " \n\t ",
+      summary: " \n\t ",
+    }));
+
+    expect(point.payload.title).toBeNull();
+    expect(point.payload.summary).toBeNull();
   });
 
   it("rejects whitespace-only organizationId before building payload", () => {

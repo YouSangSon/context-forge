@@ -38,6 +38,8 @@ export function buildVectorPoint(input: VectorPointInput): VectorPoint {
   const projectKey = input.projectKey === null ? null : input.projectKey.trim();
   const kind = input.kind.trim();
   const durability = input.durability.trim();
+  const title = normalizeOptionalText(input.title);
+  const summary = normalizeOptionalText(input.summary);
 
   return {
     id: `chunk:${input.chunkId}`,
@@ -51,8 +53,8 @@ export function buildVectorPoint(input: VectorPointInput): VectorPoint {
       project_key: projectKey,
       kind,
       durability,
-      title: input.title ?? null,
-      summary: input.summary ?? null,
+      title,
+      summary,
       tags: (input.tags ?? []).map((tag) => tag.trim()),
       updated_at: input.updatedAt,
       embedding_version: input.embeddingVersion,
@@ -86,6 +88,14 @@ function assertVectorPointInput(
   assertOptionalStringArray(candidate.tags, "tags");
   assertNonEmptyStringField(candidate.updatedAt, "updatedAt");
   assertNonEmptyStringField(candidate.embeddingVersion, "embeddingVersion");
+}
+
+function normalizeOptionalText(value: string | null | undefined): string | null {
+  if (value == null) {
+    return null;
+  }
+  const normalized = value.trim();
+  return normalized === "" ? null : normalized;
 }
 
 function assertScopeType(value: string): void {

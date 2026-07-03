@@ -4,18 +4,18 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Point Tag Metadata Normalization
+## Current Loop - Vector Point Nullable Text Metadata Normalization
 
 Status:
-- `buildVectorPoint` now trims direct tag metadata before building vector
-  payloads.
-- Direct builder calls now reject blank tag entries before backend writes.
-- Existing tag type validation and vector metadata validation remain
+- `buildVectorPoint` now trims direct nullable `title` and `summary` metadata
+  before building vector payloads.
+- Direct blank `title` and `summary` metadata now normalize to `null`.
+- Existing nullable text type validation and vector metadata validation remain
   unchanged.
 
 Verification:
-- Focused point-builder tags tests passed after RED coverage showed raw tag
-  whitespace and blank tag pass-through.
+- Focused point-builder nullable text tests passed after RED coverage showed
+  raw `title`/`summary` whitespace and blank pass-through.
 - Full point-builder tests, related Qdrant/pgvector vector tests, and
   typecheck passed.
 - Scoped reviewer agent passed the diff.

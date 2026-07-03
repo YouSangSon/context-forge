@@ -2,6 +2,33 @@
 
 ## 2026-07-03
 
+- 22:59 KST - Hardened vector point builder nullable text metadata normalization:
+  - `buildVectorPoint` now trims direct nullable `title` and `summary`
+    metadata before building vector payloads.
+  - Direct blank `title` and `summary` metadata now normalize to `null`.
+  - Existing nullable text type validation, tag validation, scope validation,
+    and memory metadata enum validation remain unchanged.
+  - Scoped reviewer agent passed the diff.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/point-builder.test.ts -t "nullable payload|scope payload" --reporter=dot`
+  failed `2` tests because raw `title`/`summary` whitespace reached payloads
+  and blank nullable text stayed non-null.
+- GREEN: same command passed (`1` file passed; `2` tests passed, `35`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/point-builder.test.ts --reporter=dot`
+  (`1` file passed; `37` tests passed)
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `214` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2533`
+  tests passed, `34` skipped)
+
 - 22:54 KST - Hardened vector point builder tag metadata normalization:
   - `buildVectorPoint` now trims direct tag entries before building vector
     payloads.

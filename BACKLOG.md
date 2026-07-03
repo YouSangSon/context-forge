@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `buildVectorPoint` now trims direct nullable `title` and `summary` metadata
+  and normalizes blank values to `null` before returning vector points.
 - `buildVectorPoint` now trims direct tag metadata and rejects blank tag entries
   before returning vector points.
 - `buildVectorPoint` now rejects direct `scopeType` values outside `user` and
