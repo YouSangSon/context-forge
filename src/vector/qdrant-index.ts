@@ -43,7 +43,7 @@ function buildQdrantMust(filter: unknown): QdrantFilterClause[] {
   assertQdrantFilter(filter);
   const organizationId =
     normalizeOptionalVectorOrganizationId(filter.organizationId);
-  assertQdrantFilterScopes(filter.scopes);
+  const scopes = normalizeQdrantFilterScopes(filter.scopes);
   assertQdrantOptionalProjectKey(filter.projectKey);
 
   const must: QdrantFilterClause[] = [];
@@ -52,7 +52,7 @@ function buildQdrantMust(filter: unknown): QdrantFilterClause[] {
     must.push({ key: "organization_id", match: { value: organizationId } });
   }
 
-  for (const scope of filter.scopes) {
+  for (const scope of scopes) {
     must.push({ key: "scope_type", match: { value: scope.scopeType } });
 
     if (scope.scopeType === "project" && filter.projectKey != null) {
@@ -258,7 +258,10 @@ function assertQdrantPointKind(point: VectorPoint): void {
   );
 }
 
-function assertQdrantNonEmptyString(value: unknown, fieldName: string): void {
+function assertQdrantNonEmptyString(
+  value: unknown,
+  fieldName: string,
+): asserts value is string {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${fieldName} must be a non-empty string`);
   }
@@ -314,9 +317,9 @@ function assertQdrantRecordIds(recordIds: unknown): asserts recordIds is readonl
   }
 }
 
-function assertQdrantFilterScopes(
+function normalizeQdrantFilterScopes(
   scopes: unknown,
-): asserts scopes is VectorFilter["scopes"] {
+): VectorFilter["scopes"] {
   if (!Array.isArray(scopes)) {
     throw new Error("filter.scopes must be an array");
   }
@@ -324,21 +327,38 @@ function assertQdrantFilterScopes(
     throw new Error("filter.scopes must be a non-empty array");
   }
 
-  scopes.forEach((scope, index) => {
+  return scopes.map((scope, index) => {
     if (typeof scope !== "object" || scope === null || Array.isArray(scope)) {
       throw new Error(`filter.scopes[${index}] must be an object`);
     }
 
     const candidate = scope as Record<string, unknown>;
-    assertQdrantNonEmptyString(
+    const scopeType = normalizeQdrantScopeType(
       candidate.scopeType,
       `filter.scopes[${index}].scopeType`,
     );
-    assertQdrantNonEmptyString(
+    const scopeId = normalizeQdrantNonEmptyString(
       candidate.scopeId,
       `filter.scopes[${index}].scopeId`,
     );
+    return { scopeType, scopeId };
   });
+}
+
+function normalizeQdrantNonEmptyString(
+  value: unknown,
+  fieldName: string,
+): string {
+  assertQdrantNonEmptyString(value, fieldName);
+  return value.trim();
+}
+
+function normalizeQdrantScopeType(value: unknown, fieldName: string): string {
+  const scopeType = normalizeQdrantNonEmptyString(value, fieldName);
+  if (scopeType === "user" || scopeType === "project") {
+    return scopeType;
+  }
+  throw new Error(`${fieldName} must be one of: user, project`);
 }
 
 function assertQdrantQueryResponse(value: unknown): asserts value is QdrantQueryResponse {

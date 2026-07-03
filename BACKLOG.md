@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and PGVector query filters now trim direct scope fields before
+  backend queries and reject scope types outside `user` and `project`.
 - `acquireScopeLock` now trims direct lock scope fields before advisory-lock
   queries and rejects scope types outside `user` and `project`.
 - `createCompactionRun` now rejects direct `scopeType` values outside `user`

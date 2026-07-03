@@ -2,6 +2,36 @@
 
 ## 2026-07-03
 
+- 21:53 KST - Hardened vector scope filter normalization:
+  - Qdrant and PGVector query filters now trim direct scope type and scope ID
+    values before backend query filters are built.
+  - Direct vector filter `scopeType` values outside `user` and `project` are
+    rejected before backend queries.
+  - `tests/vector/qdrant-index.test.ts` and
+    `tests/vector/pgvector-index.integration.test.ts` cover normalized scope
+    filters and fail-fast invalid scope types.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/qdrant-index.test.ts -t "trims scope filters|invalid scopeType" --reporter=dot`
+  failed `2` tests because raw Qdrant scope fields reached filter clauses and
+  invalid scope types returned an empty result.
+- RED: `npm test -- tests/vector/pgvector-index.integration.test.ts -t "query trims scope filters|invalid scopeType" --reporter=dot`
+  failed `2` tests because raw PGVector scope fields reached SQL params and
+  invalid scope types reached the query path.
+- GREEN: both focused commands passed (`2` tests passed in each file).
+
+Verification:
+- `npm test -- tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `80` tests passed)
+- `npm test -- tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `79` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2505`
+  tests passed, `34` skipped)
+
 - 21:46 KST - Hardened scope lock normalization:
   - `acquireScopeLock` now trims direct organization, scope type, and scope ID
     fields before advisory-lock query params are built.

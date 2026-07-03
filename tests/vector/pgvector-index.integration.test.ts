@@ -508,6 +508,11 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
       message: "filter.scopes[0].scopeType must be a non-empty string",
     },
     {
+      label: "invalid scopeType",
+      scopes: [{ scopeType: "team", scopeId: "project-alpha" }],
+      message: "filter.scopes[0].scopeType must be one of: user, project",
+    },
+    {
       label: "blank scopeId",
       scopes: [{ scopeType: "project", scopeId: " \n\t " }],
       message: "filter.scopes[0].scopeId must be a non-empty string",
@@ -629,6 +634,37 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
       "org-a",
       "project",
       "project-alpha",
+      5,
+    ]);
+  });
+
+  it("query trims scope filters before SQL parameters", async () => {
+    const { pool, query } = makeQueryPool([]);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: " user ", scopeId: " alice " }],
+          projectKey: null,
+        } as never,
+        5,
+      ),
+    ).resolves.toEqual([]);
+
+    const selectCall = query.mock.calls.find(([sql]) =>
+      typeof sql === "string" && sql.includes("FROM memory_vectors_test")
+    );
+    expect(selectCall).toBeDefined();
+
+    const [, params] = selectCall as [string, unknown[]];
+    expect(params).toEqual([
+      "[0.1,0.2,0.3]",
+      "org-a",
+      "user",
+      "alice",
       5,
     ]);
   });

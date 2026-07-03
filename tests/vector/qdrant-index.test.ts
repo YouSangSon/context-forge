@@ -122,6 +122,33 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     );
   });
 
+  it("trims scope filters before building query filters", async () => {
+    const client = makeClient();
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await index.query(
+      [0.1, 0.2, 0.3],
+      {
+        organizationId: "dev-team",
+        scopes: [{ scopeType: " user ", scopeId: " alice " }],
+        projectKey: null,
+      } as never,
+      5,
+    );
+
+    expect(client.query).toHaveBeenCalledWith(
+      "memory_chunks_v1",
+      expect.objectContaining({
+        filter: expect.objectContaining({
+          must: expect.arrayContaining([
+            { key: "scope_type", match: { value: "user" } },
+            { key: "scope_id", match: { value: "alice" } },
+          ]),
+        }),
+      }),
+    );
+  });
+
   it("builds must clauses for user scope with organizationId", async () => {
     const client = makeClient();
     const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
@@ -301,6 +328,11 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
       label: "blank scopeType",
       scopes: [{ scopeType: " \n\t ", scopeId: "p" }],
       message: "filter.scopes[0].scopeType must be a non-empty string",
+    },
+    {
+      label: "invalid scopeType",
+      scopes: [{ scopeType: "team", scopeId: "p" }],
+      message: "filter.scopes[0].scopeType must be one of: user, project",
     },
     {
       label: "blank scopeId",

@@ -303,7 +303,7 @@ export function createPgVectorIndex(
       assertPgVectorFilter(filter);
       const organizationId =
         normalizeOptionalVectorOrganizationId(filter.organizationId);
-      assertPgVectorFilterScopes(filter.scopes);
+      const scopes = normalizePgVectorFilterScopes(filter.scopes);
       assertPgVectorOptionalProjectKey(filter.projectKey);
 
       // HIGH 1(b): Run inside a transaction so SET LOCAL is scoped to this query.
@@ -340,7 +340,7 @@ export function createPgVectorIndex(
         //   - AND (scopeType==="project" && projectKey != null
         //       ? project_key = $m
         //       : scope_id    = $m)
-        for (const scope of filter.scopes) {
+        for (const scope of scopes) {
           params.push(scope.scopeType);
           whereClauses.push(`scope_type = $${params.length}`);
 
@@ -539,7 +539,10 @@ function assertPgVectorPointKind(point: VectorPoint): void {
   );
 }
 
-function assertPgVectorNonEmptyString(value: unknown, fieldName: string): void {
+function assertPgVectorNonEmptyString(
+  value: unknown,
+  fieldName: string,
+): asserts value is string {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${fieldName} must be a non-empty string`);
   }
@@ -650,9 +653,9 @@ function assertPgVectorRecordIds(recordIds: unknown): asserts recordIds is reado
   }
 }
 
-function assertPgVectorFilterScopes(
+function normalizePgVectorFilterScopes(
   scopes: unknown,
-): asserts scopes is VectorFilter["scopes"] {
+): VectorFilter["scopes"] {
   if (!Array.isArray(scopes)) {
     throw new Error("filter.scopes must be an array");
   }
@@ -660,21 +663,38 @@ function assertPgVectorFilterScopes(
     throw new Error("filter.scopes must be a non-empty array");
   }
 
-  scopes.forEach((scope, index) => {
+  return scopes.map((scope, index) => {
     if (typeof scope !== "object" || scope === null || Array.isArray(scope)) {
       throw new Error(`filter.scopes[${index}] must be an object`);
     }
 
     const candidate = scope as Record<string, unknown>;
-    assertPgVectorNonEmptyString(
+    const scopeType = normalizePgVectorScopeType(
       candidate.scopeType,
       `filter.scopes[${index}].scopeType`,
     );
-    assertPgVectorNonEmptyString(
+    const scopeId = normalizePgVectorNonEmptyString(
       candidate.scopeId,
       `filter.scopes[${index}].scopeId`,
     );
+    return { scopeType, scopeId };
   });
+}
+
+function normalizePgVectorNonEmptyString(
+  value: unknown,
+  fieldName: string,
+): string {
+  assertPgVectorNonEmptyString(value, fieldName);
+  return value.trim();
+}
+
+function normalizePgVectorScopeType(value: unknown, fieldName: string): string {
+  const scopeType = normalizePgVectorNonEmptyString(value, fieldName);
+  if (scopeType === "user" || scopeType === "project") {
+    return scopeType;
+  }
+  throw new Error(`${fieldName} must be one of: user, project`);
 }
 
 function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {
