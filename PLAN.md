@@ -4,18 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Point Nullable Text Metadata Normalization
+## Current Loop - Vector Point Required Metadata Trimming
 
 Status:
-- `buildVectorPoint` now trims direct nullable `title` and `summary` metadata
-  before building vector payloads.
-- Direct blank `title` and `summary` metadata now normalize to `null`.
-- Existing nullable text type validation and vector metadata validation remain
-  unchanged.
+- `buildVectorPoint` now trims direct `updatedAt` and `embeddingVersion`
+  metadata before building vector payloads.
+- Existing non-empty validation remains unchanged; timestamp parsing is left to
+  store row mapping.
 
 Verification:
-- Focused point-builder nullable text tests passed after RED coverage showed
-  raw `title`/`summary` whitespace and blank pass-through.
+- Focused point-builder payload metadata test passed after RED coverage showed
+  raw `updatedAt`/`embeddingVersion` whitespace reaching payloads.
 - Full point-builder tests, related Qdrant/pgvector vector tests, and
   typecheck passed.
 - Scoped reviewer agent passed the diff.

@@ -85,6 +85,8 @@ describe("buildVectorPoint", () => {
       title: " Decision title ",
       summary: " Short summary ",
       tags: [" ops ", "security "],
+      updatedAt: " 2026-03-29T00:00:00.000Z ",
+      embeddingVersion: " v1 ",
     }));
 
     expect(point.payload.organization_id).toBe("dev-team");
@@ -96,6 +98,8 @@ describe("buildVectorPoint", () => {
     expect(point.payload.title).toBe("Decision title");
     expect(point.payload.summary).toBe("Short summary");
     expect(point.payload.tags).toEqual(["ops", "security"]);
+    expect(point.payload.updated_at).toBe("2026-03-29T00:00:00.000Z");
+    expect(point.payload.embedding_version).toBe("v1");
   });
 
   it("normalizes blank nullable payload metadata to null", () => {

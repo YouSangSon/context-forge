@@ -2,6 +2,32 @@
 
 ## 2026-07-03
 
+- 23:03 KST - Hardened vector point builder required metadata trimming:
+  - `buildVectorPoint` now trims direct `updatedAt` and `embeddingVersion`
+    metadata before building vector payloads.
+  - Existing non-empty validation remains unchanged.
+  - Timestamp parsing remains in store row mapping instead of being duplicated
+    in the vector builder.
+  - Scoped reviewer agent passed the diff.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/point-builder.test.ts -t "scope payload" --reporter=dot`
+  failed `1` test because raw `updatedAt` whitespace reached payloads.
+- GREEN: same command passed (`1` file passed; `1` test passed, `36`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/point-builder.test.ts --reporter=dot`
+  (`1` file passed; `37` tests passed)
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `214` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2533`
+  tests passed, `34` skipped)
+
 - 22:59 KST - Hardened vector point builder nullable text metadata normalization:
   - `buildVectorPoint` now trims direct nullable `title` and `summary`
     metadata before building vector payloads.

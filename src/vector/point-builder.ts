@@ -40,6 +40,8 @@ export function buildVectorPoint(input: VectorPointInput): VectorPoint {
   const durability = input.durability.trim();
   const title = normalizeOptionalText(input.title);
   const summary = normalizeOptionalText(input.summary);
+  const updatedAt = input.updatedAt.trim();
+  const embeddingVersion = input.embeddingVersion.trim();
 
   return {
     id: `chunk:${input.chunkId}`,
@@ -56,8 +58,8 @@ export function buildVectorPoint(input: VectorPointInput): VectorPoint {
       title,
       summary,
       tags: (input.tags ?? []).map((tag) => tag.trim()),
-      updated_at: input.updatedAt,
-      embedding_version: input.embeddingVersion,
+      updated_at: updatedAt,
+      embedding_version: embeddingVersion,
     },
   };
 }
