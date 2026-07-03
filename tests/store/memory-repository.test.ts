@@ -3172,6 +3172,55 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(queryCalls[0]?.params).not.toContain(" org-a ");
   });
 
+  it.each([
+    {
+      scopes: [{ scopeType: "team" as never, scopeId: "proj-x" }],
+      message: "scopes[0].scopeType must be one of: user, project",
+    },
+    {
+      scopes: [{ scopeType: "project", scopeId: " \n\t " }],
+      message: "scopes[0].scopeId must contain non-whitespace text",
+    },
+  ])("searchMemory rejects malformed direct scopes before querying %#", async ({
+    scopes,
+    message,
+  }) => {
+    const mockPool = { query: vi.fn() };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.searchMemory({
+        query: "timeout retry",
+        scopes: scopes as never,
+        organizationId: "org-a",
+        limit: 5,
+      }),
+    ).rejects.toThrow(message);
+
+    expect(mockPool.query).not.toHaveBeenCalled();
+  });
+
+  it("searchMemory trims direct scope IDs before querying", async () => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.searchMemory({
+      query: "timeout retry",
+      scopes: [{ scopeType: "project", scopeId: " proj-x " }],
+      organizationId: "org-a",
+      limit: 5,
+    });
+
+    expect(queryCalls[0]?.params).toContain("proj-x");
+    expect(queryCalls[0]?.params).not.toContain(" proj-x ");
+  });
+
   it.each([undefined, null, 42, {}, []])(
     "searchMemory rejects non-string direct queries before querying: %s",
     async (query) => {

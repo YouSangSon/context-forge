@@ -317,6 +317,10 @@ export function createMemoryRepository(
       if (input.scopes.length === 0) {
         return [];
       }
+      const scopes = input.scopes.map((scope, index) => ({
+        scopeType: mapScopeType(scope.scopeType, `scopes[${index}].scopeType`),
+        scopeId: mapRequiredText(scope.scopeId, `scopes[${index}].scopeId`),
+      }));
 
       const trimmedQuery = input.query.trim();
       if (trimmedQuery.length === 0) {
@@ -368,7 +372,7 @@ export function createMemoryRepository(
         );
       }
 
-      const scopeClauses = input.scopes.map((scope) => {
+      const scopeClauses = scopes.map((scope) => {
         const scopeTypeIndex = params.push(scope.scopeType);
         const scopeIdIndex = params.push(scope.scopeId);
         return `(mr.scope_type = $${scopeTypeIndex} AND mr.scope_id = $${scopeIdIndex})`;

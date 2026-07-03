@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- 21:31 KST - Hardened search scope normalization:
+  - `searchMemory` now validates direct scope types and scope IDs before
+    querying.
+  - Direct search scope IDs are trimmed before SQL scope filter params are
+    built.
+  - `tests/store/memory-repository.test.ts` covers fail-fast malformed search
+    scopes and trimmed query scope params.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/memory-repository.test.ts -t "malformed direct scopes|trims direct scope IDs" --reporter=dot`
+  failed `3` tests because malformed search scopes reached the query path and
+  raw scope IDs reached SQL params.
+- GREEN: same command passed (`1` file passed; `3` tests passed, `195`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `191` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2489`
+  tests passed, `34` skipped)
+
 - 21:27 KST - Hardened add-memory scope normalization:
   - `addMemory` now validates direct memory/source scope types and scope IDs
     before opening a transaction.

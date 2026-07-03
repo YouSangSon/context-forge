@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `searchMemory` now validates direct scope fields before querying and trims
+  scope IDs before SQL filter params are built.
 - `addMemory` now validates direct memory/source scope fields before
   transactions and trims scope IDs before SQL writes.
 - `addMemory` now rejects non-string source title and URI metadata before
