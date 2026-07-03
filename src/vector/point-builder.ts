@@ -32,6 +32,10 @@ export type VectorPointInput = {
 
 export function buildVectorPoint(input: VectorPointInput): VectorPoint {
   assertVectorPointInput(input);
+  const organizationId = input.organizationId.trim();
+  const scopeType = input.scopeType.trim();
+  const scopeId = input.scopeId.trim();
+  const projectKey = input.projectKey === null ? null : input.projectKey.trim();
 
   return {
     id: `chunk:${input.chunkId}`,
@@ -39,10 +43,10 @@ export function buildVectorPoint(input: VectorPointInput): VectorPoint {
     payload: {
       chunk_id: input.chunkId,
       memory_record_id: input.memoryRecordId,
-      organization_id: input.organizationId,
-      scope_type: input.scopeType,
-      scope_id: input.scopeId,
-      project_key: input.projectKey,
+      organization_id: organizationId,
+      scope_type: scopeType,
+      scope_id: scopeId,
+      project_key: projectKey,
       kind: input.kind,
       durability: input.durability,
       title: input.title ?? null,

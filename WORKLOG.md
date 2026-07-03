@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- 22:06 KST - Hardened vector point payload metadata normalization:
+  - `buildVectorPoint` now trims direct organization, scope type, scope ID,
+    and project-key metadata before building vector payloads.
+  - Existing blank scoping metadata validation remains unchanged.
+  - `tests/vector/point-builder.test.ts` covers normalized vector point
+    payload metadata.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/point-builder.test.ts -t "trims direct scope payload metadata" --reporter=dot`
+  failed `1` test because raw scoping metadata reached vector payloads.
+- GREEN: same command passed (`1` file passed; `1` test passed, `32`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/point-builder.test.ts --reporter=dot`
+  (`1` file passed; `33` tests passed)
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `194` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2509`
+  tests passed, `34` skipped)
+
 - 22:00 KST - Hardened canonical chunk scope normalization:
   - `listChunks` now trims direct scope IDs before canonical chunk SQL params
     are built.

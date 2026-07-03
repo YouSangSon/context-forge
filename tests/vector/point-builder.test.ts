@@ -74,6 +74,20 @@ describe("buildVectorPoint", () => {
     expect(point.payload.tags).toEqual([]);
   });
 
+  it("trims direct scope payload metadata", () => {
+    const point = buildVectorPoint(buildInput({
+      organizationId: " dev-team ",
+      scopeType: " user ",
+      scopeId: " alice ",
+      projectKey: " project-alpha ",
+    }));
+
+    expect(point.payload.organization_id).toBe("dev-team");
+    expect(point.payload.scope_type).toBe("user");
+    expect(point.payload.scope_id).toBe("alice");
+    expect(point.payload.project_key).toBe("project-alpha");
+  });
+
   it("rejects whitespace-only organizationId before building payload", () => {
     expect(() =>
       buildVectorPoint(buildInput({

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `buildVectorPoint` now trims direct organization, scope, and project-key
+  payload metadata before returning vector points.
 - Canonical chunk listing now trims direct scope IDs before SQL params are
   built.
 - Qdrant and PGVector query filters now trim direct `projectKey` values before
