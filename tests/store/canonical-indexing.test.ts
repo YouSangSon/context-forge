@@ -2129,6 +2129,51 @@ describe("canonical indexing", () => {
     ]);
   });
 
+  it("listChunks trims stored metadata text without changing chunk content", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "701",
+          memory_record_id: "501",
+          chunk_index: "0",
+          content: " stored chunk ",
+          start_offset: "0",
+          end_offset: "14",
+          embedding_version: " v1 ",
+          organization_id: " org-a ",
+          scope_type: "project",
+          scope_id: " shared-project ",
+          project_key: " shared-project ",
+          durability: "durable",
+          kind: "summary",
+          title: " Stored title ",
+          summary: " Stored summary ",
+          tags: [" ops ", " runbook "],
+          updated_at: "2026-01-01T00:00:00.000Z",
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    const chunks = await repo.listChunks("org-a", [
+      { scopeType: "project", scopeId: "shared-project" },
+    ]);
+
+    expect(chunks).toEqual([
+      expect.objectContaining({
+        content: " stored chunk ",
+        embeddingVersion: "v1",
+        organizationId: "org-a",
+        scopeId: "shared-project",
+        projectKey: "shared-project",
+        title: "Stored title",
+        summary: "Stored summary",
+        tags: ["ops", "runbook"],
+      }),
+    ]);
+  });
+
   it.each([
     {
       rowPatch: { scope_type: "team" },

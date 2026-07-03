@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Goal Run Row Text Normalization
+## Current Loop - Canonical Chunk Metadata Text Normalization
 
 Status:
-- Goal-run row mapping now trims stored run and iteration text before returning
-  API results.
-- Existing blank-row validation remains unchanged for nullable nonblank fields.
+- Canonical chunk row mapping now trims stored metadata text before returning
+  reindexable chunk rows.
+- Raw chunk content remains unchanged so stored offsets stay meaningful.
 
 Verification:
-- Focused goal-run repository tests passed after RED coverage showed raw
-  stored text reaching returned run/iteration entries.
-- Related goal-run handler and context tests passed.
+- Focused canonical indexing tests passed after RED coverage showed raw stored
+  metadata reaching returned chunk rows.
+- Full canonical indexing test file passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

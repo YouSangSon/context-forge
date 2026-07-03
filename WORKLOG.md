@@ -2,6 +2,30 @@
 
 ## 2026-07-03
 
+- 21:01 KST - Hardened canonical chunk metadata text normalization:
+  - `src/store/canonical-indexing.ts` now trims stored chunk metadata text
+    before returning reindexable rows.
+  - Raw chunk `content` remains unchanged so offsets still refer to the stored
+    text.
+  - `tests/store/canonical-indexing.test.ts` covers metadata trimming while
+    preserving content.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/canonical-indexing.test.ts -t "trims stored metadata" --reporter=dot`
+  failed because raw stored metadata reached returned chunk rows.
+- GREEN: same command passed (`1` file passed; `1` test passed, `82`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`1` file passed; `83` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2474`
+  tests passed, `34` skipped)
+
 - 20:58 KST - Hardened goal-run row text normalization:
   - `src/goal-run/goal-run-repository.ts` now trims stored run and iteration
     row text before returning mapped results.

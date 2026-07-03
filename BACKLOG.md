@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Canonical chunk row mapping now trims stored metadata text while preserving
+  raw chunk content for offset correctness.
 - Goal-run row mapping now trims stored run and iteration text before returning
   API results.
 - Ingest job error persistence and row mapping now trim stored error text and

@@ -871,7 +871,7 @@ function mapStoredMemoryChunkRow(row: StoredMemoryChunkRow): StoredMemoryChunk {
     embeddingVersion: mapRequiredText(
       row.embedding_version,
       "memory chunk embedding_version",
-    ),
+    ).trim(),
   };
 }
 
@@ -883,9 +883,9 @@ function mapReindexableMemoryChunkRow(
     organizationId: mapRequiredText(
       row.organization_id,
       "memory chunk organization_id",
-    ),
+    ).trim(),
     scopeType: mapScopeType(row.scope_type),
-    scopeId: mapRequiredText(row.scope_id, "memory chunk scope_id"),
+    scopeId: mapRequiredText(row.scope_id, "memory chunk scope_id").trim(),
     projectKey: mapNullableText(row.project_key, "memory chunk project_key"),
     durability: mapDurability(row.durability),
     kind: mapMemoryKind(row.kind),
@@ -918,14 +918,15 @@ function mapNullableText(value: unknown, fieldName: string): string | null {
     return null;
   }
   if (typeof value === "string") {
-    return value;
+    const normalized = value.trim();
+    return normalized ? normalized : null;
   }
   throw new Error(`${fieldName} must be a string or null`);
 }
 
 function mapNonBlankStringArray(value: unknown, fieldName: string): string[] {
   assertStringArray(value, fieldName);
-  return value;
+  return value.map((item) => item.trim());
 }
 
 function mapScopeType(value: unknown): SearchMemoryResult["scopeType"] {
