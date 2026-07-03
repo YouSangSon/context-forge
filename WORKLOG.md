@@ -2,6 +2,30 @@
 
 ## 2026-07-03
 
+- 20:58 KST - Hardened goal-run row text normalization:
+  - `src/goal-run/goal-run-repository.ts` now trims stored run and iteration
+    row text before returning mapped results.
+  - Existing blank-row validation remains unchanged for nullable nonblank
+    fields.
+  - `tests/goal-run/goal-run-repository.test.ts` covers stored run and
+    iteration row trimming through `get`.
+
+RED/GREEN:
+- RED: `npm test -- tests/goal-run/goal-run-repository.test.ts -t "trims stored run" --reporter=dot`
+  failed because raw stored row text reached returned goal-run entries.
+- GREEN: same command passed (`1` file passed; `1` test passed, `69`
+  skipped).
+
+Verification:
+- `npm test -- tests/goal-run/goal-run-repository.test.ts tests/goal-run/goal-run-handlers.test.ts tests/goal-run/build-goal-context.test.ts --reporter=dot`
+  (`3` files passed; `119` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2473`
+  tests passed, `34` skipped)
+
 - 20:55 KST - Hardened ingest job error text normalization:
   - `src/jobs/ingest-job-repository.ts` now trims serialized ingest job
     errors before writing `last_error` / `qdrant_last_error`.

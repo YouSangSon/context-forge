@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Goal-run row mapping now trims stored run and iteration text before returning
+  API results.
 - Ingest job error persistence and row mapping now trim stored error text and
   normalize blank persisted errors to `null`.
 - Audit log row mapping now trims stored text values before returning API

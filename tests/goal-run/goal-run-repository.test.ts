@@ -680,6 +680,61 @@ describe("createGoalRunRepository", () => {
     expect(result?.iterations[0]?.outcome).toBe("failure");
   });
 
+  it("get trims stored run and iteration row text before returning it", async () => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({
+            rows: [
+              runRow({
+                organization_id: " org-a ",
+                scope_id: " proj-x ",
+                project_key: " proj-x ",
+                goal: " ship phase 1 ",
+                termination_criteria: " tests pass ",
+                close_note: " done ",
+              }),
+            ],
+          });
+        }
+        return Promise.resolve({
+          rows: [
+            {
+              id: "1",
+              goal_run_id: "7",
+              organization_id: " org-a ",
+              iteration_index: "1",
+              attempt: " try A ",
+              outcome: "failure",
+              summary: " summary ",
+              error: " boom ",
+              created_at: "2026-06-27T00:01:00.000Z",
+            },
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+
+    const repo = createGoalRunRepository(pool as never);
+    const result = await repo.get({ organizationId: "org-a", goalRunId: 7 });
+
+    expect(result).toMatchObject({
+      organizationId: "org-a",
+      scopeId: "proj-x",
+      projectKey: "proj-x",
+      goal: "ship phase 1",
+      terminationCriteria: "tests pass",
+      closeNote: "done",
+    });
+    expect(result?.iterations[0]).toMatchObject({
+      organizationId: "org-a",
+      attempt: "try A",
+      summary: "summary",
+      error: "boom",
+    });
+  });
+
   it("get trims organizationId before querying run and iterations", async () => {
     const calls: SqlQueryCall[] = [];
     const pool = {

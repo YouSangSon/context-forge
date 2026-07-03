@@ -398,7 +398,7 @@ function toPositiveSafeInteger(value: unknown, fieldName: string): number {
 
 function mapRequiredText(value: unknown, fieldName: string): string {
   assertNonBlankText(value, fieldName);
-  return value;
+  return value.trim();
 }
 
 function mapNullableNonBlankText(
@@ -414,7 +414,7 @@ function mapNullableNonBlankText(
   if (value.trim().length === 0) {
     throw new Error(`${fieldName} must contain non-whitespace text`);
   }
-  return value;
+  return value.trim();
 }
 
 function toGoalRunScopeType(

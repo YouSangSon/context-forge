@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Ingest Job Error Text Normalization
+## Current Loop - Goal Run Row Text Normalization
 
 Status:
-- Ingest job error serialization now trims stored `last_error` and
-  `qdrant_last_error` text.
-- Blank serialized or persisted ingest job errors now normalize to `null`.
+- Goal-run row mapping now trims stored run and iteration text before returning
+  API results.
+- Existing blank-row validation remains unchanged for nullable nonblank fields.
 
 Verification:
-- Focused ingest job tests passed after RED coverage showed raw error text
-  reaching SQL parameters and returned job rows.
-- Related ingest job claim tests passed.
+- Focused goal-run repository tests passed after RED coverage showed raw
+  stored text reaching returned run/iteration entries.
+- Related goal-run handler and context tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.
