@@ -152,7 +152,7 @@ export function createMemoryArchiveRepository(
       assertCreateCompactionRunInput(input);
       const organizationId = input.organizationId.trim();
       const actor = input.actor.trim();
-      const scopeType = input.scopeType.trim();
+      const scopeType = toArchiveScopeType(input.scopeType.trim(), "scopeType");
       const scopeId = input.scopeId.trim();
       const idempotencyKey = input.idempotencyKey.trim();
 
@@ -904,11 +904,14 @@ function assertArchiveReason(
   }
 }
 
-function toArchiveScopeType(value: unknown): string {
+function toArchiveScopeType(
+  value: unknown,
+  fieldName = "memory archive scope_type",
+): string {
   if (value === "user" || value === "project") {
     return value;
   }
-  throw new Error("memory archive scope_type must be one of: user, project");
+  throw new Error(`${fieldName} must be one of: user, project`);
 }
 
 function toArchiveKind(value: unknown): string {

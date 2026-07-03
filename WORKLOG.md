@@ -2,6 +2,30 @@
 
 ## 2026-07-03
 
+- 21:44 KST - Hardened compaction run scope-type validation:
+  - `createCompactionRun` now rejects direct `scopeType` values outside `user`
+    and `project` before querying.
+  - Existing compaction-run scope trimming behavior remains unchanged.
+  - `tests/store/memory-archive-repository.test.ts` covers fail-fast invalid
+    direct run scope types.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/memory-archive-repository.test.ts -t "rejects malformed direct run inputs" --reporter=dot`
+  failed `1` test because invalid direct run `scopeType` reached the insert
+  path and returned a pending run.
+- GREEN: same command passed (`1` file passed; `5` tests passed, `147`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `152` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2499`
+  tests passed, `34` skipped)
+
 - 21:41 KST - Hardened graph scope normalization:
   - `inspectMemoryGraph` now validates direct scope types and scope IDs before
     querying.

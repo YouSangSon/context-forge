@@ -278,6 +278,10 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
       message: "actor must contain non-whitespace text",
     },
     {
+      inputPatch: { scopeType: "team" },
+      message: "scopeType must be one of: user, project",
+    },
+    {
       inputPatch: { dryRun: "false" },
       message: "dryRun must be a boolean",
     },

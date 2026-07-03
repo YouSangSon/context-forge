@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `createCompactionRun` now rejects direct `scopeType` values outside `user`
+  and `project` before querying.
 - `inspectMemoryGraph` now validates direct scope fields before querying and
   trims scope IDs before entity and relationship SQL params are built.
 - `listMemory` and `listMemoryForGovernance` now validate direct scope fields
