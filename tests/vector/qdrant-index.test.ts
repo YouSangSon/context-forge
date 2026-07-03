@@ -149,6 +149,32 @@ describe("createQdrantVectorIndex — VectorFilter → {must} translation", () =
     );
   });
 
+  it("trims projectKey before building query filters", async () => {
+    const client = makeClient();
+    const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");
+
+    await index.query(
+      [0.1, 0.2, 0.3],
+      {
+        organizationId: "dev-team",
+        scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+        projectKey: " project-alpha ",
+      },
+      5,
+    );
+
+    expect(client.query).toHaveBeenCalledWith(
+      "memory_chunks_v1",
+      expect.objectContaining({
+        filter: expect.objectContaining({
+          must: expect.arrayContaining([
+            { key: "project_key", match: { value: "project-alpha" } },
+          ]),
+        }),
+      }),
+    );
+  });
+
   it("builds must clauses for user scope with organizationId", async () => {
     const client = makeClient();
     const index = createQdrantVectorIndex(client as never, "memory_chunks_v1");

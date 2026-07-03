@@ -44,7 +44,7 @@ function buildQdrantMust(filter: unknown): QdrantFilterClause[] {
   const organizationId =
     normalizeOptionalVectorOrganizationId(filter.organizationId);
   const scopes = normalizeQdrantFilterScopes(filter.scopes);
-  assertQdrantOptionalProjectKey(filter.projectKey);
+  const projectKey = normalizeQdrantOptionalProjectKey(filter.projectKey);
 
   const must: QdrantFilterClause[] = [];
 
@@ -55,8 +55,8 @@ function buildQdrantMust(filter: unknown): QdrantFilterClause[] {
   for (const scope of scopes) {
     must.push({ key: "scope_type", match: { value: scope.scopeType } });
 
-    if (scope.scopeType === "project" && filter.projectKey != null) {
-      must.push({ key: "project_key", match: { value: filter.projectKey } });
+    if (scope.scopeType === "project" && projectKey != null) {
+      must.push({ key: "project_key", match: { value: projectKey } });
     } else {
       must.push({ key: "scope_id", match: { value: scope.scopeId } });
     }
@@ -267,14 +267,17 @@ function assertQdrantNonEmptyString(
   }
 }
 
-function assertQdrantOptionalProjectKey(value: unknown): void {
+function normalizeQdrantOptionalProjectKey(
+  value: unknown,
+): string | null | undefined {
   if (value == null) {
-    return;
+    return value;
   }
   if (typeof value !== "string") {
     throw new Error("filter.projectKey must be a string or null");
   }
   assertQdrantNonEmptyString(value, "filter.projectKey");
+  return value.trim();
 }
 
 function assertQdrantFilter(filter: unknown): asserts filter is VectorFilter {

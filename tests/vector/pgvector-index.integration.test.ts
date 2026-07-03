@@ -669,6 +669,37 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     ]);
   });
 
+  it("query trims projectKey before SQL parameters", async () => {
+    const { pool, query } = makeQueryPool([]);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: " project-alpha ",
+        },
+        5,
+      ),
+    ).resolves.toEqual([]);
+
+    const selectCall = query.mock.calls.find(([sql]) =>
+      typeof sql === "string" && sql.includes("FROM memory_vectors_test")
+    );
+    expect(selectCall).toBeDefined();
+
+    const [, params] = selectCall as [string, unknown[]];
+    expect(params).toEqual([
+      "[0.1,0.2,0.3]",
+      "org-a",
+      "project",
+      "project-alpha",
+      5,
+    ]);
+  });
+
   it("query maps numeric string row values through guarded pgvector helpers", async () => {
     const { pool, query, client } = makeQueryPool([
       buildPgVectorQueryRow({

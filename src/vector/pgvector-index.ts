@@ -304,7 +304,7 @@ export function createPgVectorIndex(
       const organizationId =
         normalizeOptionalVectorOrganizationId(filter.organizationId);
       const scopes = normalizePgVectorFilterScopes(filter.scopes);
-      assertPgVectorOptionalProjectKey(filter.projectKey);
+      const projectKey = normalizePgVectorOptionalProjectKey(filter.projectKey);
 
       // HIGH 1(b): Run inside a transaction so SET LOCAL is scoped to this query.
       // hnsw.iterative_scan='strict_order' (pgvector 0.8+) makes HNSW keep
@@ -344,8 +344,8 @@ export function createPgVectorIndex(
           params.push(scope.scopeType);
           whereClauses.push(`scope_type = $${params.length}`);
 
-          if (scope.scopeType === "project" && filter.projectKey != null) {
-            params.push(filter.projectKey);
+          if (scope.scopeType === "project" && projectKey != null) {
+            params.push(projectKey);
             whereClauses.push(`project_key = $${params.length}`);
           } else {
             params.push(scope.scopeId);
@@ -548,14 +548,17 @@ function assertPgVectorNonEmptyString(
   }
 }
 
-function assertPgVectorOptionalProjectKey(value: unknown): void {
+function normalizePgVectorOptionalProjectKey(
+  value: unknown,
+): string | null | undefined {
   if (value == null) {
-    return;
+    return value;
   }
   if (typeof value !== "string") {
     throw new Error("filter.projectKey must be a string or null");
   }
   assertPgVectorNonEmptyString(value, "filter.projectKey");
+  return value.trim();
 }
 
 function assertPgVectorFilter(filter: unknown): asserts filter is VectorFilter {

@@ -2,6 +2,33 @@
 
 ## 2026-07-03
 
+- 21:57 KST - Hardened vector project-key filter normalization:
+  - Qdrant and PGVector query filters now trim direct `projectKey` values
+    before backend query filters are built.
+  - Existing project-key type and blank validation remains unchanged.
+  - `tests/vector/qdrant-index.test.ts` and
+    `tests/vector/pgvector-index.integration.test.ts` cover normalized
+    project-key query filters.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/qdrant-index.test.ts -t "trims projectKey" --reporter=dot`
+  failed `1` test because raw Qdrant project keys reached filter clauses.
+- RED: `npm test -- tests/vector/pgvector-index.integration.test.ts -t "query trims projectKey" --reporter=dot`
+  failed `1` test because raw PGVector project keys reached SQL params.
+- GREEN: both focused commands passed (`1` test passed in each file).
+
+Verification:
+- `npm test -- tests/vector/qdrant-index.test.ts --reporter=dot`
+  (`1` file passed; `81` tests passed)
+- `npm test -- tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `80` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2507`
+  tests passed, `34` skipped)
+
 - 21:53 KST - Hardened vector scope filter normalization:
   - Qdrant and PGVector query filters now trim direct scope type and scope ID
     values before backend query filters are built.
