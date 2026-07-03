@@ -102,6 +102,24 @@ describe("lexical scoring", () => {
     );
     expect(match.score).toBeGreaterThan(0.5);
   });
+
+  it("uses externalId when sourceRef is blank while scoring source metadata", () => {
+    const match = scoreLexicalMatch(
+      "adr-timeout",
+      makeRecord({
+        content: "Project memory.",
+        source: {
+          ...makeRecord().source,
+          title: null,
+          sourceRef: " \n\t ",
+          externalId: "adr-timeout",
+        },
+      }),
+    );
+
+    expect(match.matchedTerms).toContain("adr-timeout");
+    expect(match.score).toBeGreaterThan(0);
+  });
 });
 
 function makeRecord(

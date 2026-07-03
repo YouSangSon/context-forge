@@ -2,6 +2,27 @@
 
 ## 2026-07-04
 
+- 01:21 KST - Hardened lexical source identifier fallback:
+  - Lexical scoring now uses the first nonblank source identifier from
+    `sourceRef` and `externalId`.
+  - Blank `sourceRef` no longer hides a useful `externalId`.
+
+RED/GREEN:
+- RED: `npm test -- tests/search/lexical-score.test.ts -t "externalId when sourceRef is blank" --reporter=dot`
+  failed `1` test because blank `sourceRef` prevented an `externalId` match.
+- GREEN: same command passed (`1` file passed; `1` test passed, `10`
+  skipped).
+
+Verification:
+- `npm test -- tests/search/lexical-score.test.ts tests/search/retrieve-memory.test.ts tests/search/rank-results.test.ts --reporter=dot`
+  (`3` files passed; `73` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2571`
+  tests passed, `34` skipped)
+
 - 01:18 KST - Hardened context pack nonblank source label rendering:
   - Context pack rendering now picks the first nonblank label from
     `source.title`, `sourceRef`, and `externalId`.
