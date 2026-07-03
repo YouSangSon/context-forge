@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `acquireScopeLock` now trims direct lock scope fields before advisory-lock
+  queries and rejects scope types outside `user` and `project`.
 - `createCompactionRun` now rejects direct `scopeType` values outside `user`
   and `project` before querying.
 - `inspectMemoryGraph` now validates direct scope fields before querying and

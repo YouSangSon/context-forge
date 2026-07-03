@@ -1561,6 +1561,21 @@ describe("MemoryArchiveRepository.acquireScopeLock", () => {
     expect(acquired).toBe(false);
   });
 
+  it("trims direct lock scope fields before querying", async () => {
+    const { pool, query } = makeMockPool(async () => ({
+      rows: [{ acquired: true }],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.acquireScopeLock({
+      organizationId: " org-a ",
+      scopeType: " project ",
+      scopeId: " alpha ",
+    });
+
+    expect(query.mock.calls[0]?.[1]).toEqual(["org-a:project:alpha"]);
+  });
+
   it.each([
     {
       input: null,
@@ -1616,6 +1631,23 @@ describe("MemoryArchiveRepository.acquireScopeLock", () => {
         scopeId: "alpha",
       }),
     ).rejects.toThrow(/scopeType/);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid scopeType before querying", async () => {
+    const { pool, query } = makeMockPool(async () => ({
+      rows: [{ acquired: true }],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.acquireScopeLock({
+        organizationId: "org-a",
+        scopeType: "team",
+        scopeId: "alpha",
+      }),
+    ).rejects.toThrow("scopeType must be one of: user, project");
 
     expect(query).not.toHaveBeenCalled();
   });

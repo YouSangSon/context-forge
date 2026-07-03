@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- 21:46 KST - Hardened scope lock normalization:
+  - `acquireScopeLock` now trims direct organization, scope type, and scope ID
+    fields before advisory-lock query params are built.
+  - Direct lock `scopeType` values outside `user` and `project` are rejected
+    before querying.
+  - `tests/store/memory-archive-repository.test.ts` covers normalized lock
+    keys and fail-fast invalid lock scope types.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/memory-archive-repository.test.ts -t "trims direct lock scope fields|rejects invalid scopeType" --reporter=dot`
+  failed `2` tests because raw lock fields reached the advisory-lock key and
+  invalid scope types returned `true`.
+- GREEN: same command passed (`1` file passed; `2` tests passed, `152`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/memory-archive-repository.test.ts --reporter=dot`
+  (`1` file passed; `154` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2501`
+  tests passed, `34` skipped)
+
 - 21:44 KST - Hardened compaction run scope-type validation:
   - `createCompactionRun` now rejects direct `scopeType` values outside `user`
     and `project` before querying.

@@ -694,9 +694,12 @@ function assertScopeLockInput(value: unknown): {
     organizationId: assertRequiredNonBlankString(
       candidate.organizationId,
       "organizationId",
+    ).trim(),
+    scopeType: toArchiveScopeType(
+      assertRequiredNonBlankString(candidate.scopeType, "scopeType").trim(),
+      "scopeType",
     ),
-    scopeType: assertRequiredNonBlankString(candidate.scopeType, "scopeType"),
-    scopeId: assertRequiredNonBlankString(candidate.scopeId, "scopeId"),
+    scopeId: assertRequiredNonBlankString(candidate.scopeId, "scopeId").trim(),
   };
 }
 

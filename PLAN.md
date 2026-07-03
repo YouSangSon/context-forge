@@ -4,16 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Compaction Run Scope Type Validation
+## Current Loop - Scope Lock Normalization
 
 Status:
-- `createCompactionRun` now rejects direct `scopeType` values outside
-  `user` and `project` before querying.
-- Existing compaction-run scope trimming remains unchanged.
+- `acquireScopeLock` now trims direct organization, scope type, and scope ID
+  fields before building advisory-lock keys.
+- Direct scope lock `scopeType` values outside `user` and `project` are
+  rejected before querying.
 
 Verification:
 - Focused memory archive repository tests passed after RED coverage showed
-  malformed compaction-run scope types reaching the insert path.
+  raw scope lock fields and invalid lock scope types reaching the query path.
 - Full memory archive repository test file passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
