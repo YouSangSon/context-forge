@@ -2,6 +2,32 @@
 
 ## 2026-07-03
 
+- 20:55 KST - Hardened ingest job error text normalization:
+  - `src/jobs/ingest-job-repository.ts` now trims serialized ingest job
+    errors before writing `last_error` / `qdrant_last_error`.
+  - Ingest job row mapping now trims stored organization/error text and maps
+    blank stored errors to `null`.
+  - `tests/jobs/serialize-error.test.ts` and
+    `tests/jobs/ingest-job-repository.test.ts` cover the storage and read
+    mapping behavior.
+
+RED/GREEN:
+- RED: `npm test -- tests/jobs/serialize-error.test.ts tests/jobs/ingest-job-repository.test.ts -t "trims serialized|blank serialized|trims ingest job row" --reporter=dot`
+  failed `3` tests because raw error text reached SQL params and returned job
+  rows.
+- GREEN: same command passed (`2` files passed; `3` tests passed, `15`
+  skipped).
+
+Verification:
+- `npm test -- tests/jobs/serialize-error.test.ts tests/jobs/ingest-job-repository.test.ts tests/jobs/ingest-job-claim.test.ts --reporter=dot`
+  (`3` files passed; `32` tests passed, `6` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2472`
+  tests passed, `34` skipped)
+
 - 20:51 KST - Hardened audit log row text normalization:
   - `src/audit/audit-log-repository.ts` now trims stored audit row text before
     returning list results.

@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Ingest job error persistence and row mapping now trim stored error text and
+  normalize blank persisted errors to `null`.
 - Audit log row mapping now trims stored text values before returning API
   results and normalizes blank stored error messages to `null`.
 - Audit log writes now trim direct organization, actor, tool, project key,

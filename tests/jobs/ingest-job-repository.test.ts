@@ -47,6 +47,42 @@ describe("createIngestJobRepository row mapping", () => {
     );
   });
 
+  it("trims ingest job row text before returning mapped jobs", async () => {
+    const pool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [
+          ingestJobRow({
+            organization_id: " org-a ",
+            last_error: " failed once ",
+            qdrant_last_error: " qdrant timeout ",
+          }),
+          ingestJobRow({
+            id: "2",
+            last_error: " \n\t ",
+            qdrant_last_error: " \n\t ",
+          }),
+        ],
+      }),
+    };
+    const repo = createIngestJobRepository(pool as never);
+
+    const jobs = await repo.listPendingForRetry({
+      limit: 10,
+      now: new Date("2026-06-27T00:00:01.000Z"),
+    });
+
+    expect(jobs[0]).toMatchObject({
+      organizationId: "org-a",
+      lastError: "failed once",
+      qdrantLastError: "qdrant timeout",
+    });
+    expect(jobs[1]).toMatchObject({
+      id: 2,
+      lastError: null,
+      qdrantLastError: null,
+    });
+  });
+
   it.each([
     {
       rowPatch: { status: "queued" },

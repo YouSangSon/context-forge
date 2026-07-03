@@ -62,4 +62,36 @@ describe("serializeError (via markFailed)", () => {
     const storedError = capturedParams?.[1] as string;
     expect(storedError).toBe("timeout exceeded");
   });
+
+  it("trims serialized ingest job errors before persistence", async () => {
+    let capturedParams: unknown[] | undefined;
+
+    const fakePool = {
+      query: vi.fn().mockImplementation((_sql: string, params: unknown[]) => {
+        capturedParams = params;
+        return Promise.resolve({ rows: [makeValidJobRow()] });
+      }),
+    };
+
+    const jobs = createIngestJobRepository(fakePool as never);
+    await jobs.markFailed(1, new Error(" timeout exceeded "));
+
+    expect(capturedParams?.[1]).toBe("timeout exceeded");
+  });
+
+  it("stores blank serialized ingest job errors as null", async () => {
+    let capturedParams: unknown[] | undefined;
+
+    const fakePool = {
+      query: vi.fn().mockImplementation((_sql: string, params: unknown[]) => {
+        capturedParams = params;
+        return Promise.resolve({ rows: [makeValidJobRow()] });
+      }),
+    };
+
+    const jobs = createIngestJobRepository(fakePool as never);
+    await jobs.markFailed(1, " \n\t ");
+
+    expect(capturedParams?.[1]).toBeNull();
+  });
 });

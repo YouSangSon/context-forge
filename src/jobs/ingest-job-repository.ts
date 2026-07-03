@@ -289,12 +289,10 @@ function assertRetryQueryInput(
   assertValidDate(candidate.now, "now");
 }
 
-function serializeError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
+function serializeError(error: unknown): string | null {
+  const serialized = error instanceof Error ? error.message : String(error);
+  const normalized = serialized.trim();
+  return normalized ? normalized : null;
 }
 
 function mapJob(row: IngestJobRow): IngestJob {
@@ -343,7 +341,7 @@ function toPositiveSafeInteger(value: unknown, fieldName: string): number {
 
 function mapRequiredText(value: unknown, fieldName: string): string {
   assertNonBlankText(value, fieldName);
-  return value;
+  return value.trim();
 }
 
 function mapNullableText(value: unknown, fieldName: string): string | null {
@@ -351,7 +349,8 @@ function mapNullableText(value: unknown, fieldName: string): string | null {
     return null;
   }
   if (typeof value === "string") {
-    return value;
+    const normalized = value.trim();
+    return normalized ? normalized : null;
   }
   throw new Error(`${fieldName} must be a string or null`);
 }
