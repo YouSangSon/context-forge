@@ -543,6 +543,26 @@ Next step: validate migration paths.`,
     expect(pack.markdown).not.toContain("source: undefined");
   });
 
+  it("uses the first nonblank source label while rendering", () => {
+    const record = createResult({
+      id: 1003,
+      memoryType: "fact",
+      content: "Keep context pack source labels readable.",
+      source: {
+        title: " \n\t ",
+        externalId: "memory-1003",
+      },
+    });
+    record.source.sourceRef = " docs/context.md ";
+
+    const pack = buildContextPack({
+      records: [record],
+    });
+
+    expect(pack.markdown).toContain("source: docs/context.md");
+    expect(pack.markdown).not.toContain("source:  ");
+  });
+
   it.each([undefined, null, "input", 12, true, []])(
     "rejects non-object direct input",
     (input) => {

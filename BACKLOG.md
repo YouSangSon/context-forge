@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Context pack rendering now trims source labels and uses the first nonblank
+  value from `source.title`, `sourceRef`, and `externalId`.
 - Context pack rendering now falls back from `source.title` to `sourceRef`,
   `externalId`, then `unknown source` instead of rendering `source: undefined`.
 - `retrieveMemory` now trims direct `projectKey` and `userScopeId` before

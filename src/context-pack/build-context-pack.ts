@@ -297,11 +297,11 @@ function renderSection(
   const sorted = [...records].sort((a, b) => scopeRank(a) - scopeRank(b));
 
   const lines = sorted.map((record) => {
-    const sourceLabel =
-      record.source.title ??
-      record.source.sourceRef ??
-      record.source.externalId ??
-      "unknown source";
+    const sourceLabel = firstNonBlankString(
+      record.source.title,
+      record.source.sourceRef,
+      record.source.externalId,
+    ) ?? "unknown source";
     const warning = hasPromptInjectionSignal(record.content)
       ? "; warning: prompt-injection-like content"
       : "";
@@ -349,6 +349,21 @@ function formatContextMemoryIdentifier(record: SearchMemoryResult): string {
 
 function toSingleLineExcerpt(content: string): string {
   return content.replace(/\s+/g, " ").trim();
+}
+
+function firstNonBlankString(
+  ...values: Array<string | null | undefined>
+): string | undefined {
+  for (const value of values) {
+    if (value === undefined || value === null) {
+      continue;
+    }
+    const normalized = value.trim();
+    if (normalized.length > 0) {
+      return normalized;
+    }
+  }
+  return undefined;
 }
 
 function hasPromptInjectionSignal(content: string): boolean {
