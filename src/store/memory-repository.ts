@@ -1159,7 +1159,7 @@ function mapPositiveSafeInteger(value: unknown, fieldName: string): number {
 
 function mapRequiredText(value: unknown, fieldName: string): string {
   assertNonBlankText(value, fieldName);
-  return value;
+  return value.trim();
 }
 
 function mapMemoryContent(value: unknown): string {
@@ -1172,7 +1172,8 @@ function mapNullableText(value: unknown, fieldName: string): string | null {
     return null;
   }
   if (typeof value === "string") {
-    return value;
+    const trimmed = value.trim();
+    return trimmed.length === 0 ? null : trimmed;
   }
   throw new Error(`${fieldName} must be a string or null`);
 }
@@ -1190,7 +1191,7 @@ function mapNullableNonBlankText(
   if (value.trim().length === 0) {
     throw new Error(`${fieldName} must contain non-whitespace text`);
   }
-  return value;
+  return value.trim();
 }
 
 function mapEntityKind(
@@ -1307,7 +1308,7 @@ function mapNonBlankStringArray(value: unknown, fieldName: string): string[] {
         `${fieldName}[${index}] must contain non-whitespace text`,
       );
     }
-    values.push(item);
+    values.push(item.trim());
   }
   return values;
 }

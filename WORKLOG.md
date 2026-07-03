@@ -2,6 +2,29 @@
 
 ## 2026-07-03
 
+- 21:10 KST - Hardened memory repository row text normalization:
+  - `src/store/memory-repository.ts` now trims stored hydrated memory,
+    graph, and archive point-id text before returning mapped results.
+  - Raw memory `content` remains unchanged so saved payload text is preserved.
+  - `tests/store/memory-repository.test.ts` covers hydrated row, graph row,
+    and archive point-id trimming.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/memory-repository.test.ts -t "trims stored hydrated|trims stored graph|trims returned qdrant" --reporter=dot`
+  failed `3` tests because raw stored row text reached returned results.
+- GREEN: same command passed (`1` file passed; `3` tests passed, `184`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `180` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2477`
+  tests passed, `34` skipped)
+
 - 21:01 KST - Hardened canonical chunk metadata text normalization:
   - `src/store/canonical-indexing.ts` now trims stored chunk metadata text
     before returning reindexable rows.

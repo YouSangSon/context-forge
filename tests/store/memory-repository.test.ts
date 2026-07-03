@@ -1122,6 +1122,49 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     ]);
   });
 
+  it("listMemory trims stored hydrated row metadata without changing content", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          ...hydratedMemoryRow(),
+          organization_id: " org-a ",
+          scope_id: " proj-x ",
+          project_key: " proj-x ",
+          title: " Before ",
+          content: " plain text only ",
+          summary: " before ",
+          source_organization_id: " org-a ",
+          source_scope_id: " proj-x ",
+          source_title: " Doc A ",
+          tags: [" old ", " stable "],
+        }],
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    const records = await repo.listMemory(
+      { scopeType: "project", scopeId: "proj-x" },
+      { organizationId: "org-a" },
+    );
+
+    expect(records).toEqual([
+      expect.objectContaining({
+        organizationId: "org-a",
+        scopeId: "proj-x",
+        projectKey: "proj-x",
+        title: "Before",
+        content: " plain text only ",
+        summary: "before",
+        tags: ["old", "stable"],
+        source: expect.objectContaining({
+          organizationId: "org-a",
+          scopeId: "proj-x",
+          title: "Doc A",
+        }),
+      }),
+    ]);
+  });
+
   it.each([
     {
       rowPatch: { id: "0" },
@@ -1610,6 +1653,82 @@ describe("createMemoryRepository (unit — no PG required)", () => {
       "proj-x",
       [91],
       10,
+    ]);
+  });
+
+  it("inspectMemoryGraph trims stored graph row text", async () => {
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string) => {
+        if (sql.includes("FROM entities e")) {
+          return Promise.resolve({
+            rows: [
+              {
+                id: "91",
+                organization_id: " org-a ",
+                kind: "code_symbol",
+                normalized: " qdrant_snapshot_timeout ",
+                display_text: " QDRANT_SNAPSHOT_TIMEOUT ",
+                first_seen_at: "2026-06-26T00:00:00.000Z",
+                last_seen_at: "2026-06-27T00:00:00.000Z",
+                mention_count: "2",
+                memory_ids: ["42", "41"],
+              },
+            ],
+          });
+        }
+
+        return Promise.resolve({
+          rows: [
+            {
+              id: "701",
+              organization_id: " org-a ",
+              from_entity_id: "91",
+              to_entity_id: "92",
+              relation_type: " temporal_context ",
+              evidence_memory_record_id: "42",
+              valid_from: " 2026-06-26 ",
+              valid_to: null,
+              confidence: "0.8",
+              created_at: "2026-06-27T00:00:00.000Z",
+              from_kind: "code_symbol",
+              from_normalized: " qdrant_snapshot_timeout ",
+              from_display_text: " QDRANT_SNAPSHOT_TIMEOUT ",
+              to_kind: "date",
+              to_normalized: " 2026-06-26 ",
+              to_display_text: " 2026-06-26 ",
+            },
+          ],
+        });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    const graph = await repo.inspectMemoryGraph(
+      { scopeType: "project", scopeId: "proj-x" },
+      { organizationId: "org-a", relationshipLimit: 10 },
+    );
+
+    expect(graph.entities).toEqual([
+      expect.objectContaining({
+        organizationId: "org-a",
+        normalized: "qdrant_snapshot_timeout",
+        displayText: "QDRANT_SNAPSHOT_TIMEOUT",
+      }),
+    ]);
+    expect(graph.relationships).toEqual([
+      expect.objectContaining({
+        organizationId: "org-a",
+        relationType: "temporal_context",
+        validFrom: "2026-06-26",
+        fromEntity: expect.objectContaining({
+          normalized: "qdrant_snapshot_timeout",
+          displayText: "QDRANT_SNAPSHOT_TIMEOUT",
+        }),
+        toEntity: expect.objectContaining({
+          normalized: "2026-06-26",
+          displayText: "2026-06-26",
+        }),
+      }),
     ]);
   });
 
@@ -2516,6 +2635,26 @@ describe("createMemoryRepository (unit — no PG required)", () => {
     expect(sql).toContain("FROM target");
     expect(params).toEqual([55, "org-a"]);
     expect(archived).toEqual({
+      archived: true,
+      qdrantPointIds: ["chunk:1", "chunk:2"],
+    });
+  });
+
+  it("archiveMemoryRecord trims returned qdrant point ids", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          archived: true,
+          found: true,
+          qdrant_point_ids: [" chunk:1 ", "\tchunk:2\n"],
+        }],
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.archiveMemoryRecord({ id: 55, organizationId: "org-a" }),
+    ).resolves.toEqual({
       archived: true,
       qdrantPointIds: ["chunk:1", "chunk:2"],
     });

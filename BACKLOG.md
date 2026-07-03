@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Memory repository row mapping now trims stored hydrated memory, graph, and
+  archive point-id text while preserving raw memory content.
 - Canonical chunk row mapping now trims stored metadata text while preserving
   raw chunk content for offset correctness.
 - Goal-run row mapping now trims stored run and iteration text before returning
