@@ -840,6 +840,8 @@ async function inspectPostgresMemoryGraph(
   },
 ): Promise<MemoryGraphView> {
   const organizationId = options.organizationId.trim();
+  const scopeType = mapScopeType(scope.scopeType, "scopeType");
+  const scopeId = mapRequiredText(scope.scopeId, "scopeId");
   const limit = clampListLimit(options.limit);
   const relationshipLimit = clampListLimit(
     options.relationshipLimit ?? options.limit,
@@ -847,8 +849,8 @@ async function inspectPostgresMemoryGraph(
   );
   const params: unknown[] = [
     organizationId,
-    scope.scopeType,
-    scope.scopeId,
+    scopeType,
+    scopeId,
   ];
   const archivedClause = options.includeArchived
     ? ""
@@ -915,8 +917,8 @@ async function inspectPostgresMemoryGraph(
 
   const relationshipParams: unknown[] = [
     organizationId,
-    scope.scopeType,
-    scope.scopeId,
+    scopeType,
+    scopeId,
     entityIds,
   ];
   const relationshipLimitIndex = relationshipParams.push(relationshipLimit);

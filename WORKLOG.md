@@ -2,6 +2,31 @@
 
 ## 2026-07-03
 
+- 21:41 KST - Hardened graph scope normalization:
+  - `inspectMemoryGraph` now validates direct scope types and scope IDs before
+    querying.
+  - Direct graph scope IDs are trimmed before entity and relationship SQL
+    params are built.
+  - `tests/store/memory-repository.test.ts` covers fail-fast malformed graph
+    scopes and trimmed graph query scope params.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/memory-repository.test.ts -t "inspectMemoryGraph rejects malformed direct scopes|inspectMemoryGraph trims direct scope IDs" --reporter=dot`
+  failed `3` tests because malformed graph scopes reached the query path and
+  raw scope IDs reached SQL params.
+- GREEN: same command passed (`1` file passed; `3` tests passed, `204`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/memory-repository.test.ts --reporter=dot`
+  (`1` file passed; `200` tests passed, `7` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2498`
+  tests passed, `34` skipped)
+
 - 21:37 KST - Hardened list scope normalization:
   - `listMemory` and `listMemoryForGovernance` now validate direct scope types
     and scope IDs before querying.

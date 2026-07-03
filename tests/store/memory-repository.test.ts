@@ -2125,6 +2125,68 @@ describe("createMemoryRepository (unit — no PG required)", () => {
 
   it.each([
     {
+      scope: { scopeType: "team" as never, scopeId: "proj-x" },
+      message: "scopeType must be one of: user, project",
+    },
+    {
+      scope: { scopeType: "project", scopeId: " \n\t " },
+      message: "scopeId must contain non-whitespace text",
+    },
+  ])("inspectMemoryGraph rejects malformed direct scopes before querying %#", async ({
+    scope,
+    message,
+  }) => {
+    const mockPool = { query: vi.fn() };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await expect(
+      repo.inspectMemoryGraph(scope as never, { organizationId: "org-a" }),
+    ).rejects.toThrow(message);
+
+    expect(mockPool.query).not.toHaveBeenCalled();
+  });
+
+  it("inspectMemoryGraph trims direct scope IDs before graph queries", async () => {
+    const queryCalls: SqlQueryCall[] = [];
+    const mockPool = {
+      query: vi.fn().mockImplementation((sql: string, params: unknown[]) => {
+        queryCalls.push({ sql, params });
+        if (sql.includes("FROM entities e")) {
+          return Promise.resolve({
+            rows: [
+              {
+                id: "91",
+                organization_id: "org-a",
+                kind: "code_symbol",
+                normalized: "qdrant_snapshot_timeout",
+                display_text: "QDRANT_SNAPSHOT_TIMEOUT",
+                first_seen_at: "2026-06-26T00:00:00.000Z",
+                last_seen_at: "2026-06-27T00:00:00.000Z",
+                mention_count: "1",
+                memory_ids: ["42"],
+              },
+            ],
+          });
+        }
+
+        return Promise.resolve({ rows: [] });
+      }),
+    };
+    const repo = createMemoryRepository(mockPool as never);
+
+    await repo.inspectMemoryGraph(
+      { scopeType: "project", scopeId: " proj-x " },
+      { organizationId: "org-a" },
+    );
+
+    expect(queryCalls[0]?.params).toContain("proj-x");
+    expect(queryCalls[0]?.params).not.toContain(" proj-x ");
+    expect(queryCalls[1]?.params).toContain("proj-x");
+    expect(queryCalls[1]?.params).not.toContain(" proj-x ");
+  });
+
+  it.each([
+    {
       rowPatch: { id: "0" },
       message: "graph entity id must be a positive safe integer",
     },

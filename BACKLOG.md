@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `inspectMemoryGraph` now validates direct scope fields before querying and
+  trims scope IDs before entity and relationship SQL params are built.
 - `listMemory` and `listMemoryForGovernance` now validate direct scope fields
   before querying and trim scope IDs before SQL filter params are built.
 - `searchMemory` now validates direct scope fields before querying and trims
