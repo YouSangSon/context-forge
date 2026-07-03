@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- `buildVectorPoint` now rejects direct `scopeType` values outside `user` and
+  `project` before returning vector points.
 - `buildVectorPoint` now trims direct `kind` and `durability` metadata and
   rejects values outside the memory metadata enums before returning vector
   points.

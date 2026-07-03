@@ -74,6 +74,7 @@ function assertVectorPointInput(
   assertPositiveSafeInteger(candidate.memoryRecordId, "memoryRecordId");
   assertVectorOrganizationId(candidate.organizationId);
   assertNonEmptyStringField(candidate.scopeType, "scopeType");
+  assertScopeType(candidate.scopeType);
   assertNonEmptyStringField(candidate.scopeId, "scopeId");
   assertNonEmptyStringOrNullField(candidate.projectKey, "projectKey");
   assertNonEmptyStringField(candidate.kind, "kind");
@@ -85,6 +86,14 @@ function assertVectorPointInput(
   assertOptionalStringArray(candidate.tags, "tags");
   assertNonEmptyStringField(candidate.updatedAt, "updatedAt");
   assertNonEmptyStringField(candidate.embeddingVersion, "embeddingVersion");
+}
+
+function assertScopeType(value: string): void {
+  const normalized = value.trim();
+  if (normalized === "user" || normalized === "project") {
+    return;
+  }
+  throw new Error("scopeType must be one of: user, project");
 }
 
 function assertMemoryKind(value: string): void {

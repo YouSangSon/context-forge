@@ -180,6 +180,12 @@ describe("buildVectorPoint", () => {
     );
   });
 
+  it("rejects invalid direct scopeType before building payload", () => {
+    expect(
+      callBuildVectorPoint({ ...buildInput(), scopeType: "team" }),
+    ).toThrow("scopeType must be one of: user, project");
+  });
+
   it.each([
     ["kind", { kind: " \n\t " }, "kind must be a non-empty string"],
     [
