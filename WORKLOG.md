@@ -2,6 +2,30 @@
 
 ## 2026-07-04
 
+- 01:15 KST - Hardened context pack source label fallback:
+  - Context pack rendering now falls back from `source.title` to `sourceRef`,
+    `externalId`, then `unknown source`.
+  - `sourceRef` is now validated as an optional string before rendering.
+
+RED/GREEN:
+- RED: `npm test -- tests/context-pack/build-context-pack.test.ts -t "sourceRef|source.sourceRef" --reporter=dot`
+  failed `1` test because a title-less source without `externalId` rendered
+  `source: undefined`.
+- GREEN: same command passed (`1` file passed; `1` test passed, `24`
+  skipped).
+
+Verification:
+- `npm test -- tests/context-pack/build-context-pack.test.ts --reporter=dot`
+  (`1` file passed; `25` tests passed)
+- `npm test -- tests/context-pack/build-context-pack.test.ts tests/mcp/server.test.ts -t "context pack|Context Pack|build_context_pack|sourceRef" --reporter=dot`
+  (`2` files passed; `6` tests passed, `154` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2569`
+  tests passed, `34` skipped)
+
 - 01:10 KST - Hardened `retrieveMemory` direct scope identifier normalization:
   - `retrieveMemory` now trims direct `projectKey` and `userScopeId` once after
     validation.

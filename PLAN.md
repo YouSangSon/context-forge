@@ -4,19 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - RetrieveMemory Scope Identifier Trim
+## Current Loop - Context Pack Source Label Fallback
 
 Status:
-- `retrieveMemory` now trims direct `projectKey` and `userScopeId` once after
-  validation.
-- Vector filters and lexical repository scopes now receive normalized scope
-  identifiers.
+- Context pack rendering now falls back from `source.title` to `sourceRef`,
+  `externalId`, then `unknown source`.
+- `sourceRef` is now validated as an optional string before rendering.
 
 Verification:
-- Focused scope identifier test passed after RED coverage showed raw whitespace
-  reaching vector filters.
-- Related search tests and typecheck passed.
-- Scoped reviewer agent timed out; no reviewer PASS is recorded for this loop.
+- Focused source label fallback test passed after RED coverage showed
+  `source: undefined` rendering.
+- Context-pack tests, related MCP context-pack tests, and typecheck passed.
 - Build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
   delete remote branches from this loop.

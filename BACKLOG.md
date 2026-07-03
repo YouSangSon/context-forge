@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Context pack rendering now falls back from `source.title` to `sourceRef`,
+  `externalId`, then `unknown source` instead of rendering `source: undefined`.
 - `retrieveMemory` now trims direct `projectKey` and `userScopeId` before
   vector filters and lexical repository calls.
 - Qdrant query mapping now rejects malformed returned payload

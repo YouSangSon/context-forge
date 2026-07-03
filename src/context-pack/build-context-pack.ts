@@ -192,6 +192,7 @@ function assertMemorySource(
   const candidate = source as Record<string, unknown>;
   assertSourceType(candidate.sourceType, `${fieldName}.sourceType`);
   assertStringOrNullField(candidate.title, `${fieldName}.title`);
+  assertOptionalStringField(candidate.sourceRef, `${fieldName}.sourceRef`);
   assertOptionalStringField(candidate.externalId, `${fieldName}.externalId`);
 }
 
@@ -296,7 +297,11 @@ function renderSection(
   const sorted = [...records].sort((a, b) => scopeRank(a) - scopeRank(b));
 
   const lines = sorted.map((record) => {
-    const sourceLabel = record.source.title ?? record.source.externalId;
+    const sourceLabel =
+      record.source.title ??
+      record.source.sourceRef ??
+      record.source.externalId ??
+      "unknown source";
     const warning = hasPromptInjectionSignal(record.content)
       ? "; warning: prompt-injection-like content"
       : "";
