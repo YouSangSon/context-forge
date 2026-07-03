@@ -94,6 +94,7 @@ export function createQdrantVectorIndex(
         assertQdrantPointVector(point);
         assertQdrantPointMemoryRecordId(point);
         assertQdrantPointScopeType(point);
+        assertQdrantPointScopeId(point);
         assertQdrantPointProjectKey(point);
         assertQdrantPointKind(point);
       }
@@ -246,6 +247,16 @@ function assertQdrantPointScopeType(point: VectorPoint): void {
       "point.payload.scope_type must be one of: user, project",
     );
   }
+}
+
+function assertQdrantPointScopeId(point: VectorPoint): void {
+  if (point.payload.scope_type !== "user") {
+    return;
+  }
+  assertQdrantNonEmptyString(
+    point.payload.scope_id,
+    "point.payload.scope_id",
+  );
 }
 
 function assertQdrantPointProjectKey(point: VectorPoint): void {

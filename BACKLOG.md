@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Qdrant and PGVector upserts now reject user-scope points with missing or
+  blank `payload.scope_id` before backend writes.
 - Qdrant and PGVector upserts now reject direct point `payload.scope_type`
   values outside `user` and `project` before backend writes.
 - `buildVectorPoint` now trims direct organization, scope, and project-key

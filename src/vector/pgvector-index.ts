@@ -196,6 +196,7 @@ export function createPgVectorIndex(
         assertPgVectorEmbeddingVector(point);
         assertPgVectorPointMemoryRecordId(point);
         assertPgVectorPointScopeType(point);
+        assertPgVectorPointScopeId(point);
         assertPgVectorPointProjectKey(point);
         assertPgVectorPointKind(point);
       }
@@ -527,6 +528,16 @@ function assertPgVectorPointScopeType(point: VectorPoint): void {
       "point.payload.scope_type must be one of: user, project",
     );
   }
+}
+
+function assertPgVectorPointScopeId(point: VectorPoint): void {
+  if (point.payload.scope_type !== "user") {
+    return;
+  }
+  assertPgVectorNonEmptyString(
+    point.payload.scope_id,
+    "point.payload.scope_id",
+  );
 }
 
 function assertPgVectorPointProjectKey(point: VectorPoint): void {

@@ -2,6 +2,32 @@
 
 ## 2026-07-03
 
+- 22:14 KST - Hardened vector upsert user-scope ID validation:
+  - Qdrant and PGVector upserts now reject user-scope points with missing or
+    blank `payload.scope_id` before backend writes.
+  - Existing project-scope nullable `scope_id` behavior remains unchanged
+    because project points can be filtered by `project_key`.
+  - `tests/vector/qdrant-index.test.ts` and
+    `tests/vector/pgvector-index.integration.test.ts` cover malformed
+    user-scope point IDs.
+
+RED/GREEN:
+- RED: `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts -t "scope_id" --reporter=dot`
+  failed `4` tests because user points without usable `scope_id` values
+  reached Qdrant or pgvector client paths.
+- GREEN: same command passed (`2` files passed; `4` tests passed, `175`
+  skipped).
+
+Verification:
+- `npm test -- tests/vector/qdrant-index.test.ts tests/vector/pgvector-index.integration.test.ts tests/vector/point-builder.test.ts --reporter=dot`
+  (`3` files passed; `200` tests passed, `12` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2515`
+  tests passed, `34` skipped)
+
 - 22:11 KST - Hardened vector upsert scope-type validation:
   - Qdrant and PGVector upserts now reject direct point `payload.scope_type`
     values outside `user` and `project` before backend writes.
