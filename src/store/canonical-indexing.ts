@@ -265,16 +265,16 @@ export function createMemoryChunkRepository(pool: PgPool): MemoryChunkRepository
     async listChunks(organizationId, scopes, options) {
       assertNonBlankText(organizationId, "organizationId");
       const scopedOrganizationId = organizationId.trim();
-      assertScopeRefs(scopes, "scopes");
+      const scopedRefs = normalizeScopeRefs(scopes, "scopes");
       const listOptions = resolveListChunksOptions(options);
 
-      if (scopes.length === 0) {
+      if (scopedRefs.length === 0) {
         return [];
       }
 
       // organizationId occupies $1; scope params start at $2.
       const params: unknown[] = [scopedOrganizationId];
-      const scopeClauses = scopes.map((scope) => {
+      const scopeClauses = scopedRefs.map((scope) => {
         const scopeTypeIndex = params.push(scope.scopeType);
         const scopeIdIndex = params.push(scope.scopeId);
         return `(mr.scope_type = $${scopeTypeIndex} AND mr.scope_id = $${scopeIdIndex})`;
@@ -1082,16 +1082,20 @@ function assertPointIdMappings(
   }
 }
 
-function assertScopeRefs(value: unknown, fieldName: string): asserts value is ScopeRef[] {
+function normalizeScopeRefs(value: unknown, fieldName: string): ScopeRef[] {
   if (!Array.isArray(value)) {
     throw new Error(`${fieldName} must be an array`);
   }
 
-  for (const [index, scope] of value.entries()) {
+  return value.map((scope, index) => {
     const candidate = assertObject(scope, `${fieldName}[${index}]`);
     assertScopeType(candidate.scopeType, `${fieldName}[${index}].scopeType`);
     assertNonBlankText(candidate.scopeId, `${fieldName}[${index}].scopeId`);
-  }
+    return {
+      scopeType: candidate.scopeType,
+      scopeId: candidate.scopeId.trim(),
+    };
+  });
 }
 
 function resolveListChunksOptions(

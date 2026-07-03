@@ -2,6 +2,29 @@
 
 ## 2026-07-03
 
+- 22:00 KST - Hardened canonical chunk scope normalization:
+  - `listChunks` now trims direct scope IDs before canonical chunk SQL params
+    are built.
+  - Existing scope type and blank scope ID validation remains unchanged.
+  - `tests/store/canonical-indexing.test.ts` covers normalized list scope
+    params.
+
+RED/GREEN:
+- RED: `npm test -- tests/store/canonical-indexing.test.ts -t "listChunks trims scope IDs" --reporter=dot`
+  failed `1` test because raw list scope IDs reached SQL params.
+- GREEN: same command passed (`1` file passed; `1` test passed, `83`
+  skipped).
+
+Verification:
+- `npm test -- tests/store/canonical-indexing.test.ts --reporter=dot`
+  (`1` file passed; `84` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2508`
+  tests passed, `34` skipped)
+
 - 21:57 KST - Hardened vector project-key filter normalization:
   - Qdrant and PGVector query filters now trim direct `projectKey` values
     before backend query filters are built.

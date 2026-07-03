@@ -2012,6 +2012,22 @@ describe("canonical indexing", () => {
     expect(params[0]).toBe("org-a");
   });
 
+  it("listChunks trims scope IDs before querying", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await repo.listChunks("org-a", [
+      { scopeType: "project" as const, scopeId: " shared-project " },
+    ]);
+
+    const params = mockPool.query.mock.calls[0]![1] as unknown[];
+    expect(params).toContain("shared-project");
+    expect(params).not.toContain(" shared-project ");
+  });
+
   it.each([
     {
       scopes: null,

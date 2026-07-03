@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Canonical chunk listing now trims direct scope IDs before SQL params are
+  built.
 - Qdrant and PGVector query filters now trim direct `projectKey` values before
   backend queries.
 - Qdrant and PGVector query filters now trim direct scope fields before
