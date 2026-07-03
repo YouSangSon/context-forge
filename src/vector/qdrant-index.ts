@@ -250,7 +250,13 @@ function assertQdrantPointScopeType(point: VectorPoint): void {
 }
 
 function assertQdrantPointScopeId(point: VectorPoint): void {
-  if (point.payload.scope_type !== "user") {
+  if (
+    point.payload.scope_type !== "user" &&
+    !(
+      point.payload.scope_type === "project" &&
+      point.payload.project_key === null
+    )
+  ) {
     return;
   }
   assertQdrantNonEmptyString(

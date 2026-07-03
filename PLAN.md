@@ -4,17 +4,17 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Vector Upsert User Scope ID Validation
+## Current Loop - Vector Upsert Project Identity Validation
 
 Status:
-- Qdrant and PGVector upserts now reject user-scope points with missing or
-  blank `payload.scope_id` before backend writes.
-- Existing project-scope nullable `scope_id` behavior remains unchanged because
-  project points can be filtered by `project_key`.
+- Qdrant and PGVector upserts now reject project-scope points when
+  `payload.project_key` is `null` and `payload.scope_id` is missing or blank.
+- Existing project points with a nonblank `project_key` can still use nullable
+  `scope_id`.
 
 Verification:
-- Focused vector adapter tests passed after RED coverage showed user points
-  without usable `scope_id` values reaching backend client paths.
+- Focused vector adapter tests passed after RED coverage showed project points
+  without a usable `project_key` or `scope_id` reaching backend client paths.
 - Related vector adapter and point-builder tests passed.
 - Typecheck, build, audit, full tests, and diff check passed.
 - Local commit is expected/done by the controller; do not push, merge, or
