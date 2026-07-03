@@ -2,6 +2,30 @@
 
 ## 2026-07-03
 
+- 22:33 KST - Hardened ingest sweeper job organization normalization:
+  - The ingest sweeper now trims claimed job organization IDs before vector
+    delete filters are built.
+  - Existing claimed-job blank organization validation remains unchanged.
+  - `tests/compact/ingest-sweeper.test.ts` covers normalized vector delete
+    organization filters.
+
+RED/GREEN:
+- RED: `npm test -- tests/compact/ingest-sweeper.test.ts -t "trims claimed job organization" --reporter=dot`
+  failed `1` test because raw claimed job organization IDs reached vector
+  delete filters.
+- GREEN: same command passed (`1` file passed; `1` test passed, `52`
+  skipped).
+
+Verification:
+- `npm test -- tests/compact/ingest-sweeper.test.ts --reporter=dot`
+  (`1` file passed; `53` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=moderate` (`0` vulnerabilities)
+- `git diff --check`
+- `npm test -- --reporter=dot` (`82` files passed, `1` skipped; `2529`
+  tests passed, `34` skipped)
+
 - 22:29 KST - Hardened ingest sweeper chunk enum validation:
   - The ingest sweeper now rejects malformed chunk `scopeType`, `kind`, and
     `durability` enum values before embedding or vector side effects.

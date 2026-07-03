@@ -18,6 +18,8 @@ experience, documentation, features.
 
 ## Done In This Branch
 
+- Ingest sweeper vector cleanup now trims claimed job organization IDs before
+  building delete filters.
 - Ingest sweeper chunk parsing now rejects malformed `scopeType`, `kind`, and
   `durability` enum values before embedding or vector side effects.
 - Qdrant and PGVector upserts now reject provided `payload.durability` values

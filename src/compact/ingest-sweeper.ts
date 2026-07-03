@@ -85,6 +85,7 @@ async function sweepOne(
   getNow: () => Date,
 ): Promise<"completed" | "retry" | "failed"> {
   try {
+    const organizationId = job.organizationId.trim();
     const chunks = await input.chunkRepository.getChunksByRecordId(
       job.memoryRecordId,
     );
@@ -117,7 +118,7 @@ async function sweepOne(
     }
 
     await input.vectorIndex.deleteByRecordIds([job.memoryRecordId], {
-      organizationId: job.organizationId,
+      organizationId,
     });
 
     const points = chunks.map((chunk, index) =>
