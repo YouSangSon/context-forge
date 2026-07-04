@@ -313,6 +313,22 @@ describe("public documentation drift checks", () => {
     }
   });
 
+  it("positions code-intelligence MCP servers as complementary to Akasha memory", () => {
+    const readme = collapseWhitespace(read("README.md"));
+    const readmeKo = collapseWhitespace(read("README.ko.md"));
+
+    expect(readme).toContain("codebase-memory-mcp");
+    expect(readme).toContain("complementary rather than replacements");
+    expect(readme).toContain("symbols, routes, call graph, and ADRs");
+    expect(readme).toContain("durable agent memory");
+
+    expect(readmeKo).toContain("codebase-memory-mcp");
+    expect(readmeKo).toContain("대체재가 아니라 보완재");
+    expect(readmeKo).toContain("symbol, route, call graph, ADR");
+    expect(readmeKo).toContain("영구 에이전트 메모리");
+    expect(readmeKo).not.toContain("complementary rather than replacements");
+  });
+
   it("keeps Korean README comparison table labels localized", () => {
     const readmeKo = read("README.ko.md");
 

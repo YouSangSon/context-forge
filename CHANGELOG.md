@@ -11,6 +11,9 @@ changes; CHANGELOG entries call those out explicitly.
 
 ## [Unreleased]
 
+- Docs: README comparison now positions code-intelligence MCP servers such as
+  `codebase-memory-mcp` as complementary to Akasha's durable agent-memory
+  scope.
 - First-class goal runs: MCP and JSON HTTP now expose `start_goal_run`,
   `record_iteration`, `get_goal_run`, `list_goal_runs`, `complete_goal_run`,
   `abandon_goal_run`, `build_goal_context`, and `check_repeat_attempt` under

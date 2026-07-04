@@ -43,6 +43,12 @@ Postgres 에 저장할 수 있습니다 — Qdrant 불필요.
 세련된 UI 가 있는 호스팅형 메모리 제품이 필요하면 Mem0 또는 Letta. **API
 키가 필요 없는 자체 호스팅 메모리 MCP 서버**가 필요하면 이것.
 
+[DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)
+같은 code-intelligence MCP 서버는 Akasha의 대체재가 아니라 보완재입니다.
+그런 도구는 repository의 symbol, route, call graph, ADR을 인덱싱해 코드 구조
+질문에 답하고, Akasha는 결정, 제약, 요약, org-scoped audit trail, context
+pack 같은 영구 에이전트 메모리를 세션과 클라이언트를 넘어 보관합니다.
+
 ## 주요 기능 (Features)
 
 위의 무료/로컬/멀티테넌트 기본기 외에도, Akasha는 프로덕션 운영을

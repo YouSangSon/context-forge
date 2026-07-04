@@ -2,6 +2,30 @@
 
 ## 2026-07-05
 
+- 01:40 KST - Selected P2 README comparison positioning item:
+  - External check: `DeusData/codebase-memory-mcp` is a code-intelligence MCP
+    focused on repository graph/index/search workflows, so it is complementary
+    to Akasha rather than a direct memory-store replacement.
+  - README and README.ko now describe that distinction without relying on
+    time-sensitive star, issue, or benchmark counts.
+  - CHANGELOG and public-docs drift coverage were updated with the same
+    positioning contract.
+  - The new drift assertion collapses Markdown whitespace so wrapping changes
+    do not create brittle failures.
+
+RED:
+- `npm test -- tests/scripts/public-docs-drift.test.ts -t "code-intelligence MCP" --reporter=dot`
+  failed because README did not yet mention `codebase-memory-mcp`.
+
+Verification:
+- Focused GREEN: `npm test -- tests/scripts/public-docs-drift.test.ts -t "code-intelligence MCP" --reporter=dot`
+  (`1` file passed; `1` test passed, `45` skipped)
+- Docs drift: `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `46` tests passed)
+- Source conventions: `npm test -- tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`1` file passed; `6` tests passed)
+- `git diff --check`
+
 - 01:31 KST - Reset post-merge planning state:
   - Resumed the continuous-improvement goal after user approval; the goal tool
     still reports `blocked`, but no separate resume state is available.

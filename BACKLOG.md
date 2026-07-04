@@ -23,6 +23,12 @@ experience, documentation, features.
   post-v1 hardening branch. Detailed implementation history remains in
   `WORKLOG.md`, git history, and the GitHub PR.
 
+## Recently Updated
+
+- README comparison now positions code-intelligence MCP servers such as
+  `codebase-memory-mcp` as complementary repository-graph tools, not
+  replacements for Akasha's durable agent-memory scope.
+
 ## Discovery Queue
 
 - Refresh the backlog from current `main` by checking repo docs, recent git
