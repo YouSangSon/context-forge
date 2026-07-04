@@ -1,5 +1,23 @@
 # WORKLOG
 
+## 2026-07-05
+
+- 01:03 KST - Fixed PR #23 pgvector CI batch fixture:
+  - GitHub Actions `pgvector integration tests` failed on the HIGH 2 batch
+    test because the 8500-row fixture generated `memory_record_id: 0`.
+  - The fixture now uses positive record IDs (`i + 1`), matching the
+    adapter's positive safe integer boundary contract.
+
+Verification:
+- RED from CI: `pgvector integration tests` failed on
+  `HIGH 2 batch: upserts 8500 rows (>8191 per-batch limit) without bind-param overflow`
+  with `point.payload.memory_record_id must be a positive safe integer`.
+- GREEN focused: `PGVECTOR_TEST_URL=postgres://memory:memory@127.0.0.1:5433/memory_pgv npx vitest run tests/vector/pgvector-index.integration.test.ts -t "HIGH 2 batch" --reporter=dot`
+  (`1` file passed; `1` test passed, `114` skipped).
+- GREEN pgvector suite: `PGVECTOR_TEST_URL=postgres://memory:memory@127.0.0.1:5433/memory_pgv npx vitest run tests/vector/pgvector-index.integration.test.ts --reporter=dot`
+  (`1` file passed; `115` tests passed).
+- Temporary Docker container `akasha-pgvector-ci` was removed after testing.
+
 ## 2026-07-04
 
 - 01:21 KST - Hardened lexical source identifier fallback:

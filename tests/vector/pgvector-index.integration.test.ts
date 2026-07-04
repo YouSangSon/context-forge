@@ -1661,7 +1661,7 @@ describe.skipIf(!HAS_TEST_URL)("pgvector adapter — integration against real pg
         id: `batch:${i}`,
         vector: makeVec(3, [Math.cos(i * 0.001), Math.sin(i * 0.001), 0]),
         payload: {
-          memory_record_id: i,
+          memory_record_id: i + 1,
           organization_id: "org-batch",
           scope_type: "user",
           scope_id: "user-batch",
