@@ -2,6 +2,22 @@
 
 ## 2026-07-05
 
+- 01:31 KST - Reset post-merge planning state:
+  - Resumed the continuous-improvement goal after user approval; the goal tool
+    still reports `blocked`, but no separate resume state is available.
+  - Confirmed `main` tracks `origin/main` at `db93314`
+    (`Hardening production boundaries and package surface`).
+  - Replaced stale current-loop text from the pre-merge branch with a clean-main
+    backlog discovery plan.
+  - Collapsed the oversized branch-local `BACKLOG.md` done list into a concise
+    PR #23 merge reference so open P0/P1/P2 state is readable again.
+
+Verification:
+- `git diff --check`
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `45` tests passed)
+- No root planning-doc-specific automated test is currently available.
+
 - 01:03 KST - Fixed PR #23 pgvector CI batch fixture:
   - GitHub Actions `pgvector integration tests` failed on the HIGH 2 batch
     test because the 8500-row fixture generated `memory_record_id: 0`.
