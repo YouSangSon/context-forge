@@ -43,6 +43,16 @@ export type ScoreSearchResultOptions = {
   lexicalScore?: number;
 };
 
+type TimestampedSearchMemoryResult = {
+  record: SearchMemoryResult;
+  updatedAtTime: number;
+};
+
+type TimestampedCandidate = {
+  candidate: RetrievedMemoryCandidate;
+  updatedAtTime: number;
+};
+
 export function rankResults(
   records: readonly SearchMemoryResult[],
 ): SearchMemoryResult[] {
@@ -52,14 +62,20 @@ export function rankResults(
     return [...records];
   }
 
-  const newestUpdatedAt = newestUpdatedAtFor(records);
-  return rankCandidates(
-    records.map((record) =>
-      scoreSearchResult(record, {
-        newestUpdatedAt,
-        source: "vector",
-      }),
-    ),
+  const timestampedRecords = timestampSearchMemoryResults(records);
+  const newestUpdatedAt = newestUpdatedAtForTimestamped(timestampedRecords);
+  return rankTimestampedCandidates(
+    timestampedRecords.map(({ record, updatedAtTime }) => ({
+      candidate: scoreSearchResultWithTimestamp(
+        record,
+        {
+          newestUpdatedAt,
+          source: "vector",
+        },
+        updatedAtTime,
+      ),
+      updatedAtTime,
+    })),
   ).map((candidate) => candidate.record);
 }
 
@@ -68,30 +84,15 @@ export function rankCandidates(
 ): RetrievedMemoryCandidate[] {
   assertRetrievedMemoryCandidates(candidates);
 
-  const sortable = candidates.map((candidate) => ({
-    candidate,
-    updatedAtTime: parseCanonicalIsoTimestamp(
-      candidate.record.updatedAt,
-      "record.updatedAt",
-    ),
-  }));
-
-  return sortable
-    .sort((left, right) => {
-      const scoreDiff =
-        right.candidate.scores.total - left.candidate.scores.total;
-      if (scoreDiff !== 0) {
-        return scoreDiff;
-      }
-
-      const updatedAtDiff = right.updatedAtTime - left.updatedAtTime;
-      if (updatedAtDiff !== 0) {
-        return updatedAtDiff;
-      }
-
-      return right.candidate.record.id - left.candidate.record.id;
-    })
-    .map(({ candidate }) => candidate);
+  return rankTimestampedCandidates(
+    candidates.map((candidate) => ({
+      candidate,
+      updatedAtTime: parseCanonicalIsoTimestamp(
+        candidate.record.updatedAt,
+        "record.updatedAt",
+      ),
+    })),
+  );
 }
 
 export function buildRetrievedMemoryCandidate(
@@ -99,14 +100,19 @@ export function buildRetrievedMemoryCandidate(
   options: Omit<ScoreSearchResultOptions, "newestUpdatedAt"> = {},
 ): RetrievedMemoryCandidate {
   assertSearchMemoryResult(record, "record");
+  const updatedAtTime = parseCanonicalIsoTimestamp(
+    record.updatedAt,
+    "record.updatedAt",
+  );
 
-  return scoreSearchResult(record, {
-    ...options,
-    newestUpdatedAt: parseCanonicalIsoTimestamp(
-      record.updatedAt,
-      "record.updatedAt",
-    ),
-  });
+  return scoreSearchResultWithTimestamp(
+    record,
+    {
+      ...options,
+      newestUpdatedAt: updatedAtTime,
+    },
+    updatedAtTime,
+  );
 }
 
 export function scoreSearchResult(
@@ -114,14 +120,28 @@ export function scoreSearchResult(
   options: ScoreSearchResultOptions,
 ): RetrievedMemoryCandidate {
   assertSearchMemoryResult(record, "record");
+  const updatedAtTime = parseCanonicalIsoTimestamp(
+    record.updatedAt,
+    "record.updatedAt",
+  );
+
+  return scoreSearchResultWithTimestamp(record, options, updatedAtTime);
+}
+
+function scoreSearchResultWithTimestamp(
+  record: SearchMemoryResult,
+  options: ScoreSearchResultOptions,
+  updatedAtTime: number,
+): RetrievedMemoryCandidate {
   assertScoreSearchResultOptions(options);
+  assertFiniteTimestamp(updatedAtTime, "record.updatedAt");
 
   const reasons: string[] = [];
   assertFiniteTimestamp(options.newestUpdatedAt, "newestUpdatedAt");
 
   const scope = scopeScore(record, reasons);
   const metadata = metadataScore(record, reasons);
-  const recency = recencyScore(record.updatedAt, options.newestUpdatedAt, reasons);
+  const recency = recencyScore(updatedAtTime, options.newestUpdatedAt, reasons);
   const vector = vectorScore(options.vectorScore, reasons);
   const lexical = lexicalScore(options.lexicalScore, reasons);
   const total = scope + metadata + recency + (vector ?? 0) + (lexical ?? 0);
@@ -150,11 +170,46 @@ export function newestUpdatedAtFor(
     throw new Error("records must contain at least one record");
   }
 
-  return Math.max(
-    ...records.map((record) =>
-      parseCanonicalIsoTimestamp(record.updatedAt, "record.updatedAt"),
+  return newestUpdatedAtForTimestamped(timestampSearchMemoryResults(records));
+}
+
+function timestampSearchMemoryResults(
+  records: readonly SearchMemoryResult[],
+): TimestampedSearchMemoryResult[] {
+  return records.map((record) => ({
+    record,
+    updatedAtTime: parseCanonicalIsoTimestamp(
+      record.updatedAt,
+      "record.updatedAt",
     ),
-  );
+  }));
+}
+
+function newestUpdatedAtForTimestamped(
+  records: readonly TimestampedSearchMemoryResult[],
+): number {
+  return Math.max(...records.map((record) => record.updatedAtTime));
+}
+
+function rankTimestampedCandidates(
+  candidates: readonly TimestampedCandidate[],
+): RetrievedMemoryCandidate[] {
+  return [...candidates]
+    .sort((left, right) => {
+      const scoreDiff =
+        right.candidate.scores.total - left.candidate.scores.total;
+      if (scoreDiff !== 0) {
+        return scoreDiff;
+      }
+
+      const updatedAtDiff = right.updatedAtTime - left.updatedAtTime;
+      if (updatedAtDiff !== 0) {
+        return updatedAtDiff;
+      }
+
+      return right.candidate.record.id - left.candidate.record.id;
+    })
+    .map(({ candidate }) => candidate);
 }
 
 function assertSearchMemoryResults(
@@ -189,11 +244,16 @@ function assertRetrievedMemoryCandidates(
 
     const value = candidate as Record<string, unknown>;
     assertSearchMemoryResult(value.record, `${prefix}.record`);
+    assertCandidateSource(value.source, `${prefix}.source`);
     assertObject(value.scores, `${prefix}.scores`);
-    assertFiniteNumber(
-      (value.scores as Record<string, unknown>).total,
-      `${prefix}.scores.total`,
-    );
+    const scores = value.scores as Record<string, unknown>;
+    assertOptionalFiniteNumber(scores.vector, `${prefix}.scores.vector`);
+    assertOptionalFiniteNumber(scores.lexical, `${prefix}.scores.lexical`);
+    assertFiniteNumber(scores.scope, `${prefix}.scores.scope`);
+    assertFiniteNumber(scores.metadata, `${prefix}.scores.metadata`);
+    assertFiniteNumber(scores.recency, `${prefix}.scores.recency`);
+    assertFiniteNumber(scores.total, `${prefix}.scores.total`);
+    assertStringArray(value.reasons, `${prefix}.reasons`);
   }
 }
 
@@ -231,8 +291,8 @@ function assertScoreSearchResultOptions(
   const value = options as Record<string, unknown>;
   assertFiniteTimestamp(value.newestUpdatedAt as number, "newestUpdatedAt");
   assertOptionalCandidateSource(value.source);
-  assertOptionalFiniteNumber(value.vectorScore, "vectorScore");
-  assertOptionalFiniteNumber(value.lexicalScore, "lexicalScore");
+  assertOptionalUnitScore(value.vectorScore, "vectorScore");
+  assertOptionalUnitScore(value.lexicalScore, "lexicalScore");
 }
 
 function assertObject(value: unknown, fieldName: string): void {
@@ -250,6 +310,16 @@ function assertPositiveSafeInteger(value: unknown, fieldName: string): void {
 function assertString(value: unknown, fieldName: string): void {
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string`);
+  }
+}
+
+function assertStringArray(value: unknown, fieldName: string): void {
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+
+  for (const [index, item] of value.entries()) {
+    assertString(item, `${fieldName}[${index}]`);
   }
 }
 
@@ -279,13 +349,28 @@ function assertSourceType(value: unknown, fieldName: string): void {
   }
 }
 
+function assertCandidateSource(value: unknown, fieldName: string): void {
+  if (value !== "vector" && value !== "lexical" && value !== "hybrid") {
+    throw new Error(`${fieldName} must be "vector", "lexical", or "hybrid"`);
+  }
+}
+
 function assertOptionalCandidateSource(value: unknown): void {
   if (value === undefined) {
     return;
   }
 
-  if (value !== "vector" && value !== "lexical" && value !== "hybrid") {
-    throw new Error('source must be "vector", "lexical", or "hybrid"');
+  assertCandidateSource(value, "source");
+}
+
+function assertOptionalUnitScore(value: unknown, fieldName: string): void {
+  if (value === undefined) {
+    return;
+  }
+
+  assertFiniteNumber(value, fieldName);
+  if (value < 0 || value > 1) {
+    throw new Error(`${fieldName} must be between 0 and 1`);
   }
 }
 
@@ -297,7 +382,10 @@ function assertOptionalFiniteNumber(value: unknown, fieldName: string): void {
   assertFiniteNumber(value, fieldName);
 }
 
-function assertFiniteNumber(value: unknown, fieldName: string): void {
+function assertFiniteNumber(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new Error(`${fieldName} must be a finite number`);
   }
@@ -335,14 +423,10 @@ function metadataScore(
 }
 
 function recencyScore(
-  updatedAt: string,
+  updatedAtTime: number,
   newestUpdatedAt: number,
   reasons: string[],
 ): number {
-  const updatedAtTime = parseCanonicalIsoTimestamp(
-    updatedAt,
-    "record.updatedAt",
-  );
   const dayDistance = Math.max(0, (newestUpdatedAt - updatedAtTime) / DAY_IN_MS);
   const score = Math.max(
     0,
@@ -359,8 +443,7 @@ function vectorScore(
   if (rawScore === undefined) {
     return undefined;
   }
-  const score =
-    clampUnitScore(rawScore) * RANKING_WEIGHTS.vector.maxBonus;
+  const score = rawScore * RANKING_WEIGHTS.vector.maxBonus;
   reasons.push(`vector:${score}`);
   return score;
 }
@@ -372,16 +455,9 @@ function lexicalScore(
   if (rawScore === undefined) {
     return undefined;
   }
-  const score = clampUnitScore(rawScore) * RANKING_WEIGHTS.lexical.maxBonus;
+  const score = rawScore * RANKING_WEIGHTS.lexical.maxBonus;
   reasons.push(`lexical:${score}`);
   return score;
-}
-
-function clampUnitScore(score: number): number {
-  if (!Number.isFinite(score)) {
-    return 0;
-  }
-  return Math.min(1, Math.max(0, score));
 }
 
 function parseCanonicalIsoTimestamp(value: unknown, name: string): number {

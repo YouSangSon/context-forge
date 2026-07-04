@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   buildRetrievedMemoryCandidate,
   newestUpdatedAtFor,
@@ -137,6 +137,31 @@ describe("rankResults", () => {
     ]);
 
     expect(ranked.map((record) => record.id)).toEqual([22, 21]);
+  });
+
+  it("parses each updatedAt once while ranking records", () => {
+    const records = [
+      createResult({
+        id: 31,
+        updatedAt: "2026-03-26T10:00:00.000Z",
+      }),
+      createResult({
+        id: 32,
+        updatedAt: "2026-03-27T10:00:00.000Z",
+      }),
+      createResult({
+        id: 33,
+        updatedAt: "2026-03-28T10:00:00.000Z",
+      }),
+    ];
+    const parseSpy = vi.spyOn(Date, "parse");
+
+    try {
+      rankResults(records);
+      expect(parseSpy).toHaveBeenCalledTimes(records.length);
+    } finally {
+      parseSpy.mockRestore();
+    }
   });
 
   it.each([
@@ -314,6 +339,18 @@ describe("rankResults", () => {
         lexicalScore: Number.POSITIVE_INFINITY,
       }),
     ).toThrow("lexicalScore must be a finite number");
+    expect(
+      callScoreSearchResult(createResult({}), {
+        newestUpdatedAt: Date.parse("2026-03-28T10:00:00.000Z"),
+        vectorScore: -0.1,
+      }),
+    ).toThrow("vectorScore must be between 0 and 1");
+    expect(
+      callScoreSearchResult(createResult({}), {
+        newestUpdatedAt: Date.parse("2026-03-28T10:00:00.000Z"),
+        lexicalScore: 1.1,
+      }),
+    ).toThrow("lexicalScore must be between 0 and 1");
   });
 
   it("rejects invalid rank candidate input before sorting", () => {
@@ -327,6 +364,9 @@ describe("rankResults", () => {
       "candidates[0].scores must be an object",
     );
     expect(
+      callRankCandidates([{ ...validCandidate, source: "manual" }]),
+    ).toThrow('candidates[0].source must be "vector", "lexical", or "hybrid"');
+    expect(
       callRankCandidates([
         {
           ...validCandidate,
@@ -334,5 +374,29 @@ describe("rankResults", () => {
         },
       ]),
     ).toThrow("candidates[0].scores.total must be a finite number");
+    expect(
+      callRankCandidates([
+        {
+          ...validCandidate,
+          scores: { ...validCandidate.scores, scope: undefined },
+        },
+      ]),
+    ).toThrow("candidates[0].scores.scope must be a finite number");
+    expect(
+      callRankCandidates([
+        {
+          ...validCandidate,
+          scores: { ...validCandidate.scores, vector: Number.NaN },
+        },
+      ]),
+    ).toThrow("candidates[0].scores.vector must be a finite number");
+    expect(
+      callRankCandidates([
+        {
+          ...validCandidate,
+          reasons: ["scope:project", null],
+        },
+      ]),
+    ).toThrow("candidates[0].reasons[1] must be a string");
   });
 });

@@ -1,10 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildOpenAiProbe,
   buildPostgresProbe,
   buildQdrantProbe,
   checkDependencies,
 } from "../../src/health/check-dependencies.js";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("checkDependencies", () => {
   it("returns ok when every probe resolves", async () => {
@@ -42,6 +46,18 @@ describe("checkDependencies", () => {
     });
 
     expect(report.checks.map((c) => c.name)).toEqual(["postgres"]);
+  });
+
+  it("keeps probe durations non-negative when wall clock moves backward", async () => {
+    vi.spyOn(Date, "now")
+      .mockReturnValueOnce(1_000)
+      .mockReturnValueOnce(900);
+
+    const report = await checkDependencies({
+      postgres: vi.fn().mockResolvedValue(undefined),
+    });
+
+    expect(report.checks[0]?.durationMs).toBeGreaterThanOrEqual(0);
   });
 
   it.each([

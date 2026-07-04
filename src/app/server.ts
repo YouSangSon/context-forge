@@ -39,6 +39,7 @@ import {
   type BackgroundQueueMetricsCollector,
 } from "./background-queue-metrics.js";
 import {
+  assertRateLimitDecision,
   createTokenBucketLimiter,
   loadRateLimitFromEnv,
   type RateLimiter,
@@ -74,6 +75,8 @@ const LOOPBACK_MCP_ALLOWED_HOSTNAMES = [
   "[::1]",
 ] as const;
 
+type BackgroundWorkerStarter = typeof startBackgroundWorkers;
+
 export type CreateOperatorServerOptions = {
   config?: ServiceConfig;
   registry?: ToolRegistry;
@@ -102,18 +105,35 @@ export type CreateOperatorServerOptions = {
   // Optional live backlog collector for /metrics. startOperatorServer wires
   // this to the probe Postgres pool; tests can inject or disable it.
   backgroundQueueMetrics?: BackgroundQueueMetricsCollector | null;
+  // Test hook for startOperatorServer so module-level worker mocks are not
+  // needed in parallel test runs.
+  backgroundWorkerStarter?: BackgroundWorkerStarter;
+  // Test hook for the dedicated readiness probe pool. startOperatorServer
+  // still owns cleanup for injected pools.
+  probePool?: PgPool;
 };
 
 function normalizeTokens(
   tokens: readonly (string | BearerToken)[],
 ): BearerToken[] {
-  return tokens.map((t) => (typeof t === "string" ? { token: t } : t));
+  return tokens.map((t) => {
+    if (typeof t === "string") {
+      return { token: t.trim() };
+    }
+    return {
+      ...t,
+      token: t.token.trim(),
+      ...(t.organizationId !== undefined
+        ? { organizationId: t.organizationId.trim() }
+        : {}),
+    };
+  });
 }
 
 // Loopback hosts are safe to expose without auth — only processes on the
 // same machine can reach them. Anything else (0.0.0.0, public IP, hostname)
 // must require bearer tokens, otherwise an unauthenticated remote can
-// trigger destructive operations once compaction-apply ships in P17.
+// trigger destructive or admin operations.
 export function isLoopbackHost(host: string): boolean {
   if (host === "127.0.0.1") return true;
   if (host === "localhost") return true;
@@ -307,6 +327,7 @@ export function createOperatorServer(
         if (rateLimiter) {
           const key = matchedToken?.token ?? "anonymous";
           const decision = rateLimiter.check(key);
+          assertRateLimitDecision(decision);
           if (!decision.allowed) {
             res.writeHead(429, {
               "content-type": "application/json",
@@ -469,12 +490,20 @@ export function startOperatorServer(
   // Dedicated pool for /readyz dependency probes. Kept separate from
   // canonical-services so /readyz works before (or without) any tool call
   // bootstrapping the singleton. Only one `SELECT 1` is issued per probe, so
-  // it stays at a single live connection in practice (uses the pool default).
-  const probePool = createPgPool({ connectionString: config.databaseUrl });
+  // it stays at a single live connection in practice even when the pool's
+  // configured maximum is higher.
+  const probePool =
+    options.probePool ??
+    createPgPool({
+      connectionString: config.databaseUrl,
+      ...config.postgres.pool,
+    });
   const dependencyProbes =
     options.dependencyProbes ?? selectDependencyProbes(config, probePool);
 
   const metrics = options.metrics ?? createMetricsRegistry();
+  const backgroundWorkerStarter =
+    options.backgroundWorkerStarter ?? startBackgroundWorkers;
   const backgroundQueueMetrics =
     options.backgroundQueueMetrics === undefined
       ? createBackgroundQueueMetricsCollector(probePool)
@@ -497,7 +526,7 @@ export function startOperatorServer(
   const startWorkers = (): void => {
     backgroundWorkerStartup = Promise.resolve()
       .then(() =>
-        startBackgroundWorkers({
+        backgroundWorkerStarter({
           logger: log,
           metrics,
           failFast: false,
@@ -519,8 +548,8 @@ export function startOperatorServer(
   const cleanup = (): Promise<void> => {
     if (!cleanupPromise) {
       cleanupPromise = settleCleanup([
-        probePool.end(),
-        backgroundWorkerStartup.then((handle) =>
+        Promise.resolve().then(() => probePool.end()),
+        backgroundWorkerStartup.then(async (handle) =>
           (handle ?? backgroundWorkers)?.stop(),
         ),
       ]);
@@ -647,6 +676,8 @@ function assertOperatorServerOptions(
   assertOptionalNullableOAuthTokenVerifier(candidate.oauthTokenVerifier);
   assertOptionalMetrics(candidate.metrics);
   assertOptionalBackgroundQueueMetrics(candidate.backgroundQueueMetrics);
+  assertOptionalBackgroundWorkerStarter(candidate.backgroundWorkerStarter);
+  assertOptionalProbePool(candidate.probePool);
 }
 
 function assertOptionalObject(value: unknown, fieldName: string): void {
@@ -703,8 +734,19 @@ function assertOptionalServiceConfig(value: unknown): void {
   }
   const config = assertObject(value, "config");
   assertString(config.host, "config.host");
-  assertNumber(config.port, "config.port");
+  assertPort(config.port, "config.port");
   assertString(config.databaseUrl, "config.databaseUrl");
+  const postgres = assertObject(config.postgres, "config.postgres");
+  const pool = assertObject(postgres.pool, "config.postgres.pool");
+  assertPositiveSafeInteger(pool.max, "config.postgres.pool.max");
+  assertPositiveSafeInteger(
+    pool.idleTimeoutMillis,
+    "config.postgres.pool.idleTimeoutMillis",
+  );
+  assertPositiveSafeInteger(
+    pool.connectionTimeoutMillis,
+    "config.postgres.pool.connectionTimeoutMillis",
+  );
   if (config.vectorBackend !== "qdrant" && config.vectorBackend !== "pgvector") {
     throw new Error('config.vectorBackend must be "qdrant" or "pgvector"');
   }
@@ -738,18 +780,26 @@ function assertOptionalBearerTokens(value: unknown): void {
   }
   for (const [index, token] of value.entries()) {
     if (typeof token === "string") {
+      assertNonBlankString(token, `bearerTokens[${index}]`);
       continue;
     }
     const entry = assertObject(token, `bearerTokens[${index}]`);
     if (typeof entry.token !== "string") {
       throw new Error(`bearerTokens[${index}].token must be a string`);
     }
+    assertNonBlankString(entry.token, `bearerTokens[${index}].token`);
     if (
       entry.organizationId !== undefined &&
       typeof entry.organizationId !== "string"
     ) {
       throw new Error(
         `bearerTokens[${index}].organizationId must be a string`,
+      );
+    }
+    if (entry.organizationId !== undefined) {
+      assertNonBlankString(
+        entry.organizationId,
+        `bearerTokens[${index}].organizationId`,
       );
     }
   }
@@ -790,15 +840,56 @@ function assertOptionalBackgroundQueueMetrics(value: unknown): void {
   assertFunction(collector.collect, "backgroundQueueMetrics.collect");
 }
 
+function assertOptionalBackgroundWorkerStarter(value: unknown): void {
+  if (value === undefined) {
+    return;
+  }
+  assertFunction(value, "backgroundWorkerStarter");
+}
+
+function assertOptionalProbePool(value: unknown): void {
+  if (value === undefined) {
+    return;
+  }
+  const pool = assertObject(value, "probePool");
+  assertFunction(pool.query, "probePool.query");
+  assertFunction(pool.end, "probePool.end");
+}
+
 function assertString(value: unknown, fieldName: string): asserts value is string {
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string`);
   }
 }
 
-function assertNumber(value: unknown, fieldName: string): asserts value is number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new Error(`${fieldName} must be a finite number`);
+function assertNonBlankString(
+  value: string,
+  fieldName: string,
+): void {
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
+}
+
+function assertPort(value: unknown, fieldName: string): asserts value is number {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value < 0 ||
+    value > 65_535
+  ) {
+    throw new Error(
+      `${fieldName} must be a non-negative safe integer up to 65535`,
+    );
+  }
+}
+
+function assertPositiveSafeInteger(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
   }
 }
 

@@ -167,13 +167,14 @@ describe("claimPendingForRetry SQL shape", () => {
 
   it("returns mapped IngestJob rows from the UPDATE RETURNING result", async () => {
     const row = {
-      id: 7,
-      memory_record_id: 42,
+      id: "7",
+      memory_record_id: "42",
+      organization_id: "default",
       status: "completed",
-      attempts: 0,
+      attempts: "0",
       last_error: null,
       qdrant_status: "pending",
-      qdrant_attempts: 2,
+      qdrant_attempts: "2",
       qdrant_next_retry_at: null,
       qdrant_last_error: "boom",
       created_at: "2024-01-01T00:00:00.000Z",
@@ -188,12 +189,66 @@ describe("claimPendingForRetry SQL shape", () => {
     expect(jobs[0]).toMatchObject({
       id: 7,
       memoryRecordId: 42,
+      attempts: 0,
       qdrantStatus: "pending",
       qdrantAttempts: 2,
       qdrantNextRetryAt: null,
       qdrantLastError: "boom",
     });
   });
+
+  it.each([
+    {
+      field: "id",
+      rowPatch: { id: "0" },
+      message: "ingest job id must be a positive safe integer",
+    },
+    {
+      field: "memory_record_id",
+      rowPatch: { memory_record_id: "1.5" },
+      message: "ingest job memory_record_id must be a positive safe integer",
+    },
+    {
+      field: "attempts",
+      rowPatch: { attempts: "-1" },
+      message: "ingest job attempts must be a non-negative safe integer",
+    },
+    {
+      field: "attempts",
+      rowPatch: { attempts: "1.5" },
+      message: "ingest job attempts must be a non-negative safe integer",
+    },
+    {
+      field: "qdrant_attempts",
+      rowPatch: { qdrant_attempts: "bad" },
+      message: "database number must be finite",
+    },
+  ])(
+    "rejects malformed mapped numeric rows: $field",
+    async ({ rowPatch, message }) => {
+      const row = {
+        id: "7",
+        memory_record_id: "42",
+        organization_id: "default",
+        status: "completed",
+        attempts: "0",
+        last_error: null,
+        qdrant_status: "pending",
+        qdrant_attempts: "2",
+        qdrant_next_retry_at: null,
+        qdrant_last_error: "boom",
+        created_at: "2024-01-01T00:00:00.000Z",
+        updated_at: "2024-01-02T00:00:00.000Z",
+        ...rowPatch,
+      };
+      const { pool } = makeMockPool([row]);
+      const repo = createIngestJobRepository(pool);
+
+      await expect(
+        repo.claimPendingForRetry({ limit: 10, now: new Date() }),
+      ).rejects.toThrow(message);
+    },
+  );
 
   it("returns empty array when no rows are due", async () => {
     const { pool } = makeMockPool([]);

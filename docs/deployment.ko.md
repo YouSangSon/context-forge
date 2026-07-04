@@ -136,9 +136,11 @@ DB에서 안전. 새 버전 배포하면 부트스트랩이 pending 마이그레
 
 ## 스케일링 노트
 
-앱 프로세스는 토큰별 in-memory rate limiter 외에는 stateless. round-robin
-load balancer 뒤의 다중 replica 가능; 각 replica가 자체 bucket 가지므로
-클라이언트가 약간 느슨한 rate limit을 볼 수 있음.
+앱 프로세스는 토큰별 프로세스-local in-memory rate limiter 외에는
+stateless. round-robin load balancer 뒤의 다중 replica 가능. 단, 각 replica가
+자체 bucket을 가지므로 application rate limit의 유효 한도는 replica 수만큼
+커질 수 있습니다. 배포 전체의 엄격한 quota가 필요하면 공유 reverse proxy
+또는 edge 계층에서 제한하세요.
 
 **Sweeper 조정**: 기본값으로는 `COMPACTION_SWEEP_ENABLED=true` 및/또는
 `INGEST_SWEEP_ENABLED=true` 를 지속 실행 HTTP replica **하나**에서만 켜거나,

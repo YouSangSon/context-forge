@@ -94,10 +94,10 @@ catch block (option-A delete: CASCADE removes record + chunks + job + no orphan)
 so `add_memory` success/failure semantics are unchanged.
 
 Pre-write: `assertNoSecrets(content)` runs in
-`src/store/secret-scrub.ts` — refuses to persist content matching API key /
-PEM / bearer / JWT patterns. The check happens in `writeCanonicalMemory`
-before any store touch, so a positive detection short-circuits with no
-side effects.
+`src/store/secret-scrub.ts` — refuses to persist content matching provider
+API key, PEM, bearer/JWT, or credentialed database URL patterns. The check
+happens in `writeCanonicalMemory` before any store touch, so a positive
+detection short-circuits with no side effects.
 
 ## Data flow: read
 
@@ -125,7 +125,7 @@ semantic matches. Those mentions are persisted at write time in `entities` and
 in `entity_relationships`. Lexical retrieval uses the persisted entity graph as
 an exact-match rescue/boost path alongside FTS and substring matching.
 
-## Data flow: compact apply (P17)
+## Data flow: compact apply
 
 ```
 compact_memory dryRun=false
@@ -158,7 +158,7 @@ If a worker crashes after claim, the row becomes due again after that window.
 Operators can run these loops inside one HTTP replica or in a dedicated
 `npm run start:worker` process; both paths use the same sweeper lifecycle.
 
-## Data flow: unarchive (P19.1)
+## Data flow: unarchive
 
 ```
 unarchive_memory
@@ -166,7 +166,7 @@ unarchive_memory
 unarchiveCompaction (src/compact/unarchive-compaction.ts)
   ├─ findArchiveByIds         (org-scoped)
   ├─ for each archive row:
-  │    ├─ skip if already_unarchived / org mismatch / pre-P19.1 (no source_id)
+  │    ├─ skip if already_unarchived / org mismatch / missing source_id
   │    ├─ restoreToCanonical  (INSERT memory_records preserving original
   │    │                       timestamps + source_id; new BIGSERIAL id)
   │    ├─ chunkText + insertChunks

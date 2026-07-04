@@ -1,4 +1,8 @@
 import path from "node:path";
+import {
+  DEFAULT_PG_POOL_OPTIONS,
+  type PgPoolOptions,
+} from "./db/connection.js";
 
 export type ResolveServiceConfigInput = {
   env?: NodeJS.ProcessEnv;
@@ -8,6 +12,9 @@ export type ServiceConfig = {
   host: string;
   port: number;
   databaseUrl: string;
+  postgres: {
+    pool: PgPoolOptions;
+  };
   vectorBackend: "qdrant" | "pgvector";
   qdrant: {
     url: string;
@@ -39,6 +46,7 @@ export function resolveServiceConfig(
   const host = envString(env.HOST, "HOST") ?? "127.0.0.1";
   const port = parsePort(env.PORT);
   const databaseUrl = resolveDatabaseUrl(env);
+  const postgresPool = resolvePostgresPoolConfig(env);
 
   // EMBEDDING_PROVIDER selects which embedding factory wires up.
   //   "openai"       — historical default, requires OPENAI_API_KEY, paid.
@@ -136,6 +144,9 @@ export function resolveServiceConfig(
     host,
     port,
     databaseUrl,
+    postgres: {
+      pool: postgresPool,
+    },
     vectorBackend,
     qdrant,
     openai: {
@@ -157,6 +168,30 @@ export function resolveServiceConfig(
         "BACKUP_ENCRYPTION_KEY_FILE",
       ),
     },
+  };
+}
+
+export function resolvePostgresPoolConfig(
+  env: NodeJS.ProcessEnv,
+): PgPoolOptions {
+  const candidate = assertObject(env, "postgres pool env");
+
+  return {
+    max: parsePositiveIntOption(
+      candidate.PG_POOL_MAX,
+      "PG_POOL_MAX",
+      DEFAULT_PG_POOL_OPTIONS.max,
+    ),
+    idleTimeoutMillis: parsePositiveIntOption(
+      candidate.PG_IDLE_TIMEOUT_MS,
+      "PG_IDLE_TIMEOUT_MS",
+      DEFAULT_PG_POOL_OPTIONS.idleTimeoutMillis,
+    ),
+    connectionTimeoutMillis: parsePositiveIntOption(
+      candidate.PG_CONNECT_TIMEOUT_MS,
+      "PG_CONNECT_TIMEOUT_MS",
+      DEFAULT_PG_POOL_OPTIONS.connectionTimeoutMillis,
+    ),
   };
 }
 
@@ -213,7 +248,7 @@ function parsePort(value: unknown): number {
   let port: number;
   try {
     port = parsePlainDecimalPositiveInt(raw);
-  } catch {
+  } catch (_err: unknown) {
     throw new Error(`Invalid PORT: ${raw}`);
   }
 
@@ -234,8 +269,24 @@ function parsePositiveInt(
   }
   try {
     return parsePlainDecimalPositiveInt(raw);
-  } catch {
+  } catch (_err: unknown) {
     throw new Error(`expected positive integer, got "${raw}"`);
+  }
+}
+
+function parsePositiveIntOption(
+  value: unknown,
+  name: string,
+  fallback: number,
+): number {
+  const raw = envString(value, name);
+  if (raw === undefined) {
+    return fallback;
+  }
+  try {
+    return parsePlainDecimalPositiveInt(raw);
+  } catch (_err: unknown) {
+    throw new Error(`Invalid ${name}: expected positive integer, got "${raw}"`);
   }
 }
 
@@ -256,4 +307,14 @@ function resolveDatabaseUrl(env: NodeJS.ProcessEnv): string {
   }
 
   return `postgres://${requireEnv(env.POSTGRES_USER, "POSTGRES_USER")}:${requireEnv(env.POSTGRES_PASSWORD, "POSTGRES_PASSWORD")}@postgres:5432/${requireEnv(env.POSTGRES_DB, "POSTGRES_DB")}`;
+}
+
+function assertObject(
+  value: unknown,
+  fieldName: string,
+): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an object`);
+  }
+  return value as Record<string, unknown>;
 }

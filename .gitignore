@@ -1,4 +1,18 @@
 .DS_Store
+Thumbs.db
+Desktop.ini
+desktop.ini
+*.swp
+*.swo
+*.orig
+*.rej
+*~
+
+.env
+.env.*
+!.env.example
+.envrc
+.akasha/
 
 .worktrees/
 dist/

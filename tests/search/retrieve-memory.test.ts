@@ -165,6 +165,84 @@ describe("retrieveMemory", () => {
     expect(results.map((result) => result.id)).toEqual([12, 21]);
   });
 
+  it("rejects non-array vector query results before hydration", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue(null),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      getMemoryRecordsByIds: vi.fn(),
+    };
+
+    await expect(
+      retrieveMemory({
+        vectorIndex: vectorIndex as never,
+        repository: repository as never,
+        vector: [0.1, 0.2, 0.3],
+        organizationId: "dev-team",
+        projectKey: "project-alpha",
+        limit: 5,
+      }),
+    ).rejects.toThrow("vectorIndex.query result must be an array");
+    expect(repository.getMemoryRecordsByIds).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-array hydrated record results before ranking", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([
+        { id: "chunk:12", score: 0.9, payload: { memory_record_id: 12 } },
+      ]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      getMemoryRecordsByIds: vi.fn().mockResolvedValue(null),
+    };
+
+    await expect(
+      retrieveMemory({
+        vectorIndex: vectorIndex as never,
+        repository: repository as never,
+        vector: [0.1, 0.2, 0.3],
+        organizationId: "dev-team",
+        projectKey: "project-alpha",
+        limit: 5,
+      }),
+    ).rejects.toThrow("repository.getMemoryRecordsByIds result must be an array");
+  });
+
+  it("rejects non-array lexical record results before ranking", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      getMemoryRecordsByIds: vi.fn(),
+      searchMemory: vi.fn().mockResolvedValue(null),
+    };
+
+    await expect(
+      retrieveMemory({
+        vectorIndex: vectorIndex as never,
+        repository: repository as never,
+        vector: [0.1, 0.2, 0.3],
+        query: "ranking",
+        organizationId: "dev-team",
+        projectKey: "project-alpha",
+        limit: 5,
+      }),
+    ).rejects.toThrow("repository.searchMemory result must be an array");
+    expect(repository.getMemoryRecordsByIds).not.toHaveBeenCalled();
+  });
+
   it("keeps project hits ahead when limit is smaller than the combined candidate set", async () => {
     const vectorIndex = {
       query: vi
@@ -293,6 +371,53 @@ describe("retrieveMemory", () => {
     );
   });
 
+  it("trims organizationId before vector, lexical, and hydration calls", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([
+        { id: "chunk:12", score: 0.9, payload: { memory_record_id: 12 } },
+      ]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      searchMemory: vi.fn().mockResolvedValue([]),
+      getMemoryRecordsByIds: vi.fn().mockResolvedValue([]),
+    };
+
+    await retrieveMemory({
+      vectorIndex: vectorIndex as never,
+      repository: repository as never,
+      vector: [0.1, 0.2, 0.3],
+      query: "timeout",
+      organizationId: " dev-team ",
+      projectKey: "project-alpha",
+      limit: 5,
+    });
+
+    expect(vectorIndex.query).toHaveBeenCalledWith(
+      [0.1, 0.2, 0.3],
+      {
+        organizationId: "dev-team",
+        scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+        projectKey: "project-alpha",
+      },
+      5,
+    );
+    expect(repository.searchMemory).toHaveBeenCalledWith({
+      query: "timeout",
+      scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+      organizationId: "dev-team",
+      limit: 20,
+    });
+    expect(repository.getMemoryRecordsByIds).toHaveBeenCalledWith(
+      [12],
+      "dev-team",
+      undefined,
+    );
+  });
+
   it("ignores vector hits with invalid memory record ids before hydration", async () => {
     const vectorIndex = {
       query: vi.fn().mockResolvedValue([
@@ -355,6 +480,54 @@ describe("retrieveMemory", () => {
     expect(results.map((result) => result.id)).toEqual([12]);
   });
 
+  it("rejects non-finite vector hit scores before ranking", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([
+        { id: "chunk:12", score: Number.NaN, payload: { memory_record_id: 12 } },
+      ]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+
+    const repository = {
+      getMemoryRecordsByIds: vi.fn().mockResolvedValue([
+        {
+          id: 12,
+          sourceId: 202,
+          scopeType: "project",
+          scopeId: "project-alpha",
+          memoryType: "decision",
+          content: "Malformed vector scores should fail before ranking.",
+          createdAt: "2026-04-25T00:00:00.000Z",
+          updatedAt: "2026-04-25T00:00:00.000Z",
+          source: {
+            id: 302,
+            scopeType: "project",
+            scopeId: "project-alpha",
+            sourceType: "decision",
+            externalId: "adr-1",
+            title: "ADR 1",
+            uri: "file:///tmp/adr-1.md",
+            createdAt: "2026-04-25T00:00:00.000Z",
+          },
+        },
+      ]),
+    };
+
+    await expect(
+      retrieveMemory({
+        vectorIndex: vectorIndex as never,
+        repository: repository as never,
+        vector: [0.1, 0.2, 0.3],
+        organizationId: "dev-team",
+        projectKey: "project-alpha",
+        limit: 5,
+      }),
+    ).rejects.toThrow("vector hit score must be a finite number");
+  });
+
   it("throws when organizationId is missing and the legacy anonymous escape hatch is not opted into", async () => {
     const vectorIndex = { query: vi.fn(), upsert: vi.fn(), delete: vi.fn(), deleteByRecordIds: vi.fn().mockResolvedValue(undefined), ensureCollection: vi.fn() };
     const repository = { getMemoryRecordsByIds: vi.fn() };
@@ -409,7 +582,7 @@ describe("retrieveMemory", () => {
         projectKey: "project-alpha",
         limit: 5,
       });
-    } catch (err) {
+    } catch (err: unknown) {
       caught = err;
     }
 
@@ -584,6 +757,120 @@ describe("retrieveMemory", () => {
     });
     expect(repository.getMemoryRecordsByIds).not.toHaveBeenCalled();
     expect(results.map((result) => result.id)).toEqual([44]);
+  });
+
+  it("skips lexical search for whitespace-only direct queries", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      searchMemory: vi.fn().mockResolvedValue([]),
+      getMemoryRecordsByIds: vi.fn(),
+    };
+
+    const results = await retrieveMemory({
+      vectorIndex: vectorIndex as never,
+      repository: repository as never,
+      vector: [0.1, 0.2, 0.3],
+      query: " \n\t ",
+      organizationId: "dev-team",
+      projectKey: "project-alpha",
+      limit: 5,
+    });
+
+    expect(repository.searchMemory).not.toHaveBeenCalled();
+    expect(repository.getMemoryRecordsByIds).not.toHaveBeenCalled();
+    expect(results).toEqual([]);
+  });
+
+  it("trims direct lexical queries before calling the repository", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      searchMemory: vi.fn().mockResolvedValue([]),
+      getMemoryRecordsByIds: vi.fn(),
+    };
+
+    await retrieveMemory({
+      vectorIndex: vectorIndex as never,
+      repository: repository as never,
+      vector: [0.1, 0.2, 0.3],
+      query: " timeout retry backoff ",
+      organizationId: "dev-team",
+      projectKey: "project-alpha",
+      limit: 5,
+    });
+
+    expect(repository.searchMemory).toHaveBeenCalledWith({
+      query: "timeout retry backoff",
+      scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+      organizationId: "dev-team",
+      limit: 20,
+    });
+  });
+
+  it("trims direct scope identifiers before vector and lexical retrieval", async () => {
+    const vectorIndex = {
+      query: vi.fn().mockResolvedValue([]),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+    const repository = {
+      searchMemory: vi.fn().mockResolvedValue([]),
+      getMemoryRecordsByIds: vi.fn(),
+    };
+
+    await retrieveMemory({
+      vectorIndex: vectorIndex as never,
+      repository: repository as never,
+      vector: [0.1, 0.2, 0.3],
+      query: "timeout retry backoff",
+      organizationId: "dev-team",
+      projectKey: " project-alpha ",
+      userScopeId: " alice ",
+      limit: 5,
+    });
+
+    expect(vectorIndex.query).toHaveBeenNthCalledWith(
+      1,
+      [0.1, 0.2, 0.3],
+      {
+        organizationId: "dev-team",
+        scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+        projectKey: "project-alpha",
+      },
+      5,
+    );
+    expect(vectorIndex.query).toHaveBeenNthCalledWith(
+      2,
+      [0.1, 0.2, 0.3],
+      {
+        organizationId: "dev-team",
+        scopes: [{ scopeType: "user", scopeId: "alice" }],
+        projectKey: null,
+      },
+      5,
+    );
+    expect(repository.searchMemory).toHaveBeenCalledWith({
+      query: "timeout retry backoff",
+      scopes: [
+        { scopeType: "project", scopeId: "project-alpha" },
+        { scopeType: "user", scopeId: "alice" },
+      ],
+      organizationId: "dev-team",
+      limit: 20,
+    });
   });
 
   it("caps lexical oversampling before calling the repository", async () => {

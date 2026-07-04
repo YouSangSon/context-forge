@@ -54,6 +54,32 @@ describe("handleMcpHttpRequest boundary validation", () => {
       message: "bearerTokens must be an array",
     },
     {
+      input: { ...baseOptions(), bearerTokens: [null] },
+      message: "bearerTokens[0] must be an object",
+    },
+    {
+      input: { ...baseOptions(), bearerTokens: [{ token: 123 }] },
+      message: "bearerTokens[0].token must be a string",
+    },
+    {
+      input: { ...baseOptions(), bearerTokens: [{ token: " \n\t " }] },
+      message: "bearerTokens[0].token must contain non-whitespace text",
+    },
+    {
+      input: {
+        ...baseOptions(),
+        bearerTokens: [{ token: "token-a", organizationId: 123 }],
+      },
+      message: "bearerTokens[0].organizationId must be a string",
+    },
+    {
+      input: {
+        ...baseOptions(),
+        bearerTokens: [{ token: "token-a", organizationId: "" }],
+      },
+      message: "bearerTokens[0].organizationId must contain non-whitespace text",
+    },
+    {
       input: { ...baseOptions(), oauthTokenVerifier: {} },
       message: "oauthTokenVerifier.verify must be a function",
     },
@@ -75,5 +101,23 @@ describe("handleMcpHttpRequest boundary validation", () => {
     },
   ])("rejects malformed direct options %#", async ({ input, message }) => {
     await expect(handleMcpHttpRequest(input as never)).rejects.toThrow(message);
+  });
+
+  it("rejects malformed rate limiter decisions before writing Retry-After", async () => {
+    const options = {
+      ...baseOptions(),
+      rateLimiter: {
+        check: vi.fn().mockReturnValue({
+          allowed: false,
+          remaining: 0,
+          retryAfterMs: "soon",
+        }),
+      },
+    };
+
+    await expect(handleMcpHttpRequest(options as never)).rejects.toThrow(
+      "rate-limit decision.retryAfterMs must be a finite non-negative number",
+    );
+    expect(options.res.setHeader).not.toHaveBeenCalled();
   });
 });

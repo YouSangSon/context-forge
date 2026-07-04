@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { PgPool, PgQueryable } from "../db/connection.js";
+import { requireSingleRow, toIsoString, toNumber } from "./db-utils.js";
 import {
   extractEntityMentions,
   type EntityMention,
@@ -31,28 +32,28 @@ const POSTGRES_INTEGER_MIN = -2147483648;
 const POSTGRES_INTEGER_MAX = 2147483647;
 
 type PostgresMemoryRow = {
-  id: number;
+  id: number | string;
   organization_id: string;
-  scope_type: SearchMemoryResult["scopeType"];
+  scope_type: unknown;
   scope_id: string;
   project_key: string | null;
-  kind: SearchMemoryResult["memoryType"];
+  kind: unknown;
   title: string | null;
   content: string;
   summary: string | null;
-  durability: NonNullable<SearchMemoryResult["durability"]>;
-  importance: number;
-  source_id: number;
+  durability: unknown;
+  importance: number | string;
+  source_id: number | string;
   created_at: string | Date;
   updated_at: string | Date;
 };
 
 type PostgresSourceRow = {
-  source_id_joined: number;
+  source_id_joined: number | string;
   source_organization_id: string;
-  source_scope_type: MemorySource["scopeType"];
+  source_scope_type: unknown;
   source_scope_id: string;
-  source_type: MemorySource["sourceType"];
+  source_type: unknown;
   source_ref: string;
   source_title: string | null;
   source_created_at: string | Date;
@@ -181,13 +182,37 @@ export function createMemoryRepository(
         input.summary === undefined
           ? summarize(input.content)
           : normalizeNullableText(input.summary, "summary");
+      const scopeType = mapScopeType(input.scopeType, "scopeType");
+      const scopeId = mapRequiredText(input.scopeId, "scopeId");
+      const sourceScopeType = mapScopeType(
+        input.source.scopeType,
+        "source.scopeType",
+      );
+      const sourceScopeId = mapRequiredText(
+        input.source.scopeId,
+        "source.scopeId",
+      );
+      const scopedInput = {
+        ...input,
+        scopeType,
+        scopeId,
+        source: {
+          ...input.source,
+          scopeType: sourceScopeType,
+          scopeId: sourceScopeId,
+        },
+      };
       assertNoSecretsInMemoryFields({
         title,
         content: input.content,
         summary,
       });
-      const organizationId = input.organizationId ?? DEFAULT_ORG_ID;
-      assertNonBlankText(organizationId, "organizationId");
+      const rawOrganizationId = input.organizationId ?? DEFAULT_ORG_ID;
+      assertNonBlankText(rawOrganizationId, "organizationId");
+      const organizationId = rawOrganizationId.trim();
+      requireSourceKey(scopedInput.source);
+      normalizeNullableText(scopedInput.source.title ?? null, "source.title");
+      normalizeNullableText(scopedInput.source.uri ?? null, "source.uri");
       const client = await pool.connect();
 
       try {
@@ -195,8 +220,12 @@ export function createMemoryRepository(
 
         const sourceRow = await upsertPostgresSource(
           client,
-          input,
+          scopedInput,
           organizationId,
+        );
+        const sourceId = mapPositiveSafeInteger(
+          sourceRow.source_id_joined,
+          "source id",
         );
 
         const memoryResult = await client.query<PostgresMemoryRow>(
@@ -232,8 +261,8 @@ export function createMemoryRepository(
           `,
           [
             organizationId,
-            input.scopeType,
-            input.scopeId,
+            scopedInput.scopeType,
+            scopedInput.scopeId,
             input.projectKey ?? null,
             memoryType,
             title,
@@ -241,21 +270,25 @@ export function createMemoryRepository(
             summary,
             durability,
             importance,
-            sourceRow.source_id_joined,
+            sourceId,
           ],
         );
 
         const memoryRow = requireSingleRow(memoryResult.rows[0], "memory");
+        const memoryRecordId = mapPositiveSafeInteger(
+          memoryRow.id,
+          "memory id",
+        );
         await persistPostgresEntityGraph(client, {
-          input,
+          input: scopedInput,
           organizationId,
-          memoryRecordId: toNumber(memoryRow.id),
+          memoryRecordId,
           sourceRow,
         });
 
         await client.query("COMMIT");
 
-      return mapPostgresSearchResult({
+        return mapPostgresSearchResult({
           ...memoryRow,
           ...sourceRow,
           tags: [],
@@ -272,6 +305,10 @@ export function createMemoryRepository(
       if (input.organizationId !== undefined) {
         assertNonBlankText(input.organizationId, "organizationId");
       }
+      const organizationId =
+        input.organizationId === undefined
+          ? undefined
+          : input.organizationId.trim();
 
       if (typeof input.query !== "string") {
         throw new Error("search query must be a string");
@@ -280,6 +317,10 @@ export function createMemoryRepository(
       if (input.scopes.length === 0) {
         return [];
       }
+      const scopes = input.scopes.map((scope, index) => ({
+        scopeType: mapScopeType(scope.scopeType, `scopes[${index}].scopeType`),
+        scopeId: mapRequiredText(scope.scopeId, `scopes[${index}].scopeId`),
+      }));
 
       const trimmedQuery = input.query.trim();
       if (trimmedQuery.length === 0) {
@@ -331,15 +372,15 @@ export function createMemoryRepository(
         );
       }
 
-      const scopeClauses = input.scopes.map((scope) => {
+      const scopeClauses = scopes.map((scope) => {
         const scopeTypeIndex = params.push(scope.scopeType);
         const scopeIdIndex = params.push(scope.scopeId);
         return `(mr.scope_type = $${scopeTypeIndex} AND mr.scope_id = $${scopeIdIndex})`;
       });
 
       let orgClause = "";
-      if (input.organizationId !== undefined) {
-        const orgIndex = params.push(input.organizationId);
+      if (organizationId !== undefined) {
+        const orgIndex = params.push(organizationId);
         orgClause = ` AND mr.organization_id = $${orgIndex}`;
       }
 
@@ -368,11 +409,17 @@ export function createMemoryRepository(
 
     async listMemory(scope, options) {
       assertOrganizationId(options?.organizationId, options?.allowLegacyAnonymous, "listMemory");
+      const organizationId =
+        options?.organizationId === undefined
+          ? undefined
+          : options.organizationId.trim();
+      const scopeType = mapScopeType(scope.scopeType, "scopeType");
+      const scopeId = mapRequiredText(scope.scopeId, "scopeId");
       const limit = clampListLimit(options?.limit);
-      const params: unknown[] = [scope.scopeType, scope.scopeId];
+      const params: unknown[] = [scopeType, scopeId];
       let orgClause = "";
-      if (options?.organizationId !== undefined) {
-        const orgIndex = params.push(options.organizationId);
+      if (organizationId !== undefined) {
+        const orgIndex = params.push(organizationId);
         orgClause = ` AND mr.organization_id = $${orgIndex}`;
       }
       const limitIndex = params.push(limit);
@@ -404,14 +451,16 @@ export function createMemoryRepository(
 
     async getMemoryRecordsByIds(ids, organizationId, allowLegacyAnonymous) {
       assertOrganizationId(organizationId, allowLegacyAnonymous, "getMemoryRecordsByIds");
+      const scopedOrganizationId =
+        organizationId === undefined ? undefined : organizationId.trim();
       if (ids.length === 0) {
         return [];
       }
 
       const params: unknown[] = [ids];
       let orgClause = "";
-      if (organizationId !== undefined) {
-        const orgIndex = params.push(organizationId);
+      if (scopedOrganizationId !== undefined) {
+        const orgIndex = params.push(scopedOrganizationId);
         orgClause = ` AND mr.organization_id = $${orgIndex}`;
       }
 
@@ -432,17 +481,21 @@ export function createMemoryRepository(
 
     async listMemoryForGovernance(scope, options) {
       assertNonBlankText(options.organizationId, "organizationId");
+      const organizationId = options.organizationId.trim();
+      const scopeType = mapScopeType(scope.scopeType, "scopeType");
+      const scopeId = mapRequiredText(scope.scopeId, "scopeId");
 
       const limit = clampListLimit(options.limit);
       const params: unknown[] = [
-        scope.scopeType,
-        scope.scopeId,
-        options.organizationId,
+        scopeType,
+        scopeId,
+        organizationId,
       ];
       let tagJoin = "";
       let tagClause = "";
       if (options.tag !== undefined) {
-        const tagIndex = params.push(options.tag);
+        assertNonBlankText(options.tag, "tag");
+        const tagIndex = params.push(options.tag.trim());
         tagJoin = `
           JOIN memory_tags filter_tags
             ON filter_tags.memory_record_id = mr.id
@@ -485,6 +538,7 @@ export function createMemoryRepository(
 
     async updateMemoryRecord(input) {
       assertNonBlankText(input.organizationId, "organizationId");
+      const organizationId = input.organizationId.trim();
       const nextTags =
         input.tags === undefined ? undefined : normalizeTags(input.tags);
 
@@ -496,7 +550,7 @@ export function createMemoryRepository(
         const currentRow = await getPostgresMemoryRecordById(
           client,
           input.id,
-          input.organizationId,
+          organizationId,
         );
         if (!currentRow) {
           await client.query("ROLLBACK");
@@ -515,14 +569,20 @@ export function createMemoryRepository(
           input.summary === undefined
             ? currentRow.summary
             : normalizeNullableText(input.summary, "summary");
-        const nextKind = normalizeMemoryType(input.kind, currentRow.kind);
+        const currentKind = mapMemoryType(currentRow.kind);
+        const nextKind = normalizeMemoryType(input.kind, currentKind);
+        const currentDurability = mapDurability(currentRow.durability);
         const nextDurability = normalizeDurability(
           input.durability,
-          currentRow.durability,
+          currentDurability,
+        );
+        const currentImportance = mapPostgresInteger(
+          currentRow.importance,
+          "importance",
         );
         const nextImportance = normalizePostgresInteger(
           input.importance,
-          currentRow.importance,
+          currentImportance,
         );
         assertNoSecretsInMemoryFields({
           title: nextTitle,
@@ -559,7 +619,7 @@ export function createMemoryRepository(
           `,
           [
             input.id,
-            input.organizationId,
+            organizationId,
             nextKind,
             nextTitle,
             nextContent,
@@ -573,35 +633,40 @@ export function createMemoryRepository(
         if (input.tags !== undefined) {
           await replacePostgresMemoryTags(client, {
             memoryRecordId: input.id,
-            organizationId: input.organizationId,
+            organizationId,
             tags: nextTags ?? [],
           });
         }
 
-        await deletePostgresEntityGraphForMemory(client, input.id, input.organizationId);
+        await deletePostgresEntityGraphForMemory(client, input.id, organizationId);
+        const currentSourceMetadata = parseStoredPostgresSourceRef(
+          currentRow.source_ref,
+        );
         await persistPostgresEntityGraph(client, {
           input: {
-            organizationId: input.organizationId,
-            scopeType: updatedRow.scope_type,
+            organizationId,
+            scopeType: mapScopeType(updatedRow.scope_type, "memory scope_type"),
             scopeId: updatedRow.scope_id,
             projectKey: updatedRow.project_key ?? undefined,
-            memoryType: updatedRow.kind,
+            memoryType: mapMemoryType(updatedRow.kind),
             title: updatedRow.title ?? undefined,
             content: updatedRow.content,
             summary: updatedRow.summary ?? undefined,
-            durability: updatedRow.durability,
-            importance: updatedRow.importance,
+            durability: mapDurability(updatedRow.durability),
+            importance: mapPostgresInteger(updatedRow.importance, "importance"),
             source: {
-              scopeType: currentRow.source_scope_type,
+              scopeType: mapScopeType(
+                currentRow.source_scope_type,
+                "memory source.scope_type",
+              ),
               scopeId: currentRow.source_scope_id,
-              sourceType: currentRow.source_type,
-              sourceRef:
-                parseStoredPostgresSourceRef(currentRow.source_ref).sourceRef,
+              sourceType: mapSourceType(currentRow.source_type),
+              sourceRef: currentSourceMetadata.sourceRef,
               title: currentRow.source_title ?? undefined,
-              uri: parseStoredPostgresSourceRef(currentRow.source_ref).uri ?? undefined,
+              uri: currentSourceMetadata.uri ?? undefined,
             },
           },
-          organizationId: input.organizationId,
+          organizationId,
           memoryRecordId: input.id,
           sourceRow: currentRow,
         });
@@ -609,7 +674,7 @@ export function createMemoryRepository(
         const hydrated = await getPostgresMemoryRecordById(
           client,
           input.id,
-          input.organizationId,
+          organizationId,
         );
 
         await client.query("COMMIT");
@@ -623,7 +688,9 @@ export function createMemoryRepository(
     },
 
     async archiveMemoryRecord(input) {
+      assertPositiveSafeInteger(input.id, "id");
       assertNonBlankText(input.organizationId, "organizationId");
+      const organizationId = input.organizationId.trim();
 
       const result = await pool.query<{
         archived: boolean;
@@ -658,27 +725,33 @@ export function createMemoryRepository(
             ON mc.memory_record_id = target.id
            AND mc.organization_id = $2
         `,
-        [input.id, input.organizationId],
+        [input.id, organizationId],
       );
 
-      if (!result.rows[0]?.found) {
+      const archiveResult = mapArchiveMemoryRecordRow(result.rows[0]);
+      if (!archiveResult.found) {
         return { archived: false, qdrantPointIds: [] };
       }
 
       return {
-        archived: result.rows[0].archived,
-        qdrantPointIds: result.rows[0]?.qdrant_point_ids ?? [],
+        archived: archiveResult.archived,
+        qdrantPointIds: archiveResult.qdrantPointIds,
       };
     },
 
     async getMemoryRecordById(id, organizationId) {
       assertNonBlankText(organizationId, "organizationId");
-      const result = await getPostgresMemoryRecordById(pool, id, organizationId);
+      const result = await getPostgresMemoryRecordById(
+        pool,
+        id,
+        organizationId.trim(),
+      );
       return result ? mapPostgresSearchResult(result) : null;
     },
 
     async deleteMemoryRecord(id, organizationId) {
       assertNonBlankText(organizationId, "organizationId");
+      const scopedOrganizationId = organizationId.trim();
 
       // Single-statement rollback. ON DELETE CASCADE on memory_chunks,
       // ingest_jobs, and relationships (defined in migrations/001_initial.sql)
@@ -687,7 +760,7 @@ export function createMemoryRepository(
       // organization_id is required to prevent cross-tenant deletion (SEC-5).
       await pool.query(
         `DELETE FROM memory_records WHERE id = $1 AND organization_id = $2`,
-        [id, organizationId],
+        [id, scopedOrganizationId],
       );
     },
   };
@@ -697,30 +770,36 @@ function mapPostgresSearchResult(row: PostgresHydratedRow): SearchMemoryResult {
   const sourceMetadata = parseStoredPostgresSourceRef(row.source_ref);
 
   return {
-    id: toNumber(row.id),
-    organizationId: row.organization_id,
-    sourceId: toNumber(row.source_id),
-    scopeType: row.scope_type,
-    scopeId: row.scope_id,
-    projectKey: row.project_key,
-    memoryType: row.kind,
-    title: row.title,
-    content: row.content,
-    summary: row.summary,
-    durability: row.durability,
-    importance: row.importance,
-    tags: row.tags ?? [],
+    id: mapPositiveSafeInteger(row.id, "memory id"),
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "memory organization_id",
+    ),
+    sourceId: mapPositiveSafeInteger(row.source_id, "memory source_id"),
+    scopeType: mapScopeType(row.scope_type, "memory scope_type"),
+    scopeId: mapRequiredText(row.scope_id, "memory scope_id"),
+    projectKey: mapNullableText(row.project_key, "memory project_key"),
+    memoryType: mapMemoryType(row.kind),
+    title: mapNullableText(row.title, "memory title"),
+    content: mapMemoryContent(row.content),
+    summary: mapNullableText(row.summary, "memory summary"),
+    durability: mapDurability(row.durability),
+    importance: mapPostgresInteger(row.importance, "importance"),
+    tags: mapStoredTags(row.tags),
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
     source: {
-      id: toNumber(row.source_id_joined),
-      organizationId: row.source_organization_id,
-      scopeType: row.source_scope_type,
-      scopeId: row.source_scope_id,
-      sourceType: row.source_type,
+      id: mapPositiveSafeInteger(row.source_id_joined, "memory source.id"),
+      organizationId: mapRequiredText(
+        row.source_organization_id,
+        "memory source.organization_id",
+      ),
+      scopeType: mapScopeType(row.source_scope_type, "memory source.scope_type"),
+      scopeId: mapRequiredText(row.source_scope_id, "memory source.scope_id"),
+      sourceType: mapSourceType(row.source_type),
       externalId: sourceMetadata.sourceRef,
       sourceRef: sourceMetadata.sourceRef,
-      title: row.source_title,
+      title: mapNullableText(row.source_title, "memory source.title"),
       uri: sourceMetadata.uri,
       createdAt: toIsoString(row.source_created_at),
     },
@@ -760,15 +839,18 @@ async function inspectPostgresMemoryGraph(
     relationshipLimit?: number;
   },
 ): Promise<MemoryGraphView> {
+  const organizationId = options.organizationId.trim();
+  const scopeType = mapScopeType(scope.scopeType, "scopeType");
+  const scopeId = mapRequiredText(scope.scopeId, "scopeId");
   const limit = clampListLimit(options.limit);
   const relationshipLimit = clampListLimit(
     options.relationshipLimit ?? options.limit,
     options.relationshipLimit === undefined ? "limit" : "relationshipLimit",
   );
   const params: unknown[] = [
-    options.organizationId,
-    scope.scopeType,
-    scope.scopeId,
+    organizationId,
+    scopeType,
+    scopeId,
   ];
   const archivedClause = options.includeArchived
     ? ""
@@ -834,9 +916,9 @@ async function inspectPostgresMemoryGraph(
   }
 
   const relationshipParams: unknown[] = [
-    options.organizationId,
-    scope.scopeType,
-    scope.scopeId,
+    organizationId,
+    scopeType,
+    scopeId,
     entityIds,
   ];
   const relationshipLimitIndex = relationshipParams.push(relationshipLimit);
@@ -891,46 +973,88 @@ async function inspectPostgresMemoryGraph(
 
 function mapPostgresGraphEntity(row: PostgresGraphEntityRow): MemoryGraphEntity {
   return {
-    id: toNumber(row.id),
-    organizationId: row.organization_id,
-    kind: row.kind,
-    normalized: row.normalized,
-    displayText: row.display_text,
+    id: mapPositiveSafeInteger(row.id, "graph entity id"),
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "graph entity organization_id",
+    ),
+    kind: mapEntityKind(row.kind, "graph entity kind"),
+    normalized: mapRequiredText(row.normalized, "graph entity normalized"),
+    displayText: mapRequiredText(row.display_text, "graph entity display_text"),
     firstSeenAt: toIsoString(row.first_seen_at),
     lastSeenAt: toIsoString(row.last_seen_at),
-    mentionCount: toNumber(row.mention_count),
-    memoryIds: toNumberArray(row.memory_ids),
+    mentionCount: mapNonNegativeSafeInteger(
+      row.mention_count,
+      "graph entity mention_count",
+    ),
+    memoryIds: toPositiveSafeIntegerArray(
+      row.memory_ids,
+      "graph entity memory_ids",
+    ),
   };
 }
 
 function mapPostgresGraphRelationship(
   row: PostgresGraphRelationshipRow,
 ): MemoryGraphRelationship {
-  const fromEntityId = toNumber(row.from_entity_id);
-  const toEntityId = toNumber(row.to_entity_id);
+  const fromEntityId = mapPositiveSafeInteger(
+    row.from_entity_id,
+    "graph relationship from_entity_id",
+  );
+  const toEntityId = mapPositiveSafeInteger(
+    row.to_entity_id,
+    "graph relationship to_entity_id",
+  );
 
   return {
-    id: toNumber(row.id),
-    organizationId: row.organization_id,
+    id: mapPositiveSafeInteger(row.id, "graph relationship id"),
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "graph relationship organization_id",
+    ),
     fromEntityId,
     toEntityId,
     fromEntity: {
       id: fromEntityId,
-      kind: row.from_kind,
-      normalized: row.from_normalized,
-      displayText: row.from_display_text,
+      kind: mapEntityKind(row.from_kind, "graph relationship from.kind"),
+      normalized: mapRequiredText(
+        row.from_normalized,
+        "graph relationship from.normalized",
+      ),
+      displayText: mapRequiredText(
+        row.from_display_text,
+        "graph relationship from.display_text",
+      ),
     },
     toEntity: {
       id: toEntityId,
-      kind: row.to_kind,
-      normalized: row.to_normalized,
-      displayText: row.to_display_text,
+      kind: mapEntityKind(row.to_kind, "graph relationship to.kind"),
+      normalized: mapRequiredText(
+        row.to_normalized,
+        "graph relationship to.normalized",
+      ),
+      displayText: mapRequiredText(
+        row.to_display_text,
+        "graph relationship to.display_text",
+      ),
     },
-    relationType: row.relation_type,
-    evidenceMemoryRecordId: toNumber(row.evidence_memory_record_id),
-    validFrom: row.valid_from,
-    validTo: row.valid_to,
-    confidence: toNumber(row.confidence),
+    relationType: mapRequiredText(
+      row.relation_type,
+      "graph relationship relation_type",
+    ),
+    evidenceMemoryRecordId: mapPositiveSafeInteger(
+      row.evidence_memory_record_id,
+      "graph relationship evidence_memory_record_id",
+    ),
+    validFrom: mapNullableNonBlankText(
+      row.valid_from,
+      "graph relationship valid_from",
+    ),
+    validTo: mapNullableNonBlankText(
+      row.valid_to,
+      "graph relationship valid_to",
+    ),
+    confidence: mapConfidence(row.confidence, "graph relationship confidence"),
     createdAt: toIsoString(row.created_at),
   };
 }
@@ -938,41 +1062,31 @@ function mapPostgresGraphRelationship(
 function requireSourceKey(input: AddMemoryInput["source"]): string {
   const sourceKey = input.sourceRef ?? input.externalId;
 
-  if (!sourceKey) {
+  if (sourceKey === undefined) {
     throw new Error(
       "Memory source provenance is required: provide sourceRef or externalId",
     );
   }
 
-  return sourceKey;
+  assertNonBlankText(sourceKey, "sourceRef or externalId");
+  return sourceKey.trim();
 }
 
 function summarize(content: string): string {
   return content.length <= 180 ? content : `${content.slice(0, 177)}...`;
 }
 
-function toIsoString(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : value;
-}
-
-function toNumber(value: number | string): number {
-  return typeof value === "number" ? value : Number(value);
-}
-
-function toNumberArray(values: readonly (number | string)[] | null): number[] {
-  return (values ?? []).map((value) => toNumber(value));
+function toPositiveSafeIntegerArray(
+  values: readonly (number | string)[] | null,
+  fieldName: string,
+): number[] {
+  return (values ?? []).map((value, index) =>
+    mapPositiveSafeInteger(value, `${fieldName}[${index}]`),
+  );
 }
 
 function likeContainsPattern(value: string): string {
   return `%${value.replace(/[\\%_]/g, (match) => `\\${match}`)}%`;
-}
-
-function requireSingleRow<TRow>(row: TRow | undefined, label: string): TRow {
-  if (!row) {
-    throw new Error(`Expected ${label} row to be returned`);
-  }
-
-  return row;
 }
 
 function assertNoSecretsInMemoryFields(input: {
@@ -1000,7 +1114,8 @@ function normalizeNullableText(value: unknown, fieldName: string): string | null
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string`);
   }
-  return value.trim().length === 0 ? null : value;
+  const normalized = value.trim();
+  return normalized.length === 0 ? null : normalized;
 }
 
 function normalizeMemoryType(
@@ -1048,6 +1163,198 @@ function normalizePostgresInteger(
   return value;
 }
 
+function mapPostgresInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (
+    !Number.isInteger(numberValue) ||
+    numberValue < POSTGRES_INTEGER_MIN ||
+    numberValue > POSTGRES_INTEGER_MAX
+  ) {
+    throw new Error(`${fieldName} must be a Postgres integer`);
+  }
+  return numberValue;
+}
+
+function mapNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue < 0) {
+    throw new Error(`${fieldName} must be a non-negative safe integer`);
+  }
+  return numberValue;
+}
+
+function mapPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue <= 0) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+  return numberValue;
+}
+
+function mapRequiredText(value: unknown, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value.trim();
+}
+
+function mapMemoryContent(value: unknown): string {
+  assertNonBlankMemoryContent(value);
+  return value;
+}
+
+function mapNullableText(value: unknown, fieldName: string): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length === 0 ? null : trimmed;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
+}
+
+function mapNullableNonBlankText(
+  value: unknown,
+  fieldName: string,
+): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string or null`);
+  }
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
+  return value.trim();
+}
+
+function mapEntityKind(
+  value: unknown,
+  fieldName: string,
+): EntityMention["kind"] {
+  if (
+    value === "code_symbol" ||
+    value === "path" ||
+    value === "url" ||
+    value === "date" ||
+    value === "proper_noun"
+  ) {
+    return value;
+  }
+  throw new Error(
+    `${fieldName} must be one of: code_symbol, path, url, date, proper_noun`,
+  );
+}
+
+function assertPositiveSafeInteger(value: unknown, fieldName: string): void {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value <= 0
+  ) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+}
+
+function mapScopeType(
+  value: unknown,
+  fieldName: string,
+): SearchMemoryResult["scopeType"] {
+  if (value === "user" || value === "project") {
+    return value;
+  }
+  throw new Error(`${fieldName} must be one of: user, project`);
+}
+
+function mapMemoryType(value: unknown): SearchMemoryResult["memoryType"] {
+  if (value === "decision" || value === "fact" || value === "summary") {
+    return value;
+  }
+  throw new Error("kind must be one of: decision, summary, fact");
+}
+
+function mapDurability(
+  value: unknown,
+): NonNullable<SearchMemoryResult["durability"]> {
+  if (value === "ephemeral" || value === "durable" || value === "archived") {
+    return value;
+  }
+  throw new Error("durability must be one of: ephemeral, durable, archived");
+}
+
+function mapSourceType(value: unknown): MemorySource["sourceType"] {
+  if (value === "decision" || value === "document" || value === "conversation") {
+    return value;
+  }
+  throw new Error(
+    "memory source_type must be one of: decision, document, conversation",
+  );
+}
+
+function mapStoredTags(value: unknown): string[] {
+  return mapNonBlankStringArray(value, "memory tags");
+}
+
+function mapArchiveMemoryRecordRow(row: {
+  archived?: unknown;
+  found?: unknown;
+  qdrant_point_ids?: unknown;
+} | undefined): {
+  archived: boolean;
+  found: boolean;
+  qdrantPointIds: string[];
+} {
+  if (row === undefined) {
+    return { archived: false, found: false, qdrantPointIds: [] };
+  }
+  const found = mapBoolean(row.found, "archive memory found");
+  if (!found) {
+    return { archived: false, found, qdrantPointIds: [] };
+  }
+  return {
+    archived: mapBoolean(row.archived, "archive memory archived"),
+    found,
+    qdrantPointIds: mapNonBlankStringArray(
+      row.qdrant_point_ids,
+      "archive memory qdrant_point_ids",
+    ),
+  };
+}
+
+function mapBoolean(value: unknown, fieldName: string): boolean {
+  if (typeof value !== "boolean") {
+    throw new Error(`${fieldName} must be a boolean`);
+  }
+  return value;
+}
+
+function mapNonBlankStringArray(value: unknown, fieldName: string): string[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+  const values: string[] = [];
+  for (const [index, item] of value.entries()) {
+    if (typeof item !== "string") {
+      throw new Error(`${fieldName}[${index}] must be a string`);
+    }
+    if (item.trim().length === 0) {
+      throw new Error(
+        `${fieldName}[${index}] must contain non-whitespace text`,
+      );
+    }
+    values.push(item.trim());
+  }
+  return values;
+}
+
+function mapConfidence(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (numberValue < 0 || numberValue > 1) {
+    throw new Error(`${fieldName} must be between 0 and 1`);
+  }
+  return numberValue;
+}
+
 function orderRecordsByIds(
   records: SearchMemoryResult[],
   ids: number[],
@@ -1066,6 +1373,14 @@ async function upsertPostgresSource(
   organizationId: string,
 ): Promise<PostgresSourceRow> {
   const sourceKey = requireSourceKey(input.source);
+  const sourceTitle = normalizeNullableText(
+    input.source.title ?? null,
+    "source.title",
+  );
+  const sourceUri = normalizeNullableText(
+    input.source.uri ?? null,
+    "source.uri",
+  );
   // Push the source_ref match into the DB — source_ref is stored as JSON
   // {"sourceRef":...,"uri":...}, so we extract with ::jsonb->>'sourceRef'.
   // LIMIT 1 + ORDER BY id ASC preserves the lowest-id-match semantics of
@@ -1096,7 +1411,7 @@ async function upsertPostgresSource(
   const nextSourceRef = serializeStoredPostgresSourceRef({
     sourceRef: sourceKey,
     uri:
-      input.source.uri
+      sourceUri
       ?? (existingRow
         ? parseStoredPostgresSourceRef(existingRow.source_ref).uri
         : null),
@@ -1113,7 +1428,7 @@ async function upsertPostgresSource(
       `,
       [
         existingRow.source_id_joined,
-        input.source.title ?? null,
+        sourceTitle,
         nextSourceRef,
       ],
     );
@@ -1140,7 +1455,7 @@ async function upsertPostgresSource(
       input.source.scopeId,
       input.source.sourceType,
       nextSourceRef,
-      input.source.title ?? null,
+      sourceTitle,
       createHash("sha256").update(input.content).digest("hex"),
     ],
   );
@@ -1172,7 +1487,14 @@ async function persistPostgresEntityGraph(
   );
   const persistedMentions = mentions.flatMap((mention) => {
     const entity = entitiesByKey.get(entityMentionKey(mention));
-    return entity ? [{ ...mention, entityId: toNumber(entity.id) }] : [];
+    return entity
+      ? [
+        {
+          ...mention,
+          entityId: mapPositiveSafeInteger(entity.id, "entity id"),
+        },
+      ]
+      : [];
   });
 
   if (persistedMentions.length === 0) {
@@ -1599,12 +1921,23 @@ export function parseStoredPostgresSourceRef(
           uri: null,
         };
       }
+      const sourceRef = metadata.sourceRef.trim();
+      if (sourceRef.length === 0) {
+        return {
+          sourceRef: value,
+          uri: null,
+        };
+      }
+      const uri =
+        typeof metadata.uri === "string" && metadata.uri.trim().length > 0
+          ? metadata.uri.trim()
+          : null;
       return {
-        sourceRef: metadata.sourceRef,
-        uri: typeof metadata.uri === "string" ? metadata.uri : null,
+        sourceRef,
+        uri,
       };
     }
-  } catch (err) {
+  } catch (err: unknown) {
     rootLogger.warn(
       { err, valueLength: value.length },
       "parseStoredPostgresSourceRef: failed to parse source_ref JSON; falling back to raw value",

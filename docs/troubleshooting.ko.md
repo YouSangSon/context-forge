@@ -26,7 +26,7 @@
 키가 필요 없는 프로바이더를 사용하려면:
 ```bash
 EMBEDDING_PROVIDER=transformers   # 기본값 — 무료 로컬 ONNX (권장)
-EMBEDDING_PROVIDER=local          # CI / 오프라인 결정론적 stub
+EMBEDDING_PROVIDER=local          # CI / 오프라인 결정론적 스텁
 ```
 
 ### `Node.js ≥ 22 required`
@@ -57,7 +57,7 @@ Fail-closed startup gate. 둘 중 하나:
 ```bash
 EMBEDDING_PROVIDER=transformers   # 기본값 — 무료 로컬 ONNX
 # 또는
-EMBEDDING_PROVIDER=local          # CI / 오프라인 stub
+EMBEDDING_PROVIDER=local          # CI / 오프라인 스텁
 ```
 
 ### `Unsupported EMBEDDING_PROVIDER: <value>`
@@ -159,9 +159,11 @@ dep bump 후 stale `node_modules`. `rm -rf node_modules && npm install`.
 
 ### Tests fail with `Hook timed out in 10000ms`
 
-PG 의존 테스트 3개가 5432의 Postgres에 도달 시도하다 timeout. PG 없으면
-skip 되지만 hook timeout 자체가 보임. Postgres 띄우거나
-(`docker compose up -d postgres`) 그 3개 파일을 expected-skip 으로 수용.
+Postgres 기반 repository/migration suite가 5432의 Postgres에 도달 시도하다
+timeout 날 수 있습니다. PG 없으면 skip 되지만 hook timeout 자체가 보임.
+Postgres를 띄우거나 (`docker compose up -d postgres`) 해당 suite를
+expected-skip 으로 수용하세요. pgvector adapter integration case도
+`PGVECTOR_TEST_URL` 이 없으면 skip 되는 것이 정상입니다.
 
 ### `vitest run` hang
 
@@ -177,5 +179,5 @@ skip 되지만 hook timeout 자체가 보임. Postgres 띄우거나
 3. 다음 정보로 issue 열기: 에러 메시지, 버전 (`git rev-parse HEAD`), 재현
    단계, `EMBEDDING_PROVIDER`.
 
-보안 이슈는 **공개 이슈로 열지 마세요** — [../SECURITY.md](../SECURITY.md)
+보안 이슈는 **공개 이슈로 열지 마세요** — [../SECURITY.ko.md](../SECURITY.ko.md)
 참고.

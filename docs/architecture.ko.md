@@ -93,8 +93,9 @@ catch 블록(option-A 삭제: CASCADE가 레코드·chunk·job을 제거, 고아
 통해 처리되므로 `add_memory` 의 성공/실패 의미는 변경되지 않습니다.
 
 쓰기 전: `src/store/secret-scrub.ts` 의 `assertNoSecrets(content)` —
-API key / PEM / bearer / JWT 패턴 매칭 시 거부. `writeCanonicalMemory` 의
-어떤 store touch보다도 앞에서 실행 → 매칭 시 사이드 이펙트 없이 short-circuit.
+provider API key / PEM / bearer/JWT / 자격증명이 포함된 데이터베이스 URL 패턴
+매칭 시 거부. `writeCanonicalMemory` 의 어떤 store touch보다도 앞에서 실행 →
+매칭 시 사이드 이펙트 없이 short-circuit.
 
 ## 데이터 흐름: 읽기
 
@@ -122,7 +123,7 @@ entity mention도 추출합니다. 그래서 `QDRANT_SNAPSHOT_TIMEOUT` 또는
 matching 옆에서 이 persistent entity graph를 exact-match rescue/boost 경로로
 사용합니다.
 
-## 데이터 흐름: compact apply (P17)
+## 데이터 흐름: compact apply
 
 ```
 compact_memory dryRun=false
@@ -156,7 +157,7 @@ visibility window로 밀어둡니다. claim 이후 worker가 크래시되어도 
 `npm run start:worker` 프로세스로 실행할 수 있으며, 두 경로 모두 같은 sweeper
 lifecycle을 사용합니다.
 
-## 데이터 흐름: unarchive (P19.1)
+## 데이터 흐름: unarchive
 
 ```
 unarchive_memory
@@ -164,7 +165,7 @@ unarchive_memory
 unarchiveCompaction (src/compact/unarchive-compaction.ts)
   ├─ findArchiveByIds         (org-scoped)
   ├─ archive 행별:
-  │    ├─ already_unarchived / org mismatch / pre-P19.1 (no source_id) 시 skip
+  │    ├─ already_unarchived / org mismatch / source_id 없음 시 skip
   │    ├─ restoreToCanonical  (원본 timestamp + source_id 보존하며
   │    │                       memory_records INSERT; 새 BIGSERIAL id)
   │    ├─ chunkText + insertChunks

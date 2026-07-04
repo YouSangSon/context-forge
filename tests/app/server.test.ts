@@ -223,6 +223,23 @@ describe("createOperatorServer", () => {
     expect(html).toContain("/v1/memory/update");
     expect(html).toContain("/v1/memory/delete");
     expect(html).toContain("/v1/memory/tag");
+    expect(html).toContain("function errorMessage(error)");
+    expect(html).toContain("function numberInputValue(input, fallback)");
+    expect(html).toContain("return Number.isFinite(value) ? value : fallback;");
+    expect(html).toContain('limit: numberInputValue($("limit"), 50)');
+    expect(html).toContain("numberInputValue(form.elements.importance, null)");
+    expect(html).toContain("request failed (\" + response.status + \" \" + response.statusText + \")");
+    expect(html).toContain("setStatus(errorMessage(error), true)");
+    expect(html).not.toContain("setStatus(error.message, true)");
+    expect(html).toContain(
+      "try { await saveMemory(memory.id, form); } catch (error) { setStatus(errorMessage(error), true); }",
+    );
+    expect(html).toContain(
+      "try { await tagMemory(memory.id, form); } catch (error) { setStatus(errorMessage(error), true); }",
+    );
+    expect(html).toContain(
+      "try { await archiveMemory(memory.id); } catch (error) { setStatus(errorMessage(error), true); }",
+    );
     expect(html).not.toContain('<option value="archived">');
     expect(html).toContain("if (!form.elements.durability.disabled)");
     expect(html).not.toContain("localStorage");
@@ -1929,6 +1946,13 @@ describe("selectDependencyProbes", () => {
       host: "127.0.0.1",
       port: 8787,
       databaseUrl: "postgres://localhost/test",
+      postgres: {
+        pool: {
+          max: 10,
+          idleTimeoutMillis: 30_000,
+          connectionTimeoutMillis: 5_000,
+        },
+      },
       vectorBackend,
       qdrant: { url: "http://qdrant.local:6333", apiKey: "key-aaa", collectionName: "col" },
       openai: { apiKey: provider === "openai" ? "sk-test" : "" },

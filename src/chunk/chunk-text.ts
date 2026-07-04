@@ -11,6 +11,11 @@ export type ChunkTextInput = {
   overlapTokens: number;
 };
 
+type TokenSpan = {
+  startOffset: number;
+  endOffset: number;
+};
+
 function assertChunkTextInput(input: unknown): asserts input is ChunkTextInput {
   if (typeof input !== "object" || input === null || Array.isArray(input)) {
     throw new Error("chunkText input must be an object");
@@ -50,45 +55,58 @@ export function chunkText(input: ChunkTextInput): TextChunk[] {
   assertChunkTextInput(input);
 
   const { overlapTokens, targetTokens, text } = input;
-  const tokenMatches = [...text.matchAll(/\S+/g)];
-
-  if (tokenMatches.length === 0) {
-    return [];
-  }
-
   const step = targetTokens - overlapTokens;
+  const tokenSpans: TokenSpan[] = [];
   const chunks: TextChunk[] = [];
+  let chunkIndex = 0;
+  let emittedChunk = false;
+  let sawTokenAfterLastEmit = false;
 
-  for (
-    let startTokenIndex = 0, chunkIndex = 0;
-    startTokenIndex < tokenMatches.length;
-    startTokenIndex += step, chunkIndex += 1
-  ) {
-    const endTokenIndex = Math.min(
-      tokenMatches.length,
-      startTokenIndex + targetTokens,
-    );
-    const startMatch = tokenMatches[startTokenIndex];
-    const endMatch = tokenMatches[endTokenIndex - 1];
-
-    if (startMatch?.index === undefined || endMatch?.index === undefined) {
+  for (const match of text.matchAll(/\S+/g)) {
+    if (match.index === undefined) {
       throw new Error("Unable to resolve chunk token offsets");
     }
 
-    const startOffset = startMatch.index;
-    const endOffset = endMatch.index + endMatch[0].length;
-
-    chunks.push({
-      chunkIndex,
-      content: text.slice(startOffset, endOffset),
-      startOffset,
-      endOffset,
+    if (emittedChunk) {
+      sawTokenAfterLastEmit = true;
+    }
+    tokenSpans.push({
+      startOffset: match.index,
+      endOffset: match.index + match[0].length,
     });
 
-    if (endTokenIndex === tokenMatches.length) {
-      break;
+    if (tokenSpans.length === targetTokens) {
+      pushChunk(chunks, text, tokenSpans, chunkIndex);
+      chunkIndex += 1;
+      emittedChunk = true;
+      sawTokenAfterLastEmit = false;
+      tokenSpans.splice(0, step);
     }
   }
 
+  if (tokenSpans.length > 0 && (!emittedChunk || sawTokenAfterLastEmit)) {
+    pushChunk(chunks, text, tokenSpans, chunkIndex);
+  }
+
   return chunks;
+}
+
+function pushChunk(
+  chunks: TextChunk[],
+  text: string,
+  tokenSpans: readonly TokenSpan[],
+  chunkIndex: number,
+): void {
+  const startSpan = tokenSpans[0];
+  const endSpan = tokenSpans[tokenSpans.length - 1];
+  if (startSpan === undefined || endSpan === undefined) {
+    throw new Error("Unable to resolve chunk token offsets");
+  }
+
+  chunks.push({
+    chunkIndex,
+    content: text.slice(startSpan.startOffset, endSpan.endOffset),
+    startOffset: startSpan.startOffset,
+    endOffset: endSpan.endOffset,
+  });
 }

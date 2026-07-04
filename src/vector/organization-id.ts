@@ -13,9 +13,25 @@ export function assertVectorOrganizationId(
 }
 
 export function assertVectorPointOrganizationIds(
-  points: readonly VectorPoint[],
-): void {
-  for (const point of points) {
+  points: unknown,
+): asserts points is readonly VectorPoint[] {
+  if (!Array.isArray(points)) {
+    throw new Error("upsert: points must be an array");
+  }
+
+  for (const [index, point] of points.entries()) {
+    if (typeof point !== "object" || point === null || Array.isArray(point)) {
+      throw new Error(`upsert: points[${index}] must be an object`);
+    }
+
+    if (
+      typeof point.payload !== "object" ||
+      point.payload === null ||
+      Array.isArray(point.payload)
+    ) {
+      throw new Error(`upsert: point "${point.id}" payload must be an object`);
+    }
+
     const organizationId = point.payload.organization_id;
     if (typeof organizationId !== "string") {
       throw new Error(
@@ -35,4 +51,14 @@ export function assertOptionalVectorOrganizationId(
   }
 
   assertVectorOrganizationId(organizationId);
+}
+
+export function normalizeOptionalVectorOrganizationId(
+  organizationId: unknown,
+): string | undefined {
+  assertOptionalVectorOrganizationId(organizationId);
+  if (organizationId === undefined || organizationId === "") {
+    return undefined;
+  }
+  return organizationId.trim();
 }

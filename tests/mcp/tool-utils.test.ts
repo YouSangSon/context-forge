@@ -7,6 +7,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   formatMemoryIdentifier,
   normalizeLimit,
+  requireProjectKey,
+  requireUserScopeId,
   resolveUserScopeId,
   summarize,
   toMemoryType,
@@ -83,6 +85,13 @@ describe("tool utility input guards", () => {
     expect(() => summarize(12 as unknown as string)).toThrow(
       "content must be a string",
     );
+  });
+
+  it("trims direct scope identifiers before returning them", () => {
+    expect(requireProjectKey(" project-alpha ", "project")).toBe(
+      "project-alpha",
+    );
+    expect(requireUserScopeId(" alice ")).toBe("alice");
   });
 });
 

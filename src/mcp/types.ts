@@ -5,7 +5,6 @@
 import type {
   AuditLogRepository,
   AuditOutcome,
-  StoredAuditLogEntry,
 } from "../audit/audit-log-repository.js";
 import type { ServiceConfig } from "../config.js";
 import type {
@@ -113,8 +112,8 @@ export type CompactMemoryToolInput = {
   // v2 additions for the dry-run plan output.
   decayThreshold?: number;
   halfLifeDays?: number;
-  // P18: opt-in semantic dedup (paraphrases via cosine). When set,
-  // REPLACES exact-match dedup. Recommended 0.95 for paraphrases.
+  // Opt-in semantic dedup (paraphrases via cosine). When set, REPLACES
+  // exact-match dedup. Recommended 0.95 for paraphrases.
   // Threshold ∈ (0, 1]. Out: groups appear in CompactMemoryToolResult.
   // duplicateGroups identical to the exact-match path.
   semanticDedupThreshold?: number;
@@ -148,17 +147,10 @@ export type CompactMemoryToolResult = {
   duplicateGroups: DuplicateGroupView[];
   decayCandidates: DecayCandidateView[];
   summary: string;
-  // P17: populated when dryRun=false. compactionRunId is the server-generated
-  // UUID idempotency key; applyStats summarizes the destructive run.
+  // Populated when dryRun=false. compactionRunId is the server-generated UUID
+  // idempotency key; applyStats summarizes the destructive run.
   compactionRunId?: string;
   applyStats?: CompactionApplyStats;
-};
-
-export type CompactMemoryToolInput_v2Extension = {
-  // Records below this decay score are flagged for eviction (default 0.5).
-  decayThreshold?: number;
-  // Half-life in days for the decay curve (default 30).
-  halfLifeDays?: number;
 };
 
 export type ListMemoryToolInput = {
@@ -264,7 +256,7 @@ export type ListAuditLogToolResult = {
   entries: AuditLogEntryView[];
 };
 
-// P19.1 — unarchive recovery flow.
+// Unarchive recovery flow.
 export type UnarchiveMemoryToolInput = {
   organizationId?: string;
   archiveIds: number[];
@@ -358,10 +350,6 @@ export type McpToolAuthorizationInput = {
 export type McpToolAuthorizer = (
   input: McpToolAuthorizationInput,
 ) => MaybePromise<void>;
-
-// Internal alias — kept as a structural-equivalence point so ToolRegistry stays
-// decoupled from the concrete StoredAuditLogEntry shape over time.
-export type _AuditLogEntryRef = StoredAuditLogEntry;
 
 export type StartGoalRunToolInput = {
   organizationId?: string;

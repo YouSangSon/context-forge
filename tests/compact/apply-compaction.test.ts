@@ -427,11 +427,13 @@ describe("applyCompaction (apply path - happy path)", () => {
     );
   });
 
-  it("forwards organizationId to applyCompactionRecord (multi-tenancy guard)", async () => {
+  it("trims organizationId before apply-path repository calls", async () => {
     const archive = vi
       .fn()
       .mockResolvedValue({ archived: true, archiveId: 1, qdrantPointIds: [] });
-    const { repo } = makeRepoMocks({ applyCompactionRecord: archive });
+    const { repo, createCompactionRun } = makeRepoMocks({
+      applyCompactionRecord: archive,
+    });
     const qdrant = makeVectorIndex();
 
     const records = [
@@ -443,12 +445,19 @@ describe("applyCompaction (apply path - happy path)", () => {
       makeInput({
         records,
         dryRun: false,
-        organizationId: "finance-team",
+        organizationId: " finance-team ",
         decayThreshold: 0,
       }),
       makeDeps(repo, qdrant),
     );
 
+    expect(repo.countRecentApplyRuns).toHaveBeenCalledWith(
+      "finance-team",
+      60 * 60 * 1000,
+    );
+    expect(createCompactionRun).toHaveBeenCalledWith(
+      expect.objectContaining({ organizationId: "finance-team" }),
+    );
     expect(archive).toHaveBeenCalledWith(
       expect.objectContaining({ organizationId: "finance-team" }),
     );

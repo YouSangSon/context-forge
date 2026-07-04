@@ -827,7 +827,7 @@ describe("canonical indexing", () => {
           },
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
       caught = error;
     }
 
@@ -916,6 +916,68 @@ describe("canonical indexing", () => {
     expect(embeddings.embedBatch).not.toHaveBeenCalled();
     expect(vectorIndex.deleteByRecordIds).not.toHaveBeenCalled();
     expect(vectorIndex.upsert).not.toHaveBeenCalled();
+  });
+
+  it("reindexCanonicalMemory trims organizationId before repository and vector cleanup calls", async () => {
+    const scopes = [
+      { scopeType: "project" as const, scopeId: "project-alpha" },
+    ];
+    const chunk = {
+      id: 701,
+      memoryRecordId: 501,
+      chunkIndex: 0,
+      content: "Project chunk",
+      startOffset: 0,
+      endOffset: 13,
+      embeddingVersion: "v1",
+      organizationId: "org-a",
+      scopeType: "project" as const,
+      scopeId: "project-alpha",
+      projectKey: "project-alpha",
+      durability: "durable",
+      kind: "decision",
+      updatedAt: "2026-03-29T00:00:00.000Z",
+    };
+    const chunkRepository = {
+      listChunks: vi.fn().mockResolvedValue([chunk]),
+      updatePointIds: vi.fn().mockResolvedValue(undefined),
+    };
+    const embeddings = {
+      embed: vi.fn(),
+      embedBatch: vi.fn().mockResolvedValue([[0.1, 0.2]]),
+    };
+    const vectorIndex = {
+      upsert: vi.fn().mockResolvedValue(undefined),
+      query: vi.fn(),
+      delete: vi.fn(),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      ensureCollection: vi.fn(),
+    };
+
+    await reindexCanonicalMemory({
+      chunkRepository: chunkRepository as never,
+      embeddings,
+      vectorIndex,
+      organizationId: " org-a ",
+      scopes,
+      batchSize: 10,
+    });
+
+    expect(chunkRepository.listChunks).toHaveBeenNthCalledWith(
+      1,
+      "org-a",
+      scopes,
+      { limit: 10 },
+    );
+    expect(chunkRepository.listChunks).toHaveBeenNthCalledWith(
+      2,
+      "org-a",
+      scopes,
+      { limit: 10 },
+    );
+    expect(vectorIndex.deleteByRecordIds).toHaveBeenCalledWith([501], {
+      organizationId: "org-a",
+    });
   });
 
   it("reindexes stored chunks in pages without deleting a record after partial upsert", async () => {
@@ -1105,21 +1167,21 @@ describe("canonical indexing", () => {
         rows: [
           // reversed: chunk_index 1 before 0
           {
-            id: 2,
-            memory_record_id: 10,
-            chunk_index: 1,
+            id: "2",
+            memory_record_id: "10",
+            chunk_index: "1",
             content: "second chunk",
-            start_offset: 5,
-            end_offset: 11,
+            start_offset: "5",
+            end_offset: "11",
             embedding_version: "v1",
           },
           {
-            id: 1,
-            memory_record_id: 10,
-            chunk_index: 0,
+            id: "1",
+            memory_record_id: "10",
+            chunk_index: "0",
             content: "first chunk",
-            start_offset: 0,
-            end_offset: 5,
+            start_offset: "0",
+            end_offset: "5",
             embedding_version: "v1",
           },
         ],
@@ -1157,6 +1219,92 @@ describe("canonical indexing", () => {
     expect(result[0]!.id).toBe(1);
     expect(result[1]!.chunkIndex).toBe(1);
     expect(result[1]!.id).toBe(2);
+  });
+
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "memory chunk id must be a positive safe integer",
+    },
+    {
+      rowPatch: { id: "bad" },
+      message: "database number must be finite",
+    },
+    {
+      rowPatch: { memory_record_id: "1.5" },
+      message: "memory chunk memory_record_id must be a positive safe integer",
+    },
+    {
+      rowPatch: { content: null },
+      message: "memory chunk content must be a string",
+    },
+    {
+      rowPatch: { content: " \n\t " },
+      message: "memory chunk content must contain non-whitespace text",
+    },
+    {
+      rowPatch: { chunk_index: "1.5" },
+      message: "memory chunk chunk_index must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { start_offset: "-1" },
+      message: "memory chunk start_offset must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { start_offset: "6", end_offset: "5" },
+      message:
+        "memory chunk end_offset must be greater than or equal to start_offset",
+    },
+    {
+      rowPatch: { embedding_version: 42 },
+      message: "memory chunk embedding_version must be a string",
+    },
+    {
+      rowPatch: { embedding_version: " \n\t " },
+      message: "memory chunk embedding_version must contain non-whitespace text",
+    },
+  ])("insertChunks rejects malformed returned chunk rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "1",
+          memory_record_id: "10",
+          chunk_index: "0",
+          content: "first chunk",
+          start_offset: "0",
+          end_offset: "5",
+          embedding_version: "v1",
+          ...rowPatch,
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await expect(
+      repo.insertChunks({
+        record: createRecord({ id: 10, content: "first chunk" }),
+        chunks: [
+          {
+            chunkIndex: 0,
+            content: "first chunk",
+            startOffset: 0,
+            endOffset: 5,
+          },
+        ],
+        embedding: {
+          provider: "openai",
+          model: "text-embedding-3-small",
+          dimensions: 1536,
+          version: "v1",
+          targetTokens: 800,
+          overlapTokens: 120,
+        },
+      }),
+    ).rejects.toThrow(message);
   });
 
   it.each([
@@ -1354,6 +1502,51 @@ describe("canonical indexing", () => {
     expect(mockPool.query).not.toHaveBeenCalled();
   });
 
+  it("insertChunks trims record organizationId before querying", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "1",
+          memory_record_id: "10",
+          chunk_index: "0",
+          content: "first chunk",
+          start_offset: "0",
+          end_offset: "5",
+          embedding_version: "v1",
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+    const record = {
+      ...createRecord({ id: 10, content: "first chunk" }),
+      organizationId: " org-a ",
+    };
+
+    await repo.insertChunks({
+      record,
+      chunks: [
+        {
+          chunkIndex: 0,
+          content: "first chunk",
+          startOffset: 0,
+          endOffset: 5,
+        },
+      ],
+      embedding: {
+        provider: "openai",
+        model: "text-embedding-3-small",
+        dimensions: 1536,
+        version: "v1",
+        targetTokens: 800,
+        overlapTokens: 120,
+      },
+    });
+
+    const params = mockPool.query.mock.calls[0]![1] as unknown[];
+    expect(params[0]).toBe("org-a");
+  });
+
   it("deleteChunksForRecord rejects whitespace-only organizationId before querying", async () => {
     const mockPool = {
       query: vi.fn().mockResolvedValue({ rows: [] }),
@@ -1366,6 +1559,19 @@ describe("canonical indexing", () => {
     ).rejects.toThrow(/organizationId/);
 
     expect(mockPool.query).not.toHaveBeenCalled();
+  });
+
+  it("deleteChunksForRecord trims organizationId before querying", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await repo.deleteChunksForRecord(501, " org-a ");
+
+    const params = mockPool.query.mock.calls[0]![1] as unknown[];
+    expect(params).toEqual([501, "org-a"]);
   });
 
   it("deleteChunksForRecord rejects invalid recordId before querying", async () => {
@@ -1416,6 +1622,44 @@ describe("canonical indexing", () => {
     ).rejects.toThrow(/organizationId/);
 
     expect(mockPool.connect).not.toHaveBeenCalled();
+  });
+
+  it("replaceChunksForRecord trims record organizationId before deleting existing chunks", async () => {
+    const clientQueryCalls: { sql: string; params: unknown[] }[] = [];
+    const mockClient = {
+      query: vi.fn().mockImplementation((sql: string, params?: unknown[]) => {
+        clientQueryCalls.push({ sql, params: params ?? [] });
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const mockPool = {
+      query: vi.fn(),
+      connect: vi.fn().mockResolvedValue(mockClient),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await repo.replaceChunksForRecord!({
+      record: {
+        ...createRecord({ id: 501, content: "replacement chunk" }),
+        organizationId: " org-a ",
+      },
+      chunks: [],
+      embedding: {
+        provider: "openai",
+        model: "text-embedding-3-small",
+        dimensions: 1536,
+        version: "v1",
+        targetTokens: 800,
+        overlapTokens: 120,
+      },
+    });
+
+    const deleteQuery = clientQueryCalls.find((call) =>
+      call.sql.includes("DELETE FROM memory_chunks"),
+    );
+    expect(deleteQuery?.params).toEqual([501, "org-a"]);
+    expect(mockClient.release).toHaveBeenCalledOnce();
   });
 
   it("replaceChunksForRecordWithPendingIngest rejects invalid nextRetryAt before connecting", async () => {
@@ -1500,19 +1744,19 @@ describe("canonical indexing", () => {
         if (sql.includes("INSERT INTO memory_chunks")) {
           return Promise.resolve({
             rows: [{
-              id: 701,
-              memory_record_id: 501,
-              chunk_index: 0,
+              id: "701",
+              memory_record_id: "501",
+              chunk_index: "0",
               content: "replacement chunk",
-              start_offset: 0,
-              end_offset: 17,
+              start_offset: "0",
+              end_offset: "17",
               embedding_version: "v1",
             }],
           });
         }
         if (sql.includes("INSERT INTO ingest_jobs")) {
           return Promise.resolve({
-            rows: [{ id: 801, qdrant_attempts: 0 }],
+            rows: [{ id: "801", qdrant_attempts: "0" }],
           });
         }
         return Promise.resolve({ rows: [] });
@@ -1528,7 +1772,7 @@ describe("canonical indexing", () => {
     const result = await repo.replaceChunksForRecordWithPendingIngest!({
       record: {
         id: 501,
-        organizationId: "org-a",
+        organizationId: " org-a ",
         sourceId: 1,
         scopeType: "project",
         scopeId: "project-alpha",
@@ -1575,11 +1819,114 @@ describe("canonical indexing", () => {
       expect.stringContaining("INSERT INTO ingest_jobs"),
       "COMMIT",
     ]);
+    const deleteQuery = clientQueryCalls.find((call) =>
+      call.sql.includes("DELETE FROM memory_chunks"),
+    );
+    expect(deleteQuery?.params).toEqual([501, "org-a"]);
     const ingestInsert = clientQueryCalls.find((call) =>
       call.sql.includes("INSERT INTO ingest_jobs"),
     );
     expect(ingestInsert?.sql).toContain("qdrant_next_retry_at");
     expect(ingestInsert?.params).toEqual([501, "org-a", retryAt]);
+    expect(mockClient.release).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "ingest job id must be a positive safe integer",
+    },
+    {
+      rowPatch: { id: "bad" },
+      message: "database number must be finite",
+    },
+    {
+      rowPatch: { qdrant_attempts: "-1" },
+      message: "ingest job qdrant_attempts must be a non-negative safe integer",
+    },
+  ])("replaceChunksForRecordWithPendingIngest rejects malformed job rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const clientQueryCalls: { sql: string; params: unknown[] }[] = [];
+    const retryAt = new Date("2026-06-26T00:00:01.000Z");
+    const mockClient = {
+      query: vi.fn().mockImplementation((sql: string, params?: unknown[]) => {
+        clientQueryCalls.push({ sql, params: params ?? [] });
+        if (sql === "BEGIN" || sql === "COMMIT" || sql === "ROLLBACK") {
+          return Promise.resolve({ rows: [] });
+        }
+        if (sql.includes("INSERT INTO memory_chunks")) {
+          return Promise.resolve({
+            rows: [{
+              id: "701",
+              memory_record_id: "501",
+              chunk_index: "0",
+              content: "replacement chunk",
+              start_offset: "0",
+              end_offset: "17",
+              embedding_version: "v1",
+            }],
+          });
+        }
+        if (sql.includes("INSERT INTO ingest_jobs")) {
+          return Promise.resolve({
+            rows: [{ id: "801", qdrant_attempts: "0", ...rowPatch }],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const mockPool = {
+      query: vi.fn(),
+      connect: vi.fn().mockResolvedValue(mockClient),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await expect(
+      repo.replaceChunksForRecordWithPendingIngest!({
+        record: {
+          id: 501,
+          organizationId: "org-a",
+          sourceId: 1,
+          scopeType: "project",
+          scopeId: "project-alpha",
+          projectKey: "project-alpha",
+          memoryType: "fact",
+          content: "replacement chunk",
+          createdAt: "2026-06-26T00:00:00.000Z",
+          updatedAt: "2026-06-26T00:00:00.000Z",
+          source: {
+            id: 1,
+            scopeType: "project",
+            scopeId: "project-alpha",
+            sourceType: "document",
+            title: null,
+            uri: null,
+            createdAt: "2026-06-26T00:00:00.000Z",
+          },
+        },
+        chunks: [{
+          chunkIndex: 0,
+          content: "replacement chunk",
+          startOffset: 0,
+          endOffset: 17,
+        }],
+        embedding: {
+          provider: "openai",
+          model: "text-embedding-3-small",
+          dimensions: 1536,
+          version: "v1",
+          targetTokens: 800,
+          overlapTokens: 120,
+        },
+        nextRetryAt: retryAt,
+      }),
+    ).rejects.toThrow(message);
+
+    expect(clientQueryCalls.some(({ sql }) => sql === "ROLLBACK")).toBe(true);
+    expect(clientQueryCalls.some(({ sql }) => sql === "COMMIT")).toBe(false);
     expect(mockClient.release).toHaveBeenCalledOnce();
   });
 
@@ -1648,6 +1995,37 @@ describe("canonical indexing", () => {
     ).rejects.toThrow(/organizationId/);
 
     expect(mockPool.query).not.toHaveBeenCalled();
+  });
+
+  it("listChunks trims organizationId before querying", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await repo.listChunks(" org-a ", [
+      { scopeType: "project" as const, scopeId: "shared-project" },
+    ]);
+
+    const params = mockPool.query.mock.calls[0]![1] as unknown[];
+    expect(params[0]).toBe("org-a");
+  });
+
+  it("listChunks trims scope IDs before querying", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await repo.listChunks("org-a", [
+      { scopeType: "project" as const, scopeId: " shared-project " },
+    ]);
+
+    const params = mockPool.query.mock.calls[0]![1] as unknown[];
+    expect(params).toContain("shared-project");
+    expect(params).not.toContain(" shared-project ");
   });
 
   it.each([
@@ -1724,6 +2102,229 @@ describe("canonical indexing", () => {
     ]);
   });
 
+  it("listChunks maps string numeric chunk row values", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "701",
+          memory_record_id: "501",
+          chunk_index: "0",
+          content: "stored chunk",
+          start_offset: "0",
+          end_offset: "12",
+          embedding_version: "v1",
+          organization_id: "org-a",
+          scope_type: "project",
+          scope_id: "shared-project",
+          project_key: "shared-project",
+          durability: "durable",
+          kind: "summary",
+          title: null,
+          summary: null,
+          tags: [],
+          updated_at: "2026-01-01T00:00:00.000Z",
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    const chunks = await repo.listChunks("org-a", [
+      { scopeType: "project", scopeId: "shared-project" },
+    ]);
+
+    expect(chunks).toEqual([
+      expect.objectContaining({
+        id: 701,
+        memoryRecordId: 501,
+        chunkIndex: 0,
+        startOffset: 0,
+        endOffset: 12,
+        tags: [],
+      }),
+    ]);
+  });
+
+  it("listChunks trims stored metadata text without changing chunk content", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "701",
+          memory_record_id: "501",
+          chunk_index: "0",
+          content: " stored chunk ",
+          start_offset: "0",
+          end_offset: "14",
+          embedding_version: " v1 ",
+          organization_id: " org-a ",
+          scope_type: "project",
+          scope_id: " shared-project ",
+          project_key: " shared-project ",
+          durability: "durable",
+          kind: "summary",
+          title: " Stored title ",
+          summary: " Stored summary ",
+          tags: [" ops ", " runbook "],
+          updated_at: "2026-01-01T00:00:00.000Z",
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    const chunks = await repo.listChunks("org-a", [
+      { scopeType: "project", scopeId: "shared-project" },
+    ]);
+
+    expect(chunks).toEqual([
+      expect.objectContaining({
+        content: " stored chunk ",
+        embeddingVersion: "v1",
+        organizationId: "org-a",
+        scopeId: "shared-project",
+        projectKey: "shared-project",
+        title: "Stored title",
+        summary: "Stored summary",
+        tags: ["ops", "runbook"],
+      }),
+    ]);
+  });
+
+  it.each([
+    {
+      rowPatch: { scope_type: "team" },
+      message: "memory chunk scope_type must be one of: user, project",
+    },
+    {
+      rowPatch: { kind: "note" },
+      message: "memory chunk kind must be one of: decision, summary, fact",
+    },
+    {
+      rowPatch: { durability: "permanent" },
+      message:
+        "memory chunk durability must be one of: ephemeral, durable, archived",
+    },
+  ])("listChunks rejects malformed reindex row enum values %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "701",
+          memory_record_id: "501",
+          chunk_index: "0",
+          content: "stored chunk",
+          start_offset: "0",
+          end_offset: "12",
+          embedding_version: "v1",
+          organization_id: "org-a",
+          scope_type: "project",
+          scope_id: "shared-project",
+          project_key: "shared-project",
+          durability: "durable",
+          kind: "summary",
+          title: null,
+          summary: null,
+          tags: [],
+          updated_at: "2026-01-01T00:00:00.000Z",
+          ...rowPatch,
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await expect(
+      repo.listChunks("org-a", [
+        { scopeType: "project", scopeId: "shared-project" },
+      ]),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "memory chunk organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message: "memory chunk organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { scope_id: 42 },
+      message: "memory chunk scope_id must be a string",
+    },
+    {
+      rowPatch: { scope_id: " \n\t " },
+      message: "memory chunk scope_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { project_key: 42 },
+      message: "memory chunk project_key must be a string or null",
+    },
+    {
+      rowPatch: { title: 42 },
+      message: "memory chunk title must be a string or null",
+    },
+    {
+      rowPatch: { summary: 42 },
+      message: "memory chunk summary must be a string or null",
+    },
+    {
+      rowPatch: { tags: null },
+      message: "memory chunk tags must be an array",
+    },
+    {
+      rowPatch: { tags: "ops" },
+      message: "memory chunk tags must be an array",
+    },
+    {
+      rowPatch: { tags: [42] },
+      message: "memory chunk tags[0] must be a string",
+    },
+    {
+      rowPatch: { tags: [" \n\t "] },
+      message: "memory chunk tags[0] must contain non-whitespace text",
+    },
+  ])("listChunks rejects malformed reindex row scalar values %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "701",
+          memory_record_id: "501",
+          chunk_index: "0",
+          content: "stored chunk",
+          start_offset: "0",
+          end_offset: "12",
+          embedding_version: "v1",
+          organization_id: "org-a",
+          scope_type: "project",
+          scope_id: "shared-project",
+          project_key: "shared-project",
+          durability: "durable",
+          kind: "summary",
+          title: null,
+          summary: null,
+          tags: [],
+          updated_at: "2026-01-01T00:00:00.000Z",
+          ...rowPatch,
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await expect(
+      repo.listChunks("org-a", [
+        { scopeType: "project", scopeId: "shared-project" },
+      ]),
+    ).rejects.toThrow(message);
+  });
+
   it("getChunksByRecordId rejects invalid recordId before querying", async () => {
     const mockPool = {
       query: vi.fn().mockResolvedValue({ rows: [] }),
@@ -1736,6 +2337,47 @@ describe("canonical indexing", () => {
     );
 
     expect(mockPool.query).not.toHaveBeenCalled();
+  });
+
+  it("getChunksByRecordId maps string numeric chunk row values", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [{
+          id: "702",
+          memory_record_id: "502",
+          chunk_index: "1",
+          content: "stored chunk",
+          start_offset: "5",
+          end_offset: "17",
+          embedding_version: "v1",
+          organization_id: "org-a",
+          scope_type: "project",
+          scope_id: "shared-project",
+          project_key: null,
+          durability: "durable",
+          kind: "fact",
+          title: null,
+          summary: null,
+          tags: ["ops"],
+          updated_at: "2026-01-01T00:00:00.000Z",
+        }],
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    const chunks = await repo.getChunksByRecordId(502);
+
+    expect(chunks).toEqual([
+      expect.objectContaining({
+        id: 702,
+        memoryRecordId: 502,
+        chunkIndex: 1,
+        startOffset: 5,
+        endOffset: 17,
+        tags: ["ops"],
+      }),
+    ]);
   });
 
   it("createContextPackRun rejects whitespace-only organizationId before querying", async () => {
@@ -1756,6 +2398,25 @@ describe("canonical indexing", () => {
     ).rejects.toThrow(/organizationId/);
 
     expect(mockPool.query).not.toHaveBeenCalled();
+  });
+
+  it("createContextPackRun trims organizationId before querying", async () => {
+    const mockPool = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+      connect: vi.fn(),
+    };
+    const repo = createMemoryChunkRepository(mockPool as never);
+
+    await repo.createContextPackRun({
+      organizationId: " org-a ",
+      projectKey: "project-alpha",
+      task: "Summarize project risks",
+      selectedMemoryIds: ["project:project-alpha:1"],
+      packMarkdown: "# Context Pack",
+    });
+
+    const params = mockPool.query.mock.calls[0]![1] as unknown[];
+    expect(params[0]).toBe("org-a");
   });
 
   it.each([

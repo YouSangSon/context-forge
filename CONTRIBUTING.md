@@ -35,14 +35,20 @@ Daily commands:
 | MCP server watch mode | `npm run dev:mcp` |
 | CLI watch mode | `npm run dev:cli` |
 | Type-check | `npm run typecheck` |
-| Run all tests | `npm run test` |
+| Build | `npm run build` |
+| Dependency audit | `npm audit --audit-level=moderate` |
+| Run all tests | `npm test` |
 | Watch tests | `npm run test:watch` |
 | Apply migrations | `npm run db:migrate` |
 
-The 3 PG-dependent test files (`tests/store/memory-repository.test.ts`,
+The Postgres-backed repository/migration suites
+(`tests/store/memory-repository.test.ts`,
 `tests/jobs/ingest-job-repository.test.ts`, `tests/db/migrate.test.ts`) skip
 gracefully when Postgres on `127.0.0.1:5432` isn't reachable; bring it up via
-`docker compose up -d postgres` if you want them to run locally.
+`docker compose up -d postgres` if you want them to run locally. Pgvector
+adapter integration cases in `tests/vector/pgvector-index.integration.test.ts`
+skip unless `PGVECTOR_TEST_URL` is set; CI runs them in the
+`pgvector-integration` job.
 
 ## Code conventions
 
@@ -91,7 +97,8 @@ populated databases.
    - `docs:` documentation only
    - `test:` test additions or fixes
    - `chore:` deps, build, tooling
-3. **Tests + typecheck pass locally** before pushing.
+3. **Verification passes locally** before pushing: `npm run typecheck`,
+   `npm run build`, `npm audit --audit-level=moderate`, and `npm test`.
 4. **CHANGELOG.md**: add a line to the `## [Unreleased]` section describing
    the user-visible change (skip for purely internal refactors).
 5. **PR description**: link the issue if any, describe what changed and why,

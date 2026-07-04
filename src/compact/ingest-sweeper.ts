@@ -85,6 +85,7 @@ async function sweepOne(
   getNow: () => Date,
 ): Promise<"completed" | "retry" | "failed"> {
   try {
+    const organizationId = job.organizationId.trim();
     const chunks = await input.chunkRepository.getChunksByRecordId(
       job.memoryRecordId,
     );
@@ -117,7 +118,7 @@ async function sweepOne(
     }
 
     await input.vectorIndex.deleteByRecordIds([job.memoryRecordId], {
-      organizationId: job.organizationId,
+      organizationId,
     });
 
     const points = chunks.map((chunk, index) =>
@@ -295,11 +296,11 @@ function assertReindexableMemoryChunk(chunk: unknown, index: number): void {
     candidate.organizationId,
     `${prefix}.organizationId`,
   );
-  assertNonBlankString(candidate.scopeType, `${prefix}.scopeType`);
+  assertScopeType(candidate.scopeType, `${prefix}.scopeType`);
   assertNonBlankString(candidate.scopeId, `${prefix}.scopeId`);
   assertOptionalStringOrNull(candidate.projectKey, `${prefix}.projectKey`);
-  assertNonBlankString(candidate.kind, `${prefix}.kind`);
-  assertOptionalNonBlankString(candidate.durability, `${prefix}.durability`);
+  assertMemoryKind(candidate.kind, `${prefix}.kind`);
+  assertOptionalDurability(candidate.durability, `${prefix}.durability`);
   assertOptionalStringOrNull(candidate.title, `${prefix}.title`);
   assertOptionalStringOrNull(candidate.summary, `${prefix}.summary`);
   assertOptionalStringArray(candidate.tags, `${prefix}.tags`);
@@ -391,6 +392,36 @@ function assertOptionalNonBlankString(
     return;
   }
   assertNonBlankString(value, fieldName);
+}
+
+function assertScopeType(value: unknown, fieldName: string): void {
+  assertNonBlankString(value, fieldName);
+  if (value !== "user" && value !== "project") {
+    throw new Error(`${fieldName} must be one of: user, project`);
+  }
+}
+
+function assertMemoryKind(value: unknown, fieldName: string): void {
+  assertNonBlankString(value, fieldName);
+  if (value !== "decision" && value !== "summary" && value !== "fact") {
+    throw new Error(`${fieldName} must be one of: decision, summary, fact`);
+  }
+}
+
+function assertOptionalDurability(value: unknown, fieldName: string): void {
+  if (value === undefined) {
+    return;
+  }
+  assertNonBlankString(value, fieldName);
+  if (
+    value !== "ephemeral" &&
+    value !== "durable" &&
+    value !== "archived"
+  ) {
+    throw new Error(
+      `${fieldName} must be one of: ephemeral, durable, archived`,
+    );
+  }
 }
 
 function assertOptionalStringOrNull(value: unknown, fieldName: string): void {

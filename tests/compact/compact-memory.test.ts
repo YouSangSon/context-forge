@@ -135,7 +135,8 @@ describe("buildCompactionPlan", () => {
     expect(result.dryRun).toBe(false);
     expect(result.summary).toContain("Applied");
     expect(result.summary).toContain("user scope alice");
-    // archivedIds remains [] in this PR — apply path lands in P17 step 3.
+    // buildCompactionPlan is planning/summary-only; applyCompaction fills
+    // actual archived IDs when the orchestrator performs an apply.
     expect(result.archivedIds).toEqual([]);
   });
 

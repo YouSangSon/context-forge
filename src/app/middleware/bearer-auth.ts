@@ -1,5 +1,4 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import type { IncomingMessage } from "node:http";
 
 // Each configured token may bind to a single organization. Format:
 //   "rawToken"             -> no binding (legacy: any org allowed)
@@ -113,30 +112,54 @@ export async function authenticateBearer(
   }
 
   const oauthMatch = await oauthVerifier.verify(provided);
-  return oauthMatch ? { ...oauthMatch, token: provided, authType: "oauth" } : null;
+  return normalizeOAuthVerifierResult(oauthMatch, provided);
 }
 
-export function matchBearerFromRequest(
-  req: IncomingMessage,
-  tokens: readonly BearerToken[],
+function normalizeOAuthVerifierResult(
+  value: BearerToken | null,
+  providedToken: string,
 ): BearerToken | null {
-  const header = req.headers.authorization;
-  return matchBearer(typeof header === "string" ? header : undefined, tokens);
-}
+  if (value === null) {
+    return null;
+  }
 
-// Backward-compatible boolean check used by older call sites.
-export function checkBearer(
-  authHeader: string | undefined,
-  tokens: readonly BearerToken[],
-): boolean {
-  return matchBearer(authHeader, tokens) !== null;
-}
+  const candidate = assertObject(value, "OAuth verifier result");
+  if (typeof candidate.token !== "string") {
+    throw new Error("OAuth verifier result.token must be a string");
+  }
+  assertNonBlankString(candidate.token, "OAuth verifier result.token");
 
-export function checkBearerFromRequest(
-  req: IncomingMessage,
-  tokens: readonly BearerToken[],
-): boolean {
-  return matchBearerFromRequest(req, tokens) !== null;
+  const organizationId = candidate.organizationId;
+  if (organizationId !== undefined && typeof organizationId !== "string") {
+    throw new Error("OAuth verifier result.organizationId must be a string");
+  }
+  if (organizationId !== undefined) {
+    assertNonBlankString(
+      organizationId,
+      "OAuth verifier result.organizationId",
+    );
+  }
+
+  const scopes = candidate.scopes;
+  if (scopes !== undefined) {
+    if (!Array.isArray(scopes)) {
+      throw new Error("OAuth verifier result.scopes must be an array");
+    }
+    for (const [index, scope] of scopes.entries()) {
+      if (typeof scope !== "string") {
+        throw new Error(`OAuth verifier result.scopes[${index}] must be a string`);
+      }
+    }
+  }
+
+  return {
+    ...value,
+    token: providedToken,
+    authType: "oauth",
+    ...(organizationId !== undefined
+      ? { organizationId: organizationId.trim() }
+      : {}),
+  };
 }
 
 function extractBearerValue(authHeader: string | undefined): string | null {
@@ -149,6 +172,19 @@ function extractBearerValue(authHeader: string | undefined): string | null {
 
   const provided = authHeader.slice("Bearer ".length).trim();
   return provided.length > 0 ? provided : null;
+}
+
+function assertObject(value: unknown, fieldName: string): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an object`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function assertNonBlankString(value: string, fieldName: string): void {
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
 }
 
 function tokenDigest(token: string): Buffer {

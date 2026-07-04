@@ -27,22 +27,37 @@ export type PgPool = PgQueryable & {
 type PgPoolConstructor = new (config: {
   connectionString: string;
   max: number;
+  idleTimeoutMillis: number;
+  connectionTimeoutMillis: number;
 }) => PgPool;
 
 const { Pool: NodePostgresPool } = require("pg") as {
   Pool: PgPoolConstructor;
 };
 
+export type PgPoolOptions = {
+  max: number;
+  idleTimeoutMillis: number;
+  connectionTimeoutMillis: number;
+};
+
 export type CreatePgPoolInput = {
   connectionString: string;
+} & Partial<PgPoolOptions>;
+
+export const DEFAULT_PG_POOL_OPTIONS: PgPoolOptions = {
+  max: 10,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000,
 };
 
 export function createPgPool(input: CreatePgPoolInput): PgPool {
   assertCreatePgPoolInput(input);
+  const options = resolvePgPoolOptions(input);
 
   return new NodePostgresPool({
-    connectionString: input.connectionString,
-    max: 10,
+    connectionString: input.connectionString.trim(),
+    ...options,
   });
 }
 
@@ -51,6 +66,26 @@ function assertCreatePgPoolInput(
 ): asserts value is CreatePgPoolInput {
   const candidate = assertObject(value, "pg pool input");
   assertNonBlankText(candidate.connectionString, "connectionString");
+  assertOptionalPositiveSafeInteger(candidate.max, "max");
+  assertOptionalPositiveSafeInteger(
+    candidate.idleTimeoutMillis,
+    "idleTimeoutMillis",
+  );
+  assertOptionalPositiveSafeInteger(
+    candidate.connectionTimeoutMillis,
+    "connectionTimeoutMillis",
+  );
+}
+
+function resolvePgPoolOptions(input: CreatePgPoolInput): PgPoolOptions {
+  return {
+    max: input.max ?? DEFAULT_PG_POOL_OPTIONS.max,
+    idleTimeoutMillis:
+      input.idleTimeoutMillis ?? DEFAULT_PG_POOL_OPTIONS.idleTimeoutMillis,
+    connectionTimeoutMillis:
+      input.connectionTimeoutMillis ??
+      DEFAULT_PG_POOL_OPTIONS.connectionTimeoutMillis,
+  };
 }
 
 function assertObject(
@@ -72,5 +107,17 @@ function assertNonBlankText(
   }
   if (value.trim().length === 0) {
     throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
+}
+
+function assertOptionalPositiveSafeInteger(
+  value: unknown,
+  fieldName: string,
+): void {
+  if (value === undefined) {
+    return;
+  }
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
   }
 }

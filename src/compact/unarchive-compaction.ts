@@ -23,7 +23,6 @@ import type {
   MemoryType,
   ScopeType,
   SearchMemoryResult,
-  SourceType,
 } from "../types.js";
 import { chunkText } from "../chunk/chunk-text.js";
 import type {
@@ -87,6 +86,7 @@ export async function unarchiveCompaction(
   deps: Readonly<UnarchiveCompactionDeps>,
 ): Promise<UnarchiveResult> {
   assertUnarchiveCompactionInput(input);
+  const scopedOrganizationId = input.organizationId.trim();
 
   const startedAt = (deps.now ?? (() => new Date()))();
 
@@ -102,7 +102,7 @@ export async function unarchiveCompaction(
 
   const archives = await deps.archiveRepository.findArchiveByIds(
     input.archiveIds,
-    input.organizationId,
+    scopedOrganizationId,
   );
 
   // Map by id so we can report "not found" for archive ids that weren't
@@ -138,7 +138,7 @@ export async function unarchiveCompaction(
     }
 
     try {
-      const outcome = await restoreOne(archive, input.organizationId, deps);
+      const outcome = await restoreOne(archive, scopedOrganizationId, deps);
       outcomes.push(outcome);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -173,8 +173,17 @@ async function restoreOne(
   let upsertedPointIds: string[] = [];
 
   try {
+    const archiveScopeType = toUnarchiveArchiveScopeType(archive.scopeType);
+    const archiveKind = toUnarchiveArchiveKind(archive.kind);
+    const archiveDurability = toUnarchiveArchiveDurability(archive.durability);
+    const restorableArchive: ArchiveRow = {
+      ...archive,
+      scopeType: archiveScopeType,
+      kind: archiveKind,
+      durability: archiveDurability,
+    };
     const restored = await deps.archiveRepository.restoreToCanonical(
-      archive,
+      restorableArchive,
       organizationId,
     );
     restoredRecordId = restored.restoredRecordId;
@@ -187,22 +196,22 @@ async function restoreOne(
       id: restoredRecordId,
       organizationId,
       sourceId: archive.sourceId!,
-      scopeType: archive.scopeType as ScopeType,
+      scopeType: archiveScopeType,
       scopeId: archive.scopeId,
       projectKey: archive.projectKey,
-      memoryType: archive.kind as MemoryType,
+      memoryType: archiveKind,
       title: archive.title,
       content: archive.content,
       summary: archive.summary,
-      durability: archive.durability as Durability,
+      durability: archiveDurability,
       importance: archive.importance,
       createdAt: archive.originalCreatedAt,
       updatedAt: archive.originalUpdatedAt,
       source: {
         id: archive.sourceId!,
-        scopeType: archive.scopeType as ScopeType,
+        scopeType: archiveScopeType,
         scopeId: archive.scopeId,
-        sourceType: "document" as SourceType,
+        sourceType: "document",
         externalId: `restored-from-archive-${archive.id}`,
         title: archive.title,
         uri: null,
@@ -314,6 +323,31 @@ function assertPositiveSafeIntegerArray(
       );
     }
   }
+}
+
+function toUnarchiveArchiveScopeType(value: unknown): ScopeType {
+  if (value === "user" || value === "project") {
+    return value;
+  }
+  throw new Error("unarchive archive scopeType must be one of: user, project");
+}
+
+function toUnarchiveArchiveKind(value: unknown): MemoryType {
+  if (value === "decision" || value === "fact" || value === "summary") {
+    return value;
+  }
+  throw new Error(
+    "unarchive archive kind must be one of: decision, summary, fact",
+  );
+}
+
+function toUnarchiveArchiveDurability(value: unknown): Durability {
+  if (value === "ephemeral" || value === "durable" || value === "archived") {
+    return value;
+  }
+  throw new Error(
+    "unarchive archive durability must be one of: ephemeral, durable, archived",
+  );
 }
 
 async function compensateFailedRestore(args: {

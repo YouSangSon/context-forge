@@ -114,7 +114,7 @@ export function startBackgroundSweeper(
       if (inFlight) {
         try {
           await inFlight;
-        } catch {
+        } catch (_err: unknown) {
           // Already logged in tick; swallow during shutdown.
         }
       }
@@ -196,8 +196,8 @@ function assertFunction(value: unknown, fieldName: string): void {
 export { runOutboxSweep };
 
 // Resolves the env-driven enable flag. Used by startOperatorServer to
-// decide whether to spin up the loop. Default: disabled (P19 ships the
-// machinery; ops opts in per deploy).
+// decide whether to spin up the loop. Default: disabled; ops opts in per
+// deploy.
 export function loadSweeperEnabled(env: NodeJS.ProcessEnv): boolean {
   const raw = env.COMPACTION_SWEEP_ENABLED;
   if (!raw) return false;

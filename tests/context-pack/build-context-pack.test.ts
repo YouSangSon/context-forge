@@ -525,6 +525,44 @@ Next step: validate migration paths.`,
     expect(pack.markdown).toContain("Real note: rotate keys monthly");
   });
 
+  it("uses sourceRef when a rendered source has no title or externalId", () => {
+    const record = createResult({
+      id: 1002,
+      memoryType: "fact",
+      content: "Use bounded retries for vector cleanup.",
+    });
+    record.source.title = null;
+    delete record.source.externalId;
+    record.source.sourceRef = "session-1002";
+
+    const pack = buildContextPack({
+      records: [record],
+    });
+
+    expect(pack.markdown).toContain("source: session-1002");
+    expect(pack.markdown).not.toContain("source: undefined");
+  });
+
+  it("uses the first nonblank source label while rendering", () => {
+    const record = createResult({
+      id: 1003,
+      memoryType: "fact",
+      content: "Keep context pack source labels readable.",
+      source: {
+        title: " \n\t ",
+        externalId: "memory-1003",
+      },
+    });
+    record.source.sourceRef = " docs/context.md ";
+
+    const pack = buildContextPack({
+      records: [record],
+    });
+
+    expect(pack.markdown).toContain("source: docs/context.md");
+    expect(pack.markdown).not.toContain("source:  ");
+  });
+
   it.each([undefined, null, "input", 12, true, []])(
     "rejects non-object direct input",
     (input) => {
@@ -574,6 +612,15 @@ Next step: validate migration paths.`,
         },
       },
       "records[0].source.title must be a string or null",
+    ],
+    [
+      {
+        source: {
+          ...createResult({}).source,
+          sourceRef: 42,
+        },
+      },
+      "records[0].source.sourceRef must be a string",
     ],
     [
       {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createToolRegistry } from "../../src/mcp/server.js";
+import type { Logger } from "../../src/logger.js";
 import type { AuditLogRepository } from "../../src/audit/audit-log-repository.js";
 import type { CanonicalServices } from "../../src/mcp/types.js";
 import type { MemoryRepository, SearchMemoryResult } from "../../src/types.js";
@@ -8,6 +9,26 @@ function buildAuditLog(): AuditLogRepository {
   return {
     record: vi.fn().mockResolvedValue(undefined),
     listByOrganization: vi.fn().mockResolvedValue([]),
+  };
+}
+
+function buildLogger(): {
+  logger: Logger;
+  childLogger: {
+    info: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+  };
+} {
+  const childLogger = {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+  };
+
+  return {
+    logger: { child: vi.fn(() => childLogger) } as unknown as Logger,
+    childLogger,
   };
 }
 
@@ -83,6 +104,30 @@ describe("audit logging at the tool boundary", () => {
     );
   });
 
+  it("trims organizationId before writing successful audit rows", async () => {
+    const auditLog = buildAuditLog();
+    const repository = buildRepository();
+    const registry = createToolRegistry({
+      repository,
+      auditLog,
+      defaultActor: "alice@example.com",
+    });
+
+    await registry.add_memory({
+      projectKey: "project-alpha",
+      organizationId: " dev-team ",
+      kind: "decision",
+      content: "Decision: ship feature X",
+    });
+
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "dev-team",
+        outcome: "ok",
+      }),
+    );
+  });
+
   it("records an error audit row when the tool throws", async () => {
     const auditLog = buildAuditLog();
     const repository = buildRepository();
@@ -137,7 +182,8 @@ describe("audit logging at the tool boundary", () => {
       listByOrganization: vi.fn().mockResolvedValue([]),
     };
     const repository = buildRepository();
-    const registry = createToolRegistry({ repository, auditLog });
+    const { logger, childLogger } = buildLogger();
+    const registry = createToolRegistry({ repository, auditLog, logger });
 
     await expect(
       registry.add_memory({
@@ -146,6 +192,50 @@ describe("audit logging at the tool boundary", () => {
         content: "x",
       }),
     ).resolves.toBeDefined();
+    await vi.waitFor(() => expect(childLogger.warn).toHaveBeenCalledTimes(1));
+    expect(childLogger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "audit.record_failed",
+        auditOutcome: "ok",
+        err: expect.any(Error),
+        tool: "add_memory",
+      }),
+      expect.stringContaining("audit record failed"),
+    );
+  });
+
+  it("logs error audit row failures without masking the tool error", async () => {
+    const auditLog: AuditLogRepository = {
+      record: vi.fn().mockRejectedValue(new Error("audit infra down")),
+      listByOrganization: vi.fn().mockResolvedValue([]),
+    };
+    const repository = buildRepository();
+    (repository.addMemory as ReturnType<typeof vi.fn>).mockImplementation(
+      () => {
+        throw new Error("repository down");
+      },
+    );
+    const { logger, childLogger } = buildLogger();
+    const registry = createToolRegistry({ repository, auditLog, logger });
+
+    await expect(
+      registry.add_memory({
+        projectKey: "project-alpha",
+        kind: "decision",
+        content: "x",
+      }),
+    ).rejects.toThrow(/repository down/);
+
+    await vi.waitFor(() => expect(childLogger.warn).toHaveBeenCalledTimes(1));
+    expect(childLogger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "audit.record_failed",
+        auditOutcome: "error",
+        err: expect.any(Error),
+        tool: "add_memory",
+      }),
+      expect.stringContaining("audit record failed"),
+    );
   });
 
   it("does not call record when no auditLog is configured", async () => {

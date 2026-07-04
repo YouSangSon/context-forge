@@ -322,6 +322,32 @@ describe("unarchiveCompaction (happy path)", () => {
       "finance-team",
     );
   });
+
+  it("trims organizationId before forwarding restored side effects", async () => {
+    const archive = makeArchive({ organizationId: "finance-team" });
+    const repo = makeRepo([archive]);
+    const deps = makeDeps(repo);
+
+    await unarchiveCompaction(
+      { archiveIds: [50], organizationId: " finance-team ", actor: "ops" },
+      deps,
+    );
+
+    expect(repo.findArchiveByIds).toHaveBeenCalledWith([50], "finance-team");
+    expect(repo.restoreToCanonical).toHaveBeenCalledWith(
+      archive,
+      "finance-team",
+    );
+
+    const insertChunksInput = (deps.chunkRepository.insertChunks as ReturnType<
+      typeof vi.fn
+    >).mock.calls[0]![0] as { record: { organizationId: string } };
+    expect(insertChunksInput.record.organizationId).toBe("finance-team");
+
+    const upsertedPoints = (deps.vectorIndex.upsert as ReturnType<typeof vi.fn>)
+      .mock.calls[0]![0] as Array<{ payload: Record<string, unknown> }>;
+    expect(upsertedPoints[0]!.payload.organization_id).toBe("finance-team");
+  });
 });
 
 describe("unarchiveCompaction (skip cases)", () => {
@@ -383,6 +409,50 @@ describe("unarchiveCompaction (skip cases)", () => {
 });
 
 describe("unarchiveCompaction (failure isolation)", () => {
+  it.each([
+    {
+      archivePatch: { scopeType: "team" },
+      message: "unarchive archive scopeType must be one of: user, project",
+    },
+    {
+      archivePatch: { kind: "note" },
+      message:
+        "unarchive archive kind must be one of: decision, summary, fact",
+    },
+    {
+      archivePatch: { durability: "permanent" },
+      message:
+        "unarchive archive durability must be one of: ephemeral, durable, archived",
+    },
+  ])(
+    "fails malformed archive enum values before restore side effects %#",
+    async ({ archivePatch, message }) => {
+      const repo = makeRepo([makeArchive(archivePatch)]);
+      const deps = makeDeps(repo);
+
+      const result = await unarchiveCompaction(
+        { archiveIds: [50], organizationId: "org-a", actor: "ops" },
+        deps,
+      );
+
+      expect(result).toMatchObject({
+        restoredCount: 0,
+        skippedCount: 0,
+        failedCount: 1,
+      });
+      expect(result.outcomes[0]).toEqual({
+        archiveId: 50,
+        status: "failed",
+        error: message,
+      });
+      expect(repo.restoreToCanonical).not.toHaveBeenCalled();
+      expect(deps.chunkRepository.insertChunks).not.toHaveBeenCalled();
+      expect(deps.embeddings.embedBatch).not.toHaveBeenCalled();
+      expect(deps.vectorIndex.upsert).not.toHaveBeenCalled();
+      expect(repo.markUnarchived).not.toHaveBeenCalled();
+    },
+  );
+
   it("deletes the restored canonical row when embedding fails after restore", async () => {
     const repo = makeRepo([makeArchive({ id: 50 })]);
     const deps = makeDeps(repo);

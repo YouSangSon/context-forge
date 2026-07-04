@@ -25,12 +25,34 @@ changes; CHANGELOG entries call those out explicitly.
 - Dedicated sweeper worker: `npm run start:worker` / `npm run dev:worker` run
   the compaction and ingest sweepers outside request-serving replicas while
   preserving the existing opt-in HTTP-server path.
+- Memory governance UI: the static `/admin/memory` shell now reports
+  load/save/tag/archive failures through visible status text, keeps
+  API-provided errors, includes HTTP status details for non-JSON failures, and
+  avoids sending non-finite numeric form values as JSON `null`.
 - PR #19 added MCP Streamable HTTP at `/mcp`, MCP resources, MCP prompts, and
   structured MCP tool output for clients that consume typed results.
 - Docs: public docs now describe descriptor-shared validation, non-root
   container runtime defaults, production credential replacement, and atomic
   archive-cleanup claim semantics; stale pgvector reindex follow-up comments
   removed to match current behavior.
+- npm package tarball surface: published packages now include built runtime
+  output under `dist/`, exclude root source/tests/CI/internal work tracking plus
+  source-checkout-only `install.sh`, Docker/Compose assets, and the compiled
+  eval harness, and `prepack` rebuilds a clean `dist/` before pack/publish.
+- npm package metadata: the package description now reflects Postgres-backed
+  storage with Qdrant or pgvector search instead of implying Qdrant-only
+  operation, and npm keywords now include `pgvector`.
+- Docs: Korean public-document body links now point to Korean mirrors where
+  available.
+- Docs: Korean backup guidance now keeps pgvector logical-data-path wording in
+  Korean instead of inheriting the English README phrasing.
+- Docs: Korean README comparison copy now uses localized positioning language
+  instead of mixed English phrases.
+- Docs: Korean README comparison table now localizes non-code status labels.
+- Docs: Korean setup, embedding, and backup snippets now localize `default`,
+  `stub`, and backend-aware labels in public Korean docs.
+- Docs: configuration guidance now states that `MEMORY_API_TOKENS` token values
+  cannot contain colons because `:` is reserved for `token:org` binding.
 
 Post-release audit cycle. v1.0.0 shipped with 0 OSS users, so this window
 was the safe time to tighten default-strict behavior on multi-tenancy
@@ -300,7 +322,7 @@ small actual impact surface.
   switching in either direction, not a one-time migration.
   ([`a3b456a`](https://github.com/YouSangSon/akasha/commit/a3b456a))
 - **README landing tightened for 30-second value comprehension** — added
-  CI / License / MCP-compatible / Node ≥20 badges, leading tagline
+  CI / License / MCP-compatible / Node ≥22 badges, leading tagline
   "Persistent memory for AI coding agents — free, local, self-hosted" +
   elevator paragraph surfacing the differentiator (no API key, $0 cost,
   data stays on your box). Quick-start fix: "fill in `OPENAI_API_KEY` at

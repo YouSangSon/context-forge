@@ -22,6 +22,13 @@ function buildConfig(overrides: Partial<ServiceConfig> = {}): ServiceConfig {
     host: "127.0.0.1",
     port: 8787,
     databaseUrl: "postgres://memory:memory@127.0.0.1:5432/memory_os",
+    postgres: {
+      pool: {
+        max: 10,
+        idleTimeoutMillis: 30_000,
+        connectionTimeoutMillis: 5_000,
+      },
+    },
     vectorBackend: "pgvector",
     qdrant: {
       url: "",
@@ -64,6 +71,43 @@ const malformedOptionCases = [
     message: "config.host must be a string",
   },
   {
+    input: () => ({ config: buildConfig({ port: -1 }) }),
+    message: "config.port must be a non-negative safe integer up to 65535",
+  },
+  {
+    input: () => ({ config: buildConfig({ port: 65_536 }) }),
+    message: "config.port must be a non-negative safe integer up to 65535",
+  },
+  {
+    input: () => ({
+      config: {
+        ...buildConfig(),
+        postgres: {
+          pool: {
+            ...buildConfig().postgres.pool,
+            max: 0,
+          },
+        },
+      },
+    }),
+    message: "config.postgres.pool.max must be a positive safe integer",
+  },
+  {
+    input: () => ({
+      config: {
+        ...buildConfig(),
+        postgres: {
+          pool: {
+            ...buildConfig().postgres.pool,
+            idleTimeoutMillis: -1,
+          },
+        },
+      },
+    }),
+    message:
+      "config.postgres.pool.idleTimeoutMillis must be a positive safe integer",
+  },
+  {
     input: () => ({
       config: {
         ...buildConfig(),
@@ -81,8 +125,22 @@ const malformedOptionCases = [
     message: "bearerTokens must be an array",
   },
   {
+    input: () => ({ bearerTokens: [" \n\t "] }),
+    message: "bearerTokens[0] must contain non-whitespace text",
+  },
+  {
     input: () => ({ bearerTokens: [null] }),
     message: "bearerTokens[0] must be an object",
+  },
+  {
+    input: () => ({ bearerTokens: [{ token: "" }] }),
+    message: "bearerTokens[0].token must contain non-whitespace text",
+  },
+  {
+    input: () => ({
+      bearerTokens: [{ token: "token-a", organizationId: " \n\t " }],
+    }),
+    message: "bearerTokens[0].organizationId must contain non-whitespace text",
   },
   {
     input: () => ({ dependencyProbes: null }),

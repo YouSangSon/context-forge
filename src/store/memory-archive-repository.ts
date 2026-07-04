@@ -1,5 +1,5 @@
-// MemoryArchiveRepository — repository pattern for the P17 compaction
-// apply path. SQL ownership of compaction_runs + memory_archive tables.
+// MemoryArchiveRepository — repository pattern for the compaction apply path.
+// SQL ownership of compaction_runs + memory_archive tables.
 //
 // The orchestrator (src/compact/apply-compaction.ts) consumes this to:
 //   1. createCompactionRun  — insert run row, returns numeric id
@@ -12,9 +12,12 @@
 //   6. findRunByIdempotencyKey  — replay defense
 
 import type { PgPool } from "../db/connection.js";
+import { toIsoString, toNumber } from "./db-utils.js";
 import { assertNonBlankText } from "./memory-content.js";
 
 const QDRANT_CLEANUP_VISIBILITY_TIMEOUT_MS = 60_000;
+const POSTGRES_INTEGER_MIN = -2_147_483_648;
+const POSTGRES_INTEGER_MAX = 2_147_483_647;
 
 export type CompactionRunStatus = "pending" | "completed" | "failed";
 export type ArchiveReason = "duplicate" | "decay";
@@ -98,13 +101,13 @@ export type MemoryArchiveRepository = {
     scopeId: string;
   }): Promise<boolean>;
   // Counts dryRun=false runs for an org started within the given window.
-  // Used by the apply-path rate limit (P17 step 6) to refuse a new apply
-  // when an org has already run one recently.
+  // Used by the apply-path rate limit to refuse a new apply when an org has
+  // already run one recently.
   countRecentApplyRuns(
     organizationId: string,
     windowMs: number,
   ): Promise<number>;
-  // P19.1 — unarchive recovery flow.
+  // Unarchive recovery flow.
   findArchiveByIds(
     archiveIds: number[],
     organizationId: string,
@@ -146,21 +149,24 @@ export function createMemoryArchiveRepository(
 
   return {
     async createCompactionRun(input) {
-      assertNonBlankText(input.organizationId, "organizationId");
-      assertNonBlankText(input.scopeType, "scopeType");
-      assertNonBlankText(input.scopeId, "scopeId");
+      assertCreateCompactionRunInput(input);
+      const organizationId = input.organizationId.trim();
+      const actor = input.actor.trim();
+      const scopeType = toArchiveScopeType(input.scopeType.trim(), "scopeType");
+      const scopeId = input.scopeId.trim();
+      const idempotencyKey = input.idempotencyKey.trim();
 
       // ON CONFLICT on idempotency_key: replay defense. Returns the existing
       // row (with its outcome counters) if a run with this UUID already
       // exists — caller decides whether to skip or replay the apply.
       const result = await pool.query<{
-        id: number;
+        id: number | string;
         organization_id: string;
         status: CompactionRunStatus;
-        archived_count: number;
-        duplicate_count: number;
-        decay_count: number;
-        qdrant_failed: number;
+        archived_count: number | string;
+        duplicate_count: number | string;
+        decay_count: number | string;
+        qdrant_failed: number | string;
       }>(
         `
           INSERT INTO compaction_runs (
@@ -173,13 +179,13 @@ export function createMemoryArchiveRepository(
                     duplicate_count, decay_count, qdrant_failed
         `,
         [
-          input.organizationId,
-          input.actor,
-          input.scopeType,
-          input.scopeId,
+          organizationId,
+          actor,
+          scopeType,
+          scopeId,
           input.dryRun,
           input.planGeneratedAt.toISOString(),
-          input.idempotencyKey,
+          idempotencyKey,
         ],
       );
 
@@ -188,25 +194,28 @@ export function createMemoryArchiveRepository(
       }
 
       // ON CONFLICT path: row already exists. Read it back.
-      const existing = await this.findRunByIdempotencyKey(input.idempotencyKey);
+      const existing = await this.findRunByIdempotencyKey(idempotencyKey);
       if (!existing) {
         throw new Error(
           `compaction_runs insert returned 0 rows but no existing row found ` +
-            `for idempotency_key=${input.idempotencyKey} — check unique constraint`,
+            `for idempotency_key=${idempotencyKey} — check unique constraint`,
         );
       }
       return existing;
     },
 
     async findRunByIdempotencyKey(idempotencyKey) {
+      assertNonBlankText(idempotencyKey, "idempotencyKey");
+      const normalizedIdempotencyKey = idempotencyKey.trim();
+
       const result = await pool.query<{
-        id: number;
+        id: number | string;
         organization_id: string;
         status: CompactionRunStatus;
-        archived_count: number;
-        duplicate_count: number;
-        decay_count: number;
-        qdrant_failed: number;
+        archived_count: number | string;
+        duplicate_count: number | string;
+        decay_count: number | string;
+        qdrant_failed: number | string;
       }>(
         `
           SELECT id, organization_id, status, archived_count,
@@ -214,13 +223,14 @@ export function createMemoryArchiveRepository(
           FROM compaction_runs
           WHERE idempotency_key = $1
         `,
-        [idempotencyKey],
+        [normalizedIdempotencyKey],
       );
       return result.rows.length === 1 ? mapRunRow(result.rows[0]!) : null;
     },
 
     async applyCompactionRecord(input) {
-      assertNonBlankText(input.organizationId, "organizationId");
+      assertApplyCompactionRecordInput(input);
+      const organizationId = input.organizationId.trim();
 
       // Single CTE: DELETE canonical row (gated by org + TOCTOU updated_at),
       // INSERT archive row with snapshot of the deleted record + the
@@ -231,8 +241,8 @@ export function createMemoryArchiveRepository(
       // updated_at > planGeneratedAt = TOCTOU skip), the INSERT sees no
       // RETURNING payload and result.rows is empty.
       const result = await pool.query<{
-        archive_id: number;
-        qdrant_point_ids: string[];
+        archive_id: number | string;
+        qdrant_point_ids: unknown;
       }>(
         `
           WITH deleted AS (
@@ -282,7 +292,7 @@ export function createMemoryArchiveRepository(
         `,
         [
           input.recordId,
-          input.organizationId,
+          organizationId,
           input.runId,
           input.reason,
           input.decayScore ?? null,
@@ -297,8 +307,11 @@ export function createMemoryArchiveRepository(
       const row = result.rows[0]!;
       return {
         archived: true,
-        archiveId: row.archive_id,
-        qdrantPointIds: row.qdrant_point_ids ?? [],
+        archiveId: toPositiveSafeInteger(row.archive_id, "memory archive id"),
+        qdrantPointIds: toNonBlankStringArray(
+          row.qdrant_point_ids,
+          "memory archive qdrant_point_ids",
+        ),
       };
     },
 
@@ -306,6 +319,7 @@ export function createMemoryArchiveRepository(
       assertPositiveSafeInteger(archiveId, "archiveId");
       assertQdrantStatus(status, "status");
       assertOptionalString(errorMessage, "errorMessage");
+      const normalizedErrorMessage = normalizeOptionalErrorMessage(errorMessage);
 
       if (status === "deleted") {
         await pool.query(
@@ -331,7 +345,7 @@ export function createMemoryArchiveRepository(
                 qdrant_next_retry_at = NULL
             WHERE id = $1
           `,
-          [archiveId, errorMessage ?? null],
+          [archiveId, normalizedErrorMessage],
         );
         return;
       }
@@ -344,11 +358,14 @@ export function createMemoryArchiveRepository(
               qdrant_next_retry_at = NOW() + INTERVAL '30 seconds'
           WHERE id = $1
         `,
-        [archiveId, errorMessage ?? null],
+        [archiveId, normalizedErrorMessage],
       );
     },
 
     async completeCompactionRun(input) {
+      assertCompleteCompactionRunInput(input);
+      const errorMessage = normalizeOptionalErrorMessage(input.errorMessage);
+
       await pool.query(
         `
           UPDATE compaction_runs
@@ -368,7 +385,7 @@ export function createMemoryArchiveRepository(
           input.duplicateCount,
           input.decayCount,
           input.qdrantFailed,
-          input.errorMessage ?? null,
+          errorMessage,
         ],
       );
     },
@@ -379,10 +396,10 @@ export function createMemoryArchiveRepository(
       // Read-only compatibility wrapper for tests/manual monitoring. Sweeper
       // workers must use claimPendingQdrantCleanup for atomic visibility.
       const result = await pool.query<{
-        id: number;
-        organization_id: string;
-        qdrant_point_ids: string[];
-        qdrant_attempt_count: number;
+        id: number | string;
+        organization_id: unknown;
+        qdrant_point_ids: unknown;
+        qdrant_attempt_count: number | string;
       }>(
         `
           SELECT id, organization_id, qdrant_point_ids, qdrant_attempt_count
@@ -397,12 +414,7 @@ export function createMemoryArchiveRepository(
         `,
         [limit],
       );
-      return result.rows.map((row) => ({
-        archiveId: row.id,
-        organizationId: row.organization_id,
-        qdrantPointIds: row.qdrant_point_ids ?? [],
-        attemptCount: row.qdrant_attempt_count,
-      }));
+      return result.rows.map(mapPendingQdrantCleanupRow);
     },
 
     async claimPendingQdrantCleanup(input) {
@@ -413,10 +425,10 @@ export function createMemoryArchiveRepository(
         now.getTime() + QDRANT_CLEANUP_VISIBILITY_TIMEOUT_MS,
       );
       const result = await pool.query<{
-        id: number;
-        organization_id: string;
-        qdrant_point_ids: string[];
-        qdrant_attempt_count: number;
+        id: number | string;
+        organization_id: unknown;
+        qdrant_point_ids: unknown;
+        qdrant_attempt_count: number | string;
       }>(
         `
           UPDATE memory_archive
@@ -439,16 +451,13 @@ export function createMemoryArchiveRepository(
         [now.toISOString(), limit, claimUntil.toISOString()],
       );
 
-      return result.rows.map((row) => ({
-        archiveId: row.id,
-        organizationId: row.organization_id,
-        qdrantPointIds: row.qdrant_point_ids ?? [],
-        attemptCount: row.qdrant_attempt_count,
-      }));
+      return result.rows.map(mapPendingQdrantCleanupRow);
     },
 
     async countRecentApplyRuns(organizationId, windowMs) {
       assertNonBlankText(organizationId, "organizationId");
+      assertPositiveSafeInteger(windowMs, "windowMs");
+      const scopedOrganizationId = organizationId.trim();
 
       // Postgres INTERVAL doesn't accept parameterized text directly; build
       // it from milliseconds via make_interval. windowMs is server-controlled
@@ -463,33 +472,35 @@ export function createMemoryArchiveRepository(
             AND dry_run = false
             AND started_at > NOW() - make_interval(secs => $2)
         `,
-        [organizationId, windowSeconds],
+        [scopedOrganizationId, windowSeconds],
       );
-      const raw = result.rows[0]?.count ?? 0;
-      return typeof raw === "string" ? Number.parseInt(raw, 10) : raw;
+      const raw = result.rows[0]?.count;
+      return raw === undefined ? 0 : toRecentApplyRunCount(raw);
     },
 
     async findArchiveByIds(archiveIds, organizationId) {
+      assertPositiveSafeIntegerArray(archiveIds, "archiveIds");
       assertNonBlankText(organizationId, "organizationId");
 
       if (archiveIds.length === 0) return [];
+      const scopedOrganizationId = organizationId.trim();
       const result = await pool.query<{
-        id: number;
-        organization_id: string;
-        source_record_id: number;
-        source_id: number | null;
-        scope_type: string;
-        scope_id: string;
-        project_key: string | null;
-        kind: string;
-        title: string | null;
-        content: string;
-        summary: string | null;
-        durability: string;
-        importance: number;
-        original_created_at: string | Date;
-        original_updated_at: string | Date;
-        unarchived_at: string | Date | null;
+        id: unknown;
+        organization_id: unknown;
+        source_record_id: unknown;
+        source_id: unknown;
+        scope_type: unknown;
+        scope_id: unknown;
+        project_key: unknown;
+        kind: unknown;
+        title: unknown;
+        content: unknown;
+        summary: unknown;
+        durability: unknown;
+        importance: unknown;
+        original_created_at: unknown;
+        original_updated_at: unknown;
+        unarchived_at: unknown;
       }>(
         `
           SELECT id, organization_id, source_record_id, source_id,
@@ -500,47 +511,32 @@ export function createMemoryArchiveRepository(
           WHERE id = ANY($1::bigint[])
             AND organization_id = $2
         `,
-        [archiveIds, organizationId],
+        [archiveIds, scopedOrganizationId],
       );
-      return result.rows.map((row) => ({
-        id: row.id,
-        organizationId: row.organization_id,
-        sourceRecordId: row.source_record_id,
-        sourceId: row.source_id,
-        scopeType: row.scope_type,
-        scopeId: row.scope_id,
-        projectKey: row.project_key,
-        kind: row.kind,
-        title: row.title,
-        content: row.content,
-        summary: row.summary,
-        durability: row.durability,
-        importance: row.importance,
-        originalCreatedAt: toIso(row.original_created_at),
-        originalUpdatedAt: toIso(row.original_updated_at),
-        unarchivedAt: row.unarchived_at === null ? null : toIso(row.unarchived_at),
-      }));
+      return result.rows.map(mapArchiveLookupRow);
     },
 
     async restoreToCanonical(archive, organizationId) {
       assertNonBlankText(organizationId, "organizationId");
+      const scopedOrganizationId = organizationId.trim();
+      const restorableArchive = mapRestorableArchive(archive);
 
       // Insert preserves original_created_at / original_updated_at so
       // forensic queries see the actual age of the resurrected record. The
       // source_id is restored verbatim — caller is expected to verify the
       // source row still exists if FK violation matters (most ops won't
       // hit this since sources outlive memory_records).
-      if (archive.organizationId !== organizationId) {
+      if (restorableArchive.organizationId !== scopedOrganizationId) {
         throw new Error(
-          `restoreToCanonical: org mismatch (archive.org=${archive.organizationId}, requested=${organizationId})`,
+          `restoreToCanonical: org mismatch (archive.org=${restorableArchive.organizationId}, requested=${scopedOrganizationId})`,
         );
       }
-      if (archive.sourceId === null) {
+      if (restorableArchive.sourceId === null) {
         throw new Error(
-          `restoreToCanonical: archive ${archive.id} has no source_id (pre-P19.1 archive row); cannot restore until source is rebuilt`,
+          `restoreToCanonical: archive ${restorableArchive.id} has no source_id; cannot restore until the original source is rebuilt`,
         );
       }
-      const result = await pool.query<{ id: number }>(
+      const result = await pool.query<{ id: number | string }>(
         `
           INSERT INTO memory_records (
             organization_id, scope_type, scope_id, project_key, kind, title,
@@ -551,33 +547,36 @@ export function createMemoryArchiveRepository(
           RETURNING id
         `,
         [
-          organizationId,
-          archive.scopeType,
-          archive.scopeId,
-          archive.projectKey,
-          archive.kind,
-          archive.title,
-          archive.content,
-          archive.summary,
-          archive.durability,
-          archive.importance,
-          archive.sourceId,
-          archive.originalCreatedAt,
-          archive.originalUpdatedAt,
+          scopedOrganizationId,
+          restorableArchive.scopeType,
+          restorableArchive.scopeId,
+          restorableArchive.projectKey,
+          restorableArchive.kind,
+          restorableArchive.title,
+          restorableArchive.content,
+          restorableArchive.summary,
+          restorableArchive.durability,
+          restorableArchive.importance,
+          restorableArchive.sourceId,
+          restorableArchive.originalCreatedAt,
+          restorableArchive.originalUpdatedAt,
         ],
       );
       const newId = result.rows[0]?.id;
       if (newId === undefined) {
         throw new Error(
-          `restoreToCanonical: INSERT returned no id for archive ${archive.id}`,
+          `restoreToCanonical: INSERT returned no id for archive ${restorableArchive.id}`,
         );
       }
-      return { restoredRecordId: newId };
+      return {
+        restoredRecordId: toPositiveSafeInteger(newId, "restored memory id"),
+      };
     },
 
     async deleteRestoredCanonicalRecord(recordId, organizationId) {
       assertPositiveSafeInteger(recordId, "recordId");
       assertNonBlankText(organizationId, "organizationId");
+      const scopedOrganizationId = organizationId.trim();
 
       await pool.query(
         `
@@ -585,7 +584,7 @@ export function createMemoryArchiveRepository(
           WHERE id = $1
             AND organization_id = $2
         `,
-        [recordId, organizationId],
+        [recordId, scopedOrganizationId],
       );
     },
 
@@ -603,9 +602,7 @@ export function createMemoryArchiveRepository(
     },
 
     async acquireScopeLock(args) {
-      assertNonBlankText(args.organizationId, "organizationId");
-      assertNonBlankText(args.scopeType, "scopeType");
-      assertNonBlankText(args.scopeId, "scopeId");
+      const lockInput = assertScopeLockInput(args);
 
       // Per-(org, scope) advisory lock. Two simultaneous applies on the same
       // scope race on canonical DELETE; this serializes them. Lock auto-
@@ -618,7 +615,7 @@ export function createMemoryArchiveRepository(
             hashtextextended($1, 0)
           ) AS acquired
         `,
-        [`${args.organizationId}:${args.scopeType}:${args.scopeId}`],
+        [`${lockInput.organizationId}:${lockInput.scopeType}:${lockInput.scopeId}`],
       );
       return result.rows[0]?.acquired === true;
     },
@@ -648,28 +645,292 @@ function assertQdrantCleanupClaimInput(value: unknown): asserts value is {
   assertValidDate(candidate.now, "now");
 }
 
-function toIso(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : value;
+function assertCreateCompactionRunInput(
+  input: unknown,
+): asserts input is CreateCompactionRunInput {
+  const candidate = assertObject(input, "create compaction run input");
+  assertNonBlankText(candidate.organizationId, "organizationId");
+  assertNonBlankText(candidate.actor, "actor");
+  assertNonBlankText(candidate.scopeType, "scopeType");
+  assertNonBlankText(candidate.scopeId, "scopeId");
+  assertBoolean(candidate.dryRun, "dryRun");
+  assertValidDate(candidate.planGeneratedAt, "planGeneratedAt");
+  assertNonBlankText(candidate.idempotencyKey, "idempotencyKey");
 }
 
-function mapRunRow(row: {
-  id: number;
-  organization_id: string;
-  status: CompactionRunStatus;
-  archived_count: number;
-  duplicate_count: number;
-  decay_count: number;
-  qdrant_failed: number;
-}): CompactionRunRow {
+function assertApplyCompactionRecordInput(
+  input: unknown,
+): asserts input is ApplyCompactionRecordInput {
+  const candidate = assertObject(input, "apply compaction record input");
+  assertPositiveSafeInteger(candidate.runId, "runId");
+  assertNonBlankText(candidate.organizationId, "organizationId");
+  assertPositiveSafeInteger(candidate.recordId, "recordId");
+  assertArchiveReason(candidate.reason, "reason");
+  assertOptionalFiniteNumber(candidate.decayScore, "decayScore");
+  assertOptionalPositiveSafeInteger(candidate.keptRecordId, "keptRecordId");
+  assertValidDate(candidate.planGeneratedAt, "planGeneratedAt");
+}
+
+function assertCompleteCompactionRunInput(
+  input: unknown,
+): asserts input is CompleteCompactionRunInput {
+  const candidate = assertObject(input, "complete compaction run input");
+  assertPositiveSafeInteger(candidate.runId, "runId");
+  assertCompactionRunStatus(candidate.status, "status");
+  assertNonNegativeSafeInteger(candidate.archivedCount, "archivedCount");
+  assertNonNegativeSafeInteger(candidate.duplicateCount, "duplicateCount");
+  assertNonNegativeSafeInteger(candidate.decayCount, "decayCount");
+  assertNonNegativeSafeInteger(candidate.qdrantFailed, "qdrantFailed");
+  assertOptionalString(candidate.errorMessage, "errorMessage");
+}
+
+function assertScopeLockInput(value: unknown): {
+  organizationId: string;
+  scopeType: string;
+  scopeId: string;
+} {
+  const candidate = assertObject(value, "scope lock input");
   return {
-    id: row.id,
-    organizationId: row.organization_id,
-    status: row.status,
-    archivedCount: row.archived_count,
-    duplicateCount: row.duplicate_count,
-    decayCount: row.decay_count,
-    qdrantFailed: row.qdrant_failed,
+    organizationId: assertRequiredNonBlankString(
+      candidate.organizationId,
+      "organizationId",
+    ).trim(),
+    scopeType: toArchiveScopeType(
+      assertRequiredNonBlankString(candidate.scopeType, "scopeType").trim(),
+      "scopeType",
+    ),
+    scopeId: assertRequiredNonBlankString(candidate.scopeId, "scopeId").trim(),
   };
+}
+
+function mapRestorableArchive(value: unknown): ArchiveRow {
+  const candidate = assertObject(value, "restore archive");
+  const organizationId = candidate.organizationId;
+  assertNonBlankText(organizationId, "memory archive organizationId");
+  const sourceId =
+    candidate.sourceId === null
+      ? null
+      : toPositiveSafeInteger(candidate.sourceId, "memory archive source_id");
+  return {
+    id: toPositiveSafeInteger(candidate.id, "memory archive id"),
+    organizationId,
+    sourceRecordId: toPositiveSafeInteger(
+      candidate.sourceRecordId,
+      "memory archive source_record_id",
+    ),
+    sourceId,
+    scopeType: toArchiveScopeType(candidate.scopeType),
+    scopeId: assertRequiredNonBlankString(
+      candidate.scopeId,
+      "memory archive scopeId",
+    ),
+    projectKey: toNullableString(
+      candidate.projectKey,
+      "memory archive projectKey",
+    ),
+    kind: toArchiveKind(candidate.kind),
+    title: toNullableString(candidate.title, "memory archive title"),
+    content: assertRequiredNonBlankString(
+      candidate.content,
+      "memory archive content",
+    ),
+    summary: toNullableString(candidate.summary, "memory archive summary"),
+    durability: toArchiveDurability(candidate.durability),
+    importance: toPostgresInteger(
+      candidate.importance,
+      "memory archive importance",
+    ),
+    originalCreatedAt: toIsoString(
+      candidate.originalCreatedAt as string | Date,
+    ),
+    originalUpdatedAt: toIsoString(
+      candidate.originalUpdatedAt as string | Date,
+    ),
+    unarchivedAt:
+      candidate.unarchivedAt === null
+        ? null
+        : toIsoString(candidate.unarchivedAt as string | Date),
+  };
+}
+
+function mapArchiveLookupRow(value: unknown): ArchiveRow {
+  const row = assertObject(value, "memory archive row");
+  return {
+    id: toPositiveSafeInteger(row.id, "memory archive id"),
+    organizationId: assertRequiredNonBlankString(
+      row.organization_id,
+      "memory archive organization_id",
+    ),
+    sourceRecordId: toPositiveSafeInteger(
+      row.source_record_id,
+      "memory archive source_record_id",
+    ),
+    sourceId:
+      row.source_id === null
+        ? null
+        : toPositiveSafeInteger(row.source_id, "memory archive source_id"),
+    scopeType: toArchiveScopeType(row.scope_type),
+    scopeId: assertRequiredNonBlankString(
+      row.scope_id,
+      "memory archive scope_id",
+    ),
+    projectKey: toNullableString(
+      row.project_key,
+      "memory archive project_key",
+    ),
+    kind: toArchiveKind(row.kind),
+    title: toNullableString(row.title, "memory archive title"),
+    content: assertRequiredNonBlankString(
+      row.content,
+      "memory archive content",
+    ),
+    summary: toNullableString(row.summary, "memory archive summary"),
+    durability: toArchiveDurability(row.durability),
+    importance: toPostgresInteger(row.importance, "memory archive importance"),
+    originalCreatedAt: toIsoString(row.original_created_at as string | Date),
+    originalUpdatedAt: toIsoString(row.original_updated_at as string | Date),
+    unarchivedAt:
+      row.unarchived_at === null
+        ? null
+        : toIsoString(row.unarchived_at as string | Date),
+  };
+}
+
+function mapPendingQdrantCleanupRow(value: unknown): PendingQdrantCleanup {
+  const candidate = assertObject(value, "pending qdrant cleanup row");
+  const organizationId = candidate.organization_id;
+  assertNonBlankText(organizationId, "memory archive organization_id");
+  return {
+    archiveId: toPositiveSafeInteger(candidate.id, "memory archive id"),
+    organizationId,
+    qdrantPointIds: toNonBlankStringArray(
+      candidate.qdrant_point_ids,
+      "memory archive qdrant_point_ids",
+    ),
+    attemptCount: toNonNegativeSafeInteger(
+      candidate.qdrant_attempt_count,
+      "memory archive qdrant_attempt_count",
+    ),
+  };
+}
+
+function toRecentApplyRunCount(value: unknown): number {
+  let count: number;
+  try {
+    count = toNumber(value);
+  } catch (_err: unknown) {
+    throw new Error(
+      "recent apply run count must be a non-negative safe integer",
+    );
+  }
+  if (!Number.isSafeInteger(count) || count < 0) {
+    throw new Error(
+      "recent apply run count must be a non-negative safe integer",
+    );
+  }
+  return count;
+}
+
+function toPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertPositiveSafeInteger(numberValue, fieldName);
+  return numberValue;
+}
+
+function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertNonNegativeSafeInteger(numberValue, fieldName);
+  return numberValue;
+}
+
+function toPostgresInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (
+    !Number.isInteger(numberValue) ||
+    numberValue < POSTGRES_INTEGER_MIN ||
+    numberValue > POSTGRES_INTEGER_MAX
+  ) {
+    throw new Error(`${fieldName} must be a Postgres integer`);
+  }
+  return numberValue;
+}
+
+function mapRunRow(value: unknown): CompactionRunRow {
+  const row = assertObject(value, "compaction run row");
+  const organizationId = row.organization_id;
+  assertNonBlankText(organizationId, "compaction run organization_id");
+  return {
+    id: toPositiveSafeInteger(row.id, "compaction run id"),
+    organizationId,
+    status: toCompactionRunStatus(row.status),
+    archivedCount: toNonNegativeSafeInteger(
+      row.archived_count,
+      "compaction run archived_count",
+    ),
+    duplicateCount: toNonNegativeSafeInteger(
+      row.duplicate_count,
+      "compaction run duplicate_count",
+    ),
+    decayCount: toNonNegativeSafeInteger(
+      row.decay_count,
+      "compaction run decay_count",
+    ),
+    qdrantFailed: toNonNegativeSafeInteger(
+      row.qdrant_failed,
+      "compaction run qdrant_failed",
+    ),
+  };
+}
+
+function toCompactionRunStatus(value: unknown): CompactionRunStatus {
+  assertCompactionRunStatus(value, "compaction run status");
+  return value;
+}
+
+function assertCompactionRunStatus(
+  value: unknown,
+  fieldName: string,
+): asserts value is CompactionRunStatus {
+  if (value !== "pending" && value !== "completed" && value !== "failed") {
+    throw new Error(
+      `${fieldName} must be "pending", "completed", or "failed"`,
+    );
+  }
+}
+
+function assertArchiveReason(
+  value: unknown,
+  fieldName: string,
+): asserts value is ArchiveReason {
+  if (value !== "duplicate" && value !== "decay") {
+    throw new Error(`${fieldName} must be "duplicate" or "decay"`);
+  }
+}
+
+function toArchiveScopeType(
+  value: unknown,
+  fieldName = "memory archive scope_type",
+): string {
+  if (value === "user" || value === "project") {
+    return value;
+  }
+  throw new Error(`${fieldName} must be one of: user, project`);
+}
+
+function toArchiveKind(value: unknown): string {
+  if (value === "decision" || value === "fact" || value === "summary") {
+    return value;
+  }
+  throw new Error("memory archive kind must be one of: decision, summary, fact");
+}
+
+function toArchiveDurability(value: unknown): string {
+  if (value === "ephemeral" || value === "durable" || value === "archived") {
+    return value;
+  }
+  throw new Error(
+    "memory archive durability must be one of: ephemeral, durable, archived",
+  );
 }
 
 function assertObject(
@@ -688,6 +949,62 @@ function assertFunction(value: unknown, fieldName: string): void {
   }
 }
 
+function assertPositiveSafeIntegerArray(
+  value: unknown,
+  fieldName: string,
+): asserts value is number[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+  for (const [index, item] of value.entries()) {
+    if (
+      typeof item !== "number" ||
+      !Number.isSafeInteger(item) ||
+      item <= 0
+    ) {
+      throw new Error(
+        `${fieldName}[${index}] must be a positive safe integer`,
+      );
+    }
+  }
+}
+
+function toNonBlankStringArray(value: unknown, fieldName: string): string[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+  const result: string[] = [];
+  for (const [index, item] of value.entries()) {
+    assertNonBlankText(item, `${fieldName}[${index}]`);
+    result.push(item);
+  }
+  return result;
+}
+
+function assertRequiredNonBlankString(
+  value: unknown,
+  fieldName: string,
+): string {
+  assertNonBlankText(value, fieldName);
+  return value;
+}
+
+function toNullableString(value: unknown, fieldName: string): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
+}
+
+function assertBoolean(value: unknown, fieldName: string): void {
+  if (typeof value !== "boolean") {
+    throw new Error(`${fieldName} must be a boolean`);
+  }
+}
+
 function assertPositiveSafeInteger(
   value: unknown,
   fieldName: string,
@@ -701,6 +1018,19 @@ function assertPositiveSafeInteger(
   }
 }
 
+function assertNonNegativeSafeInteger(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value < 0
+  ) {
+    throw new Error(`${fieldName} must be a non-negative safe integer`);
+  }
+}
+
 function assertValidDate(
   value: unknown,
   fieldName: string,
@@ -710,9 +1040,33 @@ function assertValidDate(
   }
 }
 
+function assertOptionalPositiveSafeInteger(
+  value: unknown,
+  fieldName: string,
+): void {
+  if (value === undefined) {
+    return;
+  }
+  assertPositiveSafeInteger(value, fieldName);
+}
+
+function assertOptionalFiniteNumber(value: unknown, fieldName: string): void {
+  if (value === undefined) {
+    return;
+  }
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${fieldName} must be a finite number when provided`);
+  }
+}
+
 function assertOptionalString(value: unknown, fieldName: string): void {
   if (value === undefined || typeof value === "string") {
     return;
   }
   throw new Error(`${fieldName} must be a string when provided`);
+}
+
+function normalizeOptionalErrorMessage(value: string | undefined): string | null {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
 }

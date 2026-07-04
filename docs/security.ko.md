@@ -4,7 +4,7 @@
 
 이 문서는 Akasha가 다루는 위협 surface, 현재 적용된 컨트롤, 잔여
 리스크를 요약합니다. 취약점 리포팅 정책 (어디로 보안 보고를 보낼지) 는
-[../SECURITY.md](../SECURITY.md) 참고.
+[../SECURITY.ko.md](../SECURITY.ko.md) 참고.
 
 ## 위협 surface
 
@@ -15,7 +15,7 @@
 | MCP stdio | 로컬 전용 (parent process가 binary 실행); parent의 identity 상속 |
 | Postgres | 직접 DB 접근은 모든 앱 레이어 컨트롤 우회; 백업 + 제한 |
 | Qdrant | vector 접근은 scope/auth 필터 우회; 별도 백업, 네트워크 격리 |
-| OpenAI 호출 | embedding용 컨텐츠가 네트워크 외부로; `EMBEDDING_PROVIDER=transformers` 는 의미 있는 semantic embedding을 on-box 유지 (`local` 은 결정론적 CI/offline stub) |
+| OpenAI 호출 | embedding용 컨텐츠가 네트워크 외부로; `EMBEDDING_PROVIDER=transformers` 는 의미 있는 semantic embedding을 on-box 유지 (`local` 은 결정론적 CI/오프라인 스텁) |
 
 ## 컨트롤
 
@@ -121,8 +121,11 @@ secret 마운트나 Docker socket 마운트는 피하세요.
 
 ### Rate limit
 
-`RATE_LIMIT_PER_MINUTE` 의 토큰별 글로벌 bucket (token-bucket). Apply 경로는
-추가로 org당 1회/시간 제한 (기본, `applyCompaction` deps에서 설정 가능).
+`RATE_LIMIT_PER_MINUTE` 의 토큰별 bucket (token-bucket). 이 bucket은
+in-memory이고 프로세스-local입니다. 다중 replica 배포에서는 app replica마다
+bucket이 하나씩 생기므로, 배포 전체의 엄격한 quota가 필요하면 공유
+reverse-proxy 또는 edge limiter를 사용하세요. Apply 경로는 추가로 org당
+1회/시간 제한 (기본, `applyCompaction` deps에서 설정 가능).
 
 ### Audit log
 
@@ -156,7 +159,7 @@ plan 계산 후 레코드가 수정되었으면 DELETE는 0 rows 반환, 오케�
 - **Embedding provider가 컨텐츠를 봄.** `EMBEDDING_PROVIDER=openai` 시 모든
   레코드 컨텐츠가 OpenAI에 전송. 컴플라이언스가 금지하면 의미 있는 로컬 semantic
   embedding에는 `transformers` 를 사용. `local` 은 retrieval 품질이 중요하지
-  않은 결정론적 CI/offline stub 용도.
+  않은 결정론적 CI/오프라인 스텁 용도.
 - **at-rest 토큰 저장** 은 앱 사이드 (env, .env 파일). KMS 연동은 Akasha 외부에서
   수행합니다.
 - **백업에는 memory content 포함.** `BACKUP_ENCRYPTION_KEY_FILE` 을 설정하면

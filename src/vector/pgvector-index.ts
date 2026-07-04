@@ -42,10 +42,10 @@
 //   from pg_attribute and throws early if it ≠ the configured `dimensions`.
 //   This surfaces mismatches at startup rather than as a cryptic upsert error.
 //
-// EMPTY EMBEDDING GUARD (LOW 5):
-//   upsert() validates that every point's vector is non-empty before building
-//   SQL — an empty embedding would produce "[]"::vector which pgvector rejects,
-//   aborting the entire batch without a useful error message.
+// EMBEDDING VECTOR GUARD (LOW 5):
+//   upsert() validates that every point's vector is non-empty and finite before
+//   building SQL — invalid literals such as "[]"::vector or "[NaN]"::vector
+//   would otherwise abort the entire batch without a useful error message.
 //
 import type { PgPool } from "../db/connection.js";
 import type {
@@ -56,8 +56,8 @@ import type {
   VectorPoint,
 } from "./vector-index.js";
 import {
-  assertOptionalVectorOrganizationId,
   assertVectorPointOrganizationIds,
+  normalizeOptionalVectorOrganizationId,
 } from "./organization-id.js";
 
 // Max rows per INSERT batch — 14 params/row × 4000 = 56000 < 65535 cap.
@@ -72,6 +72,23 @@ export type CreatePgVectorIndexOptions = {
   tableName?: string;
 };
 
+type PgVectorQueryRow = {
+  point_id: string;
+  memory_record_id: number | string | null;
+  organization_id: string;
+  scope_type: string | null;
+  scope_id: string | null;
+  project_key: string | null;
+  kind: string | null;
+  durability: string | null;
+  title: string | null;
+  summary: string | null;
+  tags: string[] | null;
+  updated_at: string | null;
+  embedding_version: string | null;
+  score: number | string;
+};
+
 export function createPgVectorIndex(
   pool: PgPool,
   options: CreatePgVectorIndexOptions = {},
@@ -82,6 +99,7 @@ export function createPgVectorIndex(
 
   return {
     async ensureCollection(dimensions: number): Promise<void> {
+      assertPgVectorPositiveSafeInteger(dimensions, "dimensions");
       // HIGH 3: Do NOT create the extension — requires superuser, fails on managed
       // Postgres (RDS, Cloud SQL, Supabase). Check it exists and guide the operator.
       const extCheck = await pool.query<{ exists: number }>(
@@ -170,18 +188,23 @@ export function createPgVectorIndex(
     },
 
     async upsert(points: VectorPoint[]): Promise<void> {
-      if (points.length === 0) return;
       assertVectorPointOrganizationIds(points);
+      if (points.length === 0) return;
 
-      // LOW 5: Validate embeddings before building SQL — an empty vector produces
-      // "[]"::vector which pgvector rejects and aborts the entire batch.
       for (const point of points) {
-        if (point.vector.length === 0) {
-          throw new Error(
-            `upsert: point "${point.id}" has an empty embedding vector. ` +
-            "Ensure the embedding step produced a valid vector before calling upsert.",
-          );
-        }
+        assertPgVectorPointId(point);
+        assertPgVectorEmbeddingVector(point);
+        assertPgVectorPointMemoryRecordId(point);
+        assertPgVectorPointScopeType(point);
+        assertPgVectorPointScopeId(point);
+        assertPgVectorPointProjectKey(point);
+        assertPgVectorPointKind(point);
+        assertPgVectorPointDurability(point);
+        assertPgVectorOptionalPayloadText(point.payload, "title");
+        assertPgVectorOptionalPayloadText(point.payload, "summary");
+        assertPgVectorOptionalPayloadText(point.payload, "updated_at");
+        assertPgVectorOptionalPayloadText(point.payload, "embedding_version");
+        assertPgVectorPointTags(point);
       }
 
       // HIGH 2: Chunk into batches of UPSERT_BATCH_ROWS to stay under the
@@ -267,12 +290,12 @@ export function createPgVectorIndex(
         }
 
         await client.query("COMMIT");
-      } catch (err) {
+      } catch (err: unknown) {
         // Preserve and rethrow the original error even if ROLLBACK itself fails
         // (a dead/dropped connection must not mask the real failure).
         try {
           await client.query("ROLLBACK");
-        } catch {
+        } catch (_err: unknown) {
           /* ignore rollback failure */
         }
         throw err;
@@ -282,7 +305,13 @@ export function createPgVectorIndex(
     },
 
     async query(vector: number[], filter: VectorFilter, limit: number): Promise<VectorHit[]> {
-      assertOptionalVectorOrganizationId(filter.organizationId);
+      assertPgVectorQueryVector(vector);
+      assertPgVectorPositiveSafeInteger(limit, "limit");
+      assertPgVectorFilter(filter);
+      const organizationId =
+        normalizeOptionalVectorOrganizationId(filter.organizationId);
+      const scopes = normalizePgVectorFilterScopes(filter.scopes);
+      const projectKey = normalizePgVectorOptionalProjectKey(filter.projectKey);
 
       // HIGH 1(b): Run inside a transaction so SET LOCAL is scoped to this query.
       // hnsw.iterative_scan='strict_order' (pgvector 0.8+) makes HNSW keep
@@ -306,8 +335,8 @@ export function createPgVectorIndex(
         const whereClauses: string[] = [];
 
         // Mirror buildQdrantMust: add org clause only when organizationId is non-empty.
-        if (filter.organizationId) {
-          params.push(filter.organizationId);
+        if (organizationId) {
+          params.push(organizationId);
           whereClauses.push(`organization_id = $${params.length}`);
         }
 
@@ -318,12 +347,12 @@ export function createPgVectorIndex(
         //   - AND (scopeType==="project" && projectKey != null
         //       ? project_key = $m
         //       : scope_id    = $m)
-        for (const scope of filter.scopes) {
+        for (const scope of scopes) {
           params.push(scope.scopeType);
           whereClauses.push(`scope_type = $${params.length}`);
 
-          if (scope.scopeType === "project" && filter.projectKey != null) {
-            params.push(filter.projectKey);
+          if (scope.scopeType === "project" && projectKey != null) {
+            params.push(projectKey);
             whereClauses.push(`project_key = $${params.length}`);
           } else {
             params.push(scope.scopeId);
@@ -360,54 +389,19 @@ export function createPgVectorIndex(
           LIMIT ${limitPlaceholder}
         `;
 
-        type Row = {
-          point_id: string;
-          memory_record_id: string | null;
-          organization_id: string;
-          scope_type: string | null;
-          scope_id: string | null;
-          project_key: string | null;
-          kind: string | null;
-          durability: string | null;
-          title: string | null;
-          summary: string | null;
-          tags: string[] | null;
-          updated_at: string | null;
-          embedding_version: string | null;
-          score: number;
-        };
-
-        const result = await client.query<Row>(sql, params);
+        const result = await client.query<PgVectorQueryRow>(sql, params);
+        const rows: unknown = result.rows;
+        assertPgVectorQueryRows(rows);
+        const hits = rows.map(mapPgVectorQueryRow);
         await client.query("COMMIT");
 
-        return result.rows.map((row) => ({
-          id: row.point_id,
-          score: Number(row.score),
-          payload: {
-            // node-postgres returns BIGINT (int8) as a string — coerce back to
-            // Number for parity with the Qdrant path (which sees it as a number).
-            memory_record_id: row.memory_record_id == null
-              ? null
-              : Number(row.memory_record_id),
-            organization_id: row.organization_id,
-            scope_type: row.scope_type,
-            scope_id: row.scope_id,
-            project_key: row.project_key,
-            kind: row.kind,
-            durability: row.durability,
-            title: row.title,
-            summary: row.summary,
-            tags: row.tags ?? [],
-            updated_at: row.updated_at,
-            embedding_version: row.embedding_version,
-          },
-        }));
-      } catch (err) {
+        return hits;
+      } catch (err: unknown) {
         // Preserve and rethrow the original error even if ROLLBACK itself fails
         // (a dead/dropped connection must not mask the real failure).
         try {
           await client.query("ROLLBACK");
-        } catch {
+        } catch (_err: unknown) {
           /* ignore rollback failure */
         }
         throw err;
@@ -417,13 +411,15 @@ export function createPgVectorIndex(
     },
 
     async delete(ids: string[], options: VectorDeleteOptions = {}): Promise<void> {
-      assertOptionalVectorOrganizationId(options.organizationId);
+      const organizationId =
+        normalizeOptionalVectorOrganizationId(options.organizationId);
 
+      assertPgVectorPointIds(ids);
       if (ids.length === 0) return;
-      if (options.organizationId) {
+      if (organizationId) {
         await pool.query(
           `DELETE FROM ${tableName} WHERE point_id = ANY($1) AND organization_id = $2`,
-          [ids, options.organizationId],
+          [ids, organizationId],
         );
         return;
       }
@@ -434,13 +430,15 @@ export function createPgVectorIndex(
       recordIds: number[],
       options: VectorDeleteOptions = {},
     ): Promise<void> {
-      assertOptionalVectorOrganizationId(options.organizationId);
+      const organizationId =
+        normalizeOptionalVectorOrganizationId(options.organizationId);
 
+      assertPgVectorRecordIds(recordIds);
       if (recordIds.length === 0) return;
-      if (options.organizationId) {
+      if (organizationId) {
         await pool.query(
           `DELETE FROM ${tableName} WHERE memory_record_id = ANY($1) AND organization_id = $2`,
-          [recordIds, options.organizationId],
+          [recordIds, organizationId],
         );
         return;
       }
@@ -450,4 +448,394 @@ export function createPgVectorIndex(
       );
     },
   };
+}
+
+function mapPgVectorQueryRow(row: PgVectorQueryRow): VectorHit {
+  return {
+    id: toPgVectorNonEmptyString(row.point_id, "point_id"),
+    score: toPgVectorFiniteNumber(row.score, "score"),
+    payload: {
+      // node-postgres returns BIGINT (int8) as a string — coerce back to
+      // Number for parity with the Qdrant path (which sees it as a number).
+      memory_record_id:
+        row.memory_record_id == null
+          ? null
+          : toPgVectorPositiveSafeInteger(
+              row.memory_record_id,
+              "memory_record_id",
+            ),
+      organization_id: toPgVectorNonEmptyString(
+        row.organization_id,
+        "organization_id",
+      ),
+      scope_type: toPgVectorStringOrNull(row.scope_type, "scope_type"),
+      scope_id: toPgVectorStringOrNull(row.scope_id, "scope_id"),
+      project_key: toPgVectorStringOrNull(row.project_key, "project_key"),
+      kind: toPgVectorStringOrNull(row.kind, "kind"),
+      durability: toPgVectorStringOrNull(row.durability, "durability"),
+      title: toPgVectorStringOrNull(row.title, "title"),
+      summary: toPgVectorStringOrNull(row.summary, "summary"),
+      tags: toPgVectorStringArray(row.tags, "tags"),
+      updated_at: toPgVectorStringOrNull(row.updated_at, "updated_at"),
+      embedding_version: toPgVectorStringOrNull(
+        row.embedding_version,
+        "embedding_version",
+      ),
+    },
+  };
+}
+
+function assertPgVectorEmbeddingVector(point: VectorPoint): void {
+  if (!Array.isArray(point.vector)) {
+    throw new Error(`upsert: point "${point.id}" vector must be an array`);
+  }
+
+  if (point.vector.length === 0) {
+    throw new Error(
+      `upsert: point "${point.id}" has an empty embedding vector. ` +
+      "Ensure the embedding step produced a valid vector before calling upsert.",
+    );
+  }
+
+  assertPgVectorFiniteVectorComponents(point.vector, "vector");
+}
+
+function assertPgVectorPointId(point: VectorPoint): void {
+  assertPgVectorNonEmptyString(point.id, "point.id");
+}
+
+function assertPgVectorPointIds(ids: unknown): asserts ids is readonly string[] {
+  if (!Array.isArray(ids)) {
+    throw new Error("delete: ids must be an array");
+  }
+
+  for (const [index, id] of ids.entries()) {
+    assertPgVectorNonEmptyString(id, `ids[${index}]`);
+  }
+}
+
+function assertPgVectorPointMemoryRecordId(point: VectorPoint): void {
+  assertPgVectorPositiveSafeInteger(
+    point.payload.memory_record_id,
+    "point.payload.memory_record_id",
+  );
+}
+
+function assertPgVectorPointScopeType(point: VectorPoint): void {
+  assertPgVectorNonEmptyString(
+    point.payload.scope_type,
+    "point.payload.scope_type",
+  );
+  if (
+    point.payload.scope_type !== "user" &&
+    point.payload.scope_type !== "project"
+  ) {
+    throw new Error(
+      "point.payload.scope_type must be one of: user, project",
+    );
+  }
+}
+
+function assertPgVectorPointScopeId(point: VectorPoint): void {
+  if (
+    point.payload.scope_type !== "user" &&
+    !(
+      point.payload.scope_type === "project" &&
+      point.payload.project_key === null
+    )
+  ) {
+    return;
+  }
+  assertPgVectorNonEmptyString(
+    point.payload.scope_id,
+    "point.payload.scope_id",
+  );
+}
+
+function assertPgVectorPointProjectKey(point: VectorPoint): void {
+  const projectKey = point.payload.project_key;
+  if (projectKey === null) {
+    return;
+  }
+  if (typeof projectKey !== "string") {
+    throw new Error("point.payload.project_key must be a string or null");
+  }
+  assertPgVectorNonEmptyString(projectKey, "point.payload.project_key");
+}
+
+function assertPgVectorPointKind(point: VectorPoint): void {
+  assertPgVectorNonEmptyString(
+    point.payload.kind,
+    "point.payload.kind",
+  );
+  if (
+    point.payload.kind !== "decision" &&
+    point.payload.kind !== "summary" &&
+    point.payload.kind !== "fact"
+  ) {
+    throw new Error(
+      "point.payload.kind must be one of: decision, summary, fact",
+    );
+  }
+}
+
+function assertPgVectorPointDurability(point: VectorPoint): void {
+  const durability = point.payload.durability;
+  if (durability == null) {
+    return;
+  }
+  assertPgVectorNonEmptyString(durability, "point.payload.durability");
+  if (
+    durability !== "ephemeral" &&
+    durability !== "durable" &&
+    durability !== "archived"
+  ) {
+    throw new Error(
+      "point.payload.durability must be one of: ephemeral, durable, archived",
+    );
+  }
+}
+
+function assertPgVectorPointTags(point: VectorPoint): void {
+  const tags = point.payload.tags;
+  if (tags == null) {
+    return;
+  }
+  if (!Array.isArray(tags)) {
+    throw new Error("point.payload.tags must be an array");
+  }
+  for (const [index, tag] of tags.entries()) {
+    if (typeof tag !== "string") {
+      throw new Error(`point.payload.tags[${index}] must be a string`);
+    }
+    if (tag.trim().length === 0) {
+      throw new Error(
+        `point.payload.tags[${index}] must contain non-whitespace text`,
+      );
+    }
+  }
+}
+
+function assertPgVectorOptionalPayloadText(
+  payload: Record<string, unknown>,
+  key: "title" | "summary" | "updated_at" | "embedding_version",
+): void {
+  if (!(key in payload)) {
+    return;
+  }
+  const value = payload[key];
+  const fieldName = `point.payload.${key}`;
+  if (value === null) {
+    return;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string or null`);
+  }
+  assertPgVectorNonEmptyString(value, fieldName);
+}
+
+function assertPgVectorNonEmptyString(
+  value: unknown,
+  fieldName: string,
+): asserts value is string {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${fieldName} must be a non-empty string`);
+  }
+}
+
+function normalizePgVectorOptionalProjectKey(
+  value: unknown,
+): string | null | undefined {
+  if (value == null) {
+    return value;
+  }
+  if (typeof value !== "string") {
+    throw new Error("filter.projectKey must be a string or null");
+  }
+  assertPgVectorNonEmptyString(value, "filter.projectKey");
+  return value.trim();
+}
+
+function assertPgVectorFilter(filter: unknown): asserts filter is VectorFilter {
+  if (typeof filter !== "object" || filter === null || Array.isArray(filter)) {
+    throw new Error("filter must be an object");
+  }
+}
+
+function assertPgVectorQueryVector(vector: unknown): asserts vector is readonly number[] {
+  if (!Array.isArray(vector)) {
+    throw new Error("query vector must be an array");
+  }
+
+  if (vector.length === 0) {
+    throw new Error("query vector must be a non-empty array");
+  }
+
+  assertPgVectorFiniteVectorComponents(vector, "query vector");
+}
+
+function assertPgVectorFiniteVectorComponents(
+  vector: readonly unknown[],
+  fieldName: string,
+): void {
+  for (const [index, component] of vector.entries()) {
+    if (typeof component !== "number" || !Number.isFinite(component)) {
+      throw new Error(`${fieldName}[${index}] must be a finite number`);
+    }
+  }
+}
+
+function assertPgVectorQueryRows(value: unknown): asserts value is PgVectorQueryRow[] {
+  if (!Array.isArray(value)) {
+    throw new Error("query rows must be an array");
+  }
+  value.forEach((row, index) => {
+    if (typeof row !== "object" || row === null || Array.isArray(row)) {
+      throw new Error(`query rows[${index}] must be an object`);
+    }
+  });
+}
+
+function toPgVectorNonEmptyString(value: unknown, fieldName: string): string {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${fieldName} must be a non-empty string`);
+  }
+  return value;
+}
+
+function toPgVectorStringOrNull(
+  value: unknown,
+  fieldName: string,
+): string | null {
+  if (typeof value === "string" || value === null) {
+    return value;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
+}
+
+function toPgVectorStringArray(value: unknown, fieldName: string): string[] {
+  if (value === null) {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+  return value.map((entry, index) => {
+    if (typeof entry !== "string") {
+      throw new Error(`${fieldName}[${index}] must be a string`);
+    }
+    return entry;
+  });
+}
+
+function assertPgVectorPositiveSafeInteger(
+  value: unknown,
+  fieldName: string,
+): void {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value <= 0
+  ) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+}
+
+function assertPgVectorRecordIds(recordIds: unknown): asserts recordIds is readonly number[] {
+  if (!Array.isArray(recordIds)) {
+    throw new Error("deleteByRecordIds: recordIds must be an array");
+  }
+
+  for (const [index, recordId] of recordIds.entries()) {
+    assertPgVectorPositiveSafeInteger(recordId, `recordIds[${index}]`);
+  }
+}
+
+function normalizePgVectorFilterScopes(
+  scopes: unknown,
+): VectorFilter["scopes"] {
+  if (!Array.isArray(scopes)) {
+    throw new Error("filter.scopes must be an array");
+  }
+  if (scopes.length === 0) {
+    throw new Error("filter.scopes must be a non-empty array");
+  }
+
+  return scopes.map((scope, index) => {
+    if (typeof scope !== "object" || scope === null || Array.isArray(scope)) {
+      throw new Error(`filter.scopes[${index}] must be an object`);
+    }
+
+    const candidate = scope as Record<string, unknown>;
+    const scopeType = normalizePgVectorScopeType(
+      candidate.scopeType,
+      `filter.scopes[${index}].scopeType`,
+    );
+    const scopeId = normalizePgVectorNonEmptyString(
+      candidate.scopeId,
+      `filter.scopes[${index}].scopeId`,
+    );
+    return { scopeType, scopeId };
+  });
+}
+
+function normalizePgVectorNonEmptyString(
+  value: unknown,
+  fieldName: string,
+): string {
+  assertPgVectorNonEmptyString(value, fieldName);
+  return value.trim();
+}
+
+function normalizePgVectorScopeType(value: unknown, fieldName: string): string {
+  const scopeType = normalizePgVectorNonEmptyString(value, fieldName);
+  if (scopeType === "user" || scopeType === "project") {
+    return scopeType;
+  }
+  throw new Error(`${fieldName} must be one of: user, project`);
+}
+
+function toPgVectorFiniteNumber(value: unknown, fieldName: string): number {
+  if (typeof value !== "number" && typeof value !== "string") {
+    throw new Error(`${fieldName} must be a finite number`);
+  }
+
+  if (
+    typeof value === "string" &&
+    !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value)
+  ) {
+    throw new Error(`${fieldName} must be a finite number`);
+  }
+
+  const numberValue = typeof value === "number" ? value : Number(value);
+  if (
+    !Number.isFinite(numberValue) ||
+    (typeof value === "string" && value.trim().length === 0)
+  ) {
+    throw new Error(`${fieldName} must be a finite number`);
+  }
+  return numberValue;
+}
+
+function toPgVectorPositiveSafeInteger(
+  value: unknown,
+  fieldName: string,
+): number {
+  if (typeof value !== "number" && typeof value !== "string") {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+
+  if (typeof value === "string" && !/^[0-9]+$/.test(value)) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+
+  const numberValue = typeof value === "number" ? value : Number(value);
+  if (
+    !Number.isSafeInteger(numberValue) ||
+    numberValue <= 0 ||
+    (typeof value === "string" && value.trim().length === 0)
+  ) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+  return numberValue;
 }

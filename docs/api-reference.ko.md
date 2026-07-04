@@ -167,8 +167,8 @@ curl -X POST http://localhost:8787/v1/memory \
   }'
 ```
 
-에러: 컨텐츠에 스크럽 패턴 (API key, PEM 블록, bearer 토큰, JWT) 포함 시
-`SecretDetectedError` (400).
+에러: 컨텐츠에 스크럽 패턴 (provider API key, PEM 블록, bearer/JWT 토큰,
+자격증명이 포함된 데이터베이스 URL) 포함 시 `SecretDetectedError` (400).
 
 ---
 

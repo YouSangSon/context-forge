@@ -74,6 +74,44 @@ describe("buildVectorPoint", () => {
     expect(point.payload.tags).toEqual([]);
   });
 
+  it("trims direct scope payload metadata", () => {
+    const point = buildVectorPoint(buildInput({
+      organizationId: " dev-team ",
+      scopeType: " user ",
+      scopeId: " alice ",
+      projectKey: " project-alpha ",
+      kind: " decision ",
+      durability: " durable ",
+      title: " Decision title ",
+      summary: " Short summary ",
+      tags: [" ops ", "security "],
+      updatedAt: " 2026-03-29T00:00:00.000Z ",
+      embeddingVersion: " v1 ",
+    }));
+
+    expect(point.payload.organization_id).toBe("dev-team");
+    expect(point.payload.scope_type).toBe("user");
+    expect(point.payload.scope_id).toBe("alice");
+    expect(point.payload.project_key).toBe("project-alpha");
+    expect(point.payload.kind).toBe("decision");
+    expect(point.payload.durability).toBe("durable");
+    expect(point.payload.title).toBe("Decision title");
+    expect(point.payload.summary).toBe("Short summary");
+    expect(point.payload.tags).toEqual(["ops", "security"]);
+    expect(point.payload.updated_at).toBe("2026-03-29T00:00:00.000Z");
+    expect(point.payload.embedding_version).toBe("v1");
+  });
+
+  it("normalizes blank nullable payload metadata to null", () => {
+    const point = buildVectorPoint(buildInput({
+      title: " \n\t ",
+      summary: " \n\t ",
+    }));
+
+    expect(point.payload.title).toBeNull();
+    expect(point.payload.summary).toBeNull();
+  });
+
   it("rejects whitespace-only organizationId before building payload", () => {
     expect(() =>
       buildVectorPoint(buildInput({
@@ -142,6 +180,70 @@ describe("buildVectorPoint", () => {
 
   it.each([
     [
+      "scopeType",
+      { scopeType: " \n\t " },
+      "scopeType must be a non-empty string",
+    ],
+    [
+      "scopeId",
+      { scopeId: " \n\t " },
+      "scopeId must be a non-empty string",
+    ],
+    [
+      "projectKey",
+      { projectKey: " \n\t " },
+      "projectKey must be a non-empty string",
+    ],
+  ])("rejects blank scope metadata field: %s", (_label, override, message) => {
+    expect(callBuildVectorPoint({ ...buildInput(), ...override })).toThrow(
+      message,
+    );
+  });
+
+  it("rejects invalid direct scopeType before building payload", () => {
+    expect(
+      callBuildVectorPoint({ ...buildInput(), scopeType: "team" }),
+    ).toThrow("scopeType must be one of: user, project");
+  });
+
+  it.each([
+    ["kind", { kind: " \n\t " }, "kind must be a non-empty string"],
+    [
+      "durability",
+      { durability: " \n\t " },
+      "durability must be a non-empty string",
+    ],
+    [
+      "updatedAt",
+      { updatedAt: " \n\t " },
+      "updatedAt must be a non-empty string",
+    ],
+    [
+      "embeddingVersion",
+      { embeddingVersion: " \n\t " },
+      "embeddingVersion must be a non-empty string",
+    ],
+  ])("rejects blank required metadata field: %s", (_label, override, message) => {
+    expect(callBuildVectorPoint({ ...buildInput(), ...override })).toThrow(
+      message,
+    );
+  });
+
+  it.each([
+    ["kind", { kind: "note" }, "kind must be one of: decision, summary, fact"],
+    [
+      "durability",
+      { durability: "permanent" },
+      "durability must be one of: ephemeral, durable, archived",
+    ],
+  ])("rejects invalid metadata enum field: %s", (_label, override, message) => {
+    expect(callBuildVectorPoint({ ...buildInput(), ...override })).toThrow(
+      message,
+    );
+  });
+
+  it.each([
+    [
       "projectKey",
       { projectKey: undefined },
       "projectKey must be a string or null",
@@ -162,5 +264,9 @@ describe("buildVectorPoint", () => {
     expect(
       callBuildVectorPoint({ ...buildInput(), tags: ["ops", 12] }),
     ).toThrow("tags[1] must be a string");
+
+    expect(
+      callBuildVectorPoint({ ...buildInput(), tags: ["ops", " \n\t "] }),
+    ).toThrow("tags[1] must contain non-whitespace text");
   });
 });

@@ -23,6 +23,34 @@ const placeholderDbUserInfo = new Set([
   "user:pw",
   "memory:STRONG_PW",
 ]);
+const generatedMetadataFileNames = new Set([
+  ".DS_Store",
+  "Thumbs.db",
+  "Desktop.ini",
+  "desktop.ini",
+]);
+const generatedMetadataSuffixes = [
+  ".swp",
+  ".swo",
+  ".orig",
+  ".rej",
+  "~",
+];
+const generatedMetadataIgnorePatterns = [
+  ...generatedMetadataFileNames,
+  "*.swp",
+  "*.swo",
+  "*.orig",
+  "*.rej",
+  "*~",
+];
+const localSecretArtifactIgnorePatterns = [
+  ".env",
+  ".env.*",
+  "!.env.example",
+  ".envrc",
+  ".akasha/",
+];
 
 function trackedFiles(): string[] {
   return execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
@@ -33,6 +61,23 @@ function trackedFiles(): string[] {
 
 function isTextFile(content: Buffer): boolean {
   return !content.includes(0);
+}
+
+function isGeneratedMetadataPath(path: string): boolean {
+  const filename = path.split("/").at(-1) ?? "";
+  return (
+    generatedMetadataFileNames.has(filename) ||
+    generatedMetadataSuffixes.some((suffix) => filename.endsWith(suffix))
+  );
+}
+
+function isLocalSecretArtifactPath(path: string): boolean {
+  return (
+    path === ".env" ||
+    (path.startsWith(".env.") && path !== ".env.example") ||
+    path === ".envrc" ||
+    path.startsWith(".akasha/")
+  );
 }
 
 function hasOnlyPlaceholderDbCredentials(content: string): boolean {
@@ -49,6 +94,34 @@ function hasOnlyPlaceholderDbCredentials(content: string): boolean {
 }
 
 describe("repo secret hygiene", () => {
+  it("keeps local secret and generated config artifacts ignored", () => {
+    const ignoredPatterns = gitIgnorePatterns();
+
+    expect(
+      localSecretArtifactIgnorePatterns.filter(
+        (pattern) => !ignoredPatterns.has(pattern),
+      ),
+    ).toEqual([]);
+  });
+
+  it("keeps local secret and generated config artifacts out of tracked files", () => {
+    expect(trackedFiles().filter(isLocalSecretArtifactPath)).toEqual([]);
+  });
+
+  it("keeps generated metadata files ignored", () => {
+    const ignoredPatterns = gitIgnorePatterns();
+
+    expect(
+      generatedMetadataIgnorePatterns.filter(
+        (pattern) => !ignoredPatterns.has(pattern),
+      ),
+    ).toEqual([]);
+  });
+
+  it("keeps desktop and editor metadata out of tracked files", () => {
+    expect(trackedFiles().filter(isGeneratedMetadataPath)).toEqual([]);
+  });
+
   it("does not globally allow embedded database credentials", () => {
     const realDbUrl = [
       "postgres://app",
@@ -125,3 +198,13 @@ describe("repo secret hygiene", () => {
     expect(findings).toEqual([]);
   });
 });
+
+function gitIgnorePatterns(): Set<string> {
+  return new Set(
+    fs
+      .readFileSync(".gitignore", "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#")),
+  );
+}

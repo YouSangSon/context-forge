@@ -169,7 +169,7 @@ curl -X POST http://localhost:8787/v1/memory \
 ```
 
 Errors: `SecretDetectedError` (400) when content contains scrubbed patterns
-(API keys, PEM blocks, bearer tokens, JWTs).
+(provider API keys, PEM blocks, bearer/JWT tokens, credentialed database URLs).
 
 ---
 

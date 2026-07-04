@@ -1,11 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  authenticateBearer,
   loadBearerTokens,
   matchBearer,
-  matchBearerFromRequest,
-  checkBearer,
 } from "../../src/app/middleware/bearer-auth.js";
-import type { IncomingMessage } from "node:http";
 
 // ---------------------------------------------------------------------------
 // vi.mock must be hoisted to the top of the module (Vitest limitation with ESM).
@@ -25,16 +23,6 @@ vi.mock("node:crypto", async (importOriginal) => {
     },
   };
 });
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function makeReq(authHeader?: string): IncomingMessage {
-  return {
-    headers: authHeader ? { authorization: authHeader } : {},
-  } as unknown as IncomingMessage;
-}
 
 const TOKENS = [
   { token: "alpha-secret", organizationId: "dev-team" },
@@ -166,6 +154,98 @@ describe("matchBearer", () => {
 });
 
 // ---------------------------------------------------------------------------
+// authenticateBearer — static tokens first, OAuth fallback second
+// ---------------------------------------------------------------------------
+
+describe("authenticateBearer", () => {
+  it("returns a static auth match without calling the OAuth verifier", async () => {
+    const oauthVerifier = { verify: vi.fn() };
+
+    const result = await authenticateBearer(
+      "Bearer alpha-secret",
+      TOKENS,
+      oauthVerifier,
+    );
+
+    expect(result).toEqual({
+      token: "alpha-secret",
+      organizationId: "dev-team",
+      authType: "static",
+    });
+    expect(oauthVerifier.verify).not.toHaveBeenCalled();
+  });
+
+  it("uses the OAuth verifier when no static token matches", async () => {
+    const oauthVerifier = {
+      verify: vi.fn().mockResolvedValue({
+        token: "verifier-token",
+        organizationId: "oauth-team",
+        scopes: ["akasha:read"],
+      }),
+    };
+
+    const result = await authenticateBearer(
+      "Bearer oauth-token",
+      TOKENS,
+      oauthVerifier,
+    );
+
+    expect(oauthVerifier.verify).toHaveBeenCalledWith("oauth-token");
+    expect(result).toEqual({
+      token: "oauth-token",
+      organizationId: "oauth-team",
+      scopes: ["akasha:read"],
+      authType: "oauth",
+    });
+  });
+
+  it.each([
+    {
+      result: null,
+      message: "",
+    },
+    {
+      result: { token: 123 },
+      message: "OAuth verifier result.token must be a string",
+    },
+    {
+      result: { token: "verifier-token", organizationId: " \n\t " },
+      message:
+        "OAuth verifier result.organizationId must contain non-whitespace text",
+    },
+    {
+      result: { token: "verifier-token", scopes: "akasha:read" },
+      message: "OAuth verifier result.scopes must be an array",
+    },
+    {
+      result: { token: "verifier-token", scopes: ["akasha:read", 42] },
+      message: "OAuth verifier result.scopes[1] must be a string",
+    },
+  ])("validates OAuth verifier result %#", async ({ result, message }) => {
+    const oauthVerifier = {
+      verify: vi.fn().mockResolvedValue(result),
+    };
+
+    if (result === null) {
+      await expect(
+        authenticateBearer("Bearer oauth-token", TOKENS, oauthVerifier),
+      ).resolves.toBeNull();
+      return;
+    }
+
+    await expect(
+      authenticateBearer("Bearer oauth-token", TOKENS, oauthVerifier),
+    ).rejects.toThrow(message);
+  });
+
+  it("returns null when neither static nor OAuth auth can match", async () => {
+    await expect(
+      authenticateBearer("Bearer unknown-token", TOKENS, null),
+    ).resolves.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // token:org binding parsed correctly
 // ---------------------------------------------------------------------------
 
@@ -269,52 +349,5 @@ describe("loadBearerTokens", () => {
     expect(() => loadBearerTokens({ MEMORY_API_TOKENS: value })).toThrow(
       /Invalid MEMORY_API_TOKENS entry: entries must not be blank/i,
     );
-  });
-});
-
-// ---------------------------------------------------------------------------
-// matchBearerFromRequest — reads authorization header from IncomingMessage
-// ---------------------------------------------------------------------------
-
-describe("matchBearerFromRequest", () => {
-  it("returns the matched token when the request carries a valid Authorization header", () => {
-    // Arrange
-    const req = makeReq("Bearer alpha-secret");
-
-    // Act
-    const result = matchBearerFromRequest(req, TOKENS);
-
-    // Assert
-    expect(result).not.toBeNull();
-    expect(result!.organizationId).toBe("dev-team");
-  });
-
-  it("returns null when the request has no Authorization header", () => {
-    // Arrange
-    const req = makeReq();
-
-    // Act
-    const result = matchBearerFromRequest(req, TOKENS);
-
-    // Assert
-    expect(result).toBeNull();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// checkBearer — backward-compat boolean wrapper
-// ---------------------------------------------------------------------------
-
-describe("checkBearer", () => {
-  it("returns true for a valid bearer token", () => {
-    expect(checkBearer("Bearer alpha-secret", TOKENS)).toBe(true);
-  });
-
-  it("returns false for an invalid bearer token", () => {
-    expect(checkBearer("Bearer wrong", TOKENS)).toBe(false);
-  });
-
-  it("returns false when authHeader is undefined", () => {
-    expect(checkBearer(undefined, TOKENS)).toBe(false);
   });
 });

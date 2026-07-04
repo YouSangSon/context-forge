@@ -60,11 +60,11 @@ export async function runOutboxSweep(
   let retried = 0;
   let failed = 0;
 
-  for (const row of pending) {
-    const outcome = await sweepOne(input, row, maxAttempts);
-    if (outcome === "cleaned") cleaned += 1;
-    else if (outcome === "retry") retried += 1;
-    else failed += 1;
+  for (const rows of groupRowsByOrganization(pending).values()) {
+    const outcome = await sweepBatch(input, rows, maxAttempts);
+    cleaned += outcome.cleaned;
+    retried += outcome.retried;
+    failed += outcome.failed;
   }
 
   return {
@@ -75,56 +75,119 @@ export async function runOutboxSweep(
   };
 }
 
-async function sweepOne(
+function groupRowsByOrganization(
+  pending: PendingQdrantCleanup[],
+): Map<string, PendingQdrantCleanup[]> {
+  const groups = new Map<string, PendingQdrantCleanup[]>();
+  for (const row of pending) {
+    const rows = groups.get(row.organizationId) ?? [];
+    rows.push(row);
+    groups.set(row.organizationId, rows);
+  }
+  return groups;
+}
+
+async function sweepBatch(
+  input: Readonly<RunOutboxSweepInput>,
+  rows: PendingQdrantCleanup[],
+  maxAttempts: number,
+): Promise<Omit<SweepResult, "scanned">> {
+  const [firstRow] = rows;
+  if (firstRow === undefined) {
+    return { cleaned: 0, retried: 0, failed: 0 };
+  }
+
+  try {
+    await input.vectorIndex.delete(flattenPointIds(rows), {
+      organizationId: firstRow.organizationId,
+    });
+  } catch (err: unknown) {
+    return markBatchFailure(input, rows, maxAttempts, err);
+  }
+
+  let cleaned = 0;
+  let retried = 0;
+  let failed = 0;
+
+  for (const row of rows) {
+    try {
+      await input.archiveRepository.markQdrantStatus(row.archiveId, "deleted");
+      cleaned += 1;
+    } catch (err: unknown) {
+      const outcome = await markRowFailure(input, row, maxAttempts, err);
+      if (outcome === "retry") retried += 1;
+      else failed += 1;
+    }
+  }
+
+  return { cleaned, retried, failed };
+}
+
+function flattenPointIds(rows: PendingQdrantCleanup[]): string[] {
+  return rows.flatMap((row) => row.qdrantPointIds);
+}
+
+async function markBatchFailure(
+  input: Readonly<RunOutboxSweepInput>,
+  rows: PendingQdrantCleanup[],
+  maxAttempts: number,
+  err: unknown,
+): Promise<Omit<SweepResult, "scanned">> {
+  let retried = 0;
+  let failed = 0;
+
+  for (const row of rows) {
+    const outcome = await markRowFailure(input, row, maxAttempts, err);
+    if (outcome === "retry") retried += 1;
+    else failed += 1;
+  }
+
+  return { cleaned: 0, retried, failed };
+}
+
+async function markRowFailure(
   input: Readonly<RunOutboxSweepInput>,
   row: PendingQdrantCleanup,
   maxAttempts: number,
-): Promise<"cleaned" | "retry" | "failed"> {
+  err: unknown,
+): Promise<"retry" | "failed"> {
+  const errorMessage = err instanceof Error ? err.message : String(err);
+  const nextAttempt = row.attemptCount + 1;
+  const giveUp = nextAttempt >= maxAttempts;
+  const status = giveUp ? "failed" : "pending";
+
+  input.logger.warn(
+    {
+      event: giveUp
+        ? "compact.sweep_giveup"
+        : "compact.sweep_retry_failed",
+      archiveId: row.archiveId,
+      attempt: nextAttempt,
+      err: errorMessage,
+    },
+    giveUp
+      ? "qdrant cleanup gave up after max attempts; needs ops review"
+      : "qdrant cleanup retry failed; will be picked up next sweep",
+  );
+
   try {
-    await input.vectorIndex.delete(row.qdrantPointIds, {
-      organizationId: row.organizationId,
-    });
-    await input.archiveRepository.markQdrantStatus(row.archiveId, "deleted");
-    return "cleaned";
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    const nextAttempt = row.attemptCount + 1;
-    const giveUp = nextAttempt >= maxAttempts;
-    const status = giveUp ? "failed" : "pending";
-
-    input.logger.warn(
-      {
-        event: giveUp
-          ? "compact.sweep_giveup"
-          : "compact.sweep_retry_failed",
-        archiveId: row.archiveId,
-        attempt: nextAttempt,
-        err: errorMessage,
-      },
-      giveUp
-        ? "qdrant cleanup gave up after max attempts; needs ops review"
-        : "qdrant cleanup retry failed; will be picked up next sweep",
+    await input.archiveRepository.markQdrantStatus(
+      row.archiveId,
+      status,
+      errorMessage,
     );
-
-    try {
-      await input.archiveRepository.markQdrantStatus(
-        row.archiveId,
-        status,
-        errorMessage,
-      );
-    } catch (markErr: unknown) {
-      input.logger.error(
-        {
-          event: "compact.sweep_mark_failed",
-          archiveId: row.archiveId,
-          err: markErr,
-        },
-        "failed to update qdrant_status during sweep",
-      );
-    }
-
-    return giveUp ? "failed" : "retry";
+  } catch (markErr: unknown) {
+    input.logger.error(
+      {
+        event: "compact.sweep_mark_failed",
+        archiveId: row.archiveId,
+        err: markErr,
+      },
+      "failed to update qdrant_status during sweep",
+    );
   }
+
+  return giveUp ? "failed" : "retry";
 }
 
 function assertRunOutboxSweepInput(

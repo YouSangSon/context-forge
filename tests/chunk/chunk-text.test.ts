@@ -47,6 +47,50 @@ describe("chunkText", () => {
     ).toEqual([]);
   });
 
+  it("does not emit an overlap-only trailing chunk at the target boundary", () => {
+    const text = "alpha beta gamma delta";
+
+    const chunks = chunkText({
+      text,
+      targetTokens: 4,
+      overlapTokens: 2,
+    });
+
+    expect(chunks).toEqual([
+      {
+        chunkIndex: 0,
+        content: text,
+        startOffset: 0,
+        endOffset: text.length,
+      },
+    ]);
+  });
+
+  it("emits a final overlapped partial chunk when text crosses the target", () => {
+    const text = "alpha beta gamma delta epsilon";
+
+    const chunks = chunkText({
+      text,
+      targetTokens: 4,
+      overlapTokens: 2,
+    });
+
+    expect(chunks).toEqual([
+      {
+        chunkIndex: 0,
+        content: "alpha beta gamma delta",
+        startOffset: 0,
+        endOffset: "alpha beta gamma delta".length,
+      },
+      {
+        chunkIndex: 1,
+        content: "gamma delta epsilon",
+        startOffset: "alpha beta ".length,
+        endOffset: text.length,
+      },
+    ]);
+  });
+
   it.each([undefined, null, "hello", 12, true, []])(
     "rejects non-object input before reading properties",
     (input) => {

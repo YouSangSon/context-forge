@@ -340,6 +340,15 @@ describe("createMetricsRegistry HTTP metrics", () => {
     {
       input: {
         method: "GET",
+        route: " \n\t ",
+        statusCode: 200,
+        durationSeconds: 0.1,
+      },
+      message: "route must contain non-whitespace text",
+    },
+    {
+      input: {
+        method: "GET",
         route: null,
         statusCode: 200,
         durationSeconds: 0.1,
@@ -353,7 +362,34 @@ describe("createMetricsRegistry HTTP metrics", () => {
         statusCode: Number.NaN,
         durationSeconds: 0.1,
       },
-      message: "statusCode must be a finite number",
+      message: "statusCode must be an integer from 100 to 599",
+    },
+    {
+      input: {
+        method: "GET",
+        route: "/healthz",
+        statusCode: 200.5,
+        durationSeconds: 0.1,
+      },
+      message: "statusCode must be an integer from 100 to 599",
+    },
+    {
+      input: {
+        method: "GET",
+        route: "/healthz",
+        statusCode: 99,
+        durationSeconds: 0.1,
+      },
+      message: "statusCode must be an integer from 100 to 599",
+    },
+    {
+      input: {
+        method: "GET",
+        route: "/healthz",
+        statusCode: 600,
+        durationSeconds: 0.1,
+      },
+      message: "statusCode must be an integer from 100 to 599",
     },
     {
       input: {
@@ -362,7 +398,16 @@ describe("createMetricsRegistry HTTP metrics", () => {
         statusCode: 200,
         durationSeconds: Number.POSITIVE_INFINITY,
       },
-      message: "durationSeconds must be a finite number",
+      message: "durationSeconds must be a non-negative finite number",
+    },
+    {
+      input: {
+        method: "GET",
+        route: "/healthz",
+        statusCode: 200,
+        durationSeconds: -0.1,
+      },
+      message: "durationSeconds must be a non-negative finite number",
     },
   ])("rejects malformed request observations", ({ input, message }) => {
     const metrics = createMetricsRegistry();
@@ -457,7 +502,15 @@ describe("createMetricsRegistry sweeper metrics", () => {
         status: "success",
         durationSeconds: Number.NaN,
       },
-      message: "durationSeconds must be a finite number",
+      message: "durationSeconds must be a non-negative finite number",
+    },
+    {
+      input: {
+        worker: "ingest",
+        status: "success",
+        durationSeconds: -0.1,
+      },
+      message: "durationSeconds must be a non-negative finite number",
     },
     {
       input: {
@@ -475,7 +528,43 @@ describe("createMetricsRegistry sweeper metrics", () => {
         durationSeconds: 0.1,
         counts: { scanned: Number.POSITIVE_INFINITY },
       },
-      message: "counts.scanned must be a finite number",
+      message: "counts.scanned must be a non-negative safe integer",
+    },
+    {
+      input: {
+        worker: "ingest",
+        status: "success",
+        durationSeconds: 0.1,
+        counts: { scanned: Number.NaN },
+      },
+      message: "counts.scanned must be a non-negative safe integer",
+    },
+    {
+      input: {
+        worker: "ingest",
+        status: "success",
+        durationSeconds: 0.1,
+        counts: { scanned: -1 },
+      },
+      message: "counts.scanned must be a non-negative safe integer",
+    },
+    {
+      input: {
+        worker: "ingest",
+        status: "success",
+        durationSeconds: 0.1,
+        counts: { scanned: 1.5 },
+      },
+      message: "counts.scanned must be a non-negative safe integer",
+    },
+    {
+      input: {
+        worker: "ingest",
+        status: "success",
+        durationSeconds: 0.1,
+        counts: { scanned: Number.MAX_SAFE_INTEGER + 1 },
+      },
+      message: "counts.scanned must be a non-negative safe integer",
     },
   ])("rejects malformed sweeper observations", ({ input, message }) => {
     const metrics = createMetricsRegistry();
@@ -508,10 +597,26 @@ describe("createMetricsRegistry dependency metrics", () => {
     {
       input: {
         status: "ok",
+        checks: [{ name: " \n\t ", status: "ok", durationMs: 1 }],
+      },
+      message:
+        "dependency report.checks[0].name must contain non-whitespace text",
+    },
+    {
+      input: {
+        status: "ok",
         checks: [{ name: "postgres", status: "ok", durationMs: Number.NaN }],
       },
       message:
-        "dependency report.checks[0].durationMs must be a finite number",
+        "dependency report.checks[0].durationMs must be a non-negative finite number",
+    },
+    {
+      input: {
+        status: "ok",
+        checks: [{ name: "postgres", status: "ok", durationMs: -1 }],
+      },
+      message:
+        "dependency report.checks[0].durationMs must be a non-negative finite number",
     },
   ])("rejects malformed dependency reports", ({ input, message }) => {
     const metrics = createMetricsRegistry();
@@ -521,7 +626,7 @@ describe("createMetricsRegistry dependency metrics", () => {
 });
 
 describe("createMetricsRegistry background queue metrics", () => {
-  it("renders sanitized backlog gauges and collect success", () => {
+  it("renders backlog gauges and collect success", () => {
     const metrics = createMetricsRegistry();
 
     const text = metrics.render({
@@ -599,7 +704,38 @@ describe("createMetricsRegistry background queue metrics", () => {
         collectSuccess: true,
         rows: [{ queue: "ingest", state: "pending", count: Number.NaN }],
       },
-      message: "background queue backlog.rows[0].count must be a finite number",
+      message:
+        "background queue backlog.rows[0].count must be a non-negative safe integer",
+    },
+    {
+      input: {
+        collectSuccess: true,
+        rows: [{ queue: "ingest", state: "pending", count: -1 }],
+      },
+      message:
+        "background queue backlog.rows[0].count must be a non-negative safe integer",
+    },
+    {
+      input: {
+        collectSuccess: true,
+        rows: [{ queue: "ingest", state: "pending", count: 1.5 }],
+      },
+      message:
+        "background queue backlog.rows[0].count must be a non-negative safe integer",
+    },
+    {
+      input: {
+        collectSuccess: true,
+        rows: [
+          {
+            queue: "ingest",
+            state: "pending",
+            count: Number.MAX_SAFE_INTEGER + 1,
+          },
+        ],
+      },
+      message:
+        "background queue backlog.rows[0].count must be a non-negative safe integer",
     },
   ])("rejects malformed backlog snapshots", ({ input, message }) => {
     const metrics = createMetricsRegistry();

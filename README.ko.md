@@ -23,25 +23,25 @@ Claude Code, Codex CLI, 또는 어떤 MCP 클라이언트에든 붙이면 에이
 
 | | **Akasha** | doobidoo/mcp-memory-service | coleam00/mcp-mem0 | mem0ai/mem0 | letta-ai/letta | getzep/zep |
 |---|---|---|---|---|---|---|
-| **즉시 무료 사용** | ✅ | ✅ | ❌ (OpenAI) | ❌ (OpenAI default) | ❌ (hosted) | ❌ (Cloud SaaS) |
+| **즉시 무료 사용** | ✅ | ✅ | ❌ (OpenAI) | ❌ (OpenAI 기본값) | ❌ (호스팅형) | ❌ (Cloud SaaS) |
 | **데이터 본인 머신 저장** | ✅ | ✅ | 부분 (OpenAI 호출) | 부분 (OpenAI 호출) | ❌ (Letta Cloud) | ❌ (Zep Cloud) |
-| **MCP-native 프로토콜** | ✅ | ✅ | ✅ (Mem0 wrap) | wrapper 전용 | wrapper 전용 | ❌ |
+| **MCP-native 프로토콜** | ✅ | ✅ | ✅ (Mem0 래핑) | 래퍼 전용 | 래퍼 전용 | ❌ |
 | **즉시 멀티테넌트** | ✅ (`organization_id`, token-org 바인딩, SQL + vector 양 계층 필터) | ❌ | Mem0 의존 | ✅ | ✅ | ✅ |
-| **Postgres + vector 백엔드** | ✅ (Qdrant 기본; Postgres 단독 배포 옵션 pgvector) | SQLite-vec | Supabase + pgvector | varies | varies | proprietary |
-| **OSS 경로 active 유지** | ✅ | ✅ | ✅ (template repo) | ✅ | ✅ | ❌ (CE 2025 deprecated) |
+| **Postgres + vector 백엔드** | ✅ (Qdrant 기본; Postgres 단독 배포 옵션 pgvector) | SQLite-vec | Supabase + pgvector | 다양함 | 다양함 | 독점형 |
+| **OSS 경로 활발히 유지** | ✅ | ✅ | ✅ (template repo) | ✅ | ✅ | ❌ (CE 2025 지원 중단) |
 
-MCP 메모리 생태계 norm 은 *무료/로컬 default* — doobidoo (1.7k★) 가 `$0`
-cost 를 헤드라인으로 사용, 수렴 무료 임베딩 모델 (`all-MiniLM-L6-v2`)도
-Akasha 가 같이 채택. Akasha 가 distinctively 더 나아간 점:
+MCP 메모리 생태계에서는 *무료/로컬 기본값* 이 일반적입니다. doobidoo
+(1.7k★) 는 `$0` 비용을 전면에 내세우고, Akasha도 여러 도구가 채택한 무료 임베딩 모델
+(`all-MiniLM-L6-v2`)을 사용합니다. Akasha가 한 단계 더 나아가는 지점:
 **vector index 와 분리된 Postgres canonical store** (Qdrant collection 재구축
 시 데이터 손실 0, reindex 는 도구 1번 호출), **SQL + vector 양 계층의
-org-scoped 멀티테넌시** (peers 는 skip 하거나 upstream 프레임워크에 의존),
+org-scoped 멀티테넌시** (다른 도구들은 이를 생략하거나 상위 프레임워크에 의존),
 **wrapper 가 아닌 MCP-native** (프로토콜과 메모리 엔진 사이 shim 없음).
 두 번째 서비스가 번거로운 환경에서는 `VECTOR_BACKEND=pgvector` 로 벡터를
 Postgres 에 저장할 수 있습니다 — Qdrant 불필요.
 
-세련된 UI 가 있는 hosted 메모리 제품이 필요하면 Mem0 또는 Letta. **API
-키 불필요한 self-hosted 메모리 MCP 서버**가 필요하면 이것.
+세련된 UI 가 있는 호스팅형 메모리 제품이 필요하면 Mem0 또는 Letta. **API
+키가 필요 없는 자체 호스팅 메모리 MCP 서버**가 필요하면 이것.
 
 ## 주요 기능 (Features)
 
@@ -56,8 +56,9 @@ Postgres 에 저장할 수 있습니다 — Qdrant 불필요.
   intent 를 먼저 기록하고, 중간에 실패한 upsert 는 백그라운드 sweeper 가
   재시도합니다 (visibility-timeout claim, `FOR UPDATE SKIP LOCKED`). 인덱스가
   조용히 어긋나는 일이 없습니다.
-- **쓰기 시점 시크릿 스크러빙.** 콘텐츠는 저장되기 전에 스캔됩니다 — API 키,
-  PEM 블록, bearer 토큰, JWT 는 저장 대신 거부됩니다 (`SecretDetectedError`).
+- **쓰기 시점 시크릿 스크러빙.** 콘텐츠는 저장되기 전에 스캔됩니다 — provider
+  API 키, PEM 블록, bearer/JWT 토큰, 자격증명이 포함된 데이터베이스 URL 은 저장
+  대신 거부됩니다 (`SecretDetectedError`).
 - **dry-run 이 기본인 컴팩션.** exact + 시맨틱 중복 제거와 time-decay 아카이빙은
   기본적으로 미리보기 (`dryRun: true`)로 동작하며, apply 는 idempotent + rate-limited.
   아카이빙된 레코드는 `unarchive_memory` 로 복원 가능합니다.
@@ -130,7 +131,7 @@ org 를 전혀 의식할 필요가 없습니다 —
 git clone https://github.com/YouSangSon/akasha.git
 cd akasha
 
-# 1. env 템플릿 복사 (default 그대로 동작 — OPENAI_API_KEY 는
+# 1. env 템플릿 복사 (기본값 그대로 동작 — OPENAI_API_KEY 는
 #    EMBEDDING_PROVIDER=openai 로 바꿀 때만 필요)
 cp .env.example .env
 ${EDITOR:-nano} .env
@@ -188,7 +189,7 @@ curl -sX POST http://localhost:8787/v1/memory/context-pack \
 | Canonical store (`src/store/memory-repository.ts`) | Postgres — 레코드, 소스, ingest job, entity graph, 감사 |
 | Vector index (`src/vector/`) | Qdrant (기본) 또는 pgvector — 청크 임베딩 + 유사도 검색. `VECTOR_BACKEND=pgvector` 로 Postgres 단독 배포 가능. |
 | Compaction (`src/compact/`) | 중복 제거 (exact + 시맨틱), decay, archive, unarchive, sweeper |
-| Embeddings (`src/embedding/`) | `transformers` (무료 로컬 ONNX, 기본), `openai` (`text-embedding-3-small`), 또는 `local` (CI용 결정론적 stub) |
+| Embeddings (`src/embedding/`) | `transformers` (무료 로컬 ONNX, 기본), `openai` (`text-embedding-3-small`), 또는 `local` (CI용 결정론적 스텁) |
 
 데이터 흐름: 호출자가 `add_memory` → 레코드는 Postgres에 저장, entity mention
 연결, 청크 분할 + 임베딩 + 활성 벡터 백엔드 upsert. `search_memory` → 쿼리
@@ -203,7 +204,7 @@ curl -sX POST http://localhost:8787/v1/memory/context-pack \
 | 변수 | 기본값 | 용도 |
 |------|--------|------|
 | `MEMORY_API_TOKENS` | _(OAuth JWT 검증 미설정 시 필수)_ | HTTP API 용 static bearer 토큰; `token:org` 로 토큰을 org 에 바인딩 |
-| `EMBEDDING_PROVIDER` | `transformers` | `transformers` (무료 로컬 ONNX), `openai`, 또는 `local` (CI stub) |
+| `EMBEDDING_PROVIDER` | `transformers` | `transformers` (무료 로컬 ONNX), `openai`, 또는 `local` (CI 스텁) |
 | `VECTOR_BACKEND` | `qdrant` | `qdrant`, 또는 Postgres 단독 배포용 `pgvector` |
 
 `OPENAI_API_KEY` 는 선택 사항 — `EMBEDDING_PROVIDER=openai` 일 때만 필요합니다.
@@ -213,7 +214,7 @@ curl -sX POST http://localhost:8787/v1/memory/context-pack \
 
 ## 문서 (Documentation)
 
-운영자/기여자용 전체 문서는 [`docs/`](docs/README.md) 에 있습니다. 모든
+운영자/기여자용 전체 문서는 [`docs/`](docs/README.ko.md) 에 있습니다. 모든
 페이지에는 한국어 (`*.ko.md`) 미러가 있습니다.
 
 | 주제 | 설명 |
@@ -237,15 +238,17 @@ npm run dev:mcp       # MCP stdio 서버 (watch 모드)
 npm run dev:cli       # CLI (watch 모드)
 npm run lifecycle:init -- --project my-project --organization-id default
 npm run typecheck     # tsc --noEmit
-npm run test          # vitest run
+npm run build         # dist/ 정리 후 TypeScript 컴파일
+npm audit --audit-level=moderate
+npm test              # vitest run
 npm run db:migrate    # 미적용 마이그레이션 실행
-npm run backup:create # VECTOR_BACKEND 기준 backend-aware backup
-npm run backup:create:pgvector # 명시적 Postgres-only pgvector backup
+npm run backup:create # VECTOR_BACKEND 기준 백업
+npm run backup:create:pgvector # 명시적 Postgres 단독 pgvector 백업
 ```
 
 `VECTOR_BACKEND=qdrant` 에서는 `backup:create` 가 Postgres와 Qdrant snapshot을
-함께 캡처합니다. `VECTOR_BACKEND=pgvector` 에서는 logical vector data lives in
-Postgres 이므로 `backup:create` 는 `scripts/snapshot-qdrant.sh` 를 건너뛰며
+함께 캡처합니다. `VECTOR_BACKEND=pgvector` 에서는 논리 벡터 데이터가
+Postgres에 저장되므로 `backup:create` 는 `scripts/snapshot-qdrant.sh` 를 건너뛰며
 `QDRANT_URL` 을 요구하지 않습니다. `BACKUP_ENCRYPTION_KEY_FILE` 을 설정하면
 off-host copy 전에 backup artifact를 AES-256-GCM으로 암호화합니다.
 

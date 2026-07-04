@@ -2,7 +2,9 @@ import { once } from "node:events";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { startOperatorServer } from "../../src/app/server.js";
 import type { ServiceConfig } from "../../src/config.js";
+import type { PgPool } from "../../src/db/connection.js";
 import type { Logger } from "../../src/logger.js";
 import type { ToolRegistry } from "../../src/mcp/types.js";
 
@@ -21,9 +23,6 @@ afterEach(async () => {
   );
   restoreEnv("COMPACTION_SWEEP_ENABLED", originalEnv.COMPACTION_SWEEP_ENABLED);
   restoreEnv("INGEST_SWEEP_ENABLED", originalEnv.INGEST_SWEEP_ENABLED);
-  vi.doUnmock("../../src/app/background-queue-metrics.js");
-  vi.doUnmock("../../src/app/background-workers.js");
-  vi.resetModules();
 });
 
 describe("startOperatorServer metrics wiring", () => {
@@ -57,21 +56,10 @@ describe("startOperatorServer metrics wiring", () => {
         { queue: "compaction", state: "pending", count: 4 },
       ],
     });
-    const createBackgroundQueueMetricsCollector = vi.fn(() => ({
-      collect: collectBackgroundQueues,
-    }));
-
-    vi.doMock("../../src/app/background-queue-metrics.js", () => ({
-      createBackgroundQueueMetricsCollector,
-    }));
-    vi.doMock("../../src/app/background-workers.js", () => ({
-      startBackgroundWorkers,
-    }));
 
     process.env.COMPACTION_SWEEP_ENABLED = "true";
     process.env.INGEST_SWEEP_ENABLED = "false";
 
-    const { startOperatorServer } = await import("../../src/app/server.js");
     const server = startOperatorServer({
       config: buildTestConfig(),
       registry: {} as ToolRegistry,
@@ -80,6 +68,9 @@ describe("startOperatorServer metrics wiring", () => {
       dependencyProbes: {},
       oauthProtectedResource: null,
       oauthTokenVerifier: null,
+      backgroundQueueMetrics: { collect: collectBackgroundQueues },
+      backgroundWorkerStarter: startBackgroundWorkers,
+      probePool: buildProbePool(),
     });
     servers.push(server);
 
@@ -99,7 +90,6 @@ describe("startOperatorServer metrics wiring", () => {
     expect(text).toContain(
       'akasha_sweeper_rows_total{worker="compaction",outcome="cleaned"} 1',
     );
-    expect(createBackgroundQueueMetricsCollector).toHaveBeenCalledOnce();
     expect(collectBackgroundQueues).toHaveBeenCalledOnce();
     expect(text).toContain("akasha_background_queue_collect_success 1");
     expect(text).toContain(
@@ -120,6 +110,13 @@ function buildTestConfig(): ServiceConfig {
     host: "127.0.0.1",
     port: 0,
     databaseUrl: "postgres://memory:memory@127.0.0.1:5432/memory_os",
+    postgres: {
+      pool: {
+        max: 10,
+        idleTimeoutMillis: 30_000,
+        connectionTimeoutMillis: 5_000,
+      },
+    },
     vectorBackend: "pgvector",
     qdrant: {
       url: "",
@@ -151,6 +148,14 @@ function buildTestLogger(): Logger {
     debug: vi.fn(),
     child: vi.fn(() => buildTestLogger()),
   } as unknown as Logger;
+}
+
+function buildProbePool(): PgPool {
+  return {
+    query: vi.fn(),
+    connect: vi.fn(),
+    end: vi.fn().mockResolvedValue(undefined),
+  } as unknown as PgPool;
 }
 
 function restoreEnv(name: string, value: string | undefined): void {

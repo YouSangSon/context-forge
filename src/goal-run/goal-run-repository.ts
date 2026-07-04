@@ -1,4 +1,5 @@
 import type { PgPool } from "../db/connection.js";
+import { requireSingleRow, toIsoString, toNumber } from "../store/db-utils.js";
 import type {
   CloseGoalRunInput,
   GoalRun,
@@ -31,12 +32,12 @@ export class GoalRunNotActiveError extends Error {
 type GoalRunRow = {
   id: number | string;
   organization_id: string;
-  scope_type: GoalRun["scopeType"];
+  scope_type: unknown;
   scope_id: string;
   project_key: string | null;
   goal: string;
   termination_criteria: string | null;
-  status: GoalRun["status"];
+  status: unknown;
   iteration_count: number | string;
   created_at: string | Date;
   updated_at: string | Date;
@@ -50,7 +51,7 @@ type GoalRunIterationRow = {
   organization_id: string;
   iteration_index: number | string;
   attempt: string;
-  outcome: GoalRunIteration["outcome"];
+  outcome: unknown;
   summary: string | null;
   error: string | null;
   created_at: string | Date;
@@ -90,6 +91,17 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
   return {
     async start(input) {
       assertStartInput(input);
+      const organizationId = input.organizationId.trim();
+      const scopeId = input.scopeId.trim();
+      const projectKey =
+        input.projectKey === undefined || input.projectKey === null
+          ? null
+          : input.projectKey.trim();
+      const terminationCriteria =
+        input.terminationCriteria === undefined ||
+        input.terminationCriteria === null
+          ? null
+          : input.terminationCriteria.trim();
 
       const result = await pool.query<GoalRunRow>(
         `
@@ -101,12 +113,12 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           RETURNING ${RUN_COLUMNS}
         `,
         [
-          input.organizationId,
+          organizationId,
           input.scopeType,
-          input.scopeId,
-          input.projectKey ?? null,
-          input.goal,
-          input.terminationCriteria ?? null,
+          scopeId,
+          projectKey,
+          input.goal.trim(),
+          terminationCriteria,
         ],
       );
 
@@ -115,6 +127,15 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
 
     async recordIteration(input) {
       assertRecordIterationInput(input);
+      const organizationId = input.organizationId.trim();
+      const summary =
+        input.summary === undefined || input.summary === null
+          ? null
+          : input.summary.trim();
+      const error =
+        input.error === undefined || input.error === null
+          ? null
+          : input.error.trim();
 
       const client = await pool.connect();
       try {
@@ -132,7 +153,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
               AND status = 'active'
             RETURNING iteration_count
           `,
-          [input.goalRunId, input.organizationId],
+          [input.goalRunId, organizationId],
         );
 
         const bumped = bump.rows[0];
@@ -141,7 +162,10 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           throw new GoalRunNotActiveError(input.goalRunId);
         }
 
-        const iterationIndex = toNumber(bumped.iteration_count);
+        const iterationIndex = toPositiveSafeInteger(
+          bumped.iteration_count,
+          "goal run iteration_count",
+        );
 
         const inserted = await client.query<GoalRunIterationRow>(
           `
@@ -154,12 +178,12 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           `,
           [
             input.goalRunId,
-            input.organizationId,
+            organizationId,
             iterationIndex,
-            input.attempt,
+            input.attempt.trim(),
             input.outcome,
-            input.summary ?? null,
-            input.error ?? null,
+            summary,
+            error,
           ],
         );
 
@@ -174,12 +198,15 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
               WHERE id = ANY($2::bigint[])
                 AND organization_id = $3
             `,
-            [input.goalRunId, input.memoryIds, input.organizationId],
+            [input.goalRunId, input.memoryIds, organizationId],
           );
         }
 
+        const iteration = mapIteration(
+          requireSingleRow(inserted.rows[0], "iteration"),
+        );
         await client.query("COMMIT");
-        return mapIteration(requireSingleRow(inserted.rows[0], "iteration"));
+        return iteration;
       } catch (error: unknown) {
         await client.query("ROLLBACK").catch(() => undefined);
         throw error;
@@ -190,6 +217,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
 
     async get(input) {
       assertGetInput(input);
+      const organizationId = input.organizationId.trim();
 
       const runResult = await pool.query<GoalRunRow>(
         `
@@ -197,7 +225,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           FROM goal_runs
           WHERE id = $1 AND organization_id = $2
         `,
-        [input.goalRunId, input.organizationId],
+        [input.goalRunId, organizationId],
       );
 
       const runRow = runResult.rows[0];
@@ -212,7 +240,7 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
           WHERE goal_run_id = $1 AND organization_id = $2
           ORDER BY iteration_index ASC
         `,
-        [input.goalRunId, input.organizationId],
+        [input.goalRunId, organizationId],
       );
 
       const withIterations: GoalRunWithIterations = {
@@ -226,9 +254,9 @@ export function createGoalRunRepository(pool: PgPool): GoalRunRepository {
       assertListInput(input);
 
       const params: unknown[] = [
-        input.organizationId,
+        input.organizationId.trim(),
         input.scopeType,
-        input.scopeId,
+        input.scopeId.trim(),
       ];
       let statusFilter = "";
       if (input.status) {
@@ -268,6 +296,9 @@ async function closeRun(
   status: "completed" | "abandoned",
 ): Promise<GoalRun> {
   assertCloseInput(input);
+  const organizationId = input.organizationId.trim();
+  const note =
+    input.note === undefined || input.note === null ? null : input.note.trim();
 
   const result = await pool.query<GoalRunRow>(
     `
@@ -281,7 +312,7 @@ async function closeRun(
         AND status = 'active'
       RETURNING ${RUN_COLUMNS}
     `,
-    [input.goalRunId, input.organizationId, status, input.note ?? null],
+    [input.goalRunId, organizationId, status, note],
   );
 
   const row = result.rows[0];
@@ -294,50 +325,117 @@ async function closeRun(
 
 function mapRun(row: GoalRunRow): GoalRun {
   return {
-    id: toNumber(row.id),
-    organizationId: row.organization_id,
-    scopeType: row.scope_type,
-    scopeId: row.scope_id,
-    projectKey: row.project_key,
-    goal: row.goal,
-    terminationCriteria: row.termination_criteria,
-    status: row.status,
-    iterationCount: toNumber(row.iteration_count),
+    id: toPositiveSafeInteger(row.id, "goal run id"),
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "goal run organization_id",
+    ),
+    scopeType: toGoalRunScopeType(row.scope_type, "goal run scope_type"),
+    scopeId: mapRequiredText(row.scope_id, "goal run scope_id"),
+    projectKey: mapNullableNonBlankText(
+      row.project_key,
+      "goal run project_key",
+    ),
+    goal: mapRequiredText(row.goal, "goal run goal"),
+    terminationCriteria: mapNullableNonBlankText(
+      row.termination_criteria,
+      "goal run termination_criteria",
+    ),
+    status: toGoalRunStatus(row.status, "goal run status"),
+    iterationCount: toNonNegativeSafeInteger(
+      row.iteration_count,
+      "goal run iteration_count",
+    ),
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
     closedAt: row.closed_at === null ? null : toIsoString(row.closed_at),
-    closeNote: row.close_note,
+    closeNote: mapNullableNonBlankText(row.close_note, "goal run close_note"),
   };
 }
 
 function mapIteration(row: GoalRunIterationRow): GoalRunIteration {
   return {
-    id: toNumber(row.id),
-    goalRunId: toNumber(row.goal_run_id),
-    organizationId: row.organization_id,
-    iterationIndex: toNumber(row.iteration_index),
-    attempt: row.attempt,
-    outcome: row.outcome,
-    summary: row.summary,
-    error: row.error,
+    id: toPositiveSafeInteger(row.id, "goal run iteration id"),
+    goalRunId: toPositiveSafeInteger(
+      row.goal_run_id,
+      "goal run iteration goal_run_id",
+    ),
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "goal run iteration organization_id",
+    ),
+    iterationIndex: toPositiveSafeInteger(
+      row.iteration_index,
+      "goal run iteration_index",
+    ),
+    attempt: mapRequiredText(row.attempt, "goal run iteration attempt"),
+    outcome: toGoalRunIterationOutcome(
+      row.outcome,
+      "goal run iteration outcome",
+    ),
+    summary: mapNullableNonBlankText(
+      row.summary,
+      "goal run iteration summary",
+    ),
+    error: mapNullableNonBlankText(row.error, "goal run iteration error"),
     createdAt: toIsoString(row.created_at),
   };
 }
 
-function toIsoString(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : value;
-}
-
-function toNumber(value: number | string): number {
-  return typeof value === "number" ? value : Number(value);
-}
-
-function requireSingleRow<TRow>(row: TRow | undefined, label: string): TRow {
-  if (!row) {
-    throw new Error(`Expected ${label} row to be returned`);
+function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue < 0) {
+    throw new Error(`${fieldName} must be a non-negative safe integer`);
   }
+  return numberValue;
+}
 
-  return row;
+function toPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertPositiveSafeInteger(numberValue, fieldName);
+  return numberValue;
+}
+
+function mapRequiredText(value: unknown, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value.trim();
+}
+
+function mapNullableNonBlankText(
+  value: unknown,
+  fieldName: string,
+): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string or null`);
+  }
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
+  return value.trim();
+}
+
+function toGoalRunScopeType(
+  value: unknown,
+  fieldName: string,
+): GoalRunScopeType {
+  assertGoalRunScopeType(value, fieldName);
+  return value;
+}
+
+function toGoalRunStatus(value: unknown, fieldName: string): GoalRunStatus {
+  assertGoalRunStatus(value, fieldName);
+  return value;
+}
+
+function toGoalRunIterationOutcome(
+  value: unknown,
+  fieldName: string,
+): GoalRunIterationOutcome {
+  assertGoalRunIterationOutcome(value, fieldName);
+  return value;
 }
 
 function assertGoalRunPool(value: unknown): asserts value is PgPool {

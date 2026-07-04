@@ -41,19 +41,26 @@ export async function retrieveMemory(
   assertRetrieveMemoryInput(input);
   assertOrganizationId(input.organizationId, input.allowLegacyAnonymous, "retrieveMemory");
 
-  const organizationId = input.organizationId ?? "";
-  const scopes = retrievalScopes(input);
+  const normalizedInput: RetrieveMemoryInput = {
+    ...input,
+    organizationId: input.organizationId?.trim(),
+    projectKey: input.projectKey.trim(),
+    userScopeId: input.userScopeId?.trim(),
+  };
+  const organizationId = normalizedInput.organizationId ?? "";
+  const scopes = retrievalScopes(normalizedInput);
+  const lexicalQuery = normalizeOptionalText(input.query);
   const lexicalLimit = Math.min(
     Math.max(input.limit * 4, input.limit),
     MAX_REPOSITORY_LEXICAL_LIMIT,
   );
 
   const [projectVectorHits, userVectorHits, lexicalRecords] = await Promise.all([
-    queryScope(input, organizationId, scopes[0]!, input.projectKey),
-    input.userScopeId
-      ? queryScope(input, organizationId, scopes[1]!, null)
+    queryScope(normalizedInput, organizationId, scopes[0]!, normalizedInput.projectKey),
+    normalizedInput.userScopeId
+      ? queryScope(normalizedInput, organizationId, scopes[1]!, null)
       : Promise.resolve([]),
-    queryLexicalCandidates(input, scopes, lexicalLimit),
+    queryLexicalCandidates(normalizedInput, scopes, lexicalLimit, lexicalQuery),
   ]);
 
   const hits = [...projectVectorHits, ...userVectorHits];
@@ -68,11 +75,7 @@ export async function retrieveMemory(
   const hydratedRecords =
     ids.length === 0
       ? []
-      : await input.repository.getMemoryRecordsByIds(
-          ids,
-          input.organizationId,
-          input.allowLegacyAnonymous,
-        );
+      : await hydrateMemoryRecords(normalizedInput, ids);
 
   const recordsById = new Map<number, SearchMemoryResult>();
   for (const record of [...hydratedRecords, ...lexicalRecords]) {
@@ -89,7 +92,7 @@ export async function retrieveMemory(
       .sort((left, right) => right[1] - left[1])
       .map(([id]) => id),
   );
-  const lexicalScores = scoreLexicalRecords(input.query, lexicalRecords);
+  const lexicalScores = scoreLexicalRecords(lexicalQuery, lexicalRecords);
   const lexicalRanks = rankMap(lexicalScores.keys());
   const newestUpdatedAt = newestUpdatedAtFor([...recordsById.values()]);
 
@@ -226,20 +229,42 @@ async function queryLexicalCandidates(
   input: RetrieveMemoryInput,
   scopes: ScopeRef[],
   limit: number,
+  query: string | undefined,
 ): Promise<SearchMemoryResult[]> {
-  if (!input.query || !input.repository.searchMemory) {
+  if (!query || !input.repository.searchMemory) {
     return [];
   }
 
-  return input.repository.searchMemory({
-    query: input.query,
+  const records = await input.repository.searchMemory({
+    query,
     scopes,
     organizationId: input.organizationId,
     limit,
   });
+  assertArray(records, "repository.searchMemory result");
+  return records;
 }
 
-function queryScope(
+async function hydrateMemoryRecords(
+  input: RetrieveMemoryInput,
+  ids: number[],
+): Promise<SearchMemoryResult[]> {
+  const records = await input.repository.getMemoryRecordsByIds(
+    ids,
+    input.organizationId,
+    input.allowLegacyAnonymous,
+  );
+  assertArray(records, "repository.getMemoryRecordsByIds result");
+  return records;
+}
+
+function assertArray(value: unknown, fieldName: string): asserts value is unknown[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+}
+
+async function queryScope(
   input: RetrieveMemoryInput,
   organizationId: string,
   scope: { scopeType: string; scopeId: string },
@@ -250,7 +275,11 @@ function queryScope(
     scopes: [scope],
     projectKey,
   };
-  return input.vectorIndex.query(input.vector, filter, input.limit);
+  const hits = await input.vectorIndex.query(input.vector, filter, input.limit);
+  if (!Array.isArray(hits)) {
+    throw new Error("vectorIndex.query result must be an array");
+  }
+  return hits;
 }
 
 function uniqueMemoryRecordIds(hits: VectorHit[]): number[] {
@@ -279,6 +308,7 @@ function maxVectorScoresByRecordId(hits: VectorHit[]): Map<number, number> {
     if (!isPositiveSafeInteger(id)) {
       continue;
     }
+    assertFiniteNumber(hit.score, "vector hit score");
 
     const existing = scores.get(id);
     if (existing === undefined || hit.score > existing) {
@@ -295,6 +325,12 @@ function isPositiveSafeInteger(value: unknown): value is number {
     Number.isSafeInteger(value) &&
     value > 0
   );
+}
+
+function assertFiniteNumber(value: unknown, fieldName: string): asserts value is number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${fieldName} must be a finite number`);
+  }
 }
 
 function scoreLexicalRecords(
@@ -316,6 +352,15 @@ function scoreLexicalRecords(
   return new Map(
     [...scores.entries()].sort((left, right) => right[1] - left[1]),
   );
+}
+
+function normalizeOptionalText(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized.length === 0 ? undefined : normalized;
 }
 
 function rankMap(ids: Iterable<number>): Map<number, number> {

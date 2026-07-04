@@ -34,14 +34,20 @@ ${EDITOR:-nano} .env       # MEMORY_API_TOKENS 설정 (OPENAI_API_KEY 는 EMBEDD
 | MCP 서버 watch 모드 | `npm run dev:mcp` |
 | CLI watch 모드 | `npm run dev:cli` |
 | 타입 체크 | `npm run typecheck` |
-| 모든 테스트 실행 | `npm run test` |
+| 빌드 | `npm run build` |
+| 의존성 감사 | `npm audit --audit-level=moderate` |
+| 모든 테스트 실행 | `npm test` |
 | 테스트 watch | `npm run test:watch` |
 | 마이그레이션 적용 | `npm run db:migrate` |
 
-PG 의존 테스트 3개 (`tests/store/memory-repository.test.ts`,
+Postgres 기반 repository/migration suite
+(`tests/store/memory-repository.test.ts`,
 `tests/jobs/ingest-job-repository.test.ts`, `tests/db/migrate.test.ts`) 는
 `127.0.0.1:5432` 에 Postgres가 없으면 skip 됩니다. 로컬에서 돌리려면
 `docker compose up -d postgres` 로 실행하세요.
+`tests/vector/pgvector-index.integration.test.ts` 의 pgvector adapter integration
+case는 `PGVECTOR_TEST_URL` 이 없으면 skip 되며, CI는 `pgvector-integration`
+job에서 실행합니다.
 
 ## 코드 컨벤션
 
@@ -87,7 +93,8 @@ SQL 파일은 `src/db/migrations/NNN_*.sql` 에 있습니다. 현재 마이그�
    - `docs:` 문서 전용
    - `test:` 테스트 추가/수정
    - `chore:` 의존성, 빌드, 도구
-3. push 전에 **테스트 + 타입 체크 로컬 통과**.
+3. push 전에 **로컬 검증 통과**: `npm run typecheck`, `npm run build`,
+   `npm audit --audit-level=moderate`, `npm test`.
 4. **CHANGELOG.md**: `## [Unreleased]` 섹션에 사용자 가시 변경사항 한 줄 추가
    (순수 내부 리팩토링은 생략 가능).
 5. **PR 설명**: 관련 이슈 링크, 무엇을 / 왜 변경했는지 서술, 작은 테스트 플랜
@@ -96,7 +103,7 @@ SQL 파일은 `src/db/migrations/NNN_*.sql` 에 있습니다. 현재 마이그�
 ## 버그 리포트 / 기능 요청
 
 `.github/ISSUE_TEMPLATE/` 의 issue 템플릿을 사용해주세요. 보안 이슈는
-[SECURITY.md](SECURITY.md) 를 따라주세요 — 공개 이슈로 열지 마세요.
+[SECURITY.ko.md](SECURITY.ko.md) 를 따라주세요 — 공개 이슈로 열지 마세요.
 
 ## 라이선스
 

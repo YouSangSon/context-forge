@@ -130,6 +130,9 @@ flag for an explicit cleanup pass if you suspect contamination.
 ### Rate limiting
 
 Global per-token bucket via `RATE_LIMIT_PER_MINUTE` (token-bucket).
+This bucket is in-memory and process-local: a multi-replica deployment gets
+one bucket per app replica, so use a shared reverse-proxy or edge limiter when
+you need a strict deployment-wide quota.
 Apply path additionally limited to 1 per hour per organization (default,
 configurable in `applyCompaction` deps).
 

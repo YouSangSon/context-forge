@@ -18,7 +18,10 @@ import {
   setOAuthWwwAuthenticateHeader,
   type OAuthProtectedResourceConfig,
 } from "./oauth-protected-resource.js";
-import type { RateLimiter } from "./middleware/rate-limit.js";
+import {
+  assertRateLimitDecision,
+  type RateLimiter,
+} from "./middleware/rate-limit.js";
 import { checkOAuthScopes } from "./middleware/oauth-token-auth.js";
 
 export type HandleMcpHttpRequestOptions = {
@@ -91,6 +94,7 @@ export async function handleMcpHttpRequest(
   if (rateLimiter) {
     const key = matchedToken?.token ?? "anonymous";
     const decision = rateLimiter.check(key);
+    assertRateLimitDecision(decision);
     if (!decision.allowed) {
       res.setHeader(
         "Retry-After",
@@ -129,8 +133,8 @@ export async function handleMcpHttpRequest(
     }
     cleanedUp = true;
     await Promise.allSettled([
-      transport.close(),
-      server.close(),
+      Promise.resolve().then(() => transport.close()),
+      Promise.resolve().then(() => server.close()),
     ]);
   };
   const cleanupOnClose = () => {
@@ -173,7 +177,7 @@ function assertHandleMcpHttpRequestOptions(
   assertFunction(res.once, "res.once");
 
   assertObject(candidate.registry, "registry");
-  assertArray(candidate.bearerTokens, "bearerTokens");
+  assertBearerTokens(candidate.bearerTokens);
   assertNullableObject(candidate.oauthTokenVerifier, "oauthTokenVerifier");
   if (candidate.oauthTokenVerifier !== null) {
     assertFunction(
@@ -219,12 +223,43 @@ function assertStringArray(
   }
 }
 
+function assertBearerTokens(value: unknown): asserts value is BearerToken[] {
+  assertArray(value, "bearerTokens");
+  for (const [index, token] of value.entries()) {
+    const entry = assertObject(token, `bearerTokens[${index}]`);
+    if (typeof entry.token !== "string") {
+      throw new Error(`bearerTokens[${index}].token must be a string`);
+    }
+    assertNonBlankString(entry.token, `bearerTokens[${index}].token`);
+    if (
+      entry.organizationId !== undefined &&
+      typeof entry.organizationId !== "string"
+    ) {
+      throw new Error(
+        `bearerTokens[${index}].organizationId must be a string`,
+      );
+    }
+    if (entry.organizationId !== undefined) {
+      assertNonBlankString(
+        entry.organizationId,
+        `bearerTokens[${index}].organizationId`,
+      );
+    }
+  }
+}
+
 function assertNullableObject(
   value: unknown,
   fieldName: string,
 ): asserts value is Record<string, unknown> | null {
   if (value !== null) {
     assertObject(value, fieldName);
+  }
+}
+
+function assertNonBlankString(value: string, fieldName: string): void {
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
   }
 }
 
@@ -238,7 +273,7 @@ function isAllowedOrigin(origin: string | undefined): boolean {
       parsed.hostname === "::1" ||
       parsed.hostname === "[::1]"
     );
-  } catch {
+  } catch (_err: unknown) {
     return false;
   }
 }
@@ -254,7 +289,7 @@ function validateHostHeader(
   let hostname: string;
   try {
     hostname = new URL(`http://${hostHeader}`).hostname;
-  } catch {
+  } catch (_err: unknown) {
     return `Invalid Host header: ${hostHeader}`;
   }
 
@@ -293,7 +328,7 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown> {
 
   try {
     return JSON.parse(Buffer.concat(chunks).toString("utf8"));
-  } catch {
+  } catch (_err: unknown) {
     throw new BadRequestError("invalid JSON body", 400);
   }
 }
@@ -331,7 +366,7 @@ function withAuthenticatedRegistry(
       if (
         auth.organizationId !== undefined &&
         input.organizationId !== undefined &&
-        input.organizationId !== auth.organizationId
+        input.organizationId.trim() !== auth.organizationId
       ) {
         throw new Error(ORGANIZATION_MISMATCH_ERROR);
       }
@@ -396,7 +431,7 @@ function createMcpToolAuthorizer(
     if (
       auth.organizationId !== undefined &&
       typeof input.organizationId === "string" &&
-      input.organizationId !== auth.organizationId
+      input.organizationId.trim() !== auth.organizationId
     ) {
       throw new Error(ORGANIZATION_MISMATCH_ERROR);
     }

@@ -21,8 +21,8 @@ describe("goal-run handlers", () => {
 
     await registry.start_goal_run({
       projectKey: "proj-x",
-      goal: "ship phase 1",
-      terminationCriteria: "tests pass",
+      goal: " ship phase 1 ",
+      terminationCriteria: " tests pass ",
     });
 
     expect(goalRuns.start).toHaveBeenCalledWith({
@@ -40,7 +40,7 @@ describe("goal-run handlers", () => {
     const registry = registryWith(goalRuns);
 
     await registry.start_goal_run({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       scope: "user",
       userScopeId: "alice",
       goal: "learn rust",
@@ -197,15 +197,16 @@ describe("goal-run handlers", () => {
     const registry = registryWith(goalRuns);
 
     await registry.record_iteration({
+      organizationId: " org-a ",
       goalRunId: 7,
-      attempt: "try A",
+      attempt: " try A ",
       outcome: "failure",
       error: "boom",
       memoryIds: [11, 12],
     });
 
     expect(goalRuns.recordIteration).toHaveBeenCalledWith({
-      organizationId: "default",
+      organizationId: "org-a",
       goalRunId: 7,
       attempt: "try A",
       outcome: "failure",
@@ -307,10 +308,14 @@ describe("goal-run handlers", () => {
     const goalRuns = goalRunServicesStub();
     const registry = registryWith(goalRuns);
 
-    await registry.complete_goal_run({ goalRunId: 7, resolution: "done" });
+    await registry.complete_goal_run({
+      organizationId: " org-a ",
+      goalRunId: 7,
+      resolution: "done",
+    });
 
     expect(goalRuns.complete).toHaveBeenCalledWith({
-      organizationId: "default",
+      organizationId: "org-a",
       goalRunId: 7,
       note: "done",
     });
@@ -320,10 +325,14 @@ describe("goal-run handlers", () => {
     const goalRuns = goalRunServicesStub();
     const registry = registryWith(goalRuns);
 
-    await registry.abandon_goal_run({ goalRunId: 7, reason: "stuck" });
+    await registry.abandon_goal_run({
+      organizationId: " org-a ",
+      goalRunId: 7,
+      reason: "stuck",
+    });
 
     expect(goalRuns.abandon).toHaveBeenCalledWith({
-      organizationId: "default",
+      organizationId: "org-a",
       goalRunId: 7,
       note: "stuck",
     });
@@ -417,7 +426,7 @@ describe("goal-run handlers", () => {
     });
 
     await registry.list_goal_runs({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       scope: "user",
       status: "active",
     });
@@ -427,6 +436,18 @@ describe("goal-run handlers", () => {
       scopeType: "user",
       scopeId: "resolved-user",
       status: "active",
+    });
+  });
+
+  it("get_goal_run trims organization IDs before service dispatch", async () => {
+    const goalRuns = goalRunServicesStub();
+    const registry = registryWith(goalRuns);
+
+    await registry.get_goal_run({ organizationId: " org-a ", goalRunId: 7 });
+
+    expect(goalRuns.get).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      goalRunId: 7,
     });
   });
 
@@ -474,14 +495,21 @@ describe("goal-run handlers", () => {
         cb({ goalRuns, repository: { listMemory } } as unknown as CanonicalServices)) as never,
     });
 
-    const result = await registry.build_goal_context({ goalRunId: 7 });
+    const result = await registry.build_goal_context({
+      organizationId: " org-a ",
+      goalRunId: 7,
+    });
 
     expect(result.found).toBe(true);
     expect(result.goalRunId).toBe(7);
     expect(result.packMarkdown).toContain("## Goal");
+    expect(goalRuns.get).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      goalRunId: 7,
+    });
     expect(listMemory).toHaveBeenCalledWith(
       { scopeType: "project", scopeId: "proj-x" },
-      expect.objectContaining({ organizationId: "default" }),
+      expect.objectContaining({ organizationId: "org-a" }),
     );
   });
 
@@ -574,8 +602,9 @@ describe("goal-run handlers", () => {
     });
 
     const result = await registry.check_repeat_attempt({
+      organizationId: " org-a ",
       goalRunId: 7,
-      attempt: "use a regular expression",
+      attempt: " use a regular expression ",
     });
 
     // Only the two FAILED attempts are embedded (plus the candidate).
@@ -584,6 +613,10 @@ describe("goal-run handlers", () => {
       "use regex",
       "call api",
     ]);
+    expect(goalRuns.get).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      goalRunId: 7,
+    });
     expect(result.repeat).toBe(true);
     expect(result.matches).toHaveLength(1);
     expect(result.matches[0]?.iterationIndex).toBe(1);

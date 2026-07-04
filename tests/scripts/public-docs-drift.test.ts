@@ -7,6 +7,10 @@ function read(path: string): string {
   return fs.readFileSync(path, "utf8");
 }
 
+function collapseWhitespace(text: string): string {
+  return text.replace(/\s+/g, " ");
+}
+
 function readJson<T>(path: string): T {
   return JSON.parse(read(path)) as T;
 }
@@ -116,7 +120,69 @@ function migrationRanges(markdown: string): string[] {
   return [...markdown.matchAll(/\b\d{3}-\d{3}\b/g)].map((match) => match[0]);
 }
 
+function issueTemplateDropdownOptions(templatePath: string, fieldId: string): string[] {
+  const template = read(templatePath);
+  const optionsBlock = new RegExp(
+    `id: ${fieldId}[\\s\\S]*?options:\\n((?:        - .+\\n)+)`,
+  ).exec(template)?.[1];
+
+  expect(optionsBlock).toBeDefined();
+  return [...(optionsBlock ?? "").matchAll(/^\s+- "?(.+?)"?$/gm)].map(
+    (match) => match[1],
+  );
+}
+
 describe("public documentation drift checks", () => {
+  it("keeps contributor verification guidance aligned", () => {
+    const prTemplate = read(".github/PULL_REQUEST_TEMPLATE.md");
+    const readme = read("README.md");
+    const readmeKo = read("README.ko.md");
+    const contributing = read("CONTRIBUTING.md");
+    const contributingKo = read("CONTRIBUTING.ko.md");
+    const troubleshooting = read("docs/troubleshooting.md");
+    const troubleshootingKo = read("docs/troubleshooting.ko.md");
+
+    for (const command of [
+      "npm run typecheck",
+      "npm run build",
+      "npm audit --audit-level=moderate",
+      "npm test",
+    ]) {
+      expect(prTemplate).toContain(command);
+      expect(readme).toContain(command);
+      expect(readmeKo).toContain(command);
+      expect(contributing).toContain(command);
+      expect(contributingKo).toContain(command);
+    }
+
+    expect(prTemplate).toContain("`npm run typecheck` passes");
+    expect(prTemplate).toContain("`npm run build` passes");
+    expect(prTemplate).toContain(
+      "`npm audit --audit-level=moderate` reports 0 vulnerabilities",
+    );
+    expect(prTemplate).toContain("`npm test` passes");
+    expect(contributing).toContain(
+      "| Dependency audit | `npm audit --audit-level=moderate` |",
+    );
+    expect(contributingKo).toContain(
+      "| 의존성 감사 | `npm audit --audit-level=moderate` |",
+    );
+    expect(contributing).toContain("| Run all tests | `npm test` |");
+    expect(contributingKo).toContain("| 모든 테스트 실행 | `npm test` |");
+    expect(contributing).toContain("tests/vector/pgvector-index.integration.test.ts");
+    expect(contributing).toContain("PGVECTOR_TEST_URL");
+    expect(contributingKo).toContain("tests/vector/pgvector-index.integration.test.ts");
+    expect(contributingKo).toContain("PGVECTOR_TEST_URL");
+    expect(troubleshooting).toContain("PGVECTOR_TEST_URL");
+    expect(troubleshootingKo).toContain("PGVECTOR_TEST_URL");
+    expect(contributing).not.toContain("Tests + typecheck pass locally");
+    expect(contributingKo).not.toContain("테스트 + 타입 체크 로컬 통과");
+    expect(contributing).not.toContain("The 3 PG-dependent test files");
+    expect(troubleshooting).not.toContain("The 3 PG-dependent test files");
+    expect(contributingKo).not.toContain("PG 의존 테스트 3개");
+    expect(troubleshootingKo).not.toContain("PG 의존 테스트 3개");
+  });
+
   it("indexes every paired public docs page", () => {
     const publicDocs = publicDocsMarkdownPaths();
     const englishDocs = publicDocs.filter((docPath) => !isKoreanDocPath(docPath));
@@ -149,6 +215,36 @@ describe("public documentation drift checks", () => {
     }
   });
 
+  it("keeps Korean public-doc body links on Korean mirrors", () => {
+    const expectedKoreanLinks = [
+      ["README.ko.md", "docs/README.ko.md"],
+      ["CONTRIBUTING.ko.md", "SECURITY.ko.md"],
+      ["docs/configuration.ko.md", "operations.ko.md"],
+      ["docs/configuration.ko.md", "deployment.ko.md"],
+      ["docs/operations.ko.md", "self-hosted-operations.ko.md"],
+      ["docs/security.ko.md", "../SECURITY.ko.md"],
+      ["docs/troubleshooting.ko.md", "../SECURITY.ko.md"],
+    ] as const;
+
+    for (const [path, target] of expectedKoreanLinks) {
+      expect(markdownLinkTargets(read(path))).toContain(target);
+    }
+
+    const staleEnglishTargets = [
+      ["README.ko.md", "docs/README.md"],
+      ["CONTRIBUTING.ko.md", "SECURITY.md"],
+      ["docs/configuration.ko.md", "operations.md"],
+      ["docs/configuration.ko.md", "deployment.md"],
+      ["docs/operations.ko.md", "self-hosted-operations.md"],
+      ["docs/security.ko.md", "../SECURITY.md"],
+      ["docs/troubleshooting.ko.md", "../SECURITY.md"],
+    ] as const;
+
+    for (const [path, target] of staleEnglishTargets) {
+      expect(markdownLinkTargets(read(path))).not.toContain(target);
+    }
+  });
+
   it("documents Node 22 as the minimum supported runtime", () => {
     const packageJson = readJson<{ engines: { node: string } }>("package.json");
     const packageLock = readJson<{ packages: Record<string, { engines?: { node?: string } }> }>(
@@ -176,6 +272,15 @@ describe("public documentation drift checks", () => {
       expect(text).not.toContain("node-%3E%3D20");
     }
 
+    const staleUnreleasedNodeSignals = ["Node ≥20", "node-%3E%3D20", "Node 20+22"];
+    for (const path of ["CHANGELOG.md", "CHANGELOG.ko.md"]) {
+      const section = unreleasedChangelogSection(path);
+      expect(section).toContain("Node ≥22");
+      for (const staleSignal of staleUnreleasedNodeSignals) {
+        expect(section).not.toContain(staleSignal);
+      }
+    }
+
     const ci = read(".github/workflows/ci.yml");
     expect(ci).toContain('node: ["22", "24"]');
     expect(ci).not.toContain('"20"');
@@ -185,6 +290,188 @@ describe("public documentation drift checks", () => {
     expect(installer).toContain("NODE_MAJOR\" -lt 22");
     expect(installer).not.toContain("Node.js ≥ 20");
     expect(installer).not.toContain("NODE_MAJOR\" -lt 20");
+  });
+
+  it("keeps Korean README comparison copy localized", () => {
+    const readmeKo = read("README.ko.md");
+
+    expect(readmeKo).toContain("무료/로컬 기본값");
+    expect(readmeKo).toContain("비용을 전면에 내세우고");
+    expect(readmeKo).toContain("한 단계 더 나아가는 지점");
+    expect(readmeKo).toContain("자체 호스팅 메모리 MCP 서버");
+
+    for (const stalePhrase of [
+      "MCP 메모리 생태계 norm",
+      "무료/로컬 default",
+      "cost 를 헤드라인",
+      "distinctively",
+      "peers 는 skip",
+      "hosted 메모리 제품",
+      "self-hosted 메모리 MCP 서버",
+    ]) {
+      expect(readmeKo).not.toContain(stalePhrase);
+    }
+  });
+
+  it("keeps Korean README comparison table labels localized", () => {
+    const readmeKo = read("README.ko.md");
+
+    expect(readmeKo).toContain("❌ (OpenAI 기본값)");
+    expect(readmeKo).toContain("❌ (호스팅형)");
+    expect(readmeKo).toContain("✅ (Mem0 래핑)");
+    expect(readmeKo).toContain("래퍼 전용");
+    expect(readmeKo).toContain("| 다양함 | 다양함 | 독점형 |");
+    expect(readmeKo).toContain("OSS 경로 활발히 유지");
+    expect(readmeKo).toContain("❌ (CE 2025 지원 중단)");
+
+    for (const stalePhrase of [
+      "OpenAI default",
+      "(hosted)",
+      "Mem0 wrap",
+      "wrapper 전용",
+      "| varies | varies | proprietary |",
+      "OSS 경로 active 유지",
+      "CE 2025 deprecated",
+    ]) {
+      expect(readmeKo).not.toContain(stalePhrase);
+    }
+  });
+
+  it("keeps Korean embedding and setup labels localized", () => {
+    for (const path of [
+      "README.ko.md",
+      "docs/configuration.ko.md",
+      "docs/security.ko.md",
+      "docs/troubleshooting.ko.md",
+    ]) {
+      const text = read(path);
+      expect(text).not.toContain("결정론적 stub");
+      expect(text).not.toContain("CI stub");
+      expect(text).not.toContain("CI/offline stub");
+    }
+
+    const readmeKo = read("README.ko.md");
+    expect(readmeKo).toContain("기본값 그대로 동작");
+    expect(readmeKo).toContain("CI용 결정론적 스텁");
+    expect(readmeKo).toContain("CI 스텁");
+    expect(readmeKo).toContain("VECTOR_BACKEND 기준 백업");
+    expect(readmeKo).toContain("Postgres 단독 pgvector 백업");
+    expect(readmeKo).not.toContain("default 그대로 동작");
+    expect(readmeKo).not.toContain("backend-aware backup");
+    expect(readmeKo).not.toContain("Postgres-only pgvector backup");
+
+    const configurationKo = read("docs/configuration.ko.md");
+    expect(configurationKo).toContain("무료 로컬 ONNX, 기본값");
+    expect(configurationKo).toContain("일반 십진수 양의 정수 벡터 크기");
+    expect(configurationKo).not.toContain("무료 로컬 ONNX, default");
+    expect(configurationKo).not.toContain("plain decimal positive integer");
+
+    const securityKo = read("docs/security.ko.md");
+    expect(securityKo).toContain("CI/오프라인 스텁");
+  });
+
+  it("documents current secret scrubber coverage in public docs", () => {
+    const scrubber = read("src/store/secret-scrub.ts");
+    for (const category of [
+      "aws-access-key",
+      "github-token",
+      "openai-key",
+      "anthropic-key",
+      "gcp-api-key",
+      "stripe-key",
+      "slack-token",
+      "db-connection-string",
+      "private-key-block",
+      "bearer-token",
+      "jwt",
+    ]) {
+      expect(scrubber).toContain(`category: "${category}"`);
+    }
+
+    for (const path of [
+      "README.md",
+      "docs/architecture.md",
+      "docs/api-reference.md",
+    ]) {
+      const text = collapseWhitespace(read(path));
+      expect(text).toContain("provider API key");
+      expect(text).toContain("PEM");
+      expect(text).toContain("bearer/JWT");
+      expect(text).toContain("credentialed database URL");
+    }
+
+    for (const path of [
+      "README.ko.md",
+      "docs/architecture.ko.md",
+      "docs/api-reference.ko.md",
+    ]) {
+      const text = collapseWhitespace(read(path));
+      expect(text).toMatch(/provider API (?:key|키)/);
+      expect(text).toContain("PEM");
+      expect(text).toContain("bearer/JWT");
+      expect(text).toContain("자격증명이 포함된 데이터베이스 URL");
+    }
+
+    const security = read("docs/security.md");
+    for (const term of ["GCP", "Stripe", "Slack", "Database connection"]) {
+      expect(security).toContain(term);
+    }
+    const securityKo = read("docs/security.ko.md");
+    for (const term of ["GCP", "Stripe", "Slack", "DB 연결 문자열"]) {
+      expect(securityKo).toContain(term);
+    }
+  });
+
+  it("documents MEMORY_API_TOKENS colon restrictions", () => {
+    const envExample = read(".env.example");
+    const configuration = read("docs/configuration.md");
+    const configurationKo = read("docs/configuration.ko.md");
+
+    expect(envExample).toContain('Token values themselves must not contain ":"');
+    expect(configuration).toContain("The token value itself must not contain `:`");
+    expect(configuration).toContain(
+      "rejects entries with more than one\ncolon at startup",
+    );
+    expect(configurationKo).toContain("토큰 값 자체에는 `:` 를 넣지 마세요");
+    expect(configurationKo).toContain("`:` 가 두 개 이상인 entry는 시작 시");
+  });
+
+  it("documents rate-limit replica boundaries", () => {
+    const compose = read("compose.yaml");
+    const configuration = read("docs/configuration.md");
+    const configurationKo = read("docs/configuration.ko.md");
+    const security = read("docs/security.md");
+    const securityKo = read("docs/security.ko.md");
+    const deployment = read("docs/deployment.md");
+    const deploymentKo = read("docs/deployment.ko.md");
+
+    expect(compose).toContain(
+      "RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-60}",
+    );
+
+    for (const text of [configuration, security, deployment]) {
+      expect(text).toContain("in-memory");
+      expect(text).toContain("process-local");
+    }
+    expect(configuration).toContain("each app replica has its own bucket");
+    expect(configuration).toContain("deployment-wide quota");
+    expect(configuration).toContain("NGINX `limit_req_zone`/`limit_req`");
+    expect(configuration).toContain("Cloudflare rate limiting");
+    expect(security).toContain("one bucket per app replica");
+    expect(security).toContain("strict deployment-wide quota");
+    expect(deployment).toContain("each replica has its own bucket");
+    expect(deployment).toContain("shared reverse proxy or edge layer");
+
+    for (const text of [configurationKo, securityKo, deploymentKo]) {
+      expect(text).toContain("프로세스-local");
+      expect(text).toContain("replica");
+      expect(text).toContain("bucket");
+    }
+    expect(configurationKo).toContain("배포 전체 quota");
+    expect(configurationKo).toContain("NGINX `limit_req_zone`/`limit_req`");
+    expect(configurationKo).toContain("Cloudflare\nrate limiting rules");
+    expect(securityKo).toContain("배포 전체의 엄격한 quota");
+    expect(deploymentKo).toContain("edge 계층");
   });
 
   it("documents transformers as a packaged runtime dependency", () => {
@@ -223,6 +510,38 @@ describe("public documentation drift checks", () => {
     );
   });
 
+  it("keeps the bug report embedding-provider options aligned with supported providers", () => {
+    expect(
+      issueTemplateDropdownOptions(".github/ISSUE_TEMPLATE/bug_report.yml", "embedding-provider"),
+    ).toEqual([
+      "transformers",
+      "openai",
+      "local",
+    ]);
+  });
+
+  it("keeps the bug report deployment options aligned with vector backends", () => {
+    expect(
+      issueTemplateDropdownOptions(".github/ISSUE_TEMPLATE/bug_report.yml", "deployment"),
+    ).toContain("Custom (external Postgres / Qdrant or pgvector)");
+  });
+
+  it("keeps the feature request scope options aligned with vector backends", () => {
+    expect(
+      issueTemplateDropdownOptions(".github/ISSUE_TEMPLATE/feature_request.yml", "scope"),
+    ).toContain("Vector backend (Qdrant / pgvector)");
+  });
+
+  it("keeps bug report security links rooted at the repository", () => {
+    const template = read(".github/ISSUE_TEMPLATE/bug_report.yml");
+
+    expect(template).not.toContain("](../SECURITY.md)");
+    expect(snippetsAround(template, "[SECURITY.md]")).toHaveLength(2);
+    for (const snippet of snippetsAround(template, "[SECURITY.md]")) {
+      expect(snippet).toContain("[SECURITY.md](../../SECURITY.md)");
+    }
+  });
+
   it("documents current embedding provider module filenames", () => {
     for (const modulePath of [
       "src/embedding/transformers-embedding.ts",
@@ -243,6 +562,86 @@ describe("public documentation drift checks", () => {
     expect(read("src/vector/pgvector-index.ts")).not.toContain(
       "ORPHAN VECTORS ON REINDEX (KNOWN FOLLOW-UP)",
     );
+  });
+
+  it("keeps compaction apply comments current in touched files", () => {
+    const staleSignals = [
+      {
+        path: "src/app/server.ts",
+        text: "trigger destructive operations once compaction-apply ships in P17",
+      },
+      {
+        path: "tests/compact/compact-memory.test.ts",
+        text: "archivedIds remains [] in this PR",
+      },
+      {
+        path: "tests/compact/compact-memory.test.ts",
+        text: "apply path lands in P17 step 3",
+      },
+      {
+        path: "src/compact/compact-memory.ts",
+        text: "apply-path code in P17 step 3 has a stable seam to extend",
+      },
+    ];
+
+    for (const { path, text } of staleSignals) {
+      expect(read(path)).not.toContain(text);
+    }
+  });
+
+  it("keeps ingest sweeper repository comments current", () => {
+    expect(read("src/jobs/ingest-job-repository.ts")).not.toContain(
+      "The sweeper PR will",
+    );
+  });
+
+  it("keeps public architecture data-flow docs free of internal phase labels", () => {
+    for (const path of ["docs/architecture.md", "docs/architecture.ko.md"]) {
+      const text = read(path);
+      expect(text).not.toContain("(P17)");
+      expect(text).not.toContain("(P19.1)");
+      expect(text).not.toContain("pre-P19.1");
+    }
+  });
+
+  it("keeps memory archive repository comments current", () => {
+    const text = read("src/store/memory-archive-repository.ts");
+    expect(text).not.toContain("P17 compaction");
+    expect(text).not.toContain("P17 step 6");
+    expect(text).not.toContain("P19.1 — unarchive recovery flow");
+    expect(text).not.toContain("pre-P19.1 archive row");
+  });
+
+  it("keeps migration comments free of internal phase labels", () => {
+    for (const path of [
+      "src/db/migrations/004_add_cascade_indexes.sql",
+      "src/db/migrations/005_add_compaction_archive.sql",
+      "src/db/migrations/006_add_archive_unarchive.sql",
+    ]) {
+      const text = read(path);
+      expect(text).not.toContain("P17");
+      expect(text).not.toContain("P19.1");
+    }
+  });
+
+  it("keeps compaction apply, sweeper, and MCP type comments current", () => {
+    const envExample = read(".env.example");
+    const applyCompaction = read("src/compact/apply-compaction.ts");
+    const compactMemory = read("src/compact/compact-memory.ts");
+    const mcpServerTest = read("tests/mcp/server.test.ts");
+    const sweeperLoop = read("src/compact/sweeper-loop.ts");
+    const mcpTypes = read("src/mcp/types.ts");
+
+    expect(envExample).not.toContain("P17 compaction-apply");
+    expect(applyCompaction).not.toContain("destructive P17 apply path");
+    expect(applyCompaction).not.toContain("scoped out for P17");
+    expect(applyCompaction).not.toContain("P17 step 6");
+    expect(compactMemory).not.toContain("orchestrator (P18.1)");
+    expect(mcpServerTest).not.toContain("semantic dedup (P18)");
+    expect(sweeperLoop).not.toContain("P19 ships");
+    expect(mcpTypes).not.toContain("P18: opt-in semantic dedup");
+    expect(mcpTypes).not.toContain("P17: populated when dryRun=false");
+    expect(mcpTypes).not.toContain("P19.1 — unarchive recovery flow");
   });
 
   it("documents descriptor-driven tool validation in API docs", () => {
@@ -430,6 +829,47 @@ describe("public documentation drift checks", () => {
     expect(korean).not.toContain("진행중");
   });
 
+  it("records the npm package tarball surface fix in Unreleased changelogs", () => {
+    const english = unreleasedChangelogBulletContaining(
+      "CHANGELOG.md",
+      "npm package tarball",
+    );
+    expect(english).toMatch(/built\s+runtime\s+output/);
+    expect(english).toContain("source/tests/CI/internal");
+    expect(english).toContain("source-checkout-only");
+    expect(english).toContain("Docker/Compose");
+    expect(english).toContain("`dist/`");
+    expect(english).toMatch(/compiled\s+eval\s+harness/);
+    expect(english).toContain("`prepack`");
+    expect(english).toContain("clean `dist/`");
+    expect(english).toContain("`install.sh`");
+
+    const korean = unreleasedChangelogBulletContaining(
+      "CHANGELOG.ko.md",
+      "npm package tarball",
+    );
+    expect(korean).toMatch(/built\s+runtime\s+output/);
+    expect(korean).toContain("source/tests/CI/internal");
+    expect(korean).toContain("source-checkout-only");
+    expect(korean).toContain("Docker/Compose");
+    expect(korean).toContain("`dist/`");
+    expect(korean).toMatch(/compiled\s+eval\s+harness/);
+    expect(korean).toContain("`prepack`");
+    expect(korean).toContain("clean `dist/`");
+    expect(korean).toContain("`install.sh`");
+  });
+
+  it("records admin shell reliability fixes in Unreleased changelogs", () => {
+    for (const path of ["CHANGELOG.md", "CHANGELOG.ko.md"]) {
+      const bullet = unreleasedChangelogBulletContaining(path, "/admin/memory");
+      expect(bullet).toContain("load/save/tag/archive");
+      expect(bullet).toContain("status");
+      expect(bullet).toContain("non-JSON");
+      expect(bullet).toContain("HTTP status");
+      expect(bullet).toContain("JSON `null`");
+    }
+  });
+
   it("documents every service tool and JSON HTTP route in public docs", () => {
     const docs = [
       "README.md",
@@ -581,7 +1021,12 @@ describe("public documentation drift checks", () => {
       expect(text).toContain("QDRANT_URL");
       expect(text).toContain("VECTOR_BACKEND=pgvector");
       expect(text).toContain("BACKUP_ENCRYPTION_KEY_FILE");
-      expect(text).toMatch(/logical vector data lives in\s+Postgres/);
+      if (path.endsWith(".ko.md")) {
+        expect(text).toContain("논리 벡터 데이터가");
+        expect(text).not.toContain("logical vector data lives in");
+      } else {
+        expect(text).toMatch(/logical vector data lives in\s+Postgres/);
+      }
       expect(/skips|건너뛰/.test(text)).toBe(true);
       expect(text).not.toContain("later script split");
       expect(text).not.toContain("Qdrant-oriented until");
@@ -600,7 +1045,12 @@ describe("public documentation drift checks", () => {
       expect(text).toContain("Qdrant");
       expect(text).toContain("scripts/snapshot-qdrant.sh");
       expect(text).toContain("QDRANT_URL");
-      expect(text).toContain("logical data path");
+      if (path.endsWith(".ko.md")) {
+        expect(text).toContain("논리 데이터 경로");
+        expect(text).not.toContain("logical data path");
+      } else {
+        expect(text).toContain("logical data path");
+      }
       expect(text).toContain("backup:create:pgvector");
       expect(text).not.toContain("later script split");
       expect(text).not.toContain("still invokes");

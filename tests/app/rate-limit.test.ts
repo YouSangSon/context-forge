@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  assertRateLimitDecision,
   createTokenBucketLimiter,
   loadRateLimitFromEnv,
 } from "../../src/app/middleware/rate-limit.js";
@@ -240,6 +241,27 @@ describe("createTokenBucketLimiter", () => {
     });
   });
 
+  it("sweeps buckets that have been idle for a full refill window", () => {
+    let time = 0;
+    const limiter = createTokenBucketLimiter({
+      capacity: CAPACITY,
+      windowMs: WINDOW_MS,
+      now: () => time,
+    });
+
+    limiter.check("alpha");
+    limiter.check("beta");
+    expect(limiter.bucketCount?.()).toBe(2);
+
+    time = WINDOW_MS - 1;
+    limiter.check("gamma");
+    expect(limiter.bucketCount?.()).toBe(3);
+
+    time = WINDOW_MS;
+    limiter.check("delta");
+    expect(limiter.bucketCount?.()).toBe(2);
+  });
+
   it("rejects non-string direct keys before bucket lookup", () => {
     const limiter = createTokenBucketLimiter({
       capacity: CAPACITY,
@@ -265,6 +287,49 @@ describe("createTokenBucketLimiter", () => {
       );
     },
   );
+});
+
+describe("assertRateLimitDecision", () => {
+  it("accepts well-formed direct limiter decisions", () => {
+    expect(() =>
+      assertRateLimitDecision({
+        allowed: false,
+        remaining: 0,
+        retryAfterMs: 20_000,
+      }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    {
+      input: null,
+      message: "rate-limit decision must be an object",
+    },
+    {
+      input: {},
+      message: "rate-limit decision.allowed must be a boolean",
+    },
+    {
+      input: { allowed: false, remaining: "0", retryAfterMs: 1_000 },
+      message: "rate-limit decision.remaining must be a non-negative integer",
+    },
+    {
+      input: { allowed: false, remaining: -1, retryAfterMs: 1_000 },
+      message: "rate-limit decision.remaining must be a non-negative integer",
+    },
+    {
+      input: { allowed: false, remaining: 0, retryAfterMs: "1000" },
+      message:
+        "rate-limit decision.retryAfterMs must be a finite non-negative number",
+    },
+    {
+      input: { allowed: false, remaining: 0, retryAfterMs: Number.NaN },
+      message:
+        "rate-limit decision.retryAfterMs must be a finite non-negative number",
+    },
+  ])("rejects malformed direct limiter decision %#", ({ input, message }) => {
+    expect(() => assertRateLimitDecision(input)).toThrow(message);
+  });
 });
 
 describe("loadRateLimitFromEnv", () => {

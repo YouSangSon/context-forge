@@ -57,8 +57,10 @@ function instrumentToolRegistry(input: {
     },
     run: () => Promise<T>,
   ): Promise<T> {
+    let organizationId = "default";
     if (toolInput.organizationId !== undefined) {
       assertNonBlankText(toolInput.organizationId, "organizationId");
+      organizationId = toolInput.organizationId.trim();
     }
     const projectKey = optionalStringField(toolInput.projectKey, "projectKey");
     optionalStringField(toolInput.userScopeId, "userScopeId");
@@ -71,6 +73,21 @@ function instrumentToolRegistry(input: {
       projectKey,
       scope: toolInput.scope,
     });
+    const warnAuditFailure = (
+      err: unknown,
+      auditOutcome: "ok" | "error",
+    ): void => {
+      log.warn(
+        {
+          event: "audit.record_failed",
+          auditOutcome,
+          err,
+          tool: toolName,
+        },
+        "audit record failed; continuing without blocking tool result",
+      );
+    };
+
     log.info({ event: "tool.start" }, "tool invoked");
     try {
       const result = await run();
@@ -81,7 +98,7 @@ function instrumentToolRegistry(input: {
       // the caller.
       void auditLog
         ?.record({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId,
           actor: defaultActor,
           tool: toolName,
           projectKey: projectKey ?? null,
@@ -89,7 +106,7 @@ function instrumentToolRegistry(input: {
           durationMs,
           requestId,
         })
-        .catch(() => undefined);
+        .catch((err: unknown) => warnAuditFailure(err, "ok"));
 
       return result;
     } catch (error: unknown) {
@@ -104,7 +121,7 @@ function instrumentToolRegistry(input: {
 
       void auditLog
         ?.record({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId,
           actor: defaultActor,
           tool: toolName,
           projectKey: projectKey ?? null,
@@ -113,7 +130,7 @@ function instrumentToolRegistry(input: {
           durationMs,
           requestId,
         })
-        .catch(() => undefined);
+        .catch((err: unknown) => warnAuditFailure(err, "error"));
 
       throw error;
     }

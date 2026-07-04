@@ -288,13 +288,54 @@ describe("runOutboxSweep", () => {
     });
 
     expect(result).toEqual({ scanned: 2, cleaned: 2, retried: 0, failed: 0 });
-    expect(vectorIndex.delete).toHaveBeenCalledTimes(2);
-    expect(vectorIndex.delete).toHaveBeenNthCalledWith(1, ["p1", "p2"], {
+    expect(vectorIndex.delete).toHaveBeenCalledOnce();
+    expect(vectorIndex.delete).toHaveBeenCalledWith(["p1", "p2", "p3"], {
       organizationId: "org-a",
     });
     expect(markQdrantStatus.mock.calls.every((c) => c[1] === "deleted")).toBe(
       true,
     );
+  });
+
+  it("batches vector deletes by organization", async () => {
+    const pending: PendingQdrantCleanup[] = [
+      {
+        archiveId: 1,
+        organizationId: "org-a",
+        qdrantPointIds: ["a1", "a2"],
+        attemptCount: 0,
+      },
+      {
+        archiveId: 2,
+        organizationId: "org-b",
+        qdrantPointIds: ["b1"],
+        attemptCount: 0,
+      },
+      {
+        archiveId: 3,
+        organizationId: "org-a",
+        qdrantPointIds: ["a3"],
+        attemptCount: 0,
+      },
+    ];
+    const { repo, markQdrantStatus } = makeRepoWithPending(pending);
+    const vectorIndex = makeVectorIndex();
+
+    const result = await runOutboxSweep({
+      archiveRepository: repo,
+      vectorIndex,
+      logger: SILENT_LOGGER,
+    });
+
+    expect(result).toEqual({ scanned: 3, cleaned: 3, retried: 0, failed: 0 });
+    expect(vectorIndex.delete).toHaveBeenCalledTimes(2);
+    expect(vectorIndex.delete).toHaveBeenNthCalledWith(1, ["a1", "a2", "a3"], {
+      organizationId: "org-a",
+    });
+    expect(vectorIndex.delete).toHaveBeenNthCalledWith(2, ["b1"], {
+      organizationId: "org-b",
+    });
+    expect(markQdrantStatus).toHaveBeenCalledTimes(3);
   });
 
   it("retries on Qdrant error if attempt < maxAttempts (status stays pending)", async () => {
@@ -310,7 +351,9 @@ describe("runOutboxSweep", () => {
     const vectorIndex = {
       delete: vi.fn().mockRejectedValue(new Error("Qdrant 503")),
       deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
-      upsert: vi.fn(), query: vi.fn(), ensureCollection: vi.fn(),
+      upsert: vi.fn(),
+      query: vi.fn(),
+      ensureCollection: vi.fn(),
     };
 
     const result = await runOutboxSweep({
@@ -347,6 +390,43 @@ describe("runOutboxSweep", () => {
 
     expect(result).toEqual({ scanned: 1, cleaned: 0, retried: 0, failed: 1 });
     expect(markQdrantStatus).toHaveBeenCalledWith(1, "failed", "Qdrant 503");
+  });
+
+  it("keeps row-level retry and failed counts when a batched delete fails", async () => {
+    const pending: PendingQdrantCleanup[] = [
+      {
+        archiveId: 1,
+        organizationId: "org-a",
+        qdrantPointIds: ["p1"],
+        attemptCount: 2,
+      },
+      {
+        archiveId: 2,
+        organizationId: "org-a",
+        qdrantPointIds: ["p2"],
+        attemptCount: 4,
+      },
+    ];
+    const { repo, markQdrantStatus } = makeRepoWithPending(pending);
+    const vectorIndex = {
+      delete: vi.fn().mockRejectedValue(new Error("Qdrant 503")),
+      deleteByRecordIds: vi.fn().mockResolvedValue(undefined),
+      upsert: vi.fn(), query: vi.fn(), ensureCollection: vi.fn(),
+    };
+
+    const result = await runOutboxSweep({
+      archiveRepository: repo,
+      vectorIndex,
+      logger: SILENT_LOGGER,
+    });
+
+    expect(result).toEqual({ scanned: 2, cleaned: 0, retried: 1, failed: 1 });
+    expect(vectorIndex.delete).toHaveBeenCalledOnce();
+    expect(vectorIndex.delete).toHaveBeenCalledWith(["p1", "p2"], {
+      organizationId: "org-a",
+    });
+    expect(markQdrantStatus).toHaveBeenCalledWith(1, "pending", "Qdrant 503");
+    expect(markQdrantStatus).toHaveBeenCalledWith(2, "failed", "Qdrant 503");
   });
 
   it("respects custom batchSize and maxAttempts", async () => {

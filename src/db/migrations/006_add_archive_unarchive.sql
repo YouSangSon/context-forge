@@ -1,4 +1,4 @@
--- P19.1: extend memory_archive for the unarchive recovery flow.
+-- Extend memory_archive for the unarchive recovery flow.
 --
 -- source_id    - loose reference to sources.id captured at archive time so
 --                unarchive can re-link the resurrected memory_records row
@@ -8,9 +8,9 @@
 --                when an archive row is restored. Lets ops query "which
 --                archived records were resurrected and when" for audit.
 --
--- Both nullable so existing archive rows from P17 (no source_id captured)
--- survive the migration. New rows from P19.1+ will have source_id
--- populated by the updated applyCompactionRecord CTE.
+-- Both nullable so existing archive rows without captured source IDs survive
+-- the migration. New archive writes include source_id when available through
+-- the updated applyCompactionRecord CTE.
 
 ALTER TABLE memory_archive
   ADD COLUMN IF NOT EXISTS source_id BIGINT;

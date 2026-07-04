@@ -345,6 +345,18 @@ describe("runIngestSweep", () => {
       "getChunksByRecordId result[0].content must contain non-whitespace text",
     ],
     [
+      { scopeType: "team" },
+      "getChunksByRecordId result[0].scopeType must be one of: user, project",
+    ],
+    [
+      { kind: "note" },
+      "getChunksByRecordId result[0].kind must be one of: decision, summary, fact",
+    ],
+    [
+      { durability: "permanent" },
+      "getChunksByRecordId result[0].durability must be one of: ephemeral, durable, archived",
+    ],
+    [
       { tags: [12] },
       "getChunksByRecordId result[0].tags[0] must be a string",
     ],
@@ -479,6 +491,37 @@ describe("runIngestSweep", () => {
       { chunkId: chunk.id, qdrantPointId: `chunk:${chunk.id}` },
     ]);
     expect(markQdrantCompleted).toHaveBeenCalledWith(job.id);
+  });
+
+  it("trims claimed job organization before vector deletion", async () => {
+    const job = makeJob({
+      id: 8,
+      memoryRecordId: 10,
+      organizationId: " org-a ",
+      qdrantAttempts: 0,
+    });
+    const chunk = makeChunk({ id: 100, memoryRecordId: 10 });
+
+    const { repo } = makeIngestJobRepo([job]);
+    const chunkRepo = makeChunkRepo([chunk]);
+    const vectorIndex = makeVectorIndex();
+    const embeddings = makeEmbeddings({
+      embedBatch: vi.fn().mockResolvedValue([[0.1, 0.2, 0.3]]),
+    });
+
+    const result = await runIngestSweep({
+      ingestJobs: repo,
+      chunkRepository: chunkRepo,
+      embeddings,
+      vectorIndex,
+      logger: SILENT_LOGGER,
+    });
+
+    expect(result).toEqual({ scanned: 1, completed: 1, retried: 0, failed: 0 });
+    expect(vectorIndex.deleteByRecordIds).toHaveBeenCalledWith(
+      [job.memoryRecordId],
+      { organizationId: "org-a" },
+    );
   });
 
   it("marks completed and logs when a record has no chunks (deleted between claim and sweep)", async () => {

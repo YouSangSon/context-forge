@@ -25,11 +25,34 @@ CHANGELOG에서 명시적으로 표기합니다.
 - 전용 sweeper worker: `npm run start:worker` / `npm run dev:worker` 로
   compaction/ingest sweeper를 request-serving replica 밖에서 실행할 수 있으며,
   기존 HTTP 서버 내부 opt-in 경로도 유지됩니다.
+- Memory governance UI: 정적 `/admin/memory` 셸이 load/save/tag/archive 실패를
+  화면의 status text로 표시하고, API error message를 우선 사용하며, non-JSON
+  실패에는 HTTP status를 포함하고, non-finite numeric form 값이 JSON `null` 로
+  전송되지 않게 합니다.
 - PR #19: `/mcp` 의 MCP Streamable HTTP, MCP resources, MCP prompts, typed
   result를 쓰는 클라이언트용 structured MCP tool output 추가.
 - 문서: 공개 문서가 descriptor 공유 검증, non-root 컨테이너 런타임 기본값,
   production 자격증명 교체, atomic archive-cleanup claim semantics를 반영하도록
   정렬되었고, 현재 동작과 맞지 않던 pgvector reindex follow-up 주석을 제거함.
+- npm package tarball surface: 게시되는 패키지가 이제 `dist/` 아래 built
+  runtime output을 포함하고, root source/tests/CI/internal work tracking 문서와
+  source-checkout-only `install.sh`, Docker/Compose asset, compiled eval
+  harness는 제외하며, `prepack` 이 pack/publish 전에 clean `dist/` 를 다시
+  빌드합니다.
+- npm package metadata: package description이 Qdrant-only 동작처럼 보이지
+  않도록, Postgres-backed storage와 Qdrant 또는 pgvector search를 반영하고
+  npm keyword에 `pgvector` 를 추가합니다.
+- 문서: 한국어 공개 문서 본문 링크가 가능한 경우 한국어 mirror
+  (`*.ko.md`)로 연결되도록 정렬합니다.
+- 문서: 한국어 백업 안내에서 pgvector의 논리 데이터 경로 설명이 영어 README
+  문구를 그대로 상속하지 않고 한국어 표현을 사용하도록 정리합니다.
+- 문서: 한국어 README 비교 문단이 영문 혼용 표현 대신 한국어 포지셔닝 문구를
+  사용하도록 정리합니다.
+- 문서: 한국어 README 비교 표의 비코드 상태 라벨을 한국어로 정리합니다.
+- 문서: 한국어 공개 문서의 시작, 임베딩, 백업 예시에서 `default`, `stub`,
+  backend-aware 라벨을 한국어 표현으로 정리합니다.
+- 문서: `MEMORY_API_TOKENS` 의 토큰 값에는 콜론을 넣을 수 없고, `:` 는
+  `token:org` 바인딩 구분자로 예약되어 있음을 configuration 안내에 명시합니다.
 
 릴리스 후 audit 사이클. v1.0.0이 OSS 사용자 0명 상태로 출시되어 — 멀티
 테넌시 boundary 의 default-strict 강화 + secret-scrubber surface 보강을
@@ -280,7 +303,7 @@ CHANGELOG에서 명시적으로 표기합니다.
   전환 reference, 1회성 마이그레이션 아님.
   ([`a3b456a`](https://github.com/YouSangSon/akasha/commit/a3b456a))
 - **README landing 30초 가치 파악용으로 정리** — CI / License /
-  MCP-compatible / Node ≥20 badges 추가, 강조형 1줄 tagline *"Persistent
+  MCP-compatible / Node ≥22 badges 추가, 강조형 1줄 tagline *"Persistent
   memory for AI coding agents — free, local, self-hosted"* + elevator
   paragraph 로 차별화 포인트 surface (API key 불필요, $0 cost, 데이터는
   본인 머신에서만). Quick-start fix: *"fill in OPENAI_API_KEY at minimum"*

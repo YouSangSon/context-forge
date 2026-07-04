@@ -15,14 +15,18 @@ function makeMockPool(handler: QueryFn): { pool: PgPool; query: ReturnType<typeo
 }
 
 const RUN_ROW = {
-  id: 7,
+  id: "7",
   organization_id: "org-a",
   status: "pending" as const,
-  archived_count: 0,
-  duplicate_count: 0,
-  decay_count: 0,
-  qdrant_failed: 0,
+  archived_count: "0",
+  duplicate_count: "0",
+  decay_count: "0",
+  qdrant_failed: "0",
 };
+
+function runRow(overrides: Record<string, unknown> = {}) {
+  return { ...RUN_ROW, ...overrides };
+}
 
 describe("createMemoryArchiveRepository", () => {
   it.each([
@@ -40,18 +44,28 @@ describe("createMemoryArchiveRepository", () => {
 });
 
 describe("MemoryArchiveRepository.createCompactionRun", () => {
+  const baseInput = {
+    organizationId: "org-a",
+    actor: "test",
+    scopeType: "project",
+    scopeId: "alpha",
+    dryRun: false,
+    planGeneratedAt: new Date("2026-04-25T12:00:00.000Z"),
+    idempotencyKey: "00000000-0000-0000-0000-000000000001",
+  };
+
   it("inserts a new run and maps the returning row", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [RUN_ROW] }));
     const repo = createMemoryArchiveRepository(pool);
 
     const result = await repo.createCompactionRun({
-      organizationId: "org-a",
-      actor: "test",
+      organizationId: " org-a ",
+      actor: " test ",
       scopeType: "project",
-      scopeId: "alpha",
+      scopeId: " alpha ",
       dryRun: false,
       planGeneratedAt: new Date("2026-04-25T12:00:00.000Z"),
-      idempotencyKey: "00000000-0000-0000-0000-000000000001",
+      idempotencyKey: " 00000000-0000-0000-0000-000000000001 ",
     });
 
     expect(result).toEqual({
@@ -64,8 +78,11 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
       qdrantFailed: 0,
     });
     const sql = query.mock.calls[0]![0] as string;
+    const params = query.mock.calls[0]![1] as unknown[];
     expect(sql).toContain("INSERT INTO compaction_runs");
     expect(sql).toContain("ON CONFLICT (idempotency_key) DO NOTHING");
+    expect(params.slice(0, 4)).toEqual(["org-a", "test", "project", "alpha"]);
+    expect(params[6]).toBe("00000000-0000-0000-0000-000000000001");
   });
 
   it("falls back to findRunByIdempotencyKey on insert conflict", async () => {
@@ -73,7 +90,7 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
     const { pool } = makeMockPool(async () => {
       call += 1;
       if (call === 1) return { rows: [] }; // insert conflicted
-      return { rows: [{ ...RUN_ROW, status: "completed", archived_count: 5 }] };
+      return { rows: [{ ...RUN_ROW, status: "completed", archived_count: "5" }] };
     });
     const repo = createMemoryArchiveRepository(pool);
 
@@ -92,6 +109,72 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
     expect(call).toBe(2);
   });
 
+  it.each([
+    {
+      idempotencyKey: null,
+      message: "idempotencyKey must be a string",
+    },
+    {
+      idempotencyKey: " \n\t ",
+      message: "idempotencyKey must contain non-whitespace text",
+    },
+  ])("rejects malformed direct idempotency keys before querying %#", async ({
+    idempotencyKey,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [RUN_ROW] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.findRunByIdempotencyKey(idempotencyKey as never),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "compaction run organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message:
+        "compaction run organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { id: "0" },
+      message: "compaction run id must be a positive safe integer",
+    },
+    {
+      rowPatch: { archived_count: "-1" },
+      message: "compaction run archived_count must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { duplicate_count: "1.5" },
+      message: "compaction run duplicate_count must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { decay_count: "bad" },
+      message: "database number must be finite",
+    },
+    {
+      rowPatch: { qdrant_failed: "-1" },
+      message: "compaction run qdrant_failed must be a non-negative safe integer",
+    },
+    {
+      rowPatch: { status: "paused" },
+      message: 'compaction run status must be "pending", "completed", or "failed"',
+    },
+  ])("rejects malformed existing run row values %#", async ({ rowPatch, message }) => {
+    const { pool } = makeMockPool(async () => ({ rows: [runRow(rowPatch)] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.findRunByIdempotencyKey("00000000-0000-0000-0000-000000000007"),
+    ).rejects.toThrow(message);
+  });
+
   it("throws when insert returns 0 rows AND no existing row found", async () => {
     const { pool } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -107,6 +190,29 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
         idempotencyKey: "00000000-0000-0000-0000-000000000003",
       }),
     ).rejects.toThrow(/idempotency_key/);
+  });
+
+  it.each([
+    {
+      input: null,
+      message: "create compaction run input must be an object",
+    },
+    {
+      input: [],
+      message: "create compaction run input must be an object",
+    },
+  ])("rejects malformed direct run input objects before querying %#", async ({
+    input,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [RUN_ROW] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.createCompactionRun(input as never)).rejects.toThrow(
+      message,
+    );
+
+    expect(query).not.toHaveBeenCalled();
   });
 
   it("rejects whitespace-only organizationId before querying", async () => {
@@ -165,18 +271,64 @@ describe("MemoryArchiveRepository.createCompactionRun", () => {
 
     expect(query).not.toHaveBeenCalled();
   });
+
+  it.each([
+    {
+      inputPatch: { actor: " \n\t " },
+      message: "actor must contain non-whitespace text",
+    },
+    {
+      inputPatch: { scopeType: "team" },
+      message: "scopeType must be one of: user, project",
+    },
+    {
+      inputPatch: { dryRun: "false" },
+      message: "dryRun must be a boolean",
+    },
+    {
+      inputPatch: { planGeneratedAt: new Date(Number.NaN) },
+      message: "planGeneratedAt must be a valid Date",
+    },
+    {
+      inputPatch: { idempotencyKey: " \n\t " },
+      message: "idempotencyKey must contain non-whitespace text",
+    },
+  ])("rejects malformed direct run inputs before querying %#", async ({
+    inputPatch,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [RUN_ROW] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.createCompactionRun({
+        ...baseInput,
+        ...inputPatch,
+      } as never),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
 });
 
 describe("MemoryArchiveRepository.applyCompactionRecord", () => {
+  const baseInput = {
+    runId: 7,
+    organizationId: "org-a",
+    recordId: 100,
+    reason: "decay" as const,
+    planGeneratedAt: new Date("2026-04-25T12:00:00.000Z"),
+  };
+
   it("returns archived=true with archiveId and qdrantPointIds on success", async () => {
     const { pool, query } = makeMockPool(async () => ({
-      rows: [{ archive_id: 42, qdrant_point_ids: ["p1", "p2"] }],
+      rows: [{ archive_id: "42", qdrant_point_ids: ["p1", "p2"] }],
     }));
     const repo = createMemoryArchiveRepository(pool);
 
     const result = await repo.applyCompactionRecord({
       runId: 7,
-      organizationId: "org-a",
+      organizationId: " org-a ",
       recordId: 100,
       reason: "duplicate",
       keptRecordId: 99,
@@ -193,6 +345,8 @@ describe("MemoryArchiveRepository.applyCompactionRecord", () => {
     expect(sql).toContain("updated_at <= $7"); // TOCTOU guard
     expect(sql).toContain("organization_id = $2"); // org isolation
     expect(sql).toContain("ON CONFLICT (compaction_run_id, source_record_id) DO NOTHING");
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params[1]).toBe("org-a");
   });
 
   it("returns archived=false when canonical DELETE matches 0 rows (TOCTOU / org mismatch)", async () => {
@@ -228,6 +382,71 @@ describe("MemoryArchiveRepository.applyCompactionRecord", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      input: null,
+      message: "apply compaction record input must be an object",
+    },
+    {
+      input: [],
+      message: "apply compaction record input must be an object",
+    },
+  ])("rejects malformed direct apply input objects before querying %#", async ({
+    input,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.applyCompactionRecord(input as never)).rejects.toThrow(
+      message,
+    );
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      inputPatch: { runId: 0 },
+      message: "runId must be a positive safe integer",
+    },
+    {
+      inputPatch: { recordId: 0 },
+      message: "recordId must be a positive safe integer",
+    },
+    {
+      inputPatch: { reason: "manual" },
+      message: 'reason must be "duplicate" or "decay"',
+    },
+    {
+      inputPatch: { keptRecordId: 0 },
+      message: "keptRecordId must be a positive safe integer",
+    },
+    {
+      inputPatch: { decayScore: Number.POSITIVE_INFINITY },
+      message: "decayScore must be a finite number when provided",
+    },
+    {
+      inputPatch: { planGeneratedAt: new Date(Number.NaN) },
+      message: "planGeneratedAt must be a valid Date",
+    },
+  ])("rejects malformed direct apply inputs before querying %#", async ({
+    inputPatch,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.applyCompactionRecord({
+        ...baseInput,
+        ...inputPatch,
+      } as never),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("returns archived=true with empty qdrantPointIds when record has no chunks", async () => {
     const { pool } = makeMockPool(async () => ({
       rows: [{ archive_id: 1, qdrant_point_ids: [] }],
@@ -244,6 +463,57 @@ describe("MemoryArchiveRepository.applyCompactionRecord", () => {
 
     expect(result.archived).toBe(true);
     expect(result.qdrantPointIds).toEqual([]);
+  });
+
+  it("rejects malformed returned archive id rows", async () => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [{ archive_id: "0", qdrant_point_ids: [] }],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.applyCompactionRecord({
+        runId: 7,
+        organizationId: "org-a",
+        recordId: 100,
+        reason: "decay",
+        planGeneratedAt: new Date(),
+      }),
+    ).rejects.toThrow("memory archive id must be a positive safe integer");
+  });
+
+  it.each([
+    {
+      qdrantPointIds: null,
+      message: "memory archive qdrant_point_ids must be an array",
+    },
+    {
+      qdrantPointIds: [42],
+      message: "memory archive qdrant_point_ids[0] must be a string",
+    },
+    {
+      qdrantPointIds: [" \n\t "],
+      message:
+        "memory archive qdrant_point_ids[0] must contain non-whitespace text",
+    },
+  ])("rejects malformed returned qdrant point rows %#", async ({
+    qdrantPointIds,
+    message,
+  }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [{ archive_id: "42", qdrant_point_ids: qdrantPointIds }],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.applyCompactionRecord({
+        runId: 7,
+        organizationId: "org-a",
+        recordId: 100,
+        reason: "decay",
+        planGeneratedAt: new Date(),
+      }),
+    ).rejects.toThrow(message);
   });
 });
 
@@ -288,7 +558,7 @@ describe("MemoryArchiveRepository.markQdrantStatus", () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
 
-    await repo.markQdrantStatus(42, "failed", "Qdrant 503");
+    await repo.markQdrantStatus(42, "failed", " Qdrant 503 ");
 
     const sql = query.mock.calls[0]![0] as string;
     const params = query.mock.calls[0]![1] as unknown[];
@@ -301,13 +571,142 @@ describe("MemoryArchiveRepository.markQdrantStatus", () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
 
-    await repo.markQdrantStatus(42, "pending", "Qdrant 503");
+    await repo.markQdrantStatus(42, "pending", " Qdrant 503 ");
 
     const sql = query.mock.calls[0]![0] as string;
     const params = query.mock.calls[0]![1] as unknown[];
     expect(sql).toContain("qdrant_status = 'pending'");
     expect(sql).toContain("qdrant_next_retry_at = NOW() + INTERVAL '30 seconds'");
     expect(params).toEqual([42, "Qdrant 503"]);
+  });
+
+  it("stores blank qdrant error messages as null", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.markQdrantStatus(42, "failed", " \n\t ");
+
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params).toEqual([42, null]);
+  });
+});
+
+describe("MemoryArchiveRepository.completeCompactionRun", () => {
+  const baseInput = {
+    runId: 7,
+    status: "completed" as const,
+    archivedCount: 3,
+    duplicateCount: 1,
+    decayCount: 2,
+    qdrantFailed: 0,
+  };
+
+  it("updates run outcome counters and optional error message", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.completeCompactionRun({
+      ...baseInput,
+      status: "failed",
+      errorMessage: " qdrant cleanup failed ",
+    });
+
+    const sql = query.mock.calls[0]![0] as string;
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(sql).toContain("UPDATE compaction_runs");
+    expect(sql).toContain("completed_at = NOW()");
+    expect(params).toEqual([
+      7,
+      "failed",
+      3,
+      1,
+      2,
+      0,
+      "qdrant cleanup failed",
+    ]);
+  });
+
+  it("stores blank completion error messages as null", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.completeCompactionRun({
+      ...baseInput,
+      status: "failed",
+      errorMessage: " \n\t ",
+    });
+
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params[6]).toBeNull();
+  });
+
+  it.each([
+    {
+      input: null,
+      message: "complete compaction run input must be an object",
+    },
+    {
+      input: [],
+      message: "complete compaction run input must be an object",
+    },
+  ])("rejects malformed direct completion input objects before querying %#", async ({
+    input,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.completeCompactionRun(input as never)).rejects.toThrow(
+      message,
+    );
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      inputPatch: { runId: 0 },
+      message: "runId must be a positive safe integer",
+    },
+    {
+      inputPatch: { status: "paused" },
+      message: 'status must be "pending", "completed", or "failed"',
+    },
+    {
+      inputPatch: { archivedCount: -1 },
+      message: "archivedCount must be a non-negative safe integer",
+    },
+    {
+      inputPatch: { duplicateCount: 1.5 },
+      message: "duplicateCount must be a non-negative safe integer",
+    },
+    {
+      inputPatch: { decayCount: Number.NaN },
+      message: "decayCount must be a non-negative safe integer",
+    },
+    {
+      inputPatch: { qdrantFailed: -1 },
+      message: "qdrantFailed must be a non-negative safe integer",
+    },
+    {
+      inputPatch: { errorMessage: 503 },
+      message: "errorMessage must be a string when provided",
+    },
+  ])("rejects malformed direct completion inputs before querying %#", async ({
+    inputPatch,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.completeCompactionRun({
+        ...baseInput,
+        ...inputPatch,
+      } as never),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
   });
 });
 
@@ -327,16 +726,16 @@ describe("MemoryArchiveRepository.findPendingQdrantCleanup", () => {
     const { pool } = makeMockPool(async () => ({
       rows: [
         {
-          id: 1,
+          id: "1",
           organization_id: "org-a",
           qdrant_point_ids: ["pa1", "pa2"],
-          qdrant_attempt_count: 0,
+          qdrant_attempt_count: "0",
         },
         {
-          id: 2,
+          id: "2",
           organization_id: "org-b",
           qdrant_point_ids: ["pb1"],
-          qdrant_attempt_count: 3,
+          qdrant_attempt_count: "3",
         },
       ],
     }));
@@ -358,6 +757,101 @@ describe("MemoryArchiveRepository.findPendingQdrantCleanup", () => {
         attemptCount: 3,
       },
     ]);
+  });
+
+  it.each(["0", "1.5"])("rejects malformed pending archive id rows: %s", async (id) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [
+        {
+          id,
+          organization_id: "org-a",
+          qdrant_point_ids: ["pa1"],
+          qdrant_attempt_count: "0",
+        },
+      ],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findPendingQdrantCleanup(50)).rejects.toThrow(
+      "memory archive id must be a positive safe integer",
+    );
+  });
+
+  it.each([
+    {
+      attemptCount: "-1",
+      message:
+        "memory archive qdrant_attempt_count must be a non-negative safe integer",
+    },
+    {
+      attemptCount: "1.5",
+      message:
+        "memory archive qdrant_attempt_count must be a non-negative safe integer",
+    },
+    {
+      attemptCount: "bad",
+      message: "database number must be finite",
+    },
+  ])(
+    "rejects malformed pending cleanup attempt rows: $attemptCount",
+    async ({ attemptCount, message }) => {
+      const { pool } = makeMockPool(async () => ({
+        rows: [
+          {
+            id: "1",
+            organization_id: "org-a",
+            qdrant_point_ids: ["pa1"],
+            qdrant_attempt_count: attemptCount,
+          },
+        ],
+      }));
+      const repo = createMemoryArchiveRepository(pool);
+
+      await expect(repo.findPendingQdrantCleanup(50)).rejects.toThrow(message);
+    },
+  );
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "memory archive organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message:
+        "memory archive organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { qdrant_point_ids: null },
+      message: "memory archive qdrant_point_ids must be an array",
+    },
+    {
+      rowPatch: { qdrant_point_ids: [42] },
+      message: "memory archive qdrant_point_ids[0] must be a string",
+    },
+    {
+      rowPatch: { qdrant_point_ids: [" \n\t "] },
+      message:
+        "memory archive qdrant_point_ids[0] must contain non-whitespace text",
+    },
+  ])("rejects malformed pending cleanup row metadata %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [
+        {
+          id: "1",
+          organization_id: "org-a",
+          qdrant_point_ids: ["pa1"],
+          qdrant_attempt_count: "0",
+          ...rowPatch,
+        },
+      ],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findPendingQdrantCleanup(50)).rejects.toThrow(message);
   });
 
   it("filters due pending rows without claiming locks", async () => {
@@ -403,10 +897,10 @@ describe("MemoryArchiveRepository.claimPendingQdrantCleanup", () => {
     const { pool, query } = makeMockPool(async () => ({
       rows: [
         {
-          id: 1,
+          id: "1",
           organization_id: "org-a",
           qdrant_point_ids: ["pa1"],
-          qdrant_attempt_count: 2,
+          qdrant_attempt_count: "2",
         },
       ],
     }));
@@ -432,6 +926,84 @@ describe("MemoryArchiveRepository.claimPendingQdrantCleanup", () => {
     expect(params[1]).toBe(10);
     expect(params[2]).toBe("2026-06-25T00:01:00.000Z");
   });
+
+  it("rejects malformed claimed archive id rows", async () => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [
+        {
+          id: "1.5",
+          organization_id: "org-a",
+          qdrant_point_ids: ["pa1"],
+          qdrant_attempt_count: "2",
+        },
+      ],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.claimPendingQdrantCleanup({
+        limit: 10,
+        now: new Date("2026-06-25T00:00:00.000Z"),
+      }),
+    ).rejects.toThrow("memory archive id must be a positive safe integer");
+  });
+
+  it("rejects malformed claimed cleanup attempt rows", async () => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [
+        {
+          id: "1",
+          organization_id: "org-a",
+          qdrant_point_ids: ["pa1"],
+          qdrant_attempt_count: "1.5",
+        },
+      ],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.claimPendingQdrantCleanup({
+        limit: 10,
+        now: new Date("2026-06-25T00:00:00.000Z"),
+      }),
+    ).rejects.toThrow(
+      "memory archive qdrant_attempt_count must be a non-negative safe integer",
+    );
+  });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "memory archive organization_id must be a string",
+    },
+    {
+      rowPatch: { qdrant_point_ids: null },
+      message: "memory archive qdrant_point_ids must be an array",
+    },
+  ])("rejects malformed claimed cleanup row metadata %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [
+        {
+          id: "1",
+          organization_id: "org-a",
+          qdrant_point_ids: ["pa1"],
+          qdrant_attempt_count: "2",
+          ...rowPatch,
+        },
+      ],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.claimPendingQdrantCleanup({
+        limit: 10,
+        now: new Date("2026-06-25T00:00:00.000Z"),
+      }),
+    ).rejects.toThrow(message);
+  });
 });
 
 describe("MemoryArchiveRepository.countRecentApplyRuns", () => {
@@ -445,9 +1017,108 @@ describe("MemoryArchiveRepository.countRecentApplyRuns", () => {
 
     expect(query).not.toHaveBeenCalled();
   });
+
+  it("trims organizationId before counting recent apply runs", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [{ count: 0 }] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.countRecentApplyRuns(" org-a ", 60_000);
+
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params).toEqual(["org-a", 60]);
+  });
+
+  it.each([
+    {
+      windowMs: 0,
+      message: "windowMs must be a positive safe integer",
+    },
+    {
+      windowMs: -1,
+      message: "windowMs must be a positive safe integer",
+    },
+    {
+      windowMs: 1.5,
+      message: "windowMs must be a positive safe integer",
+    },
+    {
+      windowMs: Number.NaN,
+      message: "windowMs must be a positive safe integer",
+    },
+    {
+      windowMs: "60000",
+      message: "windowMs must be a positive safe integer",
+    },
+  ])("rejects malformed direct apply-run windows before querying %#", async ({
+    windowMs,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [{ count: 0 }] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.countRecentApplyRuns("org-a", windowMs as never),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { count: 0, expected: 0 },
+    { count: "0", expected: 0 },
+    { count: "42", expected: 42 },
+  ])("maps count rows without coercion drift: $count", async ({ count, expected }) => {
+    const { pool } = makeMockPool(async () => ({ rows: [{ count }] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.countRecentApplyRuns("org-a", 60_000)).resolves.toBe(
+      expected,
+    );
+  });
+
+  it("returns zero when the count query returns no row", async () => {
+    const { pool } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.countRecentApplyRuns("org-a", 60_000)).resolves.toBe(0);
+  });
+
+  it.each(["1abc", "1.5", "", " \n\t ", Number.NaN, -1, 1.5, null, false])(
+    "rejects malformed count rows: %s",
+    async (count) => {
+      const { pool } = makeMockPool(async () => ({ rows: [{ count }] }));
+      const repo = createMemoryArchiveRepository(pool);
+
+      await expect(repo.countRecentApplyRuns("org-a", 60_000)).rejects.toThrow(
+        "recent apply run count must be a non-negative safe integer",
+      );
+    },
+  );
 });
 
-describe("MemoryArchiveRepository.findArchiveByIds (P19.1)", () => {
+describe("MemoryArchiveRepository.findArchiveByIds", () => {
+  function archiveRow(overrides: Record<string, unknown> = {}) {
+    return {
+      id: "50",
+      organization_id: "org-a",
+      source_record_id: "100",
+      source_id: "200",
+      scope_type: "project",
+      scope_id: "alpha",
+      project_key: "alpha",
+      kind: "decision",
+      title: null,
+      content: "Decision: ship Friday",
+      summary: null,
+      durability: "durable",
+      importance: "5",
+      original_created_at: new Date("2026-04-25T00:00:00.000Z"),
+      original_updated_at: "2026-04-25T01:00:00.000Z",
+      unarchived_at: null,
+      ...overrides,
+    };
+  }
+
   it("returns empty array when no ids supplied", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -471,6 +1142,16 @@ describe("MemoryArchiveRepository.findArchiveByIds (P19.1)", () => {
     expect(params).toEqual([[1, 2, 3], "org-a"]);
   });
 
+  it("trims organizationId before querying archive rows", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.findArchiveByIds([1, 2, 3], " org-a ");
+
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params).toEqual([[1, 2, 3], "org-a"]);
+  });
+
   it("rejects whitespace-only organizationId before querying", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -482,28 +1163,40 @@ describe("MemoryArchiveRepository.findArchiveByIds (P19.1)", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      archiveIds: null,
+      message: "archiveIds must be an array",
+    },
+    {
+      archiveIds: [0],
+      message: "archiveIds[0] must be a positive safe integer",
+    },
+    {
+      archiveIds: [1.5],
+      message: "archiveIds[0] must be a positive safe integer",
+    },
+    {
+      archiveIds: [Number.MAX_SAFE_INTEGER + 1],
+      message: "archiveIds[0] must be a positive safe integer",
+    },
+  ])("rejects malformed direct archive id lists before querying %#", async ({
+    archiveIds,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.findArchiveByIds(archiveIds as never, "org-a"),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("maps rows including null source_id and unarchived_at", async () => {
     const { pool } = makeMockPool(async () => ({
-      rows: [
-        {
-          id: 50,
-          organization_id: "org-a",
-          source_record_id: 100,
-          source_id: 200,
-          scope_type: "project",
-          scope_id: "alpha",
-          project_key: "alpha",
-          kind: "decision",
-          title: null,
-          content: "Decision: ship Friday",
-          summary: null,
-          durability: "durable",
-          importance: 5,
-          original_created_at: new Date("2026-04-25T00:00:00.000Z"),
-          original_updated_at: "2026-04-25T01:00:00.000Z",
-          unarchived_at: null,
-        },
-      ],
+      rows: [archiveRow()],
     }));
     const repo = createMemoryArchiveRepository(pool);
 
@@ -516,9 +1209,124 @@ describe("MemoryArchiveRepository.findArchiveByIds (P19.1)", () => {
     expect(result[0]!.originalUpdatedAt).toBe("2026-04-25T01:00:00.000Z");
     expect(result[0]!.unarchivedAt).toBeNull();
   });
+
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "memory archive id must be a positive safe integer",
+    },
+    {
+      rowPatch: { source_record_id: "1.5" },
+      message: "memory archive source_record_id must be a positive safe integer",
+    },
+    {
+      rowPatch: { source_id: "0" },
+      message: "memory archive source_id must be a positive safe integer",
+    },
+    {
+      rowPatch: { source_id: "bad" },
+      message: "database number must be finite",
+    },
+  ])("rejects malformed archive record id rows %#", async ({ rowPatch, message }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [archiveRow(rowPatch)],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findArchiveByIds([50], "org-a")).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "memory archive organization_id must be a string",
+    },
+    {
+      rowPatch: { scope_id: " \n\t " },
+      message: "memory archive scope_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { project_key: 42 },
+      message: "memory archive project_key must be a string or null",
+    },
+    {
+      rowPatch: { title: 42 },
+      message: "memory archive title must be a string or null",
+    },
+    {
+      rowPatch: { content: null },
+      message: "memory archive content must be a string",
+    },
+    {
+      rowPatch: { content: " \n\t " },
+      message: "memory archive content must contain non-whitespace text",
+    },
+    {
+      rowPatch: { summary: 42 },
+      message: "memory archive summary must be a string or null",
+    },
+  ])("rejects malformed archive scalar rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [archiveRow(rowPatch)],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findArchiveByIds([50], "org-a")).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      importance: "1.5",
+      message: "memory archive importance must be a Postgres integer",
+    },
+    {
+      importance: "2147483648",
+      message: "memory archive importance must be a Postgres integer",
+    },
+    {
+      importance: "bad",
+      message: "database number must be finite",
+    },
+  ])("rejects malformed archive importance rows %#", async ({
+    importance,
+    message,
+  }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [archiveRow({ importance })],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findArchiveByIds([50], "org-a")).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      rowPatch: { scope_type: "team" },
+      message: "memory archive scope_type must be one of: user, project",
+    },
+    {
+      rowPatch: { kind: "note" },
+      message: "memory archive kind must be one of: decision, summary, fact",
+    },
+    {
+      rowPatch: { durability: "permanent" },
+      message:
+        "memory archive durability must be one of: ephemeral, durable, archived",
+    },
+  ])("rejects malformed archive enum rows %#", async ({ rowPatch, message }) => {
+    const { pool } = makeMockPool(async () => ({
+      rows: [archiveRow(rowPatch)],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.findArchiveByIds([50], "org-a")).rejects.toThrow(message);
+  });
 });
 
-describe("MemoryArchiveRepository.restoreToCanonical (P19.1)", () => {
+describe("MemoryArchiveRepository.restoreToCanonical", () => {
   function makeArchive(overrides: Record<string, unknown> = {}) {
     return {
       id: 50,
@@ -542,7 +1350,7 @@ describe("MemoryArchiveRepository.restoreToCanonical (P19.1)", () => {
   }
 
   it("INSERTs into memory_records preserving original timestamps + source_id", async () => {
-    const { pool, query } = makeMockPool(async () => ({ rows: [{ id: 999 }] }));
+    const { pool, query } = makeMockPool(async () => ({ rows: [{ id: "999" }] }));
     const repo = createMemoryArchiveRepository(pool);
 
     const result = await repo.restoreToCanonical(makeArchive(), "org-a");
@@ -555,6 +1363,29 @@ describe("MemoryArchiveRepository.restoreToCanonical (P19.1)", () => {
     expect(params).toContain("2026-04-25T00:00:00.000Z");
     expect(params).toContain(200); // source_id
   });
+
+  it("trims organizationId before checking org ownership and restoring", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [{ id: "999" }] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    const result = await repo.restoreToCanonical(makeArchive(), " org-a ");
+
+    expect(result).toEqual({ restoredRecordId: 999 });
+    const params = query.mock.calls[0]![1] as unknown[];
+    expect(params[0]).toBe("org-a");
+  });
+
+  it.each(["0", "1.5"])(
+    "rejects malformed restored memory id rows: %s",
+    async (id) => {
+      const { pool } = makeMockPool(async () => ({ rows: [{ id }] }));
+      const repo = createMemoryArchiveRepository(pool);
+
+      await expect(
+        repo.restoreToCanonical(makeArchive(), "org-a"),
+      ).rejects.toThrow("restored memory id must be a positive safe integer");
+    },
+  );
 
   it("rejects when archive.organizationId disagrees with caller org (cross-tenant guard)", async () => {
     const { pool } = makeMockPool(async () => ({ rows: [{ id: 1 }] }));
@@ -579,7 +1410,47 @@ describe("MemoryArchiveRepository.restoreToCanonical (P19.1)", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
-  it("rejects when archive predates P19.1 (sourceId is null)", async () => {
+  it.each([
+    {
+      archive: null,
+      message: "restore archive must be an object",
+    },
+    {
+      archive: makeArchive({ id: 0 }),
+      message: "memory archive id must be a positive safe integer",
+    },
+    {
+      archive: makeArchive({ scopeType: "team" }),
+      message: "memory archive scope_type must be one of: user, project",
+    },
+    {
+      archive: makeArchive({ kind: "note" }),
+      message: "memory archive kind must be one of: decision, summary, fact",
+    },
+    {
+      archive: makeArchive({ durability: "permanent" }),
+      message:
+        "memory archive durability must be one of: ephemeral, durable, archived",
+    },
+    {
+      archive: makeArchive({ originalUpdatedAt: "not-a-date" }),
+      message: "database timestamp must be a valid timestamp",
+    },
+  ])("rejects malformed direct restore archive inputs before querying %#", async ({
+    archive,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [{ id: 1 }] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.restoreToCanonical(archive as never, "org-a"),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("rejects when archive has no sourceId", async () => {
     const { pool } = makeMockPool(async () => ({ rows: [{ id: 1 }] }));
     const repo = createMemoryArchiveRepository(pool);
 
@@ -589,7 +1460,7 @@ describe("MemoryArchiveRepository.restoreToCanonical (P19.1)", () => {
   });
 });
 
-describe("MemoryArchiveRepository.deleteRestoredCanonicalRecord (P19.1)", () => {
+describe("MemoryArchiveRepository.deleteRestoredCanonicalRecord", () => {
   it("deletes only the restored canonical record for the caller organization", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -601,6 +1472,16 @@ describe("MemoryArchiveRepository.deleteRestoredCanonicalRecord (P19.1)", () => 
     expect(sql).toContain("DELETE FROM memory_records");
     expect(sql).toContain("WHERE id = $1");
     expect(sql).toContain("AND organization_id = $2");
+    expect(params).toEqual([999, "org-a"]);
+  });
+
+  it("trims organizationId before deleting restored canonical records", async () => {
+    const { pool, query } = makeMockPool(async () => ({ rows: [] }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.deleteRestoredCanonicalRecord(999, " org-a ");
+
+    const params = query.mock.calls[0]![1] as unknown[];
     expect(params).toEqual([999, "org-a"]);
   });
 
@@ -627,7 +1508,7 @@ describe("MemoryArchiveRepository.deleteRestoredCanonicalRecord (P19.1)", () => 
   });
 });
 
-describe("MemoryArchiveRepository.markUnarchived (P19.1)", () => {
+describe("MemoryArchiveRepository.markUnarchived", () => {
   it("sets unarchived_at = NOW() for the given archive id", async () => {
     const { pool, query } = makeMockPool(async () => ({ rows: [] }));
     const repo = createMemoryArchiveRepository(pool);
@@ -680,6 +1561,46 @@ describe("MemoryArchiveRepository.acquireScopeLock", () => {
     expect(acquired).toBe(false);
   });
 
+  it("trims direct lock scope fields before querying", async () => {
+    const { pool, query } = makeMockPool(async () => ({
+      rows: [{ acquired: true }],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await repo.acquireScopeLock({
+      organizationId: " org-a ",
+      scopeType: " project ",
+      scopeId: " alpha ",
+    });
+
+    expect(query.mock.calls[0]?.[1]).toEqual(["org-a:project:alpha"]);
+  });
+
+  it.each([
+    {
+      input: null,
+      message: "scope lock input must be an object",
+    },
+    {
+      input: [],
+      message: "scope lock input must be an object",
+    },
+  ])("rejects malformed direct lock inputs before querying %#", async ({
+    input,
+    message,
+  }) => {
+    const { pool, query } = makeMockPool(async () => ({
+      rows: [{ acquired: true }],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(repo.acquireScopeLock(input as never)).rejects.toThrow(
+      message,
+    );
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("rejects whitespace-only organizationId before querying", async () => {
     const { pool, query } = makeMockPool(async () => ({
       rows: [{ acquired: true }],
@@ -710,6 +1631,23 @@ describe("MemoryArchiveRepository.acquireScopeLock", () => {
         scopeId: "alpha",
       }),
     ).rejects.toThrow(/scopeType/);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid scopeType before querying", async () => {
+    const { pool, query } = makeMockPool(async () => ({
+      rows: [{ acquired: true }],
+    }));
+    const repo = createMemoryArchiveRepository(pool);
+
+    await expect(
+      repo.acquireScopeLock({
+        organizationId: "org-a",
+        scopeType: "team",
+        scopeId: "alpha",
+      }),
+    ).rejects.toThrow("scopeType must be one of: user, project");
 
     expect(query).not.toHaveBeenCalled();
   });

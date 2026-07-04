@@ -31,11 +31,12 @@ export async function bootstrapCanonicalServices(): Promise<CanonicalServices> {
   const config = resolveServiceConfig();
   const pool = createPgPool({
     connectionString: config.databaseUrl,
+    ...config.postgres.pool,
   });
 
   try {
     await runMigrations(pool);
-  } catch (error) {
+  } catch (error: unknown) {
     await pool.end().catch(() => undefined);
     throw error;
   }

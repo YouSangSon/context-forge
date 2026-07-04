@@ -8,7 +8,7 @@ type SqlQueryCall = { sql: string; params: unknown[] };
 
 function runRow(overrides: Record<string, unknown> = {}) {
   return {
-    id: 7,
+    id: "7",
     organization_id: "org-a",
     scope_type: "project",
     scope_id: "proj-x",
@@ -16,7 +16,7 @@ function runRow(overrides: Record<string, unknown> = {}) {
     goal: "ship phase 1",
     termination_criteria: "tests pass",
     status: "active",
-    iteration_count: 0,
+    iteration_count: "0",
     created_at: "2026-06-27T00:00:00.000Z",
     updated_at: "2026-06-27T00:00:00.000Z",
     closed_at: null,
@@ -145,6 +145,95 @@ describe("createGoalRunRepository", () => {
     ]);
   });
 
+  it("start trims goal and terminationCriteria before inserting", async () => {
+    const calls: SqlQueryCall[] = [];
+    const pool = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        return Promise.resolve({ rows: [runRow()] });
+      }),
+      connect: vi.fn(),
+    };
+
+    const repo = createGoalRunRepository(pool as never);
+    await repo.start({
+      organizationId: "org-a",
+      scopeType: "project",
+      scopeId: "proj-x",
+      projectKey: "proj-x",
+      goal: " ship phase 1 ",
+      terminationCriteria: " tests pass ",
+    });
+
+    expect(calls[0]?.params[4]).toBe("ship phase 1");
+    expect(calls[0]?.params[5]).toBe("tests pass");
+  });
+
+  it("start trims organizationId, scopeId, and projectKey before inserting", async () => {
+    const calls: SqlQueryCall[] = [];
+    const pool = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        return Promise.resolve({ rows: [runRow()] });
+      }),
+      connect: vi.fn(),
+    };
+
+    const repo = createGoalRunRepository(pool as never);
+    await repo.start({
+      organizationId: " org-a ",
+      scopeType: "project",
+      scopeId: " proj-x ",
+      projectKey: " proj-x ",
+      goal: "ship phase 1",
+      terminationCriteria: "tests pass",
+    });
+
+    expect(calls[0]?.params[0]).toBe("org-a");
+    expect(calls[0]?.params[2]).toBe("proj-x");
+    expect(calls[0]?.params[3]).toBe("proj-x");
+  });
+
+  it.each([
+    {
+      row: runRow({ id: "0" }),
+      message: "goal run id must be a positive safe integer",
+    },
+    {
+      row: runRow({ id: "bad" }),
+      message: "database number must be finite",
+    },
+    {
+      row: runRow({ iteration_count: "-1" }),
+      message: "goal run iteration_count must be a non-negative safe integer",
+    },
+    {
+      row: runRow({ iteration_count: "1.5" }),
+      message: "goal run iteration_count must be a non-negative safe integer",
+    },
+    {
+      row: runRow({ iteration_count: "bad" }),
+      message: "database number must be finite",
+    },
+  ])("start rejects malformed run numeric rows %#", async ({ row, message }) => {
+    const pool = {
+      query: vi.fn(() => Promise.resolve({ rows: [row] })),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.start({
+        organizationId: "org-a",
+        scopeType: "project",
+        scopeId: "proj-x",
+        projectKey: "proj-x",
+        goal: "ship phase 1",
+        terminationCriteria: "tests pass",
+      }),
+    ).rejects.toThrow(message);
+  });
+
   it("recordIteration rejects whitespace-only organizationId before opening a transaction", async () => {
     const pool = { query: vi.fn(), connect: vi.fn() };
     const repo = createGoalRunRepository(pool as never);
@@ -219,16 +308,16 @@ describe("createGoalRunRepository", () => {
       query: vi.fn((sql: string, params?: unknown[]) => {
         calls.push({ sql, params: params ?? [] });
         if (sql.includes("UPDATE goal_runs")) {
-          return Promise.resolve({ rows: [{ iteration_count: 1 }] });
+          return Promise.resolve({ rows: [{ iteration_count: "1" }] });
         }
         if (sql.includes("INSERT INTO goal_run_iterations")) {
           return Promise.resolve({
             rows: [
               {
-                id: 11,
-                goal_run_id: 7,
+                id: "11",
+                goal_run_id: "7",
                 organization_id: "org-a",
-                iteration_index: 1,
+                iteration_index: "1",
                 attempt: "try A",
                 outcome: "failure",
                 summary: null,
@@ -262,6 +351,193 @@ describe("createGoalRunRepository", () => {
     expect(sqls.some((s) => s.includes("UPDATE memory_records"))).toBe(true);
     const linkCall = calls.find((c) => c.sql.includes("UPDATE memory_records"));
     expect(linkCall?.params).toEqual([7, [101, 102], "org-a"]);
+  });
+
+  it("recordIteration trims attempt, summary, and error before inserting", async () => {
+    const calls: SqlQueryCall[] = [];
+    const client = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        if (sql.includes("UPDATE goal_runs")) {
+          return Promise.resolve({ rows: [{ iteration_count: "1" }] });
+        }
+        if (sql.includes("INSERT INTO goal_run_iterations")) {
+          return Promise.resolve({
+            rows: [
+              {
+                id: "11",
+                goal_run_id: "7",
+                organization_id: "org-a",
+                iteration_index: "1",
+                attempt: "try A",
+                outcome: "failure",
+                summary: "summary",
+                error: "boom",
+                created_at: "2026-06-27T00:01:00.000Z",
+              },
+            ],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const pool = { query: vi.fn(), connect: vi.fn().mockResolvedValue(client) };
+
+    const repo = createGoalRunRepository(pool as never);
+    await repo.recordIteration({
+      organizationId: "org-a",
+      goalRunId: 7,
+      attempt: " try A ",
+      outcome: "failure",
+      summary: " summary ",
+      error: " boom ",
+    });
+
+    const insertCall = calls.find((c) =>
+      c.sql.includes("INSERT INTO goal_run_iterations"),
+    );
+    expect(insertCall?.params[3]).toBe("try A");
+    expect(insertCall?.params[5]).toBe("summary");
+    expect(insertCall?.params[6]).toBe("boom");
+  });
+
+  it("recordIteration trims organizationId before querying and linking memories", async () => {
+    const calls: SqlQueryCall[] = [];
+    const client = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        if (sql.includes("UPDATE goal_runs")) {
+          return Promise.resolve({ rows: [{ iteration_count: "1" }] });
+        }
+        if (sql.includes("INSERT INTO goal_run_iterations")) {
+          return Promise.resolve({
+            rows: [
+              {
+                id: "11",
+                goal_run_id: "7",
+                organization_id: "org-a",
+                iteration_index: "1",
+                attempt: "try A",
+                outcome: "failure",
+                summary: null,
+                error: null,
+                created_at: "2026-06-27T00:01:00.000Z",
+              },
+            ],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const pool = { query: vi.fn(), connect: vi.fn().mockResolvedValue(client) };
+
+    const repo = createGoalRunRepository(pool as never);
+    await repo.recordIteration({
+      organizationId: " org-a ",
+      goalRunId: 7,
+      attempt: "try A",
+      outcome: "failure",
+      memoryIds: [101],
+    });
+
+    const bumpCall = calls.find((c) => c.sql.includes("UPDATE goal_runs"));
+    const insertCall = calls.find((c) =>
+      c.sql.includes("INSERT INTO goal_run_iterations"),
+    );
+    const linkCall = calls.find((c) => c.sql.includes("UPDATE memory_records"));
+    expect(bumpCall?.params).toEqual([7, "org-a"]);
+    expect(insertCall?.params[1]).toBe("org-a");
+    expect(linkCall?.params).toEqual([7, [101], "org-a"]);
+  });
+
+  it("recordIteration rolls back on malformed bumped iteration count", async () => {
+    const calls: SqlQueryCall[] = [];
+    const client = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        if (sql.includes("UPDATE goal_runs")) {
+          return Promise.resolve({ rows: [{ iteration_count: "1.5" }] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const pool = { query: vi.fn(), connect: vi.fn().mockResolvedValue(client) };
+
+    const repo = createGoalRunRepository(pool as never);
+    await expect(
+      repo.recordIteration({
+        organizationId: "org-a",
+        goalRunId: 7,
+        attempt: "try A",
+        outcome: "failure",
+      }),
+    ).rejects.toThrow("goal run iteration_count must be a positive safe integer");
+
+    expect(calls.some((c) => c.sql === "ROLLBACK")).toBe(true);
+    expect(calls.some((c) => c.sql.includes("INSERT INTO goal_run_iterations"))).toBe(
+      false,
+    );
+  });
+
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "goal run iteration id must be a positive safe integer",
+    },
+    {
+      rowPatch: { goal_run_id: "1.5" },
+      message: "goal run iteration goal_run_id must be a positive safe integer",
+    },
+  ])("recordIteration rolls back on malformed inserted iteration rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const calls: SqlQueryCall[] = [];
+    const client = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        if (sql.includes("UPDATE goal_runs")) {
+          return Promise.resolve({ rows: [{ iteration_count: "1" }] });
+        }
+        if (sql.includes("INSERT INTO goal_run_iterations")) {
+          return Promise.resolve({
+            rows: [
+              {
+                id: "11",
+                goal_run_id: "7",
+                organization_id: "org-a",
+                iteration_index: "1",
+                attempt: "try A",
+                outcome: "failure",
+                summary: null,
+                error: "boom",
+                created_at: "2026-06-27T00:01:00.000Z",
+                ...rowPatch,
+              },
+            ],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      release: vi.fn(),
+    };
+    const pool = { query: vi.fn(), connect: vi.fn().mockResolvedValue(client) };
+
+    const repo = createGoalRunRepository(pool as never);
+    await expect(
+      repo.recordIteration({
+        organizationId: "org-a",
+        goalRunId: 7,
+        attempt: "try A",
+        outcome: "failure",
+      }),
+    ).rejects.toThrow(message);
+
+    expect(calls.some((c) => c.sql === "ROLLBACK")).toBe(true);
+    expect(calls.some((c) => c.sql === "COMMIT")).toBe(false);
   });
 
   it("recordIteration on a closed/unknown run rolls back and throws", async () => {
@@ -300,16 +576,16 @@ describe("createGoalRunRepository", () => {
       query: vi.fn((sql: string) => {
         calls.push({ sql, params: [] });
         if (sql.includes("UPDATE goal_runs")) {
-          return Promise.resolve({ rows: [{ iteration_count: 1 }] });
+          return Promise.resolve({ rows: [{ iteration_count: "1" }] });
         }
         if (sql.includes("INSERT INTO goal_run_iterations")) {
           return Promise.resolve({
             rows: [
               {
-                id: 12,
-                goal_run_id: 7,
+                id: "12",
+                goal_run_id: "7",
                 organization_id: "org-a",
-                iteration_index: 1,
+                iteration_index: "1",
                 attempt: "try",
                 outcome: "success",
                 summary: null,
@@ -378,15 +654,15 @@ describe("createGoalRunRepository", () => {
     const pool = {
       query: vi.fn((sql: string) => {
         if (sql.includes("FROM goal_runs")) {
-          return Promise.resolve({ rows: [runRow({ iteration_count: 2 })] });
+          return Promise.resolve({ rows: [runRow({ iteration_count: "2" })] });
         }
         return Promise.resolve({
           rows: [
             {
-              id: 1,
-              goal_run_id: 7,
+              id: "1",
+              goal_run_id: "7",
               organization_id: "org-a",
-              iteration_index: 1,
+              iteration_index: "1",
               attempt: "a",
               outcome: "failure",
               summary: null,
@@ -402,6 +678,327 @@ describe("createGoalRunRepository", () => {
     const result = await repo.get({ organizationId: "org-a", goalRunId: 7 });
     expect(result?.iterations).toHaveLength(1);
     expect(result?.iterations[0]?.outcome).toBe("failure");
+  });
+
+  it("get trims stored run and iteration row text before returning it", async () => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({
+            rows: [
+              runRow({
+                organization_id: " org-a ",
+                scope_id: " proj-x ",
+                project_key: " proj-x ",
+                goal: " ship phase 1 ",
+                termination_criteria: " tests pass ",
+                close_note: " done ",
+              }),
+            ],
+          });
+        }
+        return Promise.resolve({
+          rows: [
+            {
+              id: "1",
+              goal_run_id: "7",
+              organization_id: " org-a ",
+              iteration_index: "1",
+              attempt: " try A ",
+              outcome: "failure",
+              summary: " summary ",
+              error: " boom ",
+              created_at: "2026-06-27T00:01:00.000Z",
+            },
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+
+    const repo = createGoalRunRepository(pool as never);
+    const result = await repo.get({ organizationId: "org-a", goalRunId: 7 });
+
+    expect(result).toMatchObject({
+      organizationId: "org-a",
+      scopeId: "proj-x",
+      projectKey: "proj-x",
+      goal: "ship phase 1",
+      terminationCriteria: "tests pass",
+      closeNote: "done",
+    });
+    expect(result?.iterations[0]).toMatchObject({
+      organizationId: "org-a",
+      attempt: "try A",
+      summary: "summary",
+      error: "boom",
+    });
+  });
+
+  it("get trims organizationId before querying run and iterations", async () => {
+    const calls: SqlQueryCall[] = [];
+    const pool = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow({ iteration_count: "1" })] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      connect: vi.fn(),
+    };
+
+    const repo = createGoalRunRepository(pool as never);
+    await repo.get({ organizationId: " org-a ", goalRunId: 7 });
+
+    expect(calls[0]?.params).toEqual([7, "org-a"]);
+    expect(calls[1]?.params).toEqual([7, "org-a"]);
+  });
+
+  it.each([
+    {
+      rowPatch: { scope_type: "team" },
+      message: 'goal run scope_type must be "project" or "user"',
+    },
+    {
+      rowPatch: { status: "paused" },
+      message: 'goal run status must be "active", "completed", or "abandoned"',
+    },
+  ])("get rejects malformed run enum rows %#", async ({ rowPatch, message }) => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow(rowPatch)] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.get({ organizationId: "org-a", goalRunId: 7 }),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "goal run organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message: "goal run organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { scope_id: 42 },
+      message: "goal run scope_id must be a string",
+    },
+    {
+      rowPatch: { scope_id: " \n\t " },
+      message: "goal run scope_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { project_key: 42 },
+      message: "goal run project_key must be a string or null",
+    },
+    {
+      rowPatch: { project_key: " \n\t " },
+      message: "goal run project_key must contain non-whitespace text",
+    },
+    {
+      rowPatch: { goal: null },
+      message: "goal run goal must be a string",
+    },
+    {
+      rowPatch: { goal: " \n\t " },
+      message: "goal run goal must contain non-whitespace text",
+    },
+    {
+      rowPatch: { termination_criteria: 42 },
+      message: "goal run termination_criteria must be a string or null",
+    },
+    {
+      rowPatch: { termination_criteria: " \n\t " },
+      message:
+        "goal run termination_criteria must contain non-whitespace text",
+    },
+    {
+      rowPatch: { close_note: false },
+      message: "goal run close_note must be a string or null",
+    },
+    {
+      rowPatch: { close_note: " \n\t " },
+      message: "goal run close_note must contain non-whitespace text",
+    },
+  ])("get rejects malformed run scalar rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow(rowPatch)] });
+        }
+        return Promise.resolve({ rows: [] });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.get({ organizationId: "org-a", goalRunId: 7 }),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      rowPatch: { id: "0" },
+      message: "goal run iteration id must be a positive safe integer",
+    },
+    {
+      rowPatch: { goal_run_id: "bad" },
+      message: "database number must be finite",
+    },
+    {
+      rowPatch: { iteration_index: "0" },
+      message: "goal run iteration_index must be a positive safe integer",
+    },
+  ])("get rejects malformed iteration numeric rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow({ iteration_count: "1" })] });
+        }
+        return Promise.resolve({
+          rows: [
+            {
+              id: "1",
+              goal_run_id: "7",
+              organization_id: "org-a",
+              iteration_index: "0",
+              attempt: "a",
+              outcome: "failure",
+              summary: null,
+              error: "e",
+              created_at: "2026-06-27T00:01:00.000Z",
+              ...rowPatch,
+            },
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.get({ organizationId: "org-a", goalRunId: 7 }),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "goal run iteration organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message:
+        "goal run iteration organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { attempt: null },
+      message: "goal run iteration attempt must be a string",
+    },
+    {
+      rowPatch: { attempt: " \n\t " },
+      message: "goal run iteration attempt must contain non-whitespace text",
+    },
+    {
+      rowPatch: { summary: 42 },
+      message: "goal run iteration summary must be a string or null",
+    },
+    {
+      rowPatch: { summary: " \n\t " },
+      message: "goal run iteration summary must contain non-whitespace text",
+    },
+    {
+      rowPatch: { error: false },
+      message: "goal run iteration error must be a string or null",
+    },
+    {
+      rowPatch: { error: " \n\t " },
+      message: "goal run iteration error must contain non-whitespace text",
+    },
+  ])("get rejects malformed iteration scalar rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow({ iteration_count: "1" })] });
+        }
+        return Promise.resolve({
+          rows: [
+            {
+              id: "1",
+              goal_run_id: "7",
+              organization_id: "org-a",
+              iteration_index: "1",
+              attempt: "a",
+              outcome: "failure",
+              summary: null,
+              error: "e",
+              created_at: "2026-06-27T00:01:00.000Z",
+              ...rowPatch,
+            },
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.get({ organizationId: "org-a", goalRunId: 7 }),
+    ).rejects.toThrow(message);
+  });
+
+  it("get rejects malformed iteration outcome rows", async () => {
+    const pool = {
+      query: vi.fn((sql: string) => {
+        if (sql.includes("FROM goal_runs")) {
+          return Promise.resolve({ rows: [runRow({ iteration_count: "1" })] });
+        }
+        return Promise.resolve({
+          rows: [
+            {
+              id: "1",
+              goal_run_id: "7",
+              organization_id: "org-a",
+              iteration_index: "1",
+              attempt: "a",
+              outcome: "retry",
+              summary: null,
+              error: "e",
+              created_at: "2026-06-27T00:01:00.000Z",
+            },
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await expect(
+      repo.get({ organizationId: "org-a", goalRunId: 7 }),
+    ).rejects.toThrow(
+      'goal run iteration outcome must be "success", "failure", or "partial"',
+    );
   });
 
   it("list rejects whitespace-only organizationId before querying", async () => {
@@ -439,6 +1036,27 @@ describe("createGoalRunRepository", () => {
     ).rejects.toThrow('status must be "active", "completed", or "abandoned"');
 
     expect(pool.query).not.toHaveBeenCalled();
+  });
+
+  it("list trims organizationId and scopeId before querying", async () => {
+    const calls: SqlQueryCall[] = [];
+    const pool = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        return Promise.resolve({ rows: [] });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await repo.list({
+      organizationId: " org-a ",
+      scopeType: "project",
+      scopeId: " proj-x ",
+      status: "active",
+    });
+
+    expect(calls[0]?.params).toEqual(["org-a", "project", "proj-x", "active"]);
   });
 
   it("complete rejects whitespace-only organizationId before querying", async () => {
@@ -506,5 +1124,61 @@ describe("createGoalRunRepository", () => {
     await expect(
       repo2.abandon({ organizationId: "org-a", goalRunId: 7 }),
     ).rejects.toBeInstanceOf(GoalRunNotActiveError);
+  });
+
+  it("complete trims note before closing a run", async () => {
+    const calls: SqlQueryCall[] = [];
+    const pool = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        return Promise.resolve({
+          rows: [
+            runRow({
+              status: "completed",
+              closed_at: "2026-06-27T01:00:00.000Z",
+              close_note: "done",
+            }),
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await repo.complete({
+      organizationId: "org-a",
+      goalRunId: 7,
+      note: " done ",
+    });
+
+    expect(calls[0]?.params[3]).toBe("done");
+  });
+
+  it("complete trims organizationId before closing a run", async () => {
+    const calls: SqlQueryCall[] = [];
+    const pool = {
+      query: vi.fn((sql: string, params?: unknown[]) => {
+        calls.push({ sql, params: params ?? [] });
+        return Promise.resolve({
+          rows: [
+            runRow({
+              status: "completed",
+              closed_at: "2026-06-27T01:00:00.000Z",
+              close_note: "done",
+            }),
+          ],
+        });
+      }),
+      connect: vi.fn(),
+    };
+    const repo = createGoalRunRepository(pool as never);
+
+    await repo.complete({
+      organizationId: " org-a ",
+      goalRunId: 7,
+      note: "done",
+    });
+
+    expect(calls[0]?.params).toEqual([7, "org-a", "completed", "done"]);
   });
 });

@@ -1,4 +1,4 @@
--- P17 Compaction v2 apply path. Two new tables + audit_log.metadata column.
+-- Compaction apply persistence and async vector cleanup.
 --
 -- compaction_runs    - one row per dryRun=false call. Idempotency anchor
 --                      (UUID UNIQUE) and run-level outcome counters.

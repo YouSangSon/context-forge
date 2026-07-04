@@ -44,7 +44,7 @@ body:
         - MCP server (src/mcp/)
         - HTTP API (src/app/)
         - Postgres / repos (src/store/, src/db/)
-        - Qdrant / vector index
+        - Vector backend (Qdrant / pgvector)
         - Compaction (src/compact/)
         - Embeddings (src/embedding/)
         - Audit log

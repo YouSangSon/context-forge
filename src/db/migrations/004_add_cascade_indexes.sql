@@ -2,9 +2,9 @@
 --
 -- memory_records has ON DELETE CASCADE incoming from three tables. Without
 -- indexes on the FK columns, every parent delete forces Postgres to do a
--- sequential scan of the child table to find rows to remove. P17's
--- compaction apply path will delete records in the hundreds-to-thousands
--- range; without these indexes the cascade is the dominant cost.
+-- sequential scan of the child table to find rows to remove. The compaction
+-- apply path can delete records in the hundreds-to-thousands range; without
+-- these indexes the cascade is the dominant cost.
 --
 -- Idempotent (IF NOT EXISTS). Adding indexes to small tables is fast; the
 -- locks are brief because no FK rewrites are involved. Safe to run on a

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolvePostgresPoolConfig } from "../config.js";
 import { createPgPool, type PgPool } from "./connection.js";
 
 const dbDir = path.dirname(fileURLToPath(import.meta.url));
@@ -559,6 +560,7 @@ export async function migrateFromEnv(
 ): Promise<void> {
   const pool = createPgPool({
     connectionString: resolveMigrationDatabaseUrl(env),
+    ...resolvePostgresPoolConfig(env),
   });
 
   try {

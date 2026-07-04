@@ -287,10 +287,13 @@ describe("createToolRegistry", () => {
   });
 
   it("adds memory using the Task 6 public tool contract", async () => {
-    const registry = createToolRegistry({ repository: createRepository() });
+    const resolveRepository = vi.fn((projectKey: string) =>
+      createProjectRepository(projectKey),
+    );
+    const registry = createToolRegistry({ resolveRepository });
 
     const result = await registry.add_memory({
-      projectKey: "project-alpha",
+      projectKey: " project-alpha ",
       kind: "decision",
       content: "Use Postgres for canonical memory state.",
     });
@@ -300,6 +303,7 @@ describe("createToolRegistry", () => {
       memoryId: "101",
       summary: "Use Postgres for canonical memory state.",
     });
+    expect(resolveRepository).toHaveBeenCalledWith("project-alpha");
   });
 
   it("rejects whitespace-only content through the direct add_memory registry path", async () => {
@@ -744,6 +748,23 @@ describe("createToolRegistry", () => {
     expect(services.embeddings.embedBatch).not.toHaveBeenCalled();
   });
 
+  it("rejects whitespace-only reindex organizationId before canonical service resolution", async () => {
+    const services = createCanonicalServices();
+    const resolveCanonicalServices = vi.fn(async () => services);
+    const registry = createToolRegistry({ resolveCanonicalServices });
+
+    await expect(
+      registry.reindex_memory({
+        organizationId: " \n\t ",
+        projectKey: "project-alpha",
+      }),
+    ).rejects.toThrow(/organizationId/);
+
+    expect(resolveCanonicalServices).not.toHaveBeenCalled();
+    expect(services.chunkRepository.listChunks).not.toHaveBeenCalled();
+    expect(services.vectorIndex.deleteByRecordIds).not.toHaveBeenCalled();
+  });
+
   it("rejects non-string scope identifiers before canonical service resolution", async () => {
     const services = createCanonicalServices();
     const resolveCanonicalServices = vi.fn(async () => services);
@@ -974,7 +995,7 @@ describe("createToolRegistry", () => {
     });
 
     await registry.add_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       projectKey: "project-alpha",
       kind: "decision",
       content: "Decision: index canonical memory into the active vector backend.",
@@ -1051,11 +1072,12 @@ describe("createToolRegistry", () => {
       // Strict-org guard demands either organizationId or the LEGACY_ANONYMOUS_SEARCH
       // escape hatch. Use a non-default tenant so the persistence row proves it
       // keeps the request's org attribution instead of falling back to "default".
-      organizationId: "org-a",
-      task: "continue work",
+      organizationId: " org-a ",
+      task: " continue work ",
     });
 
     expect(result.selectedMemoryIds).toEqual(["project:project-alpha:12"]);
+    expect(result.packMarkdown).toContain("Task: continue work");
     expect(services.chunkRepository.createContextPackRun).toHaveBeenCalledWith({
       organizationId: "org-a",
       projectKey: "project-alpha",
@@ -1167,7 +1189,7 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.reindex_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       projectKey: "project-alpha",
     });
 
@@ -1225,10 +1247,10 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.list_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       projectKey: "project-alpha",
       includeArchived: true,
-      tag: "ops",
+      tag: " ops ",
       limit: 25,
     });
 
@@ -1257,10 +1279,10 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.inspect_memory_graph({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       projectKey: "project-alpha",
       kind: "code_symbol",
-      query: "QDRANT",
+      query: " QDRANT ",
       includeArchived: true,
       limit: 25,
       relationshipLimit: 10,
@@ -1460,7 +1482,7 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.update_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       memoryId: 501,
       content: "Decision: refresh vectors after governance edits.",
       summary: "Refresh vectors after governance edits.",
@@ -1549,6 +1571,29 @@ describe("createToolRegistry", () => {
         organizationId: "org-a",
         title: null,
         summary: null,
+      }),
+    );
+  });
+
+  it("trims update_memory optional title and summary before repository dispatch", async () => {
+    const services = createCanonicalServices();
+    const registry = createToolRegistry({
+      resolveCanonicalServices: async () => services,
+    });
+
+    await registry.update_memory({
+      organizationId: "org-a",
+      memoryId: 501,
+      title: " Updated title ",
+      summary: " Updated summary ",
+    });
+
+    expect(services.repository.updateMemoryRecord).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 501,
+        organizationId: "org-a",
+        title: "Updated title",
+        summary: "Updated summary",
       }),
     );
   });
@@ -1719,14 +1764,14 @@ describe("createToolRegistry", () => {
     const registry = createToolRegistry({ auditLog });
 
     await expect(
-      registry.list_audit_log({ limit: 1000 }),
+      registry.list_audit_log({ organizationId: " org-a ", limit: 1000 }),
     ).resolves.toMatchObject({
       ok: true,
-      organizationId: "default",
+      organizationId: "org-a",
       entries: [],
     });
 
-    expect(auditLog.listByOrganization).toHaveBeenCalledWith("default", {
+    expect(auditLog.listByOrganization).toHaveBeenCalledWith("org-a", {
       limit: 1000,
     });
   });
@@ -1908,7 +1953,7 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.delete_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       memoryId: 501,
     });
 
@@ -1968,7 +2013,7 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.tag_memory({
-      organizationId: "org-a",
+      organizationId: " org-a ",
       memoryId: 501,
       tags: ["security", "ops"],
     });
@@ -2261,20 +2306,28 @@ describe("createToolRegistry", () => {
     });
 
     const result = await registry.compact_memory({
-      projectKey: "project-alpha",
+      projectKey: " project-alpha ",
       dryRun: false,
-      organizationId: "dev-team",
+      organizationId: " dev-team ",
       decayThreshold: 0,
     });
 
     expect(result.ok).toBe(true);
+    expect(result.projectKey).toBe("project-alpha");
     expect(result.dryRun).toBe(false);
     expect(result.archivedIds).toEqual(["902"]);
     expect(result.compactionRunId).toBeTypeOf("string");
     expect(result.applyStats?.archived).toBe(1);
     expect(result.applyStats?.qdrantPointsDeleted).toBe(1);
+    expect(services.repository.listMemory).toHaveBeenCalledWith(
+      { scopeType: "project", scopeId: "project-alpha" },
+      expect.objectContaining({ organizationId: "dev-team" }),
+    );
     expect(services.archiveRepository.createCompactionRun).toHaveBeenCalledWith(
-      expect.objectContaining({ organizationId: "dev-team", dryRun: false }),
+      expect.objectContaining({
+        organizationId: "dev-team",
+        dryRun: false,
+      }),
     );
     expect(services.vectorIndex.delete).toHaveBeenCalledWith(["pt-902"], {
       organizationId: "dev-team",
@@ -2407,7 +2460,7 @@ describe("createToolRegistry", () => {
     ).not.toHaveBeenCalled();
   });
 
-  it("applies semantic dedup (P18) when semanticDedupThreshold is set", async () => {
+  it("applies semantic dedup when semanticDedupThreshold is set", async () => {
     const services = createCanonicalServices();
 
     // Three records — two are paraphrases of each other; one is unrelated.
@@ -3382,7 +3435,7 @@ describe("createMcpServer structured outputs", () => {
           return {
             action: "accept",
             content: {
-              projectKey: "project-alpha",
+              projectKey: " project-alpha ",
               kind: "decision",
               content: "Decision: use MCP elicitation for user-confirmed memory.",
             },
@@ -3411,6 +3464,55 @@ describe("createMcpServer structured outputs", () => {
         projectKey: "project-alpha",
         kind: "decision",
         content: "Decision: use MCP elicitation for user-confirmed memory.",
+      },
+    });
+
+    await client.close();
+    await server.close();
+  });
+
+  it("stores accepted user-scoped elicited memory with normalized identifiers", async () => {
+    const registry = buildRegistryForMcpProtocol();
+    const server = createMcpServer({ registry });
+    const client = await createInMemoryClient(
+      server,
+      { capabilities: { elicitation: { form: {} } } },
+      (candidate) => {
+        candidate.setRequestHandler(ElicitRequestSchema, async () => ({
+          action: "accept",
+          content: {
+            content: "Always answer in Korean unless the repo says otherwise.",
+          },
+        }));
+      },
+    );
+
+    const result = await client.callTool({
+      name: "add_memory_interactive",
+      arguments: {
+        organizationId: " org-a ",
+        scope: "user",
+        userScopeId: " alice ",
+        kind: "fact",
+      },
+    });
+
+    expect(registry.add_memory).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      scope: "user",
+      userScopeId: "alice",
+      kind: "fact",
+      content: "Always answer in Korean unless the repo says otherwise.",
+    });
+    expect(result.structuredContent).toEqual({
+      ok: true,
+      action: "accept",
+      stored: true,
+      memoryId: "101",
+      summary: "stored",
+      collected: {
+        kind: "fact",
+        content: "Always answer in Korean unless the repo says otherwise.",
       },
     });
 
@@ -3919,6 +4021,27 @@ describe("createMcpServer resources and prompts", () => {
           projectKey: "project-alpha",
           task: "continue implementation",
           limit: "101",
+        },
+      }),
+    ).rejects.toThrow();
+    expect(registry.build_context_pack).not.toHaveBeenCalled();
+
+    await client.close();
+    await server.close();
+  });
+
+  it("rejects non-decimal session prompt limits before dispatch", async () => {
+    const registry = buildRegistryForMcpProtocol();
+    const server = createMcpServer({ registry });
+    const client = await createInMemoryClient(server);
+
+    await expect(
+      client.getPrompt({
+        name: "akasha_session_start",
+        arguments: {
+          projectKey: "project-alpha",
+          task: "continue implementation",
+          limit: "0x10",
         },
       }),
     ).rejects.toThrow();

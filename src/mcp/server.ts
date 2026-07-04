@@ -15,7 +15,11 @@ import {
   assertNonBlankString,
   assertObject,
 } from "./tool-registry-validation.js";
-import { SUPPORTED_MEMORY_KINDS } from "./tool-utils.js";
+import {
+  requireProjectKey,
+  requireUserScopeId,
+  SUPPORTED_MEMORY_KINDS,
+} from "./tool-utils.js";
 import type {
   AddMemoryInteractiveToolInput,
   ClassifyMemoryCandidateToolInput,
@@ -68,6 +72,15 @@ const MEMORY_CLASSIFICATION_SCHEMA = z.object({
   summary: nonBlankTextInputSchema,
   confidence: z.number().min(0).max(1).optional(),
 });
+
+const sessionPromptLimitSchema = z.union([
+  z.number().int().positive().max(100),
+  z
+    .string()
+    .regex(/^\d+$/)
+    .transform((value) => Number(value))
+    .pipe(z.number().int().positive().max(100)),
+]);
 
 export function createMcpServer(
   options: CreateMcpServerOptions = {},
@@ -254,7 +267,20 @@ function registerMcpContextTools(
       }
 
       const parsed = ELICITED_MEMORY_SCHEMA.parse(elicited.content ?? {});
-      const projectKey = input.projectKey ?? parsed.projectKey;
+      const rawProjectKey = input.projectKey ?? parsed.projectKey;
+      let organizationId: string | undefined;
+      if (input.organizationId !== undefined) {
+        assertNonBlankString(input.organizationId, "organizationId");
+        organizationId = input.organizationId.trim();
+      }
+      const projectKey =
+        rawProjectKey === undefined
+          ? undefined
+          : requireProjectKey(rawProjectKey, "project");
+      const userScopeId =
+        input.userScopeId === undefined
+          ? undefined
+          : requireUserScopeId(input.userScopeId);
       const kind = input.kind ?? parsed.kind;
       if (input.scope !== "user" && !projectKey) {
         throw new Error("projectKey is required to store project memory.");
@@ -264,10 +290,10 @@ function registerMcpContextTools(
       }
 
       const stored = await registry.add_memory({
-        ...(input.organizationId ? { organizationId: input.organizationId } : {}),
+        ...(organizationId ? { organizationId } : {}),
         ...(projectKey ? { projectKey } : {}),
         ...(input.scope ? { scope: input.scope } : {}),
-        ...(input.userScopeId ? { userScopeId: input.userScopeId } : {}),
+        ...(userScopeId ? { userScopeId } : {}),
         kind,
         content: parsed.content,
       });
@@ -392,7 +418,7 @@ function parseJsonObjectFromText(text: string): unknown {
   const trimmed = text.trim();
   try {
     return JSON.parse(trimmed);
-  } catch {
+  } catch (_err: unknown) {
     const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
     if (fenced?.[1]) {
       return JSON.parse(fenced[1]);
@@ -603,7 +629,7 @@ function registerAkashaPrompts(server: McpServer, registry: ToolRegistry): void 
         organizationId: nonBlankTextInputSchema.optional(),
         projectKey: nonBlankTextInputSchema,
         task: nonBlankTextInputSchema,
-        limit: z.coerce.number().int().positive().max(100).optional(),
+        limit: sessionPromptLimitSchema.optional(),
       },
     },
     async ({ organizationId, projectKey, task, limit }) => {

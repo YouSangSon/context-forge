@@ -13,6 +13,20 @@ describe("parseStoredPostgresSourceRef", () => {
     expect(result).toEqual({ sourceRef: "README.md", uri: "file:///README.md" });
   });
 
+  it("trims valid JSON source_ref metadata", () => {
+    const value = JSON.stringify({
+      sourceRef: " README.md ",
+      uri: " file:///README.md ",
+    });
+
+    const result = parseStoredPostgresSourceRef(value);
+
+    expect(result).toEqual({
+      sourceRef: "README.md",
+      uri: "file:///README.md",
+    });
+  });
+
   it("rejects non-string source_ref values before parsing", () => {
     const warnSpy = vi.spyOn(loggerModule.rootLogger, "warn");
 

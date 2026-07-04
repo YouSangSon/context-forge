@@ -1,4 +1,5 @@
 import type { PgPool } from "../db/connection.js";
+import { toIsoString, toNumber } from "../store/db-utils.js";
 import { assertNonBlankText } from "../store/memory-content.js";
 
 export type AuditOutcome = "ok" | "error";
@@ -28,14 +29,14 @@ export type AuditLogRepository = {
 };
 
 type AuditLogRow = {
-  id: number;
+  id: number | string;
   organization_id: string;
   actor: string;
   tool: string;
   project_key: string | null;
-  outcome: AuditOutcome;
+  outcome: unknown;
   error_message: string | null;
-  duration_ms: number;
+  duration_ms: number | string;
   request_id: string | null;
   created_at: string | Date;
 };
@@ -46,6 +47,15 @@ export function createAuditLogRepository(pool: PgPool): AuditLogRepository {
   return {
     async record(entry) {
       assertAuditLogEntry(entry);
+      const organizationId = normalizeRequiredText(
+        entry.organizationId,
+        "organizationId",
+      );
+      const actor = normalizeRequiredText(entry.actor, "actor");
+      const tool = normalizeRequiredText(entry.tool, "tool");
+      const projectKey = normalizeOptionalNonBlankText(entry.projectKey);
+      const errorMessage = normalizeOptionalText(entry.errorMessage);
+      const requestId = normalizeOptionalNonBlankText(entry.requestId);
 
       await pool.query(
         `
@@ -61,22 +71,26 @@ export function createAuditLogRepository(pool: PgPool): AuditLogRepository {
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         `,
         [
-          entry.organizationId,
-          entry.actor,
-          entry.tool,
-          entry.projectKey ?? null,
+          organizationId,
+          actor,
+          tool,
+          projectKey,
           entry.outcome,
-          entry.errorMessage != null
-            ? entry.errorMessage.slice(0, MAX_ERROR_MESSAGE_LENGTH)
+          errorMessage != null
+            ? errorMessage.slice(0, MAX_ERROR_MESSAGE_LENGTH)
             : null,
           entry.durationMs,
-          entry.requestId ?? null,
+          requestId,
         ],
       );
     },
 
     async listByOrganization(organizationId, options) {
       assertNonBlankText(organizationId, "organizationId");
+      const normalizedOrganizationId = normalizeRequiredText(
+        organizationId,
+        "organizationId",
+      );
 
       const limit = resolveAuditLimit(options);
       const result = await pool.query<AuditLogRow>(
@@ -97,7 +111,7 @@ export function createAuditLogRepository(pool: PgPool): AuditLogRepository {
           ORDER BY id DESC
           LIMIT $2
         `,
-        [organizationId, limit],
+        [normalizedOrganizationId, limit],
       );
 
       return result.rows.map(mapAuditLogRow);
@@ -107,20 +121,107 @@ export function createAuditLogRepository(pool: PgPool): AuditLogRepository {
 
 function mapAuditLogRow(row: AuditLogRow): StoredAuditLogEntry {
   return {
-    id: typeof row.id === "number" ? row.id : Number(row.id),
-    organizationId: row.organization_id,
-    actor: row.actor,
-    tool: row.tool,
-    projectKey: row.project_key,
-    outcome: row.outcome,
-    errorMessage: row.error_message,
-    durationMs: row.duration_ms,
-    requestId: row.request_id,
-    createdAt:
-      row.created_at instanceof Date
-        ? row.created_at.toISOString()
-        : row.created_at,
+    id: toPositiveSafeInteger(row.id, "audit log id"),
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "audit log organization_id",
+    ),
+    actor: mapRequiredText(row.actor, "audit log actor"),
+    tool: mapRequiredText(row.tool, "audit log tool"),
+    projectKey: mapNullableNonBlankText(
+      row.project_key,
+      "audit log project_key",
+    ),
+    outcome: toAuditOutcome(row.outcome),
+    errorMessage: mapNullableText(
+      row.error_message,
+      "audit log error_message",
+    ),
+    durationMs: toNonNegativeSafeInteger(
+      row.duration_ms,
+      "audit log duration_ms",
+    ),
+    requestId: mapNullableNonBlankText(
+      row.request_id,
+      "audit log request_id",
+    ),
+    createdAt: toIsoString(row.created_at),
   };
+}
+
+function toPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue <= 0) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+  return numberValue;
+}
+
+function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue < 0) {
+    throw new Error(`${fieldName} must be a non-negative safe integer`);
+  }
+  return numberValue;
+}
+
+function mapRequiredText(value: unknown, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value.trim();
+}
+
+function mapNullableText(value: unknown, fieldName: string): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    return normalized ? normalized : null;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
+}
+
+function mapNullableNonBlankText(
+  value: unknown,
+  fieldName: string,
+): string | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string or null`);
+  }
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
+  return value.trim();
+}
+
+function toAuditOutcome(value: unknown): AuditOutcome {
+  assertAuditOutcome(value, "audit log outcome");
+  return value;
+}
+
+function normalizeRequiredText(value: string, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value.trim();
+}
+
+function normalizeOptionalNonBlankText(
+  value: string | null | undefined,
+): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  return value.trim();
+}
+
+function normalizeOptionalText(value: string | null | undefined): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  const normalized = value.trim();
+  return normalized ? normalized : null;
 }
 
 const DEFAULT_AUDIT_LIMIT = 100;

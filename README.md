@@ -56,8 +56,8 @@ operated in production:
   vector store; a background sweeper retries any upsert that failed mid-flight
   (visibility-timeout claim, `FOR UPDATE SKIP LOCKED`). No silent index drift.
 - **Secrets scrubbed at write.** Content is scanned before it ever lands —
-  API keys, PEM blocks, bearer tokens, and JWTs are rejected (`SecretDetectedError`)
-  rather than persisted.
+  provider API keys, PEM blocks, bearer/JWT tokens, and credentialed database
+  URLs are rejected (`SecretDetectedError`) rather than persisted.
 - **Compaction with a dry run.** Exact + semantic dedup and time-decay archival
   are previewed by default (`dryRun: true`); apply is idempotent and
   rate-limited. Archived records are restorable via `unarchive_memory`.
@@ -236,7 +236,9 @@ npm run dev:mcp       # MCP stdio server in watch mode
 npm run dev:cli       # CLI in watch mode
 npm run lifecycle:init -- --project my-project --organization-id default
 npm run typecheck     # tsc --noEmit
-npm run test          # vitest run
+npm run build         # clean dist/ and compile TypeScript
+npm audit --audit-level=moderate
+npm test              # vitest run
 npm run db:migrate    # apply pending migrations
 npm run backup:create # backend-aware backup for VECTOR_BACKEND
 npm run backup:create:pgvector # explicit Postgres-only pgvector backup

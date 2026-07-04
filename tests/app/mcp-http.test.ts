@@ -558,6 +558,30 @@ describe("Streamable HTTP /mcp", () => {
     await client.close();
   });
 
+  it("accepts MCP tool calls when a bound token org matches after trimming", async () => {
+    handle = await startServer([
+      { token: "bound-token", organizationId: "org-a" },
+    ]);
+    const client = await connectMcp(handle.baseUrl, "bound-token");
+
+    const result = await client.callTool({
+      name: "search_memory",
+      arguments: {
+        organizationId: " org-a ",
+        projectKey: "p",
+        query: "q",
+      },
+    });
+    await client.close();
+
+    expect(result.isError).not.toBe(true);
+    expect(handle.registry.search_memory).toHaveBeenCalledWith({
+      organizationId: "org-a",
+      projectKey: "p",
+      query: "q",
+    });
+  });
+
   it("injects the bound token org into MCP tool calls that omit organizationId", async () => {
     handle = await startServer([
       { token: "bound-token", organizationId: "org-a" },
@@ -682,7 +706,7 @@ describe("Streamable HTTP /mcp", () => {
 
     const roots = await client.callTool({
       name: "list_workspace_roots",
-      arguments: {},
+      arguments: { organizationId: " org-oauth " },
     });
     expect(roots.isError).not.toBe(true);
 
@@ -766,6 +790,36 @@ describe("Streamable HTTP /mcp", () => {
     expect(res.status).toBe(400);
     expect(serverCloseSpy).toHaveBeenCalled();
     expect(transportCloseSpy).toHaveBeenCalled();
+  });
+
+  it("closes the per-request MCP server when transport cleanup throws synchronously", async () => {
+    const serverCloseSpy = vi.spyOn(McpServer.prototype, "close");
+    const transportCloseSpy = vi
+      .spyOn(StreamableHTTPServerTransport.prototype, "close")
+      .mockImplementationOnce(() => {
+        throw new Error("transport close boom");
+      });
+
+    try {
+      handle = await startServer(["token-a"]);
+
+      const res = await fetch(`${handle.baseUrl}/mcp`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer token-a",
+          "content-type": "application/json",
+          accept: "application/json, text/event-stream",
+        },
+        body: "{",
+      });
+
+      expect(res.status).toBe(400);
+      expect(transportCloseSpy).toHaveBeenCalled();
+      expect(serverCloseSpy).toHaveBeenCalled();
+    } finally {
+      transportCloseSpy.mockRestore();
+      serverCloseSpy.mockRestore();
+    }
   });
 
   it("closes the per-request MCP server and transport when POST body exceeds the size cap", async () => {

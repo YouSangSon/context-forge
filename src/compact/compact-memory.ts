@@ -1,9 +1,9 @@
 // Compaction plan orchestrator. Pure given (records, options): combines
 // dedup + decay + promotion into a single CompactMemoryToolResult.
 //
-// Extracted from src/mcp/server.ts:526-563 in P17 step 0 with no behavior
-// change, so the apply-path code in P17 step 3 has a stable seam to extend.
-// Tests can drive this directly without spinning up the MCP registry.
+// Extracted from the MCP server with no behavior change so dry-run planning
+// and destructive apply share the same result shape. Tests can drive this
+// directly without spinning up the MCP registry.
 
 import { findExactContentDuplicates } from "./detect-duplicates.js";
 import { findDecayCandidates } from "./decay-score.js";
@@ -30,7 +30,7 @@ export type BuildCompactionPlanInput = {
   decayThreshold?: number;
   halfLifeDays?: number;
   // When provided, REPLACES exact-match dedup with this set. Computed by
-  // the orchestrator (P18.1) which embeds records and runs
+  // the semantic compaction orchestrator, which embeds records and runs
   // findSemanticDuplicates. Semantic with threshold ≤ 1.0 subsumes exact
   // match — running both would just produce overlapping groups that the
   // apply-path orchestrator dedups by id anyway.

@@ -148,10 +148,10 @@ function normalizeLifecycleInput(input: LifecycleInitInput) {
   return {
     repoDir,
     outDir: path.resolve(repoDir, input.outDir ?? DEFAULT_OUT_DIR),
-    projectKey: input.projectKey,
-    organizationId: input.organizationId,
-    userScopeId: input.userScopeId,
-    task: input.task ?? DEFAULT_TASK,
+    projectKey: input.projectKey.trim(),
+    organizationId: input.organizationId?.trim(),
+    userScopeId: input.userScopeId?.trim(),
+    task: input.task?.trim() ?? DEFAULT_TASK,
     force: input.force ?? false,
   };
 }
@@ -160,7 +160,7 @@ async function fileExists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);
     return true;
-  } catch {
+  } catch (_err: unknown) {
     return false;
   }
 }

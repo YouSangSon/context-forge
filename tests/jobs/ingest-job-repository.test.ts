@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createPgPool, type PgPool } from "../../src/db/connection.js";
 import { runMigrations } from "../../src/db/migrate.js";
 import { createIngestJobRepository } from "../../src/jobs/ingest-job-repository.js";
@@ -11,6 +11,138 @@ const adminConnectionString =
   `postgres://memory:memory@127.0.0.1:${postgresPort}/postgres`;
 const testConnectionString =
   `postgres://memory:memory@127.0.0.1:${postgresPort}/${testDatabaseName}`;
+
+function ingestJobRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "1",
+    memory_record_id: "42",
+    organization_id: "org-a",
+    status: "pending",
+    attempts: "0",
+    last_error: null,
+    qdrant_status: "pending",
+    qdrant_attempts: "0",
+    qdrant_next_retry_at: null,
+    qdrant_last_error: null,
+    created_at: "2026-06-27T00:00:00.000Z",
+    updated_at: "2026-06-27T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+describe("createIngestJobRepository row mapping", () => {
+  it("trims organizationId before creating ingest jobs", async () => {
+    const pool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [ingestJobRow()],
+      }),
+    };
+    const repo = createIngestJobRepository(pool as never);
+
+    await repo.create({ memoryRecordId: 42, organizationId: " org-a " });
+
+    expect(pool.query).toHaveBeenCalledWith(
+      expect.stringContaining("INSERT INTO ingest_jobs"),
+      [42, "org-a"],
+    );
+  });
+
+  it("trims ingest job row text before returning mapped jobs", async () => {
+    const pool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [
+          ingestJobRow({
+            organization_id: " org-a ",
+            last_error: " failed once ",
+            qdrant_last_error: " qdrant timeout ",
+          }),
+          ingestJobRow({
+            id: "2",
+            last_error: " \n\t ",
+            qdrant_last_error: " \n\t ",
+          }),
+        ],
+      }),
+    };
+    const repo = createIngestJobRepository(pool as never);
+
+    const jobs = await repo.listPendingForRetry({
+      limit: 10,
+      now: new Date("2026-06-27T00:00:01.000Z"),
+    });
+
+    expect(jobs[0]).toMatchObject({
+      organizationId: "org-a",
+      lastError: "failed once",
+      qdrantLastError: "qdrant timeout",
+    });
+    expect(jobs[1]).toMatchObject({
+      id: 2,
+      lastError: null,
+      qdrantLastError: null,
+    });
+  });
+
+  it.each([
+    {
+      rowPatch: { status: "queued" },
+      message:
+        'ingest job status must be "pending", "processing", "completed", or "failed"',
+    },
+    {
+      rowPatch: { qdrant_status: "deleted" },
+      message:
+        'ingest job qdrant_status must be "pending", "completed", or "failed"',
+    },
+  ])("rejects malformed ingest job enum rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const pool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [ingestJobRow(rowPatch)],
+      }),
+    };
+    const repo = createIngestJobRepository(pool as never);
+
+    await expect(
+      repo.create({ memoryRecordId: 42, organizationId: "org-a" }),
+    ).rejects.toThrow(message);
+  });
+
+  it.each([
+    {
+      rowPatch: { organization_id: null },
+      message: "ingest job organization_id must be a string",
+    },
+    {
+      rowPatch: { organization_id: " \n\t " },
+      message: "ingest job organization_id must contain non-whitespace text",
+    },
+    {
+      rowPatch: { last_error: 42 },
+      message: "ingest job last_error must be a string or null",
+    },
+    {
+      rowPatch: { qdrant_last_error: false },
+      message: "ingest job qdrant_last_error must be a string or null",
+    },
+  ])("rejects malformed ingest job scalar rows %#", async ({
+    rowPatch,
+    message,
+  }) => {
+    const pool = {
+      query: vi.fn().mockResolvedValue({
+        rows: [ingestJobRow(rowPatch)],
+      }),
+    };
+    const repo = createIngestJobRepository(pool as never);
+
+    await expect(
+      repo.create({ memoryRecordId: 42, organizationId: "org-a" }),
+    ).rejects.toThrow(message);
+  });
+});
 
 async function waitForPostgres() {
   let lastError: unknown;
@@ -51,7 +183,7 @@ async function recreateTestDatabase() {
   }
 }
 
-// PG-dependent suite: skip when POSTGRES_HOST is unset (e.g. the non-PG CI
+// Postgres-backed suite: skip when POSTGRES_HOST is unset (e.g. the non-PG CI
 // job, or local dev without docker compose). The pg-integration CI job sets
 // it explicitly. Local opt-in: `POSTGRES_HOST=127.0.0.1 npm test`.
 describe.skipIf(!process.env.POSTGRES_HOST)("createIngestJobRepository", () => {

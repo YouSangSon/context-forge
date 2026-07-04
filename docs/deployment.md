@@ -140,9 +140,10 @@ version and the bootstrap will apply pending migrations.
 ## Scaling notes
 
 The app process is stateless except for the per-token rate limiter
-(in-memory). Multiple replicas behind a round-robin load balancer work
-fine; clients may see slightly looser rate limiting because each replica
-has its own bucket.
+(process-local in-memory). Multiple replicas behind a round-robin load balancer
+work fine, but the effective application rate limit can scale with the number
+of replicas because each replica has its own bucket. If you need a strict
+deployment-wide quota, enforce it at the shared reverse proxy or edge layer.
 
 **Sweeper coordination**: enable `COMPACTION_SWEEP_ENABLED=true` and/or
 `INGEST_SWEEP_ENABLED=true` on **only one** continuously running HTTP replica by

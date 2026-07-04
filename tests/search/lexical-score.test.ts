@@ -50,6 +50,9 @@ describe("lexical scoring", () => {
     expect(() =>
       scoreLexicalMatch("retry", null as unknown as SearchMemoryResult),
     ).toThrow("scoreLexicalMatch record must be an object");
+    expect(() =>
+      scoreLexicalMatch("retry", [] as unknown as SearchMemoryResult),
+    ).toThrow("scoreLexicalMatch record must be an object");
   });
 
   it("rejects records without source objects while scoring", () => {
@@ -57,6 +60,12 @@ describe("lexical scoring", () => {
       scoreLexicalMatch("retry", {
         ...makeRecord(),
         source: undefined,
+      } as unknown as SearchMemoryResult),
+    ).toThrow("scoreLexicalMatch record.source must be an object");
+    expect(() =>
+      scoreLexicalMatch("retry", {
+        ...makeRecord(),
+        source: [],
       } as unknown as SearchMemoryResult),
     ).toThrow("scoreLexicalMatch record.source must be an object");
   });
@@ -92,6 +101,24 @@ describe("lexical scoring", () => {
       expect.arrayContaining(["qdrant_snapshot_timeout", "docs/operations.md"]),
     );
     expect(match.score).toBeGreaterThan(0.5);
+  });
+
+  it("uses externalId when sourceRef is blank while scoring source metadata", () => {
+    const match = scoreLexicalMatch(
+      "adr-timeout",
+      makeRecord({
+        content: "Project memory.",
+        source: {
+          ...makeRecord().source,
+          title: null,
+          sourceRef: " \n\t ",
+          externalId: "adr-timeout",
+        },
+      }),
+    );
+
+    expect(match.matchedTerms).toContain("adr-timeout");
+    expect(match.score).toBeGreaterThan(0);
   });
 });
 

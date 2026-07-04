@@ -96,7 +96,7 @@ function defaultFactory(model: string): () => Promise<FeatureExtractor> {
         ) => Promise<FeatureExtractor>;
       };
       pipeline = mod.pipeline;
-    } catch (err) {
+    } catch (err: unknown) {
       const reason = err instanceof Error ? err.message : String(err);
       throw new Error(
         `EMBEDDING_PROVIDER=transformers requires @huggingface/transformers ` +

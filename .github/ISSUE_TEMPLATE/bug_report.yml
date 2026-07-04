@@ -11,7 +11,7 @@ body:
         we can fix.
 
         **Don't report security vulnerabilities here.** See
-        [SECURITY.md](../SECURITY.md) for the private reporting channel.
+        [SECURITY.md](../../SECURITY.md) for the private reporting channel.
 
   - type: textarea
     id: summary
@@ -67,6 +67,7 @@ body:
     attributes:
       label: EMBEDDING_PROVIDER
       options:
+        - transformers
         - openai
         - local
     validations:
@@ -79,7 +80,7 @@ body:
       options:
         - "Local dev (./install.sh + docker compose)"
         - "Compose on a remote host"
-        - "Custom (external Postgres / Qdrant)"
+        - "Custom (external Postgres / Qdrant or pgvector)"
         - "MCP only (no HTTP server)"
     validations:
       required: true

@@ -109,7 +109,7 @@ export function createMetricsRegistry(): MetricsRegistry {
       const status = String(observation.statusCode);
       const key = buildHttpSampleKey(method, observation.route, status);
       const existing = httpSamples.get(key);
-      const durationSeconds = Math.max(0, observation.durationSeconds);
+      const { durationSeconds } = observation;
 
       if (existing) {
         existing.count += 1;
@@ -132,7 +132,7 @@ export function createMetricsRegistry(): MetricsRegistry {
         observation.worker,
         observation.status,
       );
-      const durationSeconds = Math.max(0, observation.durationSeconds);
+      const { durationSeconds } = observation;
       const existing = sweeperTickSamples.get(key);
 
       if (existing) {
@@ -267,18 +267,17 @@ function observeSweeperRows(
   }
 
   const key = buildSweeperRowSampleKey(worker, outcome);
-  const sanitizedCount = Math.max(0, count);
   const existing = samples.get(key);
 
   if (existing) {
-    existing.count += sanitizedCount;
+    existing.count += count;
     return;
   }
 
   samples.set(key, {
     worker,
     outcome,
-    count: sanitizedCount,
+    count,
   });
 }
 
@@ -414,7 +413,7 @@ function appendBackgroundQueueMetrics(
       {
         queue: row.queue,
         state: row.state,
-        count: sanitizeGaugeValue(row.count),
+        count: row.count,
       },
     ];
   });
@@ -488,21 +487,14 @@ function formatNumber(value: number): string {
   return String(Math.max(0, value));
 }
 
-function sanitizeGaugeValue(value: number): number {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-  return Math.max(0, Math.trunc(value));
-}
-
 function assertHttpRequestObservation(
   value: unknown,
 ): asserts value is HttpRequestObservation {
   const candidate = assertObject(value, "HTTP request observation");
   assertOptionalString(candidate.method, "method");
-  assertString(candidate.route, "route");
-  assertFiniteNumber(candidate.statusCode, "statusCode");
-  assertFiniteNumber(candidate.durationSeconds, "durationSeconds");
+  assertNonBlankString(candidate.route, "route");
+  assertHttpStatusCode(candidate.statusCode, "statusCode");
+  assertNonNegativeFiniteNumber(candidate.durationSeconds, "durationSeconds");
 }
 
 function assertSweeperTickObservation(
@@ -511,7 +503,7 @@ function assertSweeperTickObservation(
   const candidate = assertObject(value, "sweeper tick observation");
   assertSweeperWorker(candidate.worker, "worker");
   assertSweeperTickStatus(candidate.status, "status");
-  assertFiniteNumber(candidate.durationSeconds, "durationSeconds");
+  assertNonNegativeFiniteNumber(candidate.durationSeconds, "durationSeconds");
 
   if (candidate.counts === undefined) {
     return;
@@ -522,7 +514,7 @@ function assertSweeperTickObservation(
     if (!isKnownSweeperRowOutcome(outcome)) {
       continue;
     }
-    assertFiniteNumber(count, `counts.${outcome}`);
+    assertNonNegativeSafeInteger(count, `counts.${outcome}`);
   }
 }
 
@@ -538,9 +530,9 @@ function assertDependencyReport(
   for (const [index, checkValue] of candidate.checks.entries()) {
     const prefix = `dependency report.checks[${index}]`;
     const check = assertObject(checkValue, prefix);
-    assertString(check.name, `${prefix}.name`);
+    assertNonBlankString(check.name, `${prefix}.name`);
     assertDependencyStatus(check.status, `${prefix}.status`);
-    assertFiniteNumber(check.durationMs, `${prefix}.durationMs`);
+    assertNonNegativeFiniteNumber(check.durationMs, `${prefix}.durationMs`);
     if (check.message !== undefined) {
       assertString(check.message, `${prefix}.message`);
     }
@@ -568,7 +560,7 @@ function assertOptionalBackgroundQueueBacklog(
     const row = assertObject(rowValue, prefix);
     assertString(row.queue, `${prefix}.queue`);
     assertString(row.state, `${prefix}.state`);
-    assertFiniteNumber(row.count, `${prefix}.count`);
+    assertNonNegativeSafeInteger(row.count, `${prefix}.count`);
   }
 }
 
@@ -615,6 +607,16 @@ function assertString(value: unknown, fieldName: string): asserts value is strin
   }
 }
 
+function assertNonBlankString(
+  value: unknown,
+  fieldName: string,
+): asserts value is string {
+  assertString(value, fieldName);
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must contain non-whitespace text`);
+  }
+}
+
 function assertOptionalString(
   value: unknown,
   fieldName: string,
@@ -639,5 +641,37 @@ function assertFiniteNumber(
 ): asserts value is number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new Error(`${fieldName} must be a finite number`);
+  }
+}
+
+function assertNonNegativeFiniteNumber(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new Error(`${fieldName} must be a non-negative finite number`);
+  }
+}
+
+function assertNonNegativeSafeInteger(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
+    throw new Error(`${fieldName} must be a non-negative safe integer`);
+  }
+}
+
+function assertHttpStatusCode(
+  value: unknown,
+  fieldName: string,
+): asserts value is number {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    value < 100 ||
+    value > 599
+  ) {
+    throw new Error(`${fieldName} must be an integer from 100 to 599`);
   }
 }

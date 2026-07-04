@@ -48,7 +48,7 @@ export async function verifyBackups(
       try {
         await fsp.access(filePath, fs.constants.F_OK);
         return true;
-      } catch {
+      } catch (_err: unknown) {
         return false;
       }
     });
@@ -256,7 +256,7 @@ async function main() {
           `test -f ${shellQuote(remotePath(fileName))} && printf ok`,
         );
         return true;
-      } catch {
+      } catch (_err: unknown) {
         return false;
       }
     },

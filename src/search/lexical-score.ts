@@ -25,7 +25,7 @@ export function scoreLexicalMatch(
     record.summary ?? "",
     record.content,
     record.source.title ?? "",
-    record.source.sourceRef ?? record.source.externalId ?? "",
+    firstNonBlankString(record.source.sourceRef, record.source.externalId) ?? "",
   ].join(" ");
   const normalizedText = normalizeForLexical(weightedText);
   const normalizedQuery = normalizeForLexical(query);
@@ -135,8 +135,23 @@ function assertOptionalStringInput(value: unknown, fieldName: string): void {
   }
 }
 
+function firstNonBlankString(
+  ...values: Array<string | null | undefined>
+): string | undefined {
+  for (const value of values) {
+    if (value === undefined || value === null) {
+      continue;
+    }
+    const normalized = value.trim();
+    if (normalized.length > 0) {
+      return normalized;
+    }
+  }
+  return undefined;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function countOccurrences(text: string, term: string): number {

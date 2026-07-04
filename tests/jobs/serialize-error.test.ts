@@ -1,25 +1,24 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { createIngestJobRepository } from "../../src/jobs/ingest-job-repository.js";
-import type { IngestJob } from "../../src/types.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function makeValidJobRow(): IngestJob {
+function makeValidJobRow() {
   return {
     id: 1,
-    memoryRecordId: 42,
-    organizationId: "default",
+    memory_record_id: 42,
+    organization_id: "default",
     status: "failed",
     attempts: 1,
-    lastError: null,
-    qdrantStatus: "pending",
-    qdrantAttempts: 0,
-    qdrantNextRetryAt: null,
-    qdrantLastError: null,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z",
+    last_error: null,
+    qdrant_status: "pending",
+    qdrant_attempts: 0,
+    qdrant_next_retry_at: null,
+    qdrant_last_error: null,
+    created_at: "2026-01-01T00:00:00.000Z",
+    updated_at: "2026-01-01T00:00:00.000Z",
   };
 }
 
@@ -62,5 +61,37 @@ describe("serializeError (via markFailed)", () => {
 
     const storedError = capturedParams?.[1] as string;
     expect(storedError).toBe("timeout exceeded");
+  });
+
+  it("trims serialized ingest job errors before persistence", async () => {
+    let capturedParams: unknown[] | undefined;
+
+    const fakePool = {
+      query: vi.fn().mockImplementation((_sql: string, params: unknown[]) => {
+        capturedParams = params;
+        return Promise.resolve({ rows: [makeValidJobRow()] });
+      }),
+    };
+
+    const jobs = createIngestJobRepository(fakePool as never);
+    await jobs.markFailed(1, new Error(" timeout exceeded "));
+
+    expect(capturedParams?.[1]).toBe("timeout exceeded");
+  });
+
+  it("stores blank serialized ingest job errors as null", async () => {
+    let capturedParams: unknown[] | undefined;
+
+    const fakePool = {
+      query: vi.fn().mockImplementation((_sql: string, params: unknown[]) => {
+        capturedParams = params;
+        return Promise.resolve({ rows: [makeValidJobRow()] });
+      }),
+    };
+
+    const jobs = createIngestJobRepository(fakePool as never);
+    await jobs.markFailed(1, " \n\t ");
+
+    expect(capturedParams?.[1]).toBeNull();
   });
 });

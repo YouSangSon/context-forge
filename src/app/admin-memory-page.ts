@@ -293,8 +293,17 @@ export function renderMemoryAdminPage(): string {
       statusEl.className = isError ? "status error" : "status";
     }
 
+    function errorMessage(error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+
     function inputValue(id) {
       return $(id).value.trim();
+    }
+
+    function numberInputValue(input, fallback) {
+      const value = input.valueAsNumber;
+      return Number.isFinite(value) ? value : fallback;
     }
 
     function baseHeaders() {
@@ -311,7 +320,7 @@ export function renderMemoryAdminPage(): string {
     function scopePayload() {
       const payload = {
         scope: inputValue("scope"),
-        limit: Number(inputValue("limit") || "50")
+        limit: numberInputValue($("limit"), 50)
       };
       const organizationId = inputValue("organizationId");
       const projectKey = inputValue("projectKey");
@@ -333,7 +342,10 @@ export function renderMemoryAdminPage(): string {
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok || body.success === false) {
-        throw new Error(body.error?.message || "request failed");
+        const fallback = response.statusText
+          ? "request failed (" + response.status + " " + response.statusText + ")"
+          : "request failed (" + response.status + ")";
+        throw new Error(body.error?.message || fallback);
       }
       return body.data;
     }
@@ -430,13 +442,13 @@ export function renderMemoryAdminPage(): string {
       }
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
-        await saveMemory(memory.id, form);
+        try { await saveMemory(memory.id, form); } catch (error) { setStatus(errorMessage(error), true); }
       });
       form.querySelector("[data-action='tag']").addEventListener("click", async () => {
-        await tagMemory(memory.id, form);
+        try { await tagMemory(memory.id, form); } catch (error) { setStatus(errorMessage(error), true); }
       });
       form.querySelector("[data-action='archive']").addEventListener("click", async () => {
-        await archiveMemory(memory.id);
+        try { await archiveMemory(memory.id); } catch (error) { setStatus(errorMessage(error), true); }
       });
       detailEl.append(heading, form);
     }
@@ -467,8 +479,8 @@ export function renderMemoryAdminPage(): string {
       if (!form.elements.durability.disabled) {
         payload.durability = form.elements.durability.value;
       }
-      const importance = form.elements.importance.value;
-      if (importance) payload.importance = Number(importance);
+      const importance = numberInputValue(form.elements.importance, null);
+      if (importance !== null) payload.importance = importance;
       await post("/v1/memory/update", payload);
       await loadMemories();
       setStatus("Saved");
@@ -499,10 +511,10 @@ export function renderMemoryAdminPage(): string {
 
     $("filters").addEventListener("submit", async (event) => {
       event.preventDefault();
-      try { await loadMemories(); } catch (error) { setStatus(error.message, true); }
+      try { await loadMemories(); } catch (error) { setStatus(errorMessage(error), true); }
     });
     $("reload").addEventListener("click", async () => {
-      try { await loadMemories(); } catch (error) { setStatus(error.message, true); }
+      try { await loadMemories(); } catch (error) { setStatus(errorMessage(error), true); }
     });
     $("clear").addEventListener("click", () => {
       state.memories = [];

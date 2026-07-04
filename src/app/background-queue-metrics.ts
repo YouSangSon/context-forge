@@ -150,16 +150,28 @@ async function countRows(
   return toNonNegativeInteger(result.rows[0]?.count ?? 0);
 }
 
-function toNonNegativeInteger(value: string | number | null): number {
+function toNonNegativeInteger(value: unknown): number {
   if (value === null) {
     return 0;
   }
 
-  const numberValue = typeof value === "number" ? value : Number(value);
-  if (!Number.isFinite(numberValue)) {
-    throw new Error("background queue count must be a finite number");
+  if (typeof value !== "number" && typeof value !== "string") {
+    throw new Error(
+      "background queue count must be a non-negative safe integer",
+    );
   }
-  return Math.max(0, Math.trunc(numberValue));
+  if (typeof value === "string" && !/^[0-9]+$/.test(value)) {
+    throw new Error(
+      "background queue count must be a non-negative safe integer",
+    );
+  }
+  const numberValue = typeof value === "number" ? value : Number(value);
+  if (!Number.isSafeInteger(numberValue) || numberValue < 0) {
+    throw new Error(
+      "background queue count must be a non-negative safe integer",
+    );
+  }
+  return numberValue;
 }
 
 function assertValidDate(

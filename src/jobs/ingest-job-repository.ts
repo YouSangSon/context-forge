@@ -1,7 +1,13 @@
 import type { PgPool } from "../db/connection.js";
 import { rootLogger } from "../logger.js";
+import { requireSingleRow, toIsoString, toNumber } from "../store/db-utils.js";
 import { assertNonBlankText } from "../store/memory-content.js";
-import type { IngestJob, IngestJobRepository } from "../types.js";
+import type {
+  IngestJob,
+  IngestJobQdrantStatus,
+  IngestJobRepository,
+  IngestJobStatus,
+} from "../types.js";
 
 // How long (in ms) a claimed row is "reserved" before it can be re-claimed.
 // A sweeper that claims a row sets qdrant_next_retry_at = now + this window
@@ -17,14 +23,14 @@ import type { IngestJob, IngestJobRepository } from "../types.js";
 const CLAIM_VISIBILITY_TIMEOUT_MS = 5 * 60 * 1_000; // 5 minutes
 
 type IngestJobRow = {
-  id: number;
-  memory_record_id: number;
+  id: number | string;
+  memory_record_id: number | string;
   organization_id: string;
-  status: IngestJob["status"];
-  attempts: number;
+  status: unknown;
+  attempts: number | string;
   last_error: string | null;
-  qdrant_status: IngestJob["qdrantStatus"];
-  qdrant_attempts: number;
+  qdrant_status: unknown;
+  qdrant_attempts: number | string;
   qdrant_next_retry_at: string | Date | null;
   qdrant_last_error: string | null;
   created_at: string | Date;
@@ -52,6 +58,7 @@ export function createIngestJobRepository(pool: PgPool): IngestJobRepository {
   return {
     async create(input) {
       assertCreateInput(input);
+      const organizationId = input.organizationId.trim();
 
       const result = await pool.query<IngestJobRow>(
         `
@@ -59,7 +66,7 @@ export function createIngestJobRepository(pool: PgPool): IngestJobRepository {
           VALUES ($1, $2, 'pending')
           RETURNING ${RETURNING_COLUMNS}
         `,
-        [input.memoryRecordId, input.organizationId],
+        [input.memoryRecordId, organizationId],
       );
 
       return mapJob(requireSingleRow(result.rows[0], "ingest job"));
@@ -175,9 +182,9 @@ export function createIngestJobRepository(pool: PgPool): IngestJobRepository {
       assertRetryQueryInput(input);
       const { limit, now } = input;
 
-      // Read-only query for monitoring / manual replay. The sweeper PR will
-      // add claim semantics (FOR UPDATE SKIP LOCKED inside a transaction) so
-      // multiple replicas don't race on the same row.
+      // Read-only query for monitoring / manual replay. Production sweepers
+      // should use claimPendingForRetry so multiple replicas don't race on
+      // the same row.
       const result = await pool.query<IngestJobRow>(
         `
           SELECT ${RETURNING_COLUMNS}
@@ -282,48 +289,93 @@ function assertRetryQueryInput(
   assertValidDate(candidate.now, "now");
 }
 
-function serializeError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
+function serializeError(error: unknown): string | null {
+  const serialized = error instanceof Error ? error.message : String(error);
+  const normalized = serialized.trim();
+  return normalized ? normalized : null;
 }
 
 function mapJob(row: IngestJobRow): IngestJob {
   return {
-    id: toNumber(row.id),
-    memoryRecordId: toNumber(row.memory_record_id),
-    organizationId: row.organization_id,
-    status: row.status,
-    attempts: row.attempts,
-    lastError: row.last_error,
-    qdrantStatus: row.qdrant_status,
-    qdrantAttempts: row.qdrant_attempts,
+    id: toPositiveSafeInteger(row.id, "ingest job id"),
+    memoryRecordId: toPositiveSafeInteger(
+      row.memory_record_id,
+      "ingest job memory_record_id",
+    ),
+    organizationId: mapRequiredText(
+      row.organization_id,
+      "ingest job organization_id",
+    ),
+    status: toIngestJobStatus(row.status),
+    attempts: toNonNegativeSafeInteger(row.attempts, "ingest job attempts"),
+    lastError: mapNullableText(row.last_error, "ingest job last_error"),
+    qdrantStatus: toIngestJobQdrantStatus(row.qdrant_status),
+    qdrantAttempts: toNonNegativeSafeInteger(
+      row.qdrant_attempts,
+      "ingest job qdrant_attempts",
+    ),
     qdrantNextRetryAt:
       row.qdrant_next_retry_at === null
         ? null
         : toIsoString(row.qdrant_next_retry_at),
-    qdrantLastError: row.qdrant_last_error,
+    qdrantLastError: mapNullableText(
+      row.qdrant_last_error,
+      "ingest job qdrant_last_error",
+    ),
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
   };
 }
 
-function toIsoString(value: string | Date): string {
-  return value instanceof Date ? value.toISOString() : value;
+function toNonNegativeSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertNonNegativeSafeInteger(numberValue, fieldName);
+  return numberValue;
 }
 
-function toNumber(value: number | string): number {
-  return typeof value === "number" ? value : Number(value);
+function toPositiveSafeInteger(value: unknown, fieldName: string): number {
+  const numberValue = toNumber(value);
+  assertPositiveSafeInteger(numberValue, fieldName);
+  return numberValue;
 }
 
-function requireSingleRow<TRow>(row: TRow | undefined, label: string): TRow {
-  if (!row) {
-    throw new Error(`Expected ${label} row to be returned`);
+function mapRequiredText(value: unknown, fieldName: string): string {
+  assertNonBlankText(value, fieldName);
+  return value.trim();
+}
+
+function mapNullableText(value: unknown, fieldName: string): string | null {
+  if (value === null) {
+    return null;
   }
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    return normalized ? normalized : null;
+  }
+  throw new Error(`${fieldName} must be a string or null`);
+}
 
-  return row;
+function toIngestJobStatus(value: unknown): IngestJobStatus {
+  if (
+    value === "pending" ||
+    value === "processing" ||
+    value === "completed" ||
+    value === "failed"
+  ) {
+    return value;
+  }
+  throw new Error(
+    'ingest job status must be "pending", "processing", "completed", or "failed"',
+  );
+}
+
+function toIngestJobQdrantStatus(value: unknown): IngestJobQdrantStatus {
+  if (value === "pending" || value === "completed" || value === "failed") {
+    return value;
+  }
+  throw new Error(
+    'ingest job qdrant_status must be "pending", "completed", or "failed"',
+  );
 }
 
 function assertObject(

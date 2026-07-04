@@ -54,10 +54,18 @@ compose 번들 Postgres가 기본. 외부 인스턴스를 가리키려면 `DATAB
 | `POSTGRES_DB` | `memory_os` | |
 | `POSTGRES_HOST` | `127.0.0.1` (호스트 프로세스) / `postgres` (compose) | |
 | `POSTGRES_PORT` | `5432` | |
+| `PG_POOL_MAX` | `10` | Node process pool당 최대 연결 수. Postgres connection 용량이 충분할 때만 늘리세요. |
+| `PG_IDLE_TIMEOUT_MS` | `30000` | idle client를 닫기 전 대기 시간(ms). |
+| `PG_CONNECT_TIMEOUT_MS` | `5000` | 새 pool connection을 얻기 전까지 기다리는 시간(ms). |
 
 compose 관리 Postgres 사용 시 `DATABASE_URL` 은 `POSTGRES_*` 부분에서
 자동 빌드됩니다 (네트워크 내부 host=`postgres`). 호스트에서 마이그레이션
 스크립트 실행 시 `install.sh` 가 host를 `127.0.0.1:5432` 로 다시 씁니다.
+
+`PG_POOL_MAX`, `PG_IDLE_TIMEOUT_MS`, `PG_CONNECT_TIMEOUT_MS` 는 runtime
+service와 migration이 사용하는 Node Postgres client pool을 조정합니다.
+일반 십진수 양의 정수만 허용하며, whitespace, 소수, scientific notation,
+prefix가 붙은 숫자 형식은 시작 시 거부됩니다.
 
 ## 벡터 백엔드
 
@@ -105,10 +113,10 @@ compose 기본 자격증명은 로컬 개발 전용입니다. production 운영�
 
 | 변수 | 기본값 | 메모 |
 |---|---|---|
-| `EMBEDDING_PROVIDER` | `transformers` | `transformers` (무료 로컬 ONNX, default), `openai` (유료 API), 또는 `local` (CI용 결정론적 stub). |
+| `EMBEDDING_PROVIDER` | `transformers` | `transformers` (무료 로컬 ONNX, 기본값), `openai` (유료 API), 또는 `local` (CI용 결정론적 스텁). |
 | `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | 1536-dim. 변경 시 reindex 필요. |
 | `TRANSFORMERS_EMBEDDING_MODEL` | `Xenova/all-MiniLM-L6-v2` | Hugging Face ONNX 모델 id. 384-dim. `EMBEDDING_PROVIDER=transformers` 일 때만 의미. |
-| `EMBEDDING_DIMENSIONS` | `384` | `transformers` / `local` provider의 plain decimal positive integer 벡터 크기. |
+| `EMBEDDING_DIMENSIONS` | `384` | `transformers` / `local` provider의 일반 십진수 양의 정수 벡터 크기. |
 | `EMBEDDING_MODEL` | `local-deterministic-v1` | `EMBEDDING_PROVIDER=local` 일 때만 의미. |
 
 ### Provider 선택 — 비용 vs. 품질 vs. 셋업
@@ -136,6 +144,10 @@ Chroma와 txtai가 default로 채택한 동일 모델. CPU 추론으로 충분
 
 `MEMORY_API_TOKENS` 는 콤마 구분 bearer 토큰 리스트. 각 토큰은 `:` 문법으로
 organization에 옵션 바인딩 가능:
+
+토큰 값 자체에는 `:` 를 넣지 마세요. Akasha는 단일 콜론을 옵션
+`token:org` 구분자로 처리하며, `:` 가 두 개 이상인 entry는 시작 시
+거부합니다.
 
 ```bash
 # 단일 토큰, 어느 org든:
@@ -257,6 +269,12 @@ SaaS 형으로 서빙) 가 필요하면 각 사용자에게 `token:org` 쌍을 �
 |---|---|---|
 | `RATE_LIMIT_PER_MINUTE` | unset → 제한 없음 (compose 배포 기본값 **60**) | 토큰별 양의 정수 token-bucket 캡. production 권장. |
 
+이 limiter는 in-memory이며 프로세스-local입니다. 다중 replica 배포에서는 각
+app replica가 자체 bucket을 가지므로 유효 limit이 replica 수만큼 커질 수
+있습니다. 배포 전체 quota가 필요하면 Akasha 앞단에 공유 reverse-proxy 또는
+edge limiter를 두세요(예: NGINX `limit_req_zone`/`limit_req`, Cloudflare
+rate limiting rules).
+
 Compaction-apply 경로에는 별도 더 엄격한 limit (org당 1회/시간 기본) 이
 `applyCompaction` deps에 하드코딩되어 있습니다. 커스텀 통합에서는 다르게
 구성 가능.
@@ -302,7 +320,7 @@ ingest sweeper 는 write-ahead `markQdrantPending` 과 `markQdrantCompleted`
 | `BACKUP_ENCRYPTION_KEY_FILE` | unset | 32-byte AES key(hex, base64, raw bytes)를 담은 선택적 파일. 설정한다면 non-whitespace text가 필요합니다. 설정하면 off-host copy 전에 backup artifact를 AES-256-GCM으로 암호화. |
 | `BACKUP_ENCRYPTION_KEEP_PLAINTEXT` | `false` | 로컬 디버깅 때만 `true`; 앞뒤 공백을 제거한 뒤 대소문자 구분 없이 `true` 또는 `false` 만 허용. 그 외 설정값은 encryption 시작 전 실패. 기본값은 encrypted `.enc` artifact와 manifest checksum 작성 후 plaintext artifact 제거. |
 
-백업/복원 워크플로는 [docs/operations.md](operations.md) 참고.
+백업/복원 워크플로는 [docs/operations.ko.md](operations.ko.md) 참고.
 
 ## 로깅과 MCP identity
 
@@ -371,5 +389,5 @@ COMPACTION_SWEEP_ENABLED=true
 NODE_ENV=production
 ```
 
-reverse proxy 레이어에서 TLS와 같이 사용. [docs/deployment.md](deployment.md)
+reverse proxy 레이어에서 TLS와 같이 사용. [docs/deployment.ko.md](deployment.ko.md)
 참고.

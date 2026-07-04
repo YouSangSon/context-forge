@@ -166,6 +166,7 @@ export function createToolHandlers(input: {
     assertProvidedScopeIdentifiers(input);
     const limit = normalizeLimit(input.limit);
     const projectKey = requireProjectKey(input.projectKey, "project");
+    const organizationId = input.organizationId?.trim();
     const userScopeId =
       input.includeUser === false
         ? undefined
@@ -179,7 +180,7 @@ export function createToolHandlers(input: {
 
     if (options.retrieveMemory) {
       return options.retrieveMemory({
-        organizationId: input.organizationId,
+        organizationId,
         projectKey,
         userScopeId,
         query: input.query,
@@ -198,7 +199,7 @@ export function createToolHandlers(input: {
           collectRecords({
             query: input.query,
             limit,
-            organizationId: input.organizationId,
+            organizationId,
             projectKey,
             projectRepository,
             userScopeId,
@@ -210,7 +211,7 @@ export function createToolHandlers(input: {
 
     return withCanonicalServices((services) =>
       retrieveRecordsWithCanonicalServices(services, {
-        organizationId: input.organizationId,
+        organizationId,
         projectKey,
         query: input.query,
         userScopeId,
@@ -227,6 +228,10 @@ export function createToolHandlers(input: {
       assertAllowedValue(toolInput.kind, "kind", SUPPORTED_MEMORY_KINDS);
 
       const scope = toolInput.scope ?? "project";
+      const projectKey =
+        toolInput.projectKey === undefined
+          ? undefined
+          : requireProjectKey(toolInput.projectKey, "project");
       const userScopeId = resolveUserScopeId({
         cwd,
         explicitUserScopeId: toolInput.userScopeId,
@@ -236,7 +241,7 @@ export function createToolHandlers(input: {
       const createdRecord = hasOverrides
         ? await withRepositories(
             {
-              projectKey: toolInput.projectKey,
+              projectKey,
               userScopeId,
               includeUser: scope === "user",
             },
@@ -251,6 +256,7 @@ export function createToolHandlers(input: {
               return repository.addMemory(
                 toRepositoryAddMemoryInput({
                   ...toolInput,
+                  projectKey,
                   scope,
                   userScopeId,
                 }),
@@ -274,6 +280,7 @@ export function createToolHandlers(input: {
               },
               memory: toRepositoryAddMemoryInput({
                 ...toolInput,
+                projectKey,
                 scope,
                 userScopeId,
               }),
@@ -291,11 +298,12 @@ export function createToolHandlers(input: {
       assertNonBlankText(toolInput.query, "search query");
       assertProvidedScopeIdentifiers(toolInput);
       const projectKey = requireProjectKey(toolInput.projectKey, "project");
+      const query = toolInput.query.trim();
 
       const results = await resolveRecords({
-        organizationId: toolInput.organizationId,
+        organizationId: toolInput.organizationId?.trim(),
         projectKey,
-        query: toolInput.query,
+        query,
         userScopeId: toolInput.userScopeId,
         includeUser: toolInput.includeUser,
         limit: toolInput.limit,
@@ -304,7 +312,7 @@ export function createToolHandlers(input: {
       return {
         ok: true,
         projectKey,
-        query: toolInput.query,
+        query,
         results,
       };
     },
@@ -313,15 +321,17 @@ export function createToolHandlers(input: {
       assertNonBlankText(toolInput.task, "context-pack task");
       assertProvidedScopeIdentifiers(toolInput);
       const projectKey = requireProjectKey(toolInput.projectKey, "project");
+      const organizationId = toolInput.organizationId?.trim();
+      const task = toolInput.task.trim();
 
       const useServiceBackedPack =
         !hasOverrides && !options.retrieveMemory;
       const builtPack = useServiceBackedPack
         ? await withCanonicalServices(async (services) => {
             const records = await retrieveRecordsWithCanonicalServices(services, {
-              organizationId: toolInput.organizationId,
+              organizationId,
               projectKey,
-              query: toolInput.task,
+              query: task,
               userScopeId:
                 toolInput.includeUser === false
                   ? undefined
@@ -336,7 +346,7 @@ export function createToolHandlers(input: {
             });
             const pack = buildContextPack({ records });
             const packMarkdown = renderContextPackMarkdown(
-              toolInput.task,
+              task,
               pack.markdown,
             );
             const selectedMemoryIds = pack.selectionRationale.map(
@@ -344,9 +354,9 @@ export function createToolHandlers(input: {
             );
 
             await services.chunkRepository.createContextPackRun({
-              organizationId: toolInput.organizationId ?? "default",
+              organizationId: organizationId ?? "default",
               projectKey,
-              task: toolInput.task,
+              task,
               selectedMemoryIds,
               packMarkdown,
             });
@@ -359,9 +369,9 @@ export function createToolHandlers(input: {
           })
         : await (async () => {
             const records = await resolveRecords({
-              organizationId: toolInput.organizationId,
+              organizationId,
               projectKey,
-              query: toolInput.task,
+              query: task,
               userScopeId: toolInput.userScopeId,
               includeUser: toolInput.includeUser,
               limit: toolInput.limit,
@@ -371,7 +381,7 @@ export function createToolHandlers(input: {
             return {
               pack,
               packMarkdown: renderContextPackMarkdown(
-                toolInput.task,
+                task,
                 pack.markdown,
               ),
               selectedMemoryIds: pack.selectionRationale.map(
@@ -391,7 +401,8 @@ export function createToolHandlers(input: {
     },
 
     async reindex_memory(toolInput) {
-      if (!toolInput.organizationId) {
+      const organizationId = toolInput.organizationId?.trim();
+      if (!organizationId) {
         throw new Error(
           "reindex_memory requires organizationId: omitting it would reindex chunks " +
             "across all tenants sharing the same scope, violating data isolation. " +
@@ -399,7 +410,6 @@ export function createToolHandlers(input: {
         );
       }
       assertProvidedScopeIdentifiers(toolInput);
-      const organizationId: string = toolInput.organizationId;
       const projectKey = requireProjectKey(toolInput.projectKey, "project");
       const userScopeId = resolveUserScopeId({
         cwd,
@@ -455,6 +465,11 @@ export function createToolHandlers(input: {
       );
       const scope = toolInput.scope ?? "project";
       const dryRun = toolInput.dryRun ?? true;
+      const organizationId = toolInput.organizationId?.trim();
+      const projectKey =
+        toolInput.projectKey === undefined
+          ? undefined
+          : requireProjectKey(toolInput.projectKey, "project");
       const userScopeId = resolveUserScopeId({
         cwd,
         explicitUserScopeId: toolInput.userScopeId,
@@ -468,12 +483,12 @@ export function createToolHandlers(input: {
             }
           : {
               scopeType: "project" as const,
-              scopeId: requireProjectKey(toolInput.projectKey, scope),
+              scopeId: requireProjectKey(projectKey, scope),
             };
       const records = hasOverrides
         ? await withRepositories(
             {
-              projectKey: toolInput.projectKey,
+              projectKey,
               userScopeId,
               includeUser: scope === "user",
             },
@@ -487,7 +502,7 @@ export function createToolHandlers(input: {
 
               return repository.listMemory(scopeRef, {
                 limit: toolInput.limit,
-                organizationId: toolInput.organizationId,
+                organizationId,
                 allowLegacyAnonymous: process.env.LEGACY_ANONYMOUS_SEARCH === "true",
                 excludePinnedGoalRuns: true,
               });
@@ -496,7 +511,7 @@ export function createToolHandlers(input: {
         : await withCanonicalRepository((repository) =>
             repository.listMemory(scopeRef, {
               limit: toolInput.limit,
-              organizationId: toolInput.organizationId,
+              organizationId,
               allowLegacyAnonymous: process.env.LEGACY_ANONYMOUS_SEARCH === "true",
               excludePinnedGoalRuns: true,
             }),
@@ -504,7 +519,7 @@ export function createToolHandlers(input: {
       const targetLabel =
         scope === "user"
           ? requireUserScopeId(userScopeId)
-          : requireProjectKey(toolInput.projectKey, scope);
+          : requireProjectKey(projectKey, scope);
 
       // Legacy override mode (in-process MemoryRepository, no Postgres):
       // dry-run only; no semantic dedup; no apply path.
@@ -525,7 +540,7 @@ export function createToolHandlers(input: {
           records,
           scope,
           scopeLabel: targetLabel,
-          projectKey: toolInput.projectKey,
+          projectKey,
           dryRun: true,
           decayThreshold: toolInput.decayThreshold,
           halfLifeDays: toolInput.halfLifeDays,
@@ -541,12 +556,12 @@ export function createToolHandlers(input: {
             records,
             scope,
             scopeLabel: targetLabel,
-            projectKey: toolInput.projectKey,
+            projectKey,
             dryRun,
             decayThreshold: toolInput.decayThreshold,
             halfLifeDays: toolInput.halfLifeDays,
             semanticDedupThreshold: toolInput.semanticDedupThreshold,
-            organizationId: toolInput.organizationId ?? "default",
+            organizationId: organizationId ?? "default",
             actor: "compact_memory",
           },
           {
@@ -567,6 +582,8 @@ export function createToolHandlers(input: {
       if (toolInput.tag !== undefined) {
         assertNonBlankText(toolInput.tag, "memory tag");
       }
+      const tag =
+        toolInput.tag === undefined ? undefined : toolInput.tag.trim();
       assertOptionalPositiveInteger(toolInput.limit, "limit", 5000);
       const scope = toolInput.scope ?? "project";
       const userScopeId = resolveUserScopeId({
@@ -584,13 +601,13 @@ export function createToolHandlers(input: {
               scopeType: "project" as const,
               scopeId: requireProjectKey(toolInput.projectKey, scope),
             };
-      const organizationId = toolInput.organizationId ?? "default";
+      const organizationId = toolInput.organizationId?.trim() ?? "default";
 
       const memories = await withCanonicalRepository((repository) =>
         repository.listMemoryForGovernance(scopeRef, {
           organizationId,
           includeArchived: toolInput.includeArchived,
-          tag: toolInput.tag,
+          tag,
           limit: toolInput.limit,
         }),
       );
@@ -611,6 +628,8 @@ export function createToolHandlers(input: {
       if (toolInput.query !== undefined) {
         assertNonBlankText(toolInput.query, "graph query");
       }
+      const query =
+        toolInput.query === undefined ? undefined : toolInput.query.trim();
       assertOptionalPositiveInteger(toolInput.limit, "limit", 5000);
       assertOptionalPositiveInteger(
         toolInput.relationshipLimit,
@@ -633,13 +652,13 @@ export function createToolHandlers(input: {
               scopeType: "project" as const,
               scopeId: requireProjectKey(toolInput.projectKey, scope),
             };
-      const organizationId = toolInput.organizationId ?? "default";
+      const organizationId = toolInput.organizationId?.trim() ?? "default";
 
       const graph = await withCanonicalRepository((repository) =>
         repository.inspectMemoryGraph(scopeRef, {
           organizationId,
           kind: toolInput.kind,
-          query: toolInput.query,
+          query,
           includeArchived: toolInput.includeArchived,
           limit: toolInput.limit,
           relationshipLimit: toolInput.relationshipLimit,
@@ -679,7 +698,7 @@ export function createToolHandlers(input: {
           : optionalNonBlankText(toolInput.summary);
 
       return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId ?? "default";
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const memory = await services.repository.updateMemoryRecord({
           id: toolInput.memoryId,
           organizationId,
@@ -722,7 +741,7 @@ export function createToolHandlers(input: {
       ensureGovernanceCanonicalMode(hasGovernanceOverrides);
       assertPositiveInteger(toolInput.memoryId, "memoryId");
       return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId ?? "default";
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const archived = await services.repository.archiveMemoryRecord({
           id: toolInput.memoryId,
           organizationId,
@@ -773,7 +792,7 @@ export function createToolHandlers(input: {
       assertPositiveInteger(toolInput.memoryId, "memoryId");
       assertNonBlankTags(toolInput.tags);
       return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId ?? "default";
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const memory = await services.repository.updateMemoryRecord({
           id: toolInput.memoryId,
           organizationId,
@@ -811,7 +830,7 @@ export function createToolHandlers(input: {
         );
       }
       assertOptionalPositiveInteger(toolInput.limit, "limit", 1000);
-      const organizationId = toolInput.organizationId ?? "default";
+      const organizationId = toolInput.organizationId?.trim() ?? "default";
       const entries = await auditLogForListing.listByOrganization(
         organizationId,
         { limit: toolInput.limit },
@@ -858,10 +877,11 @@ export function createToolHandlers(input: {
         };
       }
       return await withCanonicalServices(async (services) => {
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const result = await unarchiveCompaction(
           {
             archiveIds: toolInput.archiveIds,
-            organizationId: toolInput.organizationId ?? "default",
+            organizationId,
             actor: "unarchive_memory",
           },
           {
@@ -893,6 +913,7 @@ export function createToolHandlers(input: {
     async start_goal_run(toolInput) {
       ensureGovernanceCanonicalMode(hasGovernanceOverrides);
       assertNonBlankText(toolInput.goal, "goal");
+      const goal = toolInput.goal.trim();
       assertOptionalAllowedValue(toolInput.scope, "scope", SUPPORTED_SCOPE_TYPES);
       const scope = toolInput.scope ?? "project";
       const scopeId = resolveGoalRunScopeId(scope, toolInput, {
@@ -903,17 +924,17 @@ export function createToolHandlers(input: {
         toolInput.terminationCriteria,
         "terminationCriteria",
       );
-      assertNoSecrets(toolInput.goal);
+      assertNoSecrets(goal);
       if (terminationCriteria) {
         assertNoSecrets(terminationCriteria);
       }
       return await withCanonicalServices(async (services) => {
         const goalRun = await services.goalRuns.start({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           scopeType: scope,
           scopeId,
           projectKey: scope === "project" ? scopeId : null,
-          goal: toolInput.goal,
+          goal,
           terminationCriteria,
         });
         return { ok: true, goalRun };
@@ -924,6 +945,7 @@ export function createToolHandlers(input: {
       ensureGovernanceCanonicalMode(hasGovernanceOverrides);
       assertPositiveInteger(toolInput.goalRunId, "goalRunId");
       assertNonBlankText(toolInput.attempt, "attempt");
+      const attempt = toolInput.attempt.trim();
       assertAllowedValue(
         toolInput.outcome,
         "outcome",
@@ -932,7 +954,7 @@ export function createToolHandlers(input: {
       assertPositiveIntegerArray(toolInput.memoryIds, "memoryIds");
       const summary = optionalNonBlankText(toolInput.summary, "summary");
       const error = optionalNonBlankText(toolInput.error, "error");
-      assertNoSecrets(toolInput.attempt);
+      assertNoSecrets(attempt);
       if (summary) {
         assertNoSecrets(summary);
       }
@@ -941,9 +963,9 @@ export function createToolHandlers(input: {
       }
       return await withCanonicalServices(async (services) => {
         const iteration = await services.goalRuns.recordIteration({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           goalRunId: toolInput.goalRunId,
-          attempt: toolInput.attempt,
+          attempt,
           outcome: toolInput.outcome,
           summary,
           error,
@@ -958,7 +980,7 @@ export function createToolHandlers(input: {
       assertPositiveInteger(toolInput.goalRunId, "goalRunId");
       return await withCanonicalServices(async (services) => {
         const goalRun = await services.goalRuns.get({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           goalRunId: toolInput.goalRunId,
         });
         return { ok: true, goalRun };
@@ -980,7 +1002,7 @@ export function createToolHandlers(input: {
       });
       return await withCanonicalServices(async (services) => {
         const goalRuns = await services.goalRuns.list({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           scopeType: scope,
           scopeId,
           status: toolInput.status,
@@ -998,7 +1020,7 @@ export function createToolHandlers(input: {
       }
       return await withCanonicalServices(async (services) => {
         const goalRun = await services.goalRuns.complete({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           goalRunId: toolInput.goalRunId,
           note: resolution,
         });
@@ -1015,7 +1037,7 @@ export function createToolHandlers(input: {
       }
       return await withCanonicalServices(async (services) => {
         const goalRun = await services.goalRuns.abandon({
-          organizationId: toolInput.organizationId ?? "default",
+          organizationId: toolInput.organizationId?.trim() ?? "default",
           goalRunId: toolInput.goalRunId,
           note: reason,
         });
@@ -1028,7 +1050,7 @@ export function createToolHandlers(input: {
       assertPositiveInteger(toolInput.goalRunId, "goalRunId");
       assertOptionalPositiveInteger(toolInput.limit, "limit", 200);
       return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId ?? "default";
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const goalRun = await services.goalRuns.get({
           organizationId,
           goalRunId: toolInput.goalRunId,
@@ -1062,10 +1084,11 @@ export function createToolHandlers(input: {
       ensureGovernanceCanonicalMode(hasGovernanceOverrides);
       assertPositiveInteger(toolInput.goalRunId, "goalRunId");
       assertNonBlankText(toolInput.attempt, "attempt");
-      assertNoSecrets(toolInput.attempt);
+      const attempt = toolInput.attempt.trim();
+      assertNoSecrets(attempt);
       const threshold = resolveRepeatThreshold(toolInput.threshold);
       return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId ?? "default";
+        const organizationId = toolInput.organizationId?.trim() ?? "default";
         const goalRun = await services.goalRuns.get({
           organizationId,
           goalRunId: toolInput.goalRunId,
@@ -1083,7 +1106,7 @@ export function createToolHandlers(input: {
         }
 
         const vectors = await services.embeddings.embedBatch([
-          toolInput.attempt,
+          attempt,
           ...failures.map((failure) => failure.attempt),
         ]);
         const candidateEmbedding = vectors[0];
@@ -1134,7 +1157,8 @@ function optionalNonBlankText(
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string`);
   }
-  return value.trim().length === 0 ? null : value;
+  const normalized = value.trim();
+  return normalized.length === 0 ? null : normalized;
 }
 
 function assertNonBlankTags(tags: readonly string[] | undefined): void {
@@ -1306,7 +1330,7 @@ function toRepositoryAddMemoryInput(input: AddMemoryToolInput): AddMemoryInput {
       : requireProjectKey(input.projectKey, scope);
 
   return {
-    organizationId: input.organizationId,
+    organizationId: input.organizationId?.trim(),
     scopeType: scope,
     scopeId,
     projectKey: scope === "project" ? scopeId : undefined,

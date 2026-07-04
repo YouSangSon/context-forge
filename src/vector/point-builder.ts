@@ -32,6 +32,16 @@ export type VectorPointInput = {
 
 export function buildVectorPoint(input: VectorPointInput): VectorPoint {
   assertVectorPointInput(input);
+  const organizationId = input.organizationId.trim();
+  const scopeType = input.scopeType.trim();
+  const scopeId = input.scopeId.trim();
+  const projectKey = input.projectKey === null ? null : input.projectKey.trim();
+  const kind = input.kind.trim();
+  const durability = input.durability.trim();
+  const title = normalizeOptionalText(input.title);
+  const summary = normalizeOptionalText(input.summary);
+  const updatedAt = input.updatedAt.trim();
+  const embeddingVersion = input.embeddingVersion.trim();
 
   return {
     id: `chunk:${input.chunkId}`,
@@ -39,17 +49,17 @@ export function buildVectorPoint(input: VectorPointInput): VectorPoint {
     payload: {
       chunk_id: input.chunkId,
       memory_record_id: input.memoryRecordId,
-      organization_id: input.organizationId,
-      scope_type: input.scopeType,
-      scope_id: input.scopeId,
-      project_key: input.projectKey,
-      kind: input.kind,
-      durability: input.durability,
-      title: input.title ?? null,
-      summary: input.summary ?? null,
-      tags: [...(input.tags ?? [])],
-      updated_at: input.updatedAt,
-      embedding_version: input.embeddingVersion,
+      organization_id: organizationId,
+      scope_type: scopeType,
+      scope_id: scopeId,
+      project_key: projectKey,
+      kind,
+      durability,
+      title,
+      summary,
+      tags: (input.tags ?? []).map((tag) => tag.trim()),
+      updated_at: updatedAt,
+      embedding_version: embeddingVersion,
     },
   };
 }
@@ -67,16 +77,59 @@ function assertVectorPointInput(
   assertFiniteVector(candidate.vector);
   assertPositiveSafeInteger(candidate.memoryRecordId, "memoryRecordId");
   assertVectorOrganizationId(candidate.organizationId);
-  assertStringField(candidate.scopeType, "scopeType");
-  assertStringField(candidate.scopeId, "scopeId");
-  assertStringOrNullField(candidate.projectKey, "projectKey");
-  assertStringField(candidate.kind, "kind");
-  assertStringField(candidate.durability, "durability");
+  assertNonEmptyStringField(candidate.scopeType, "scopeType");
+  assertScopeType(candidate.scopeType);
+  assertNonEmptyStringField(candidate.scopeId, "scopeId");
+  assertNonEmptyStringOrNullField(candidate.projectKey, "projectKey");
+  assertNonEmptyStringField(candidate.kind, "kind");
+  assertMemoryKind(candidate.kind);
+  assertNonEmptyStringField(candidate.durability, "durability");
+  assertDurability(candidate.durability);
   assertOptionalStringOrNullField(candidate.title, "title");
   assertOptionalStringOrNullField(candidate.summary, "summary");
   assertOptionalStringArray(candidate.tags, "tags");
-  assertStringField(candidate.updatedAt, "updatedAt");
-  assertStringField(candidate.embeddingVersion, "embeddingVersion");
+  assertNonEmptyStringField(candidate.updatedAt, "updatedAt");
+  assertNonEmptyStringField(candidate.embeddingVersion, "embeddingVersion");
+}
+
+function normalizeOptionalText(value: string | null | undefined): string | null {
+  if (value == null) {
+    return null;
+  }
+  const normalized = value.trim();
+  return normalized === "" ? null : normalized;
+}
+
+function assertScopeType(value: string): void {
+  const normalized = value.trim();
+  if (normalized === "user" || normalized === "project") {
+    return;
+  }
+  throw new Error("scopeType must be one of: user, project");
+}
+
+function assertMemoryKind(value: string): void {
+  const normalized = value.trim();
+  if (
+    normalized === "decision" ||
+    normalized === "summary" ||
+    normalized === "fact"
+  ) {
+    return;
+  }
+  throw new Error("kind must be one of: decision, summary, fact");
+}
+
+function assertDurability(value: string): void {
+  const normalized = value.trim();
+  if (
+    normalized === "ephemeral" ||
+    normalized === "durable" ||
+    normalized === "archived"
+  ) {
+    return;
+  }
+  throw new Error("durability must be one of: ephemeral, durable, archived");
 }
 
 function assertPositiveSafeInteger(value: unknown, fieldName: string): void {
@@ -97,15 +150,41 @@ function assertFiniteVector(value: unknown): void {
   }
 }
 
-function assertStringField(value: unknown, fieldName: string): void {
+function assertStringField(
+  value: unknown,
+  fieldName: string,
+): asserts value is string {
   if (typeof value !== "string") {
     throw new Error(`${fieldName} must be a string`);
   }
 }
 
-function assertStringOrNullField(value: unknown, fieldName: string): void {
+function assertNonEmptyStringField(
+  value: unknown,
+  fieldName: string,
+): asserts value is string {
+  assertStringField(value, fieldName);
+  if (value.trim().length === 0) {
+    throw new Error(`${fieldName} must be a non-empty string`);
+  }
+}
+
+function assertStringOrNullField(
+  value: unknown,
+  fieldName: string,
+): asserts value is string | null {
   if (typeof value !== "string" && value !== null) {
     throw new Error(`${fieldName} must be a string or null`);
+  }
+}
+
+function assertNonEmptyStringOrNullField(
+  value: unknown,
+  fieldName: string,
+): void {
+  assertStringOrNullField(value, fieldName);
+  if (typeof value === "string" && value.trim().length === 0) {
+    throw new Error(`${fieldName} must be a non-empty string`);
   }
 }
 
@@ -130,6 +209,9 @@ function assertOptionalStringArray(value: unknown, fieldName: string): void {
   for (const [index, entry] of value.entries()) {
     if (typeof entry !== "string") {
       throw new Error(`${fieldName}[${index}] must be a string`);
+    }
+    if (entry.trim().length === 0) {
+      throw new Error(`${fieldName}[${index}] must contain non-whitespace text`);
     }
   }
 }

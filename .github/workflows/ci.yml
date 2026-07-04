@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 # Allow concurrent builds on different PRs but cancel stale ones on the
 # same PR when a new commit is pushed.
 concurrency:
@@ -16,6 +19,7 @@ jobs:
   typecheck-and-test:
     name: typecheck + test (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -36,18 +40,25 @@ jobs:
         # and that download hits GitHub releases (flaky — has 500'd mid-run).
         run: ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci
 
+      - name: Audit dependencies
+        run: npm audit --audit-level=moderate
+
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Build
+        run: npm run build
+
       - name: Test (non-PG suites)
-        # The 3 PG-dependent test files skip gracefully without Postgres on
-        # 5432; the integration coverage runs in a separate job below where
-        # we actually bring up Postgres.
+        # The Postgres-backed repository/migration suites skip gracefully
+        # without Postgres on 5432, and pgvector adapter cases skip without
+        # PGVECTOR_TEST_URL. Dedicated jobs below bring up each backend.
         run: npm test
 
   pg-integration:
     name: pg integration tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16-alpine
@@ -78,7 +89,7 @@ jobs:
         # and that download hits GitHub releases (flaky — has 500'd mid-run).
         run: ONNXRUNTIME_NODE_INSTALL_CUDA=skip npm ci
 
-      - name: Run PG-dependent suites
+      - name: Run Postgres-backed suites
         env:
           POSTGRES_USER: memory
           POSTGRES_PASSWORD: memory
@@ -86,11 +97,16 @@ jobs:
           POSTGRES_HOST: 127.0.0.1
           POSTGRES_PORT: "5432"
           DATABASE_URL: postgres://memory:memory@127.0.0.1:5432/memory_os
-        run: npm test
+        run: >
+          npx vitest run
+          tests/store/memory-repository.test.ts
+          tests/jobs/ingest-job-repository.test.ts
+          tests/db/migrate.test.ts
 
   pgvector-integration:
     name: pgvector integration tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       pgvector:
         image: pgvector/pgvector:pg16

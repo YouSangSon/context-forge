@@ -41,6 +41,47 @@ function makeMockPool(): { pool: PgPool; query: ReturnType<typeof vi.fn> } {
   return { pool, query };
 }
 
+function makeQueryPool(rows: Record<string, unknown>[]): {
+  pool: PgPool;
+  query: ReturnType<typeof vi.fn>;
+  client: { query: ReturnType<typeof vi.fn>; release: ReturnType<typeof vi.fn> };
+} {
+  const query = vi.fn().mockResolvedValue({ rows });
+  const client = {
+    query,
+    release: vi.fn(),
+  };
+  const pool = {
+    query: vi.fn(),
+    connect: vi.fn().mockResolvedValue(client),
+    end: vi.fn(),
+  } as unknown as PgPool;
+
+  return { pool, query, client };
+}
+
+function buildPgVectorQueryRow(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    point_id: "chunk:42",
+    memory_record_id: "42",
+    organization_id: "org-a",
+    scope_type: "project",
+    scope_id: "project-alpha",
+    project_key: "project-alpha",
+    kind: "fact",
+    durability: "durable",
+    title: "title",
+    summary: "summary",
+    tags: null,
+    updated_at: "2026-04-25T00:00:00.000Z",
+    embedding_version: "v1",
+    score: "0.875",
+    ...overrides,
+  };
+}
+
 // Helper: cosine similarity between two equal-length vectors.
 function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0;
@@ -111,6 +152,701 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
+  it("upsert rejects non-object point payloads before opening a client", async () => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-payload",
+          vector: [0.1, 0.2, 0.3],
+          payload: null,
+        } as never,
+      ]),
+    ).rejects.toThrow('upsert: point "chunk:bad-payload" payload must be an object');
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("upsert rejects non-object point entries before opening a client", async () => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([null] as never),
+    ).rejects.toThrow("upsert: points[0] must be an object");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("upsert rejects non-array point lists before opening a client", async () => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert(null as never),
+    ).rejects.toThrow("upsert: points must be an array");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { label: "missing", memoryRecordId: undefined },
+    { label: "zero", memoryRecordId: 0 },
+    { label: "fractional", memoryRecordId: 1.5 },
+  ])("upsert rejects malformed point memory_record_id before opening a client: $label", async ({ memoryRecordId }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-record-id",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            ...(memoryRecordId === undefined ? {} : { memory_record_id: memoryRecordId }),
+            organization_id: "org-a",
+          },
+        },
+      ]),
+    ).rejects.toThrow("point.payload.memory_record_id must be a positive safe integer");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "missing",
+      payload: {},
+      message: "point.payload.scope_type must be a non-empty string",
+    },
+    {
+      label: "blank",
+      payload: { scope_type: " \n\t " },
+      message: "point.payload.scope_type must be a non-empty string",
+    },
+    {
+      label: "invalid",
+      payload: { scope_type: "team", project_key: null, kind: "fact" },
+      message: "point.payload.scope_type must be one of: user, project",
+    },
+  ])("upsert rejects malformed point scope_type before opening a client: $label", async ({ payload, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-scope-type",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { label: "missing", payload: {} },
+    { label: "blank", payload: { scope_id: " \n\t " } },
+  ])("upsert rejects malformed user point scope_id before opening a client: $label", async ({ payload }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-scope-id",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "user",
+            project_key: null,
+            kind: "fact",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow("point.payload.scope_id must be a non-empty string");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "missing",
+      payload: {},
+      message: "point.payload.project_key must be a string or null",
+    },
+    {
+      label: "non-string",
+      payload: { project_key: 123 },
+      message: "point.payload.project_key must be a string or null",
+    },
+    {
+      label: "blank",
+      payload: { project_key: " \n\t " },
+      message: "point.payload.project_key must be a non-empty string",
+    },
+  ])("upsert rejects malformed point project_key before opening a client: $label", async ({ payload, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-project-key",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { label: "missing", payload: {} },
+    { label: "blank", payload: { scope_id: " \n\t " } },
+  ])("upsert rejects project points without project_key or scope_id before opening a client: $label", async ({ payload }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-project-identity",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: null,
+            kind: "fact",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow("point.payload.scope_id must be a non-empty string");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "missing",
+      payload: {},
+      message: "point.payload.kind must be a non-empty string",
+    },
+    {
+      label: "blank",
+      payload: { kind: " \n\t " },
+      message: "point.payload.kind must be a non-empty string",
+    },
+    {
+      label: "invalid",
+      payload: { kind: "note" },
+      message: "point.payload.kind must be one of: decision, summary, fact",
+    },
+  ])("upsert rejects malformed point kind before opening a client: $label", async ({ payload, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-kind",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "blank",
+      durability: " \n\t ",
+      message: "point.payload.durability must be a non-empty string",
+    },
+    {
+      label: "invalid",
+      durability: "permanent",
+      message: "point.payload.durability must be one of: ephemeral, durable, archived",
+    },
+  ])("upsert rejects malformed provided point durability before opening a client: $label", async ({ durability, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-durability",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            kind: "fact",
+            durability,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "non-array",
+      tags: "ops",
+      message: "point.payload.tags must be an array",
+    },
+    {
+      label: "non-string entry",
+      tags: ["ops", 12],
+      message: "point.payload.tags[1] must be a string",
+    },
+    {
+      label: "blank entry",
+      tags: ["ops", " \n\t "],
+      message: "point.payload.tags[1] must contain non-whitespace text",
+    },
+  ])("upsert rejects malformed provided point tags before opening a client: $label", async ({ tags, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-tags",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            kind: "fact",
+            tags,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "title undefined",
+      payload: { title: undefined },
+      message: "point.payload.title must be a string or null",
+    },
+    {
+      label: "title non-string",
+      payload: { title: 12 },
+      message: "point.payload.title must be a string or null",
+    },
+    {
+      label: "title blank",
+      payload: { title: " \n\t " },
+      message: "point.payload.title must be a non-empty string",
+    },
+    {
+      label: "summary non-string",
+      payload: { summary: false },
+      message: "point.payload.summary must be a string or null",
+    },
+    {
+      label: "summary undefined",
+      payload: { summary: undefined },
+      message: "point.payload.summary must be a string or null",
+    },
+    {
+      label: "summary blank",
+      payload: { summary: " \n\t " },
+      message: "point.payload.summary must be a non-empty string",
+    },
+  ])("upsert rejects malformed provided point text metadata before opening a client: $label", async ({ payload, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-text",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            kind: "fact",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "updated_at undefined",
+      payload: { updated_at: undefined },
+      message: "point.payload.updated_at must be a string or null",
+    },
+    {
+      label: "updated_at non-string",
+      payload: { updated_at: 12 },
+      message: "point.payload.updated_at must be a string or null",
+    },
+    {
+      label: "updated_at blank",
+      payload: { updated_at: " \n\t " },
+      message: "point.payload.updated_at must be a non-empty string",
+    },
+    {
+      label: "embedding_version undefined",
+      payload: { embedding_version: undefined },
+      message: "point.payload.embedding_version must be a string or null",
+    },
+    {
+      label: "embedding_version non-string",
+      payload: { embedding_version: false },
+      message: "point.payload.embedding_version must be a string or null",
+    },
+    {
+      label: "embedding_version blank",
+      payload: { embedding_version: " \n\t " },
+      message: "point.payload.embedding_version must be a non-empty string",
+    },
+  ])("upsert rejects malformed provided point storage metadata before opening a client: $label", async ({ payload, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-storage",
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+            scope_type: "project",
+            project_key: "project-alpha",
+            kind: "fact",
+            ...payload,
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { label: "empty", id: "" },
+    { label: "blank", id: " \n\t " },
+  ])("upsert rejects malformed point ids before opening a client: $label", async ({ id }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id,
+          vector: [0.1, 0.2, 0.3],
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+          },
+        },
+      ]),
+    ).rejects.toThrow("point.id must be a non-empty string");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "non-array",
+      vector: null as never,
+      message: 'upsert: point "chunk:bad-vector" vector must be an array',
+    },
+    {
+      label: "NaN",
+      vector: [0.1, Number.NaN, 0.3],
+      message: "vector[1] must be a finite number",
+    },
+    {
+      label: "Infinity",
+      vector: [0.1, Number.POSITIVE_INFINITY, 0.3],
+      message: "vector[1] must be a finite number",
+    },
+  ])("upsert rejects malformed vector components before opening a client: $label", async ({ vector, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.upsert([
+        {
+          id: "chunk:bad-vector",
+          vector,
+          payload: {
+            memory_record_id: 9,
+            organization_id: "org-a",
+          },
+        },
+      ]),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "non-array",
+      vector: null as never,
+      message: "query vector must be an array",
+    },
+    {
+      label: "empty",
+      vector: [],
+      message: "query vector must be a non-empty array",
+    },
+    {
+      label: "NaN",
+      vector: [0.1, Number.NaN, 0.3],
+      message: "query vector[1] must be a finite number",
+    },
+  ])("query rejects malformed vectors before opening a client: $label", async ({ vector, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        vector,
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        5,
+      ),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { label: "zero", limit: 0 },
+    { label: "fractional", limit: 1.5 },
+  ])("query rejects malformed limits before opening a client: $label", async ({ limit }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        limit,
+      ),
+    ).rejects.toThrow("limit must be a positive safe integer");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("query rejects non-object filters before opening a client", async () => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query([0.1, 0.2, 0.3], null as never, 5),
+    ).rejects.toThrow("filter must be an object");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("query rejects non-array filter scopes before opening a client", async () => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: null,
+          projectKey: "project-alpha",
+        } as never,
+        5,
+      ),
+    ).rejects.toThrow("filter.scopes must be an array");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("query rejects empty filter scopes before opening a client", async () => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [],
+          projectKey: "project-alpha",
+        },
+        5,
+      ),
+    ).rejects.toThrow("filter.scopes must be a non-empty array");
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "non-object",
+      scopes: [null],
+      message: "filter.scopes[0] must be an object",
+    },
+    {
+      label: "blank scopeType",
+      scopes: [{ scopeType: " \n\t ", scopeId: "project-alpha" }],
+      message: "filter.scopes[0].scopeType must be a non-empty string",
+    },
+    {
+      label: "invalid scopeType",
+      scopes: [{ scopeType: "team", scopeId: "project-alpha" }],
+      message: "filter.scopes[0].scopeType must be one of: user, project",
+    },
+    {
+      label: "blank scopeId",
+      scopes: [{ scopeType: "project", scopeId: " \n\t " }],
+      message: "filter.scopes[0].scopeId must be a non-empty string",
+    },
+  ])("query rejects malformed filter scope entries before opening a client: $label", async ({ scopes, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes,
+          projectKey: "project-alpha",
+        } as never,
+        5,
+      ),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      label: "non-string",
+      projectKey: 123,
+      message: "filter.projectKey must be a string or null",
+    },
+    {
+      label: "blank",
+      projectKey: " \n\t ",
+      message: "filter.projectKey must be a non-empty string",
+    },
+  ])("query rejects malformed filter projectKey before opening a client: $label", async ({ projectKey, message }) => {
+    const { pool, query } = makeMockPool();
+    const connect = vi.mocked(pool.connect);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey,
+        } as never,
+        5,
+      ),
+    ).rejects.toThrow(message);
+
+    expect(connect).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it("query treats empty organizationId as legacy unscoped lookup", async () => {
     const query = vi.fn().mockResolvedValue({ rows: [] });
     const client = {
@@ -146,6 +882,305 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     const [sql, params] = selectCall as [string, unknown[]];
     expect(sql).not.toContain("organization_id =");
     expect(params).toEqual(["[0.1,0.2,0.3]", "project", "project-alpha", 5]);
+  });
+
+  it("query trims organizationId before SQL parameters", async () => {
+    const { pool, query } = makeQueryPool([]);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: " org-a ",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        5,
+      ),
+    ).resolves.toEqual([]);
+
+    const selectCall = query.mock.calls.find(([sql]) =>
+      typeof sql === "string" && sql.includes("FROM memory_vectors_test")
+    );
+    expect(selectCall).toBeDefined();
+
+    const [, params] = selectCall as [string, unknown[]];
+    expect(params).toEqual([
+      "[0.1,0.2,0.3]",
+      "org-a",
+      "project",
+      "project-alpha",
+      5,
+    ]);
+  });
+
+  it("query trims scope filters before SQL parameters", async () => {
+    const { pool, query } = makeQueryPool([]);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: " user ", scopeId: " alice " }],
+          projectKey: null,
+        } as never,
+        5,
+      ),
+    ).resolves.toEqual([]);
+
+    const selectCall = query.mock.calls.find(([sql]) =>
+      typeof sql === "string" && sql.includes("FROM memory_vectors_test")
+    );
+    expect(selectCall).toBeDefined();
+
+    const [, params] = selectCall as [string, unknown[]];
+    expect(params).toEqual([
+      "[0.1,0.2,0.3]",
+      "org-a",
+      "user",
+      "alice",
+      5,
+    ]);
+  });
+
+  it("query trims projectKey before SQL parameters", async () => {
+    const { pool, query } = makeQueryPool([]);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: " project-alpha ",
+        },
+        5,
+      ),
+    ).resolves.toEqual([]);
+
+    const selectCall = query.mock.calls.find(([sql]) =>
+      typeof sql === "string" && sql.includes("FROM memory_vectors_test")
+    );
+    expect(selectCall).toBeDefined();
+
+    const [, params] = selectCall as [string, unknown[]];
+    expect(params).toEqual([
+      "[0.1,0.2,0.3]",
+      "org-a",
+      "project",
+      "project-alpha",
+      5,
+    ]);
+  });
+
+  it("query maps numeric string row values through guarded pgvector helpers", async () => {
+    const { pool, query, client } = makeQueryPool([
+      buildPgVectorQueryRow({
+        memory_record_id: "42",
+        score: "0.875",
+      }),
+    ]);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        1,
+      ),
+    ).resolves.toEqual([
+      {
+        id: "chunk:42",
+        score: 0.875,
+        payload: {
+          memory_record_id: 42,
+          organization_id: "org-a",
+          scope_type: "project",
+          scope_id: "project-alpha",
+          project_key: "project-alpha",
+          kind: "fact",
+          durability: "durable",
+          title: "title",
+          summary: "summary",
+          tags: [],
+          updated_at: "2026-04-25T00:00:00.000Z",
+          embedding_version: "v1",
+        },
+      },
+    ]);
+
+    expect(query).toHaveBeenCalledWith("COMMIT");
+    expect(client.release).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    {
+      label: "point_id null",
+      row: buildPgVectorQueryRow({ point_id: null }),
+      message: "point_id must be a non-empty string",
+    },
+    {
+      label: "point_id blank",
+      row: buildPgVectorQueryRow({ point_id: " \n\t " }),
+      message: "point_id must be a non-empty string",
+    },
+    {
+      label: "organization_id null",
+      row: buildPgVectorQueryRow({ organization_id: null }),
+      message: "organization_id must be a non-empty string",
+    },
+    {
+      label: "organization_id blank",
+      row: buildPgVectorQueryRow({ organization_id: " \n\t " }),
+      message: "organization_id must be a non-empty string",
+    },
+    {
+      label: "score null",
+      row: buildPgVectorQueryRow({ score: null }),
+      message: "score must be a finite number",
+    },
+    {
+      label: "score blank",
+      row: buildPgVectorQueryRow({ score: " \n\t " }),
+      message: "score must be a finite number",
+    },
+    {
+      label: "score hex string",
+      row: buildPgVectorQueryRow({ score: "0x10" }),
+      message: "score must be a finite number",
+    },
+    {
+      label: "memory_record_id boolean",
+      row: buildPgVectorQueryRow({ memory_record_id: false }),
+      message: "memory_record_id must be a positive safe integer",
+    },
+    {
+      label: "memory_record_id array",
+      row: buildPgVectorQueryRow({ memory_record_id: [42] }),
+      message: "memory_record_id must be a positive safe integer",
+    },
+    {
+      label: "memory_record_id zero",
+      row: buildPgVectorQueryRow({ memory_record_id: "0" }),
+      message: "memory_record_id must be a positive safe integer",
+    },
+    {
+      label: "memory_record_id fractional",
+      row: buildPgVectorQueryRow({ memory_record_id: "1.5" }),
+      message: "memory_record_id must be a positive safe integer",
+    },
+    {
+      label: "memory_record_id hex string",
+      row: buildPgVectorQueryRow({ memory_record_id: "0x10" }),
+      message: "memory_record_id must be a positive safe integer",
+    },
+    {
+      label: "kind boolean",
+      row: buildPgVectorQueryRow({ kind: false }),
+      message: "kind must be a string or null",
+    },
+    {
+      label: "updated_at number",
+      row: buildPgVectorQueryRow({ updated_at: 123 }),
+      message: "updated_at must be a string or null",
+    },
+    {
+      label: "tags string",
+      row: buildPgVectorQueryRow({ tags: "ops" }),
+      message: "tags must be an array",
+    },
+    {
+      label: "tags entry number",
+      row: buildPgVectorQueryRow({ tags: ["ops", 12] }),
+      message: "tags[1] must be a string",
+    },
+  ])("query rejects malformed pgvector row fields: $label", async ({ row, message }) => {
+    const { pool, query, client } = makeQueryPool([row]);
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        1,
+      ),
+    ).rejects.toThrow(message);
+
+    expect(query).not.toHaveBeenCalledWith("COMMIT");
+    expect(query).toHaveBeenCalledWith("ROLLBACK");
+    expect(client.release).toHaveBeenCalledOnce();
+  });
+
+  it("query rejects non-array pgvector row results before mapping", async () => {
+    const query = vi.fn().mockResolvedValue({ rows: null });
+    const client = {
+      query,
+      release: vi.fn(),
+    };
+    const pool = {
+      query: vi.fn(),
+      connect: vi.fn().mockResolvedValue(client),
+      end: vi.fn(),
+    } as unknown as PgPool;
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        1,
+      ),
+    ).rejects.toThrow("query rows must be an array");
+
+    expect(query).not.toHaveBeenCalledWith("COMMIT");
+    expect(query).toHaveBeenCalledWith("ROLLBACK");
+    expect(client.release).toHaveBeenCalledOnce();
+  });
+
+  it("query rejects malformed pgvector row objects before reading fields", async () => {
+    const query = vi.fn().mockResolvedValue({ rows: [null] });
+    const client = {
+      query,
+      release: vi.fn(),
+    };
+    const pool = {
+      query: vi.fn(),
+      connect: vi.fn().mockResolvedValue(client),
+      end: vi.fn(),
+    } as unknown as PgPool;
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.query(
+        [0.1, 0.2, 0.3],
+        {
+          organizationId: "org-a",
+          scopes: [{ scopeType: "project", scopeId: "project-alpha" }],
+          projectKey: "project-alpha",
+        },
+        1,
+      ),
+    ).rejects.toThrow("query rows[0] must be an object");
+
+    expect(query).not.toHaveBeenCalledWith("COMMIT");
+    expect(query).toHaveBeenCalledWith("ROLLBACK");
+    expect(client.release).toHaveBeenCalledOnce();
   });
 
   it("query rejects whitespace-only organizationId before opening a client", async () => {
@@ -205,6 +1240,18 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
     );
   });
 
+  it("deleteByRecordIds trims organizationId before SQL parameters", async () => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await index.deleteByRecordIds([101, 202], { organizationId: " org-a " });
+
+    expect(query).toHaveBeenCalledWith(
+      "DELETE FROM memory_vectors_test WHERE memory_record_id = ANY($1) AND organization_id = $2",
+      [[101, 202], "org-a"],
+    );
+  });
+
   it("deleteByRecordIds rejects whitespace-only organizationId before SQL", async () => {
     const { pool, query } = makeMockPool();
     const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
@@ -226,6 +1273,49 @@ describe("pgvector adapter — deleteByRecordIds SQL shape", () => {
 
     expect(query).not.toHaveBeenCalled();
   });
+
+  it.each([
+    { label: "zero", recordIds: [0] },
+    { label: "fractional", recordIds: [1.5] },
+    { label: "NaN", recordIds: [Number.NaN] },
+  ])("deleteByRecordIds rejects malformed recordIds before SQL: $label", async ({ recordIds }) => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.deleteByRecordIds(recordIds),
+    ).rejects.toThrow("recordIds[0] must be a positive safe integer");
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("deleteByRecordIds rejects non-array record id lists before SQL", async () => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.deleteByRecordIds(null as never),
+    ).rejects.toThrow("deleteByRecordIds: recordIds must be an array");
+
+    expect(query).not.toHaveBeenCalled();
+  });
+});
+
+describe("pgvector adapter — ensureCollection SQL shape", () => {
+  it.each([
+    { label: "zero", dimensions: 0 },
+    { label: "fractional", dimensions: 3.5 },
+    { label: "NaN", dimensions: Number.NaN },
+  ])("ensureCollection rejects malformed dimensions before SQL: $label", async ({ dimensions }) => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "memory_vectors_test" });
+
+    await expect(
+      index.ensureCollection(dimensions),
+    ).rejects.toThrow("dimensions must be a positive safe integer");
+
+    expect(query).not.toHaveBeenCalled();
+  });
 });
 
 describe.skipIf(!HAS_TEST_URL)("pgvector adapter — integration against real pgvector", () => {
@@ -244,7 +1334,7 @@ describe.skipIf(!HAS_TEST_URL)("pgvector adapter — integration against real pg
         await pool.query("SELECT 1");
         lastErr = undefined;
         break;
-      } catch (err) {
+      } catch (err: unknown) {
         lastErr = err;
         await new Promise((r) => setTimeout(r, 1000));
       }
@@ -571,7 +1661,7 @@ describe.skipIf(!HAS_TEST_URL)("pgvector adapter — integration against real pg
         id: `batch:${i}`,
         vector: makeVec(3, [Math.cos(i * 0.001), Math.sin(i * 0.001), 0]),
         payload: {
-          memory_record_id: i,
+          memory_record_id: i + 1,
           organization_id: "org-batch",
           scope_type: "user",
           scope_id: "user-batch",
@@ -643,6 +1733,18 @@ describe("pgvector adapter — delete SQL", () => {
     );
   });
 
+  it("trims organizationId before SQL delete parameters", async () => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "test_memory_vectors" });
+
+    await index.delete(["chunk:1", "chunk:2"], { organizationId: " org-a " });
+
+    expect(query).toHaveBeenCalledWith(
+      "DELETE FROM test_memory_vectors WHERE point_id = ANY($1) AND organization_id = $2",
+      [["chunk:1", "chunk:2"], "org-a"],
+    );
+  });
+
   it("rejects whitespace-only organizationId before SQL", async () => {
     const { pool, query } = makeMockPool();
     const index = createPgVectorIndex(pool, { tableName: "test_memory_vectors" });
@@ -650,6 +1752,31 @@ describe("pgvector adapter — delete SQL", () => {
     await expect(
       index.delete(["chunk:1"], { organizationId: " \n\t " }),
     ).rejects.toThrow(/organizationId/);
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { label: "empty", ids: [""] },
+    { label: "blank", ids: [" \n\t "] },
+  ])("rejects malformed point ids before SQL delete: $label", async ({ ids }) => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "test_memory_vectors" });
+
+    await expect(
+      index.delete(ids),
+    ).rejects.toThrow("ids[0] must be a non-empty string");
+
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-array point id lists before SQL delete", async () => {
+    const { pool, query } = makeMockPool();
+    const index = createPgVectorIndex(pool, { tableName: "test_memory_vectors" });
+
+    await expect(
+      index.delete(null as never),
+    ).rejects.toThrow("delete: ids must be an array");
 
     expect(query).not.toHaveBeenCalled();
   });
@@ -688,7 +1815,7 @@ describe.skipIf(!HAS_TEST_URL)("ingest sweeper recovery — integration against 
         await pool.query("SELECT 1");
         lastErr = undefined;
         break;
-      } catch (err) {
+      } catch (err: unknown) {
         lastErr = err;
         await new Promise((r) => setTimeout(r, 1000));
       }
@@ -840,7 +1967,7 @@ describe.skipIf(!HAS_TEST_URL)("pgvector adapter — deleteByRecordIds prevents 
         await pool.query("SELECT 1");
         lastErr = undefined;
         break;
-      } catch (err) {
+      } catch (err: unknown) {
         lastErr = err;
         await new Promise((r) => setTimeout(r, 1000));
       }
