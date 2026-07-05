@@ -2,6 +2,22 @@
 
 ## 2026-07-05
 
+- 10:48 KST - Split MCP Streamable HTTP auth guarding:
+  - Added `src/app/middleware/mcp-http-auth.ts` for authenticated registry
+    guarding and MCP-only tool authorization.
+  - Kept `src/app/mcp-http.ts` focused on request checks, auth lookup, rate
+    limiting, server/transport lifecycle, and JSON-RPC error responses.
+  - Updated `CONTRACTS.md`, `PLAN.md`, `BACKLOG.md`, `DECISIONS.md`, and the
+    contract-baseline drift guard for the new middleware file.
+
+Verification:
+- `npm test -- tests/app/mcp-http.test.ts -t "bound token org|OAuth tokens for MCP tool calls|OAuth scopes for MCP-only context tools" --reporter=dot`
+  (`1` file passed; `5` tests passed, `16` skipped)
+- `npm test -- tests/app/mcp-http.test.ts tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`2` files passed; `69` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:46 KST - Ran the full test suite after the current boundary commits:
   - Verified the contract baseline, JSON HTTP route handler split, MCP tool
     result split, and existing repository behavior together.

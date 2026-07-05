@@ -1,5 +1,30 @@
 # DECISIONS
 
+## 2026-07-05 — Split MCP Streamable HTTP Auth Guarding
+
+Decision: move MCP Streamable HTTP authenticated registry guarding and MCP-only
+tool authorization into `src/app/middleware/mcp-http-auth.ts`.
+
+Why:
+- `src/app/mcp-http.ts` should focus on HTTP transport setup, request parsing,
+  rate limiting, and MCP transport lifecycle.
+- The auth guard is contract-sensitive because it injects bound
+  `organizationId`, rejects mismatches, and maps insufficient OAuth scopes to
+  MCP tool errors.
+- Existing MCP HTTP tests already cover those behaviors for service tools and
+  MCP-only context tools.
+
+Implementation:
+- `handleMcpHttpRequest` imports `withAuthenticatedRegistry` and
+  `createMcpToolAuthorizer`.
+- `CONTRACTS.md` and the contract-baseline drift guard list the new middleware
+  file.
+
+Tradeoff:
+- The registry wrapper still lists service tools explicitly. That is verbose,
+  but it preserves current dispatch typing without adding a generic registry
+  abstraction.
+
 ## 2026-07-05 — Split JSON HTTP Tool Handler Execution
 
 Decision: move JSON HTTP tool execution from `src/app/routes/memory.ts` into

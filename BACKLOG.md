@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- MCP Streamable HTTP registry guarding and MCP-only tool authorization now live
+  in `src/app/middleware/mcp-http-auth.ts`.
 - JSON HTTP tool execution now lives in `src/app/routes/tool-handler.ts`, with
   route construction remaining in `src/app/routes/memory.ts`.
 - JSON HTTP route handler dispatch now has direct boundary coverage for success

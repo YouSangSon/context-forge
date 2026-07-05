@@ -18,6 +18,8 @@ Current structure:
 - Public transports live in `src/mcp/server.ts`, `src/app/mcp-http.ts`, and
   `src/app/routes/memory.ts`.
 - MCP tool result formatting lives in `src/mcp/tool-result.ts`.
+- MCP Streamable HTTP authenticated tool authorization lives in
+  `src/app/middleware/mcp-http-auth.ts`.
 - JSON HTTP route handler execution lives in `src/app/routes/tool-handler.ts`;
   shared route types live in `src/app/routes/types.ts`.
 - Shared public service schemas and JSON HTTP route descriptors live in
@@ -43,6 +45,8 @@ Completed in this branch:
   handler dispatch before deeper route-handler extraction.
 - `src/app/routes/tool-handler.ts` owns JSON HTTP tool execution while
   `src/app/routes/memory.ts` owns route table construction.
+- `src/app/middleware/mcp-http-auth.ts` owns MCP Streamable HTTP registry
+  guarding and MCP-only tool authorization.
 
 Known issues:
 - No open P0/P1/P2 backlog item is known from current repo evidence.

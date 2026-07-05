@@ -910,6 +910,8 @@ describe("public documentation drift checks", () => {
     expect(contracts).toContain("src/mcp/tool-schemas.ts");
     expect(contracts).toContain("src/mcp/types.ts");
     expect(contracts).toContain("src/mcp/tool-result.ts");
+    expect(contracts).toContain("src/app/mcp-http.ts");
+    expect(contracts).toContain("src/app/middleware/mcp-http-auth.ts");
     expect(contracts).toContain("src/app/routes/memory.ts");
     expect(contracts).toContain("src/app/routes/tool-handler.ts");
     expect(contracts).toContain("src/app/routes/types.ts");
@@ -918,6 +920,7 @@ describe("public documentation drift checks", () => {
     expect(contracts).toContain("src/app/middleware/envelope.ts");
     expect(contracts).toContain("src/app/server.ts");
     expect(contracts).toContain("tests/app/envelope.test.ts");
+    expect(contracts).toContain("tests/app/mcp-http.test.ts");
     expect(contracts).toContain("structuredContent");
     expect(contracts).toContain("package.json");
     expect(contracts).toContain("001_initial.sql");

@@ -20,7 +20,8 @@ work.
   `src/app/middleware/organization-resolution.ts`,
   `src/app/middleware/envelope.ts`
 - MCP stdio and MCP Streamable HTTP transport wiring:
-  `src/mcp/server.ts`, `src/mcp/tool-result.ts`, `src/app/mcp-http.ts`
+  `src/mcp/server.ts`, `src/mcp/tool-result.ts`, `src/app/mcp-http.ts`,
+  `src/app/middleware/mcp-http-auth.ts`
 - Operator HTTP endpoints:
   `src/app/server.ts`
 - CLI and package command surface:
@@ -111,5 +112,7 @@ structured success results rather than transport failures.
   shape and field order.
 - `tests/mcp/server.test.ts` verifies MCP tool descriptor registration and the
   structuredContent plus JSON text content response contract.
+- `tests/app/mcp-http.test.ts` verifies MCP Streamable HTTP auth, bound
+  `organizationId` injection, scope denial, body limits, and cleanup behavior.
 - `tests/scripts/package-manifest.test.ts` verifies public package scripts and
   package surface.
