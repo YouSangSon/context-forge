@@ -937,6 +937,35 @@ describe("public documentation drift checks", () => {
     }
   });
 
+  it("keeps the architecture transition plan resumable", () => {
+    const plan = read("PLAN.md");
+
+    for (const heading of [
+      "## Current State",
+      "## Next Loop Candidates",
+      "## Target Architecture",
+      "## Transition Plan",
+      "## Contract Gate",
+      "## Risks And Rollback",
+      "## Continuation Handoff",
+    ]) {
+      expect(plan).toContain(heading);
+    }
+
+    for (const requiredContext of [
+      "src/mcp/tool-schemas.ts",
+      "src/mcp/types.ts",
+      "src/app/routes/memory.ts",
+      "CONTRACTS.md",
+      "organizationId",
+      "git status --short --branch",
+      "git log -1 --oneline",
+      "Do not push",
+    ]) {
+      expect(plan).toContain(requiredContext);
+    }
+  });
+
   it("documents all three public transports in architecture and security docs", () => {
     for (const path of [
       "docs/architecture.md",

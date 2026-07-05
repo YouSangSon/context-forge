@@ -2,6 +2,21 @@
 
 ## 2026-07-05
 
+- 10:20 KST - Expanded the architecture transition handoff:
+  - `PLAN.md` now records current structure, completed branch commits, known
+    issues, target architecture, staged transition plan, contract gate, risks,
+    rollback, and resume instructions.
+  - This addresses the goal requirement that future agents can continue from
+    repository documents and git history rather than chat context.
+
+Verification:
+- `npm test -- tests/scripts/public-docs-drift.test.ts -t "architecture transition plan" --reporter=dot`
+  (`1` file passed; `1` test passed, `47` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `48` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:13 KST - Extracted shared HTTP JSON body parsing boundary:
   - Added `src/app/middleware/json-body.ts` for bounded JSON body parsing.
   - Reused it from JSON HTTP routes and MCP Streamable HTTP.

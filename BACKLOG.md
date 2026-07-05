@@ -25,6 +25,9 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- `PLAN.md` now records the current architecture state, target structure,
+  transition plan, contract gate, risks, rollback, and continuation handoff for
+  the clean-architecture/DDD goal.
 - JSON body parsing is now shared by JSON HTTP routes and MCP Streamable HTTP;
   both transports keep their previous oversized-body status behavior.
 - JSON HTTP organization resolution is now isolated behind an internal

@@ -4,44 +4,133 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - HTTP JSON Body Boundary
+## Current State
 
-Status:
-- Continuing small HTTP boundary extractions after freezing public contracts.
-- Moved duplicated JSON body parsing from `src/app/routes/memory.ts` and
-  `src/app/mcp-http.ts` into `src/app/middleware/json-body.ts`.
-- Preserved JSON HTTP oversized-body status `400` and MCP HTTP oversized-body
-  status `413`.
-- Updated `CONTRACTS.md` so the shared body parser remains part of the contract
-  source inventory.
-- Target structure remains staged: preserve contracts first, then split
-  internals behind existing descriptors, handlers, repositories, and CLI
-  entrypoints.
+Branch: `docs/contract-architecture-baseline`.
 
-Verification:
-- `npm test -- tests/app/server.test.ts -t "invalid JSON body|JSON HTTP body exceeds|JSON but not an object" --reporter=dot`
-  (`1` file passed; `3` tests passed, `65` skipped)
-- `npm test -- tests/app/mcp-http.test.ts -t "oversized POST bodies|POST JSON is invalid|POST body exceeds" --reporter=dot`
-  (`1` file passed; `3` tests passed, `18` skipped)
-- `npm test -- tests/app/memory-routes-boundary.test.ts --reporter=dot`
-  (`1` file passed; `14` tests)
-- `npm test -- tests/app/server.test.ts tests/app/mcp-http.test.ts tests/app/memory-routes-boundary.test.ts tests/scripts/public-docs-drift.test.ts --reporter=dot`
-  (`4` files passed; `150` tests)
-- `npm run typecheck`
-- `git diff --check`
+Recent completed architecture-goal commits; run `git log -1 --oneline` for the
+newest local commit:
+- `9534382 refactor(app): share http json body parsing`
+- `ec8bba9 refactor(app): split organization resolution boundary`
+- `47e8e59 docs(contracts): add public contract baseline`
 
-Architecture transition plan:
-- Current structure: transports (`src/mcp`, `src/app`) route into shared tool
-  descriptors/registry, domain orchestrators, repositories, vector adapters, and
-  migrations.
-- Target structure: keep public entrypoints stable while extracting internal
-  boundaries around contract schemas, application services, domain operations,
-  adapters, repositories, and customer/module-specific extensions.
-- First rule: every refactor must prove `CONTRACTS.md` plus existing API/docs
-  tests still match current behavior.
-- Rollback: revert the small refactor commit; contracts stay as the baseline.
+Current structure:
+- Public transports live in `src/mcp/server.ts`, `src/app/mcp-http.ts`, and
+  `src/app/routes/memory.ts`.
+- Shared public service schemas and JSON HTTP route descriptors live in
+  `src/mcp/tool-schemas.ts`; SDK-facing tool types live in `src/mcp/types.ts`.
+- Tool dispatch goes through `src/mcp/tool-registry.ts` and
+  `src/mcp/tool-handlers.ts`.
+- Domain work is currently grouped by capability under `src/compact/`,
+  `src/context-pack/`, `src/search/`, `src/goal-run/`, `src/store/`,
+  `src/vector/`, and `src/embedding/`.
+- DB-facing contracts are migration filenames `001-015` plus repository row
+  shapes.
+
+Completed in this branch:
+- `CONTRACTS.md` freezes the public contract inventory.
+- `src/app/middleware/organization-resolution.ts` owns JSON HTTP
+  `organizationId` precedence while `src/app/routes/memory.ts` keeps the
+  compatibility re-export.
+- `src/app/middleware/json-body.ts` owns bounded JSON body parsing for JSON HTTP
+  and MCP Streamable HTTP while preserving their previous status behavior.
+
+Known issues:
+- No open P0/P1/P2 backlog item is known from current repo evidence.
+- The target architecture is still a staged transition, not a completed module
+  split.
+- Customer-specific modules and MSA extraction seams are not yet implemented.
 
 ## Next Loop Candidates
 
-- Pick one internal boundary behind an existing public entrypoint and add
-  characterization coverage before moving code.
+- Extract one more HTTP or tool-dispatch boundary only when a focused contract
+  test can prove behavior stayed stable.
+- Shape a first customer/module boundary around an existing capability without
+  changing tool names or input/output shapes.
+- Add characterization coverage for the next chosen boundary before moving code.
+
+## Target Architecture
+
+Keep public entrypoints stable while moving internals toward:
+
+- Transport adapters: MCP stdio, MCP Streamable HTTP, and JSON HTTP only parse,
+  authenticate, authorize, validate envelopes, and call the shared application
+  surface.
+- Application services: tool use cases coordinate validation, audit, domain
+  operations, repositories, vector adapters, and embeddings behind stable
+  interfaces already present in the repo.
+- Domain modules: memory, search, compaction, goal-run, governance tags, audit,
+  and context-pack each own their rules and tests.
+- Infrastructure adapters: Postgres, Qdrant, pgvector, embeddings, OAuth, and
+  CLI stay replaceable behind existing factories/interfaces.
+- Customer-specific modules: add optional modules behind existing tool schemas
+  or versioned adapters first; do not fork public request/response shapes.
+- MSA readiness: each future service boundary must already have an explicit
+  contract, data owner, idempotency/rollback story, and local test gate before
+  extraction.
+
+## Transition Plan
+
+1. Preserve contracts first:
+   - Keep `CONTRACTS.md`, `docs/api-reference.md`, `src/mcp/tool-schemas.ts`,
+     `src/mcp/types.ts`, migrations, CLI scripts, and docs drift tests aligned.
+2. Shrink transport files:
+   - Move reusable boundary behavior from `src/app/routes/memory.ts` and
+     `src/app/mcp-http.ts` into `src/app/middleware/*` or existing helpers.
+3. Define application seams:
+   - Extract application-level functions only when two transports or tests can
+     call the same behavior without new public surface.
+4. Clarify domain modules:
+   - Move business rules toward capability folders already used by the repo.
+5. Add customer/module seams:
+   - Introduce adapters or option objects only after a real caller exists.
+6. Consider MSA split last:
+   - Split deployable services only after module contracts, queues/retries,
+     telemetry, and data ownership are proven locally.
+
+## Contract Gate
+
+Every loop must preserve:
+- Tool names, JSON HTTP routes, MCP tool registration, response envelope shape,
+  status classes, error messages that docs/tests rely on, field names, field
+  meaning, defaults, nullability, ordering, and side effects.
+- `organizationId` behavior, including token-bound precedence and mismatch
+  rejection.
+- CLI/package scripts and migration filenames.
+
+Minimum verification for a code loop:
+- Focused characterization or contract test for the touched boundary.
+- Relevant focused test suite.
+- `npm run typecheck`.
+- `git diff --check`.
+- Broader `npm test` or `npm run build` when the touched surface is shared
+  enough to justify the runtime.
+
+## Risks And Rollback
+
+Risks:
+- Moving transport code can silently change HTTP status, envelope shape, auth
+  precedence, or handler dispatch timing.
+- Moving schema or DTO code can break MCP and JSON HTTP at the same time.
+- Moving repository code can affect DB-facing row shape or migration order.
+- Adding generic module abstractions too early can create dead interfaces.
+
+Rollback:
+- Revert only the latest small refactor commit for the failed loop.
+- Keep `CONTRACTS.md` unless the contract baseline itself is proven wrong by
+  current code.
+- If a contract must change, stop and design a compatibility adapter, versioned
+  path, or migration plan before changing behavior.
+
+## Continuation Handoff
+
+Before each resume:
+- Read `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `docs/architecture.md`,
+  `docs/configuration.md`, `docs/api-reference.md`, `docs/README.md`,
+  `CONTRACTS.md`, this file, `BACKLOG.md`, `DECISIONS.md`, and recent
+  `WORKLOG.md`.
+- Check `git status --short --branch` and `git log -1 --oneline`.
+- Pick one candidate loop, write or run the smallest contract check, make the
+  internal change, rerun checks, update durable docs, and create a local commit.
+- Do not push, merge, deploy, change credentials, run paid work, or make
+  destructive migrations without explicit approval.
