@@ -33,6 +33,7 @@
 │   src/mcp/tool-registry.ts    → registry assembly               │
 │   src/mcp/tool-registry-instrumentation.ts → audit wrapper      │
 │   src/mcp/tool-handlers.ts    → tool 구현                       │
+│   src/goal-run/tool-handlers.ts → goal-run tool adapter          │
 └────────────────┬────────────────────────────────────────────────┘
                  │
 ┌────────────────▼────────────────────────────────────────────────┐
@@ -45,6 +46,8 @@
 │   src/app/background-workers.ts        공용 worker lifecycle    │
 │   src/app/worker.ts                    전용 worker 프로세스      │
 │   src/context-pack/build-context-pack.ts  pack assembler        │
+│   src/goal-run/build-goal-context.ts      goal context pack     │
+│   src/goal-run/find-repeat-attempts.ts    retry loop detector   │
 │   src/search/retrieve-memory.ts        vector + PG hydrate       │
 └────────────────┬────────────────────────────────────────────────┘
                  │

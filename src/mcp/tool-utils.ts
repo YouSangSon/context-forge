@@ -82,6 +82,147 @@ export function normalizeLimit(limit: number | undefined): number {
   return limit;
 }
 
+export function optionalNonBlankText(
+  value: string | null | undefined,
+  fieldName = "value",
+): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`${fieldName} must be a string`);
+  }
+  const normalized = value.trim();
+  return normalized.length === 0 ? null : normalized;
+}
+
+export function assertPositiveIntegerArray(
+  values: readonly number[] | undefined,
+  fieldName: string,
+): void {
+  if (values === undefined) {
+    return;
+  }
+  if (!Array.isArray(values)) {
+    throw new Error(`${fieldName} must be an array`);
+  }
+  for (const value of values) {
+    assertPositiveInteger(value, fieldName);
+  }
+}
+
+export function assertPositiveInteger(value: number, fieldName: string): void {
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${fieldName} must be a positive safe integer`);
+  }
+}
+
+export function assertOptionalPositiveInteger(
+  value: number | undefined,
+  fieldName: string,
+  max?: number,
+): void {
+  if (value === undefined) {
+    return;
+  }
+  assertPositiveInteger(value, fieldName);
+  if (max !== undefined && value > max) {
+    throw new Error(`${fieldName} must be at most ${max}`);
+  }
+}
+
+export function assertOptionalPostgresInteger(
+  value: number | undefined,
+  fieldName: string,
+): void {
+  if (value === undefined) {
+    return;
+  }
+  if (
+    !Number.isInteger(value) ||
+    value < POSTGRES_INTEGER_MIN ||
+    value > POSTGRES_INTEGER_MAX
+  ) {
+    throw new Error(`${fieldName} must be a Postgres integer`);
+  }
+}
+
+export function assertOptionalAllowedValue(
+  value: string | undefined,
+  fieldName: string,
+  allowedValues: readonly string[],
+): void {
+  if (value === undefined) {
+    return;
+  }
+  if (!allowedValues.includes(value)) {
+    throw new Error(
+      `${fieldName} must be one of: ${allowedValues.join(", ")}`,
+    );
+  }
+}
+
+export function assertAllowedValue(
+  value: string | undefined,
+  fieldName: string,
+  allowedValues: readonly string[],
+): void {
+  if (value === undefined || !allowedValues.includes(value)) {
+    throw new Error(
+      `${fieldName} must be one of: ${allowedValues.join(", ")}`,
+    );
+  }
+}
+
+export function assertOptionalNonNegativeFiniteNumber(
+  value: number | undefined,
+  fieldName: string,
+): void {
+  if (value === undefined) {
+    return;
+  }
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`${fieldName} must be a non-negative finite number`);
+  }
+}
+
+export function assertOptionalPositiveFiniteNumber(
+  value: number | undefined,
+  fieldName: string,
+  max?: number,
+): void {
+  if (value === undefined) {
+    return;
+  }
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`${fieldName} must be a positive finite number`);
+  }
+  if (max !== undefined && value > max) {
+    throw new Error(`${fieldName} must be at most ${max}`);
+  }
+}
+
+export function assertProvidedScopeIdentifiers(input: {
+  projectKey?: string;
+  userScopeId?: string;
+}): void {
+  if (input.projectKey !== undefined) {
+    requireProjectKey(input.projectKey, "project");
+  }
+  if (input.userScopeId !== undefined) {
+    requireUserScopeId(input.userScopeId);
+  }
+}
+
+export function ensureGovernanceCanonicalMode(hasOverrides: boolean): void {
+  if (hasOverrides) {
+    throw new Error(
+      "memory governance tools require canonical services (Postgres + vector index); " +
+        "legacy repository or retrieval overrides are not supported.",
+    );
+  }
+}
+
 export function toMemoryType(kind: string): AddMemoryInput["memoryType"] {
   if (typeof kind !== "string") {
     throw new Error("memory kind must be a string");

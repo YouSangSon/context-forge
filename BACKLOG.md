@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- Goal-run service tool adapters now live in `src/goal-run/tool-handlers.ts`,
+  with the shared registry continuing to expose the same public tool names.
 - MCP service tool registration now lives in `src/mcp/service-tools.ts`, with
   MCP server assembly remaining in `src/mcp/server.ts`.
 - MCP-only context tool registration now lives in `src/mcp/context-tools.ts`,

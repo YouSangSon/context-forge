@@ -2,6 +2,7 @@ import { applyCompaction } from "../compact/apply-compaction.js";
 import { buildCompactionPlan } from "../compact/compact-memory.js";
 import { unarchiveCompaction } from "../compact/unarchive-compaction.js";
 import { buildContextPack } from "../context-pack/build-context-pack.js";
+import { createGoalRunToolHandlers } from "../goal-run/tool-handlers.js";
 import { rootLogger } from "../logger.js";
 import { rankResults } from "../search/rank-results.js";
 import { retrieveMemory as retrieveMemoryFromQdrant } from "../search/retrieve-memory.js";
@@ -11,22 +12,15 @@ import {
   reindexCanonicalMemory,
   writeCanonicalMemory,
 } from "../store/canonical-indexing.js";
-import { assertNoSecrets } from "../store/secret-scrub.js";
 import {
   assertNonBlankMemoryContent,
   assertNonBlankText,
 } from "../store/memory-content.js";
-import { buildGoalContextPack } from "../goal-run/build-goal-context.js";
 import { ENTITY_KIND_VALUES } from "../entities/entity-extraction.js";
-import {
-  DEFAULT_REPEAT_THRESHOLD,
-  findRepeatAttempts,
-} from "../goal-run/find-repeat-attempts.js";
 import type {
   AddMemoryInput,
   CanonicalMemoryRepository,
   MemoryRepository,
-  ScopeType,
   SearchMemoryResult,
 } from "../types.js";
 import type {
@@ -45,15 +39,22 @@ import {
   assertObject,
 } from "./tool-registry-validation.js";
 import {
+  assertAllowedValue,
+  assertOptionalAllowedValue,
+  assertOptionalNonNegativeFiniteNumber,
+  assertOptionalPositiveFiniteNumber,
+  assertOptionalPositiveInteger,
+  assertOptionalPostgresInteger,
+  assertPositiveInteger,
+  assertPositiveIntegerArray,
+  assertProvidedScopeIdentifiers,
+  ensureGovernanceCanonicalMode,
   normalizeLimit,
-  POSTGRES_INTEGER_MAX,
-  POSTGRES_INTEGER_MIN,
+  optionalNonBlankText,
   requireProjectKey,
   requireUserScopeId,
   resolveUserScopeId,
   SUPPORTED_DURABILITY_VALUES,
-  SUPPORTED_GOAL_RUN_OUTCOMES,
-  SUPPORTED_GOAL_RUN_STATUSES,
   SUPPORTED_MEMORY_KINDS,
   SUPPORTED_SCOPE_TYPES,
   summarize,
@@ -909,256 +910,13 @@ export function createToolHandlers(input: {
         };
       });
     },
-
-    async start_goal_run(toolInput) {
-      ensureGovernanceCanonicalMode(hasGovernanceOverrides);
-      assertNonBlankText(toolInput.goal, "goal");
-      const goal = toolInput.goal.trim();
-      assertOptionalAllowedValue(toolInput.scope, "scope", SUPPORTED_SCOPE_TYPES);
-      const scope = toolInput.scope ?? "project";
-      const scopeId = resolveGoalRunScopeId(scope, toolInput, {
-        cwd,
-        defaultUserScopeId: options.defaultUserScopeId,
-      });
-      const terminationCriteria = optionalNonBlankText(
-        toolInput.terminationCriteria,
-        "terminationCriteria",
-      );
-      assertNoSecrets(goal);
-      if (terminationCriteria) {
-        assertNoSecrets(terminationCriteria);
-      }
-      return await withCanonicalServices(async (services) => {
-        const goalRun = await services.goalRuns.start({
-          organizationId: toolInput.organizationId?.trim() ?? "default",
-          scopeType: scope,
-          scopeId,
-          projectKey: scope === "project" ? scopeId : null,
-          goal,
-          terminationCriteria,
-        });
-        return { ok: true, goalRun };
-      });
-    },
-
-    async record_iteration(toolInput) {
-      ensureGovernanceCanonicalMode(hasGovernanceOverrides);
-      assertPositiveInteger(toolInput.goalRunId, "goalRunId");
-      assertNonBlankText(toolInput.attempt, "attempt");
-      const attempt = toolInput.attempt.trim();
-      assertAllowedValue(
-        toolInput.outcome,
-        "outcome",
-        SUPPORTED_GOAL_RUN_OUTCOMES,
-      );
-      assertPositiveIntegerArray(toolInput.memoryIds, "memoryIds");
-      const summary = optionalNonBlankText(toolInput.summary, "summary");
-      const error = optionalNonBlankText(toolInput.error, "error");
-      assertNoSecrets(attempt);
-      if (summary) {
-        assertNoSecrets(summary);
-      }
-      if (error) {
-        assertNoSecrets(error);
-      }
-      return await withCanonicalServices(async (services) => {
-        const iteration = await services.goalRuns.recordIteration({
-          organizationId: toolInput.organizationId?.trim() ?? "default",
-          goalRunId: toolInput.goalRunId,
-          attempt,
-          outcome: toolInput.outcome,
-          summary,
-          error,
-          memoryIds: toolInput.memoryIds,
-        });
-        return { ok: true, iteration };
-      });
-    },
-
-    async get_goal_run(toolInput) {
-      ensureGovernanceCanonicalMode(hasGovernanceOverrides);
-      assertPositiveInteger(toolInput.goalRunId, "goalRunId");
-      return await withCanonicalServices(async (services) => {
-        const goalRun = await services.goalRuns.get({
-          organizationId: toolInput.organizationId?.trim() ?? "default",
-          goalRunId: toolInput.goalRunId,
-        });
-        return { ok: true, goalRun };
-      });
-    },
-
-    async list_goal_runs(toolInput) {
-      ensureGovernanceCanonicalMode(hasGovernanceOverrides);
-      assertOptionalAllowedValue(toolInput.scope, "scope", SUPPORTED_SCOPE_TYPES);
-      assertOptionalAllowedValue(
-        toolInput.status,
-        "status",
-        SUPPORTED_GOAL_RUN_STATUSES,
-      );
-      const scope = toolInput.scope ?? "project";
-      const scopeId = resolveGoalRunScopeId(scope, toolInput, {
-        cwd,
-        defaultUserScopeId: options.defaultUserScopeId,
-      });
-      return await withCanonicalServices(async (services) => {
-        const goalRuns = await services.goalRuns.list({
-          organizationId: toolInput.organizationId?.trim() ?? "default",
-          scopeType: scope,
-          scopeId,
-          status: toolInput.status,
-        });
-        return { ok: true, goalRuns };
-      });
-    },
-
-    async complete_goal_run(toolInput) {
-      ensureGovernanceCanonicalMode(hasGovernanceOverrides);
-      assertPositiveInteger(toolInput.goalRunId, "goalRunId");
-      const resolution = optionalNonBlankText(toolInput.resolution, "resolution");
-      if (resolution) {
-        assertNoSecrets(resolution);
-      }
-      return await withCanonicalServices(async (services) => {
-        const goalRun = await services.goalRuns.complete({
-          organizationId: toolInput.organizationId?.trim() ?? "default",
-          goalRunId: toolInput.goalRunId,
-          note: resolution,
-        });
-        return { ok: true, goalRun };
-      });
-    },
-
-    async abandon_goal_run(toolInput) {
-      ensureGovernanceCanonicalMode(hasGovernanceOverrides);
-      assertPositiveInteger(toolInput.goalRunId, "goalRunId");
-      const reason = optionalNonBlankText(toolInput.reason, "reason");
-      if (reason) {
-        assertNoSecrets(reason);
-      }
-      return await withCanonicalServices(async (services) => {
-        const goalRun = await services.goalRuns.abandon({
-          organizationId: toolInput.organizationId?.trim() ?? "default",
-          goalRunId: toolInput.goalRunId,
-          note: reason,
-        });
-        return { ok: true, goalRun };
-      });
-    },
-
-    async build_goal_context(toolInput) {
-      ensureGovernanceCanonicalMode(hasGovernanceOverrides);
-      assertPositiveInteger(toolInput.goalRunId, "goalRunId");
-      assertOptionalPositiveInteger(toolInput.limit, "limit", 200);
-      return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId?.trim() ?? "default";
-        const goalRun = await services.goalRuns.get({
-          organizationId,
-          goalRunId: toolInput.goalRunId,
-        });
-        if (!goalRun) {
-          return {
-            ok: true,
-            found: false,
-            goalRunId: toolInput.goalRunId,
-            packMarkdown: "",
-          };
-        }
-        const records = await services.repository.listMemory(
-          { scopeType: goalRun.scopeType, scopeId: goalRun.scopeId },
-          {
-            organizationId,
-            limit: toolInput.limit ?? GOAL_CONTEXT_RECORD_LIMIT,
-          },
-        );
-        const pack = buildGoalContextPack({ goalRun, records });
-        return {
-          ok: true,
-          found: true,
-          goalRunId: goalRun.id,
-          packMarkdown: pack.markdown,
-        };
-      });
-    },
-
-    async check_repeat_attempt(toolInput) {
-      ensureGovernanceCanonicalMode(hasGovernanceOverrides);
-      assertPositiveInteger(toolInput.goalRunId, "goalRunId");
-      assertNonBlankText(toolInput.attempt, "attempt");
-      const attempt = toolInput.attempt.trim();
-      assertNoSecrets(attempt);
-      const threshold = resolveRepeatThreshold(toolInput.threshold);
-      return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId?.trim() ?? "default";
-        const goalRun = await services.goalRuns.get({
-          organizationId,
-          goalRunId: toolInput.goalRunId,
-        });
-        if (!goalRun) {
-          return { ok: true, found: false, repeat: false, threshold, matches: [] };
-        }
-
-        const failures = goalRun.iterations.filter(
-          (iteration) =>
-            iteration.outcome === "failure" && iteration.attempt.trim().length > 0,
-        );
-        if (failures.length === 0) {
-          return { ok: true, found: true, repeat: false, threshold, matches: [] };
-        }
-
-        const vectors = await services.embeddings.embedBatch([
-          attempt,
-          ...failures.map((failure) => failure.attempt),
-        ]);
-        const candidateEmbedding = vectors[0];
-        if (!candidateEmbedding) {
-          return { ok: true, found: true, repeat: false, threshold, matches: [] };
-        }
-
-        const priorFailures = failures
-          .map((failure, index) => ({
-            iterationIndex: failure.iterationIndex,
-            attempt: failure.attempt,
-            embedding: vectors[index + 1] ?? [],
-          }))
-          // Guard cosineSimilarity (throws on length mismatch); embedBatch
-          // normally returns same-dim vectors, so this only drops anomalies.
-          .filter(
-            (failure) => failure.embedding.length === candidateEmbedding.length,
-          );
-        const matches = findRepeatAttempts({
-          candidateEmbedding,
-          priorFailures,
-          threshold,
-        });
-
-        return {
-          ok: true,
-          found: true,
-          repeat: matches.length > 0,
-          threshold,
-          matches,
-        };
-      });
-    },
+    ...createGoalRunToolHandlers({
+      cwd,
+      defaultUserScopeId: options.defaultUserScopeId,
+      hasGovernanceOverrides,
+      withCanonicalServices,
+    }),
   };
-}
-
-// Upper bound on scope memories pulled into a goal context pack. Mirrors the
-// browse/paging intent of listMemory; the pack itself caps each section.
-const GOAL_CONTEXT_RECORD_LIMIT = 50;
-
-function optionalNonBlankText(
-  value: string | null | undefined,
-  fieldName = "value",
-): string | null {
-  if (value === undefined || value === null) {
-    return null;
-  }
-  if (typeof value !== "string") {
-    throw new Error(`${fieldName} must be a string`);
-  }
-  const normalized = value.trim();
-  return normalized.length === 0 ? null : normalized;
 }
 
 function assertNonBlankTags(tags: readonly string[] | undefined): void {
@@ -1171,154 +929,6 @@ function assertNonBlankTags(tags: readonly string[] | undefined): void {
   for (const tag of tags) {
     assertNonBlankText(tag, "tag");
   }
-}
-
-function assertPositiveIntegerArray(
-  values: readonly number[] | undefined,
-  fieldName: string,
-): void {
-  if (values === undefined) {
-    return;
-  }
-  if (!Array.isArray(values)) {
-    throw new Error(`${fieldName} must be an array`);
-  }
-  for (const value of values) {
-    assertPositiveInteger(value, fieldName);
-  }
-}
-
-function assertPositiveInteger(value: number, fieldName: string): void {
-  if (!Number.isSafeInteger(value) || value <= 0) {
-    throw new Error(`${fieldName} must be a positive safe integer`);
-  }
-}
-
-function assertOptionalPositiveInteger(
-  value: number | undefined,
-  fieldName: string,
-  max?: number,
-): void {
-  if (value === undefined) {
-    return;
-  }
-  assertPositiveInteger(value, fieldName);
-  if (max !== undefined && value > max) {
-    throw new Error(`${fieldName} must be at most ${max}`);
-  }
-}
-
-function assertOptionalPostgresInteger(
-  value: number | undefined,
-  fieldName: string,
-): void {
-  if (value === undefined) {
-    return;
-  }
-  if (
-    !Number.isInteger(value) ||
-    value < POSTGRES_INTEGER_MIN ||
-    value > POSTGRES_INTEGER_MAX
-  ) {
-    throw new Error(`${fieldName} must be a Postgres integer`);
-  }
-}
-
-function assertOptionalAllowedValue(
-  value: string | undefined,
-  fieldName: string,
-  allowedValues: readonly string[],
-): void {
-  if (value === undefined) {
-    return;
-  }
-  if (!allowedValues.includes(value)) {
-    throw new Error(
-      `${fieldName} must be one of: ${allowedValues.join(", ")}`,
-    );
-  }
-}
-
-function assertAllowedValue(
-  value: string | undefined,
-  fieldName: string,
-  allowedValues: readonly string[],
-): void {
-  if (value === undefined || !allowedValues.includes(value)) {
-    throw new Error(
-      `${fieldName} must be one of: ${allowedValues.join(", ")}`,
-    );
-  }
-}
-
-function assertOptionalNonNegativeFiniteNumber(
-  value: number | undefined,
-  fieldName: string,
-): void {
-  if (value === undefined) {
-    return;
-  }
-  if (!Number.isFinite(value) || value < 0) {
-    throw new Error(`${fieldName} must be a non-negative finite number`);
-  }
-}
-
-function assertOptionalPositiveFiniteNumber(
-  value: number | undefined,
-  fieldName: string,
-  max?: number,
-): void {
-  if (value === undefined) {
-    return;
-  }
-  if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(`${fieldName} must be a positive finite number`);
-  }
-  if (max !== undefined && value > max) {
-    throw new Error(`${fieldName} must be at most ${max}`);
-  }
-}
-
-function resolveRepeatThreshold(threshold: number | undefined): number {
-  if (threshold === undefined) {
-    return DEFAULT_REPEAT_THRESHOLD;
-  }
-  if (!Number.isFinite(threshold) || threshold <= 0 || threshold > 1) {
-    throw new Error("threshold must be greater than 0 and at most 1");
-  }
-  return threshold;
-}
-
-function assertProvidedScopeIdentifiers(input: {
-  projectKey?: string;
-  userScopeId?: string;
-}): void {
-  if (input.projectKey !== undefined) {
-    requireProjectKey(input.projectKey, "project");
-  }
-  if (input.userScopeId !== undefined) {
-    requireUserScopeId(input.userScopeId);
-  }
-}
-
-// Resolve a goal-run scope into the scopeId the repository stores: the
-// projectKey for project scope, or the resolved user scope id for user scope.
-function resolveGoalRunScopeId(
-  scope: ScopeType,
-  toolInput: { projectKey?: string; userScopeId?: string },
-  resolutionInput: { cwd: string; defaultUserScopeId?: string },
-): string {
-  assertProvidedScopeIdentifiers(toolInput);
-  if (scope === "user") {
-    return requireUserScopeId(
-      resolveUserScopeId({
-        cwd: resolutionInput.cwd,
-        explicitUserScopeId: toolInput.userScopeId,
-        defaultUserScopeId: resolutionInput.defaultUserScopeId,
-      }),
-    );
-  }
-  return requireProjectKey(toolInput.projectKey, scope);
 }
 
 function toRepositoryAddMemoryInput(input: AddMemoryToolInput): AddMemoryInput {
@@ -1399,15 +1009,6 @@ function collectRecords(input: {
   }
 
   return rankResults(results).slice(0, perScopeLimit);
-}
-
-function ensureGovernanceCanonicalMode(hasOverrides: boolean): void {
-  if (hasOverrides) {
-    throw new Error(
-      "memory governance tools require canonical services (Postgres + vector index); " +
-        "legacy repository or retrieval overrides are not supported.",
-    );
-  }
 }
 
 function shouldRefreshMemoryIndex(input: {

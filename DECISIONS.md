@@ -1,5 +1,29 @@
 # DECISIONS
 
+## 2026-07-05 — Split Goal-Run Tool Handlers
+
+Decision: move goal-run service tool adapters into
+`src/goal-run/tool-handlers.ts`.
+
+Why:
+- `src/mcp/tool-handlers.ts` should not own every capability adapter as the
+  codebase moves toward module boundaries.
+- Goal-run tools already have a domain folder and focused handler tests for
+  scope resolution, org defaults, close-note mapping, context-pack rendering,
+  repeat-attempt detection, and validation-before-dispatch behavior.
+- The public contract remains the same because tool names, shared schemas,
+  registry keys, JSON HTTP routes, and MCP exposure still flow through the
+  existing descriptors and registry.
+
+Implementation:
+- `createToolHandlers` now composes `createGoalRunToolHandlers`.
+- Shared handler validation helpers moved to `src/mcp/tool-utils.ts`.
+- `CONTRACTS.md`, API docs, and architecture docs list the new adapter module.
+
+Tradeoff:
+- Goal-run adapters still depend on MCP tool types because this loop moves an
+  existing boundary; it does not introduce a new application-service interface.
+
 ## 2026-07-05 — Split MCP Service Tool Registration
 
 Decision: move MCP service tool registration into `src/mcp/service-tools.ts`.

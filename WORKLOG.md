@@ -2,6 +2,30 @@
 
 ## 2026-07-05
 
+- 11:21 KST - Split goal-run tool handlers:
+  - Added `src/goal-run/tool-handlers.ts` for the goal-run service tool
+    adapters: run start/iteration/get/list/complete/abandon/context/repeat.
+  - Kept public tool names, JSON HTTP routes, MCP exposure, shared schemas, and
+    registry keys unchanged by composing the new adapter from
+    `createToolHandlers`.
+  - Moved shared handler validation helpers into `src/mcp/tool-utils.ts`.
+  - Updated architecture docs, API docs, `CONTRACTS.md`, `PLAN.md`,
+    `BACKLOG.md`, and `DECISIONS.md` for the goal-run module boundary.
+
+Verification:
+- `npm test -- tests/goal-run/goal-run-handlers.test.ts tests/mcp/tool-registry.test.ts tests/app/memory-routes-boundary.test.ts --reporter=dot`
+  (`3` files passed; `60` tests passed)
+- `npm test -- tests/mcp/server.test.ts -t "registers all service and context tools|dispatches reindex_memory|dispatches unarchive_memory|advertises output schemas|structuredContent while retaining" --reporter=dot`
+  (`1` file passed; `5` tests passed, `130` skipped)
+- `npm test -- tests/app/mcp-http.test.ts -t "serves MCP tools over Streamable HTTP" --reporter=dot`
+  (`1` file passed; `1` test passed, `20` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `48` tests passed)
+- `npm test -- tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`1` file passed; `6` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 11:09 KST - Split MCP service tool registration:
   - Added `src/mcp/service-tools.ts` for MCP service tool registration from
     `SERVICE_TOOL_DESCRIPTORS` and `toToolResult` conversion.
