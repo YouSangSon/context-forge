@@ -38,6 +38,8 @@ Current structure:
   `src/mcp/tool-schemas.ts`; SDK-facing tool types live in `src/mcp/types.ts`.
 - Tool dispatch goes through `src/mcp/tool-registry.ts` and
   `src/mcp/tool-handlers.ts`.
+- Tool-boundary audit/log instrumentation lives in
+  `src/mcp/tool-registry-instrumentation.ts`.
 - Domain work is currently grouped by capability under `src/compact/`,
   `src/context-pack/`, `src/search/`, `src/goal-run/`, `src/store/`,
   `src/vector/`, and `src/embedding/`.
@@ -61,6 +63,8 @@ Completed in this branch:
   guarding and MCP-only tool authorization.
 - `src/cli-args.ts` owns CLI argument parsing while `src/cli.ts` preserves the
   existing `parseCliArgs` export and command execution.
+- `src/mcp/tool-registry-instrumentation.ts` owns tool-boundary audit/log
+  wrapping while `src/mcp/tool-registry.ts` owns registry assembly.
 
 Known issues:
 - No open P0/P1/P2 backlog item is known from current repo evidence.

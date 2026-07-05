@@ -1,5 +1,27 @@
 # DECISIONS
 
+## 2026-07-05 — Split Tool Registry Audit Instrumentation
+
+Decision: move tool-boundary audit/log instrumentation into
+`src/mcp/tool-registry-instrumentation.ts`.
+
+Why:
+- `src/mcp/tool-registry.ts` should assemble canonical services, handlers, and
+  registry wrapping without owning the audit wrapper implementation.
+- Audit rows are contract-sensitive because they capture org, actor, tool,
+  outcome, duration, request id, and error messages.
+- Existing audit tests already characterize ok/error rows, trimmed org ids,
+  default org behavior, and best-effort failure handling.
+
+Implementation:
+- `createToolRegistry` now imports `instrumentToolRegistry`.
+- Architecture docs and drift guards point at the new instrumentation module.
+- `CONTRACTS.md` lists the new file and audit contract test.
+
+Tradeoff:
+- The wrapper still enumerates each tool explicitly. That keeps current typing
+  and avoids a generic registry mapper in this loop.
+
 ## 2026-07-05 — Split CLI Argument Parsing
 
 Decision: move CLI argument parsing into `src/cli-args.ts` and keep

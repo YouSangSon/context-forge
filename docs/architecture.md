@@ -26,7 +26,8 @@ for env-var setup see [configuration.md](configuration.md).
 ┌────────────────▼────────────────────────────────────────────────┐
 │ Tool descriptors + registry                                     │
 │   src/mcp/tool-schemas.ts     → shared zod schemas + routes     │
-│   src/mcp/tool-registry.ts    → audited registry wrappers       │
+│   src/mcp/tool-registry.ts    → registry assembly               │
+│   src/mcp/tool-registry-instrumentation.ts → audit wrappers     │
 │   src/mcp/tool-handlers.ts    → tool implementations            │
 └────────────────┬────────────────────────────────────────────────┘
                  │
@@ -304,10 +305,10 @@ token's bound org disagrees with a record's org.
 ## Audit trail
 
 Every tool invocation produces an `audit_log` row via the `instrument()`
-wrapper in `src/mcp/tool-registry.ts`. The row captures org, actor, tool name,
-project key, outcome (`ok`/`error`), error message, duration ms, request
-id, and (for destructive operations) `metadata` JSONB with structured
-detail (archived ids, run ids, etc.).
+wrapper in `src/mcp/tool-registry-instrumentation.ts`. The row captures org,
+actor, tool name, project key, outcome (`ok`/`error`), error message, duration
+ms, request id, and (for destructive operations) `metadata` JSONB with
+structured detail (archived ids, run ids, etc.).
 
 Reads via `list_audit_log` are org-scoped — entries from other orgs never
 leak. Writes are best-effort (failures don't block the user request) but

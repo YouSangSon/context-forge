@@ -9,6 +9,8 @@ work.
 
 - Shared service tool descriptors and JSON HTTP routes:
   `src/mcp/tool-schemas.ts`
+- Tool registry dispatch and audit instrumentation:
+  `src/mcp/tool-registry.ts`, `src/mcp/tool-registry-instrumentation.ts`
 - SDK-facing TypeScript tool input/result types:
   `src/mcp/types.ts`
 - HTTP JSON body parsing, organization resolution, and JSON HTTP response
@@ -116,5 +118,8 @@ structured success results rather than transport failures.
   `organizationId` injection, scope denial, body limits, and cleanup behavior.
 - `tests/cli.test.ts` verifies CLI argument parsing, command dispatch, and
   lifecycle init output behavior.
+- `tests/audit/audit-write.test.ts` verifies tool-boundary audit rows,
+  best-effort audit failure handling, and audit listing through canonical
+  services.
 - `tests/scripts/package-manifest.test.ts` verifies public package scripts and
   package surface.

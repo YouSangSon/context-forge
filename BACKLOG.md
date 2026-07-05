@@ -25,6 +25,9 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- Tool-boundary audit/log instrumentation now lives in
+  `src/mcp/tool-registry-instrumentation.ts`, with registry assembly remaining
+  in `src/mcp/tool-registry.ts`.
 - CLI argument parsing now lives in `src/cli-args.ts` while `src/cli.ts`
   preserves the existing parser export and command dispatch surface.
 - MCP Streamable HTTP registry guarding and MCP-only tool authorization now live

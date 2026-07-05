@@ -26,7 +26,8 @@
 ┌────────────────▼────────────────────────────────────────────────┐
 │ Tool descriptor + registry                                      │
 │   src/mcp/tool-schemas.ts     → shared zod schema + route       │
-│   src/mcp/tool-registry.ts    → audit wrapper registry          │
+│   src/mcp/tool-registry.ts    → registry assembly               │
+│   src/mcp/tool-registry-instrumentation.ts → audit wrapper      │
 │   src/mcp/tool-handlers.ts    → tool 구현                       │
 └────────────────┬────────────────────────────────────────────────┘
                  │
@@ -301,10 +302,11 @@ canonical 레코드 자체에서 (DELETE의 RETURNING) 읽음 — 토큰의 바�
 
 ## Audit trail
 
-모든 도구 호출은 `src/mcp/tool-registry.ts` 의 `instrument()` wrapper를 통해
-`audit_log` 행 생성. 행에는 org, actor, 도구 이름, project key, outcome
-(`ok`/`error`), 에러 메시지, duration ms, request id 포함; destructive
-operation 의 경우 `metadata` JSONB 에 구조화된 디테일 (archive id, run id 등).
+모든 도구 호출은 `src/mcp/tool-registry-instrumentation.ts` 의 `instrument()`
+wrapper를 통해 `audit_log` 행 생성. 행에는 org, actor, 도구 이름, project
+key, outcome (`ok`/`error`), 에러 메시지, duration ms, request id 포함;
+destructive operation 의 경우 `metadata` JSONB 에 구조화된 디테일 (archive id,
+run id 등).
 
 `list_audit_log` 읽기는 org-scoped — 다른 org의 entry는 누출되지 않음.
 쓰기는 best-effort (실패해도 사용자 요청은 차단 안 함) 이지만 error 레벨

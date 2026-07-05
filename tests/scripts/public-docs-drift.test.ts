@@ -762,10 +762,10 @@ describe("public documentation drift checks", () => {
 
   it("documents the current audit instrumentation module in architecture docs", () => {
     expect(read("docs/architecture.md")).toContain(
-      "instrument()`\nwrapper in `src/mcp/tool-registry.ts`",
+      "instrument()`\nwrapper in `src/mcp/tool-registry-instrumentation.ts`",
     );
     expect(read("docs/architecture.ko.md")).toContain(
-      "`src/mcp/tool-registry.ts` 의 `instrument()` wrapper",
+      "`src/mcp/tool-registry-instrumentation.ts` 의 `instrument()`",
     );
     expect(read("docs/architecture.md")).not.toContain(
       "instrument()`\nwrapper in `src/mcp/server.ts`",
@@ -908,6 +908,8 @@ describe("public documentation drift checks", () => {
     const contracts = read("CONTRACTS.md");
 
     expect(contracts).toContain("src/mcp/tool-schemas.ts");
+    expect(contracts).toContain("src/mcp/tool-registry.ts");
+    expect(contracts).toContain("src/mcp/tool-registry-instrumentation.ts");
     expect(contracts).toContain("src/mcp/types.ts");
     expect(contracts).toContain("src/mcp/tool-result.ts");
     expect(contracts).toContain("src/app/mcp-http.ts");
@@ -924,6 +926,7 @@ describe("public documentation drift checks", () => {
     expect(contracts).toContain("tests/app/envelope.test.ts");
     expect(contracts).toContain("tests/app/mcp-http.test.ts");
     expect(contracts).toContain("tests/cli.test.ts");
+    expect(contracts).toContain("tests/audit/audit-write.test.ts");
     expect(contracts).toContain("structuredContent");
     expect(contracts).toContain("package.json");
     expect(contracts).toContain("001_initial.sql");

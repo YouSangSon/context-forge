@@ -2,6 +2,24 @@
 
 ## 2026-07-05
 
+- 10:48 KST - Split tool registry audit instrumentation:
+  - Added `src/mcp/tool-registry-instrumentation.ts` for tool-boundary
+    audit/log wrapping.
+  - Kept `src/mcp/tool-registry.ts` focused on canonical service resolution,
+    handler creation, and registry assembly.
+  - Updated architecture docs, `CONTRACTS.md`, `PLAN.md`, `BACKLOG.md`,
+    `DECISIONS.md`, and drift guards for the new instrumentation module.
+
+Verification:
+- `npm test -- tests/audit/audit-write.test.ts tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`2` files passed; `56` tests passed)
+- `npm test -- tests/scripts/package-manifest.test.ts --reporter=dot`
+  (`1` file passed; `39` tests passed)
+- `npm test -- tests/mcp/server.test.ts -t "forwards auditLog" --reporter=dot`
+  (`1` file passed; `1` test passed, `134` skipped)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:42 KST - Split CLI argument parsing:
   - Added `src/cli-args.ts` for CLI flag parsing and parser-only validation.
   - Kept `src/cli.ts` as the public re-export, command dispatcher, process
