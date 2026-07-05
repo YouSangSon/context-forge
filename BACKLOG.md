@@ -25,6 +25,9 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- Audit-log read service tool adapter now lives in
+  `src/audit/tool-handlers.ts`, with the shared registry continuing to expose
+  `list_audit_log` unchanged.
 - Goal-run service tool adapters now live in `src/goal-run/tool-handlers.ts`,
   with the shared registry continuing to expose the same public tool names.
 - MCP service tool registration now lives in `src/mcp/service-tools.ts`, with

@@ -665,6 +665,8 @@ describe("public documentation drift checks", () => {
     expect(read("docs/api-reference.ko.md")).toContain("공유 tool schema");
     expect(read("docs/api-reference.md")).toContain("src/mcp/tool-handlers.ts");
     expect(read("docs/api-reference.ko.md")).toContain("src/mcp/tool-handlers.ts");
+    expect(read("docs/api-reference.md")).toContain("src/audit/tool-handlers.ts");
+    expect(read("docs/api-reference.ko.md")).toContain("src/audit/tool-handlers.ts");
     expect(read("docs/api-reference.md")).not.toContain("src/mcp/server.ts");
     expect(read("docs/api-reference.ko.md")).not.toContain("src/mcp/server.ts");
   });
@@ -767,6 +769,8 @@ describe("public documentation drift checks", () => {
     expect(read("docs/architecture.ko.md")).toContain(
       "`src/mcp/tool-registry-instrumentation.ts` 의 `instrument()`",
     );
+    expect(read("docs/architecture.md")).toContain("src/audit/tool-handlers.ts");
+    expect(read("docs/architecture.ko.md")).toContain("src/audit/tool-handlers.ts");
     expect(read("docs/architecture.md")).not.toContain(
       "instrument()`\nwrapper in `src/mcp/server.ts`",
     );
@@ -911,6 +915,7 @@ describe("public documentation drift checks", () => {
     expect(contracts).toContain("src/mcp/tool-registry.ts");
     expect(contracts).toContain("src/mcp/tool-registry-instrumentation.ts");
     expect(contracts).toContain("src/mcp/tool-handlers.ts");
+    expect(contracts).toContain("src/audit/tool-handlers.ts");
     expect(contracts).toContain("src/goal-run/tool-handlers.ts");
     expect(contracts).toContain("src/mcp/types.ts");
     expect(contracts).toContain("src/mcp/service-tools.ts");

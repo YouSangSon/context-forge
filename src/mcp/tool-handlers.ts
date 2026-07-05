@@ -1,3 +1,4 @@
+import { createAuditToolHandlers } from "../audit/tool-handlers.js";
 import { applyCompaction } from "../compact/apply-compaction.js";
 import { buildCompactionPlan } from "../compact/compact-memory.js";
 import { unarchiveCompaction } from "../compact/unarchive-compaction.js";
@@ -824,36 +825,6 @@ export function createToolHandlers(input: {
       });
     },
 
-    async list_audit_log(toolInput) {
-      if (!auditLogForListing) {
-        throw new Error(
-          "audit log not configured: pass options.auditLog to enable list_audit_log",
-        );
-      }
-      assertOptionalPositiveInteger(toolInput.limit, "limit", 1000);
-      const organizationId = toolInput.organizationId?.trim() ?? "default";
-      const entries = await auditLogForListing.listByOrganization(
-        organizationId,
-        { limit: toolInput.limit },
-      );
-      return {
-        ok: true,
-        organizationId,
-        entries: entries.map((entry) => ({
-          id: entry.id,
-          organizationId: entry.organizationId,
-          actor: entry.actor,
-          tool: entry.tool,
-          projectKey: entry.projectKey ?? null,
-          outcome: entry.outcome,
-          errorMessage: entry.errorMessage ?? null,
-          durationMs: entry.durationMs,
-          requestId: entry.requestId ?? null,
-          createdAt: entry.createdAt,
-        })),
-      };
-    },
-
     async unarchive_memory(toolInput) {
       // Apply path requires canonical services (archiveRepository +
       // chunkRepository + embeddings + qdrantClient). Legacy override mode
@@ -910,6 +881,7 @@ export function createToolHandlers(input: {
         };
       });
     },
+    ...createAuditToolHandlers({ auditLog: auditLogForListing }),
     ...createGoalRunToolHandlers({
       cwd,
       defaultUserScopeId: options.defaultUserScopeId,

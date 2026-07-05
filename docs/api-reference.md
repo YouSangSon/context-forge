@@ -16,8 +16,9 @@ Akasha exposes the same core service tool surface through three access paths:
 All three access paths share the same descriptor/schema/registry path in
 `src/mcp/tool-schemas.ts` and `src/mcp/tool-registry.ts`, then dispatch to the
 service tool implementations in `src/mcp/tool-handlers.ts`; goal-run tool
-adapters live in `src/goal-run/tool-handlers.ts`. Service tool inputs and
-outputs are identical; only the wire format differs.
+adapters live in `src/goal-run/tool-handlers.ts`, and the audit-log read
+adapter lives in `src/audit/tool-handlers.ts`. Service tool inputs and outputs
+are identical; only the wire format differs.
 
 HTTP and MCP tool calls share the same zod-backed shared tool schema
 definitions. HTTP requests are validated after bearer-token organization

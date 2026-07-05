@@ -33,6 +33,7 @@
 │   src/mcp/tool-registry.ts    → registry assembly               │
 │   src/mcp/tool-registry-instrumentation.ts → audit wrapper      │
 │   src/mcp/tool-handlers.ts    → tool 구현                       │
+│   src/audit/tool-handlers.ts  → audit-log read adapter          │
 │   src/goal-run/tool-handlers.ts → goal-run tool adapter          │
 └────────────────┬────────────────────────────────────────────────┘
                  │

@@ -2,6 +2,33 @@
 
 ## 2026-07-05
 
+- 11:29 KST - Split audit-log read tool handler:
+  - Added `src/audit/tool-handlers.ts` for the `list_audit_log` service tool
+    adapter.
+  - Kept public tool name, JSON HTTP route `/v1/audit/list`, MCP exposure,
+    shared schema, registry key, and result fields unchanged by composing the
+    new adapter from `createToolHandlers`.
+  - Updated architecture docs, API docs, `CONTRACTS.md`, `PLAN.md`,
+    `BACKLOG.md`, and `DECISIONS.md` for the audit adapter boundary.
+
+Verification:
+- `npm test -- tests/audit/audit-write.test.ts tests/mcp/tool-registry.test.ts --reporter=dot`
+  (`2` files passed; `27` tests passed)
+- `npm test -- tests/mcp/server.test.ts -t "registers all service and context tools|list_audit_log|structuredContent while retaining" --reporter=dot`
+  (`1` file passed; `2` tests passed, `133` skipped)
+- `npm test -- tests/app/mcp-http.test.ts -t "serves MCP tools over Streamable HTTP|list_memory|inspect_memory_graph|update_memory" --reporter=dot`
+  (`1` file passed; `1` test passed, `20` skipped)
+- `npm test -- tests/app/memory-routes-boundary.test.ts --reporter=dot`
+  (`1` file passed; `16` tests passed)
+- `npm test -- tests/app/server.test.ts --reporter=dot`
+  (`1` file passed; `68` tests passed)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `48` tests passed)
+- `npm test -- tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`1` file passed; `6` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 11:21 KST - Split goal-run tool handlers:
   - Added `src/goal-run/tool-handlers.ts` for the goal-run service tool
     adapters: run start/iteration/get/list/complete/abandon/context/repeat.

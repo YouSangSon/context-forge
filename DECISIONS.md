@@ -1,5 +1,26 @@
 # DECISIONS
 
+## 2026-07-05 — Split Audit Tool Handler
+
+Decision: move the `list_audit_log` service tool adapter into
+`src/audit/tool-handlers.ts`.
+
+Why:
+- Audit-log listing is an audit capability, not a memory/governance handler.
+- The audit domain folder already owns `audit_log` persistence.
+- Existing tests characterize canonical-service audit listing, direct
+  `options.auditLog` listing, trimmed organization ids, and the shared
+  registry contract.
+
+Implementation:
+- `createToolHandlers` now composes `createAuditToolHandlers`.
+- Tool names, shared schemas, JSON HTTP route `/v1/audit/list`, MCP exposure,
+  and result fields remain unchanged.
+
+Tradeoff:
+- The adapter still depends on MCP tool types because this loop only moves the
+  existing boundary. A separate application-service interface is still YAGNI.
+
 ## 2026-07-05 — Split Goal-Run Tool Handlers
 
 Decision: move goal-run service tool adapters into
