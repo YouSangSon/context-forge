@@ -25,7 +25,7 @@ work.
 - Operator HTTP endpoints:
   `src/app/server.ts`
 - CLI and package command surface:
-  `package.json`, `src/cli.ts`, `src/lifecycle/init.ts`
+  `package.json`, `src/cli.ts`, `src/cli-args.ts`, `src/lifecycle/init.ts`
 - DB-facing schema and migration order:
   `src/db/migrations/001_initial.sql` through
   `src/db/migrations/015_background_queue_metrics_indexes.sql`
@@ -114,5 +114,7 @@ structured success results rather than transport failures.
   structuredContent plus JSON text content response contract.
 - `tests/app/mcp-http.test.ts` verifies MCP Streamable HTTP auth, bound
   `organizationId` injection, scope denial, body limits, and cleanup behavior.
+- `tests/cli.test.ts` verifies CLI argument parsing, command dispatch, and
+  lifecycle init output behavior.
 - `tests/scripts/package-manifest.test.ts` verifies public package scripts and
   package surface.

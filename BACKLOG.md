@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- CLI argument parsing now lives in `src/cli-args.ts` while `src/cli.ts`
+  preserves the existing parser export and command dispatch surface.
 - MCP Streamable HTTP registry guarding and MCP-only tool authorization now live
   in `src/app/middleware/mcp-http-auth.ts`.
 - JSON HTTP tool execution now lives in `src/app/routes/tool-handler.ts`, with

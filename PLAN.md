@@ -30,6 +30,8 @@ Current structure:
   `src/app/middleware/mcp-http-auth.ts`.
 - JSON HTTP route handler execution lives in `src/app/routes/tool-handler.ts`;
   shared route types live in `src/app/routes/types.ts`.
+- CLI argument parsing lives in `src/cli-args.ts`; `src/cli.ts` keeps the
+  public re-export and command dispatch.
 - Shared public service schemas and JSON HTTP route descriptors live in
   `src/mcp/tool-schemas.ts`; SDK-facing tool types live in `src/mcp/types.ts`.
 - Tool dispatch goes through `src/mcp/tool-registry.ts` and
@@ -55,6 +57,8 @@ Completed in this branch:
   `src/app/routes/memory.ts` owns route table construction.
 - `src/app/middleware/mcp-http-auth.ts` owns MCP Streamable HTTP registry
   guarding and MCP-only tool authorization.
+- `src/cli-args.ts` owns CLI argument parsing while `src/cli.ts` preserves the
+  existing `parseCliArgs` export and command execution.
 
 Known issues:
 - No open P0/P1/P2 backlog item is known from current repo evidence.

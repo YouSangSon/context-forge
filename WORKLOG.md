@@ -2,6 +2,21 @@
 
 ## 2026-07-05
 
+- 10:42 KST - Split CLI argument parsing:
+  - Added `src/cli-args.ts` for CLI flag parsing and parser-only validation.
+  - Kept `src/cli.ts` as the public re-export, command dispatcher, process
+    entrypoint, and content-file reader.
+  - Updated `CONTRACTS.md`, `PLAN.md`, `BACKLOG.md`, `DECISIONS.md`, and the
+    contract-baseline drift guard for the new CLI parser module.
+
+Verification:
+- `npm test -- tests/cli.test.ts tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`2` files passed; `78` tests passed)
+- `npm test -- tests/scripts/package-manifest.test.ts --reporter=dot`
+  (`1` file passed; `39` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:48 KST - Split MCP Streamable HTTP auth guarding:
   - Added `src/app/middleware/mcp-http-auth.ts` for authenticated registry
     guarding and MCP-only tool authorization.

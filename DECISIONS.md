@@ -1,5 +1,27 @@
 # DECISIONS
 
+## 2026-07-05 — Split CLI Argument Parsing
+
+Decision: move CLI argument parsing into `src/cli-args.ts` and keep
+`src/cli.ts` as the compatibility export plus command dispatch entrypoint.
+
+Why:
+- `src/cli.ts` mixed public process entrypoint behavior, parser logic, command
+  dispatch, file reading, and lifecycle init calls.
+- CLI flags and parse errors are public contract behavior, so the existing
+  `tests/cli.test.ts` coverage should guard the move.
+- This creates a small CLI boundary without changing scripts, flags, defaults,
+  output JSON, or import paths.
+
+Implementation:
+- `src/cli.ts` imports and re-exports `parseCliArgs` and `ParsedCliArgs`.
+- `CONTRACTS.md` and the contract-baseline drift guard list `src/cli-args.ts`
+  and `tests/cli.test.ts`.
+
+Tradeoff:
+- No generic command framework was added. The hand-rolled parser is still the
+  smallest code that preserves current CLI behavior.
+
 ## 2026-07-05 — Split MCP Streamable HTTP Auth Guarding
 
 Decision: move MCP Streamable HTTP authenticated registry guarding and MCP-only

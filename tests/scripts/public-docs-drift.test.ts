@@ -919,8 +919,11 @@ describe("public documentation drift checks", () => {
     expect(contracts).toContain("src/app/middleware/organization-resolution.ts");
     expect(contracts).toContain("src/app/middleware/envelope.ts");
     expect(contracts).toContain("src/app/server.ts");
+    expect(contracts).toContain("src/cli-args.ts");
+    expect(contracts).toContain("src/cli.ts");
     expect(contracts).toContain("tests/app/envelope.test.ts");
     expect(contracts).toContain("tests/app/mcp-http.test.ts");
+    expect(contracts).toContain("tests/cli.test.ts");
     expect(contracts).toContain("structuredContent");
     expect(contracts).toContain("package.json");
     expect(contracts).toContain("001_initial.sql");
