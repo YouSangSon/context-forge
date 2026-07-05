@@ -25,6 +25,9 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- Canonical reindex service tool adapter now lives in
+  `src/store/tool-handlers.ts`, with the shared registry continuing to expose
+  `reindex_memory` unchanged.
 - Unarchive recovery service tool adapter now lives in
   `src/compact/tool-handlers.ts`, with the shared registry continuing to expose
   `unarchive_memory` unchanged.

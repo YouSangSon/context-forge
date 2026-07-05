@@ -13,7 +13,8 @@ work.
   `src/mcp/tool-registry.ts`, `src/mcp/tool-registry-instrumentation.ts`
 - Service tool implementations:
   `src/mcp/tool-handlers.ts`, `src/audit/tool-handlers.ts`,
-  `src/compact/tool-handlers.ts`, `src/goal-run/tool-handlers.ts`
+  `src/compact/tool-handlers.ts`, `src/goal-run/tool-handlers.ts`,
+  `src/store/tool-handlers.ts`
 - SDK-facing TypeScript tool input/result types:
   `src/mcp/types.ts`
 - HTTP JSON body parsing, organization resolution, and JSON HTTP response

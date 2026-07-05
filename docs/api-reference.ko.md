@@ -18,8 +18,9 @@ Akasha는 동일한 core service tool surface를 세 가지 접근 경로로 노
 `src/mcp/tool-handlers.ts` 의 service tool 구현으로 dispatch합니다. Goal-run tool
 adapter는 `src/goal-run/tool-handlers.ts`, audit-log read adapter는
 `src/audit/tool-handlers.ts` 에 있습니다. Unarchive recovery adapter는
-`src/compact/tool-handlers.ts` 에 있습니다. Service tool 입출력은 동일하고
-wire 포맷만 다릅니다.
+`src/compact/tool-handlers.ts`, canonical reindex adapter는
+`src/store/tool-handlers.ts` 에 있습니다. Service tool 입출력은 동일하고 wire
+포맷만 다릅니다.
 
 HTTP와 MCP tool call은 같은 zod 기반 공유 tool schema 정의를 공유합니다.
 HTTP 요청은 bearer token의 organization 해석 이후, registry dispatch 이전에

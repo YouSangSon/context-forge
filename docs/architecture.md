@@ -36,6 +36,7 @@ for env-var setup see [configuration.md](configuration.md).
 │   src/audit/tool-handlers.ts  → audit-log read adapter          │
 │   src/compact/tool-handlers.ts → unarchive recovery adapter      │
 │   src/goal-run/tool-handlers.ts → goal-run tool adapter          │
+│   src/store/tool-handlers.ts  → canonical reindex adapter       │
 └────────────────┬────────────────────────────────────────────────┘
                  │
 ┌────────────────▼────────────────────────────────────────────────┐

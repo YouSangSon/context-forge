@@ -1,5 +1,30 @@
 # DECISIONS
 
+## 2026-07-05 — Split Reindex Tool Handler
+
+Decision: move the `reindex_memory` service tool adapter into
+`src/store/tool-handlers.ts`.
+
+Why:
+- `reindex_memory` is the public adapter for rebuilding canonical chunks into
+  the active vector backend, and the implementation already lives in
+  `src/store/canonical-indexing.ts`.
+- Existing tests characterize required `organizationId`, direct registry
+  dispatch, MCP registration/dispatch, output schema, and the underlying
+  `reindexCanonicalMemory` normalization.
+- Moving only this adapter keeps the loop small while reducing
+  `src/mcp/tool-handlers.ts` ownership of store/indexing behavior.
+
+Implementation:
+- `createToolHandlers` now composes `createStoreToolHandlers`.
+- Tool name, shared schema, JSON HTTP route `/v1/memory/reindex`, MCP exposure,
+  validation errors, and result fields remain unchanged.
+
+Tradeoff:
+- `add_memory` still stays in `src/mcp/tool-handlers.ts`; moving the full write
+  adapter is a larger boundary because it coordinates secret scrubbing, chunk
+  writes, ingest jobs, embeddings, and vector upsert.
+
 ## 2026-07-05 — Split Unarchive Tool Handler
 
 Decision: move the `unarchive_memory` service tool adapter into

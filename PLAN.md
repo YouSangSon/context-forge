@@ -63,6 +63,8 @@ Current structure:
   `src/compact/`.
 - Goal-run service tool adapters live in `src/goal-run/tool-handlers.ts`;
   goal-run pack/repeat domain helpers stay in `src/goal-run/`.
+- Canonical reindex service tool adapter lives in `src/store/tool-handlers.ts`;
+  chunk indexing helpers stay in `src/store/canonical-indexing.ts`.
 - Domain work is currently grouped by capability under `src/compact/`,
   `src/context-pack/`, `src/search/`, `src/goal-run/`, `src/store/`,
   `src/vector/`, and `src/embedding/`.
@@ -105,6 +107,9 @@ Completed in this branch:
 - `src/compact/tool-handlers.ts` owns the `unarchive_memory` service tool
   adapter while `src/mcp/tool-handlers.ts` keeps the remaining shared
   memory/governance handlers.
+- `src/store/tool-handlers.ts` owns the `reindex_memory` service tool adapter
+  while `src/mcp/tool-handlers.ts` keeps the remaining shared memory/governance
+  handlers.
 
 Known issues:
 - No open P0/P1/P2 backlog item is known from current repo evidence.
