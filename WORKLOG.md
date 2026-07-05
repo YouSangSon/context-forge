@@ -2,6 +2,21 @@
 
 ## 2026-07-05
 
+- 10:42 KST - Split JSON HTTP tool handler execution:
+  - Added `src/app/routes/tool-handler.ts` for JSON HTTP body parsing,
+    organization resolution, OAuth scope checks, validation, registry dispatch,
+    and envelope response handling.
+  - Added `src/app/routes/types.ts` and preserved `Route`/`RouteContext`
+    exports through `src/app/routes/memory.ts`.
+  - Updated `CONTRACTS.md`, `PLAN.md`, `BACKLOG.md`, `DECISIONS.md`, and the
+    contract-baseline drift guard for the new route modules.
+
+Verification:
+- `npm test -- tests/app/memory-routes-boundary.test.ts tests/app/server.test.ts tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`3` files passed; `132` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:38 KST - Added JSON HTTP route handler contract coverage:
   - `tests/app/memory-routes-boundary.test.ts` now invokes a generated route
     handler directly.

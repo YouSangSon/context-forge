@@ -14,6 +14,8 @@ work.
 - HTTP JSON body parsing, organization resolution, and JSON HTTP response
   envelope:
   `src/app/routes/memory.ts`,
+  `src/app/routes/tool-handler.ts`,
+  `src/app/routes/types.ts`,
   `src/app/middleware/json-body.ts`,
   `src/app/middleware/organization-resolution.ts`,
   `src/app/middleware/envelope.ts`

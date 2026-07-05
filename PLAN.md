@@ -18,6 +18,8 @@ Current structure:
 - Public transports live in `src/mcp/server.ts`, `src/app/mcp-http.ts`, and
   `src/app/routes/memory.ts`.
 - MCP tool result formatting lives in `src/mcp/tool-result.ts`.
+- JSON HTTP route handler execution lives in `src/app/routes/tool-handler.ts`;
+  shared route types live in `src/app/routes/types.ts`.
 - Shared public service schemas and JSON HTTP route descriptors live in
   `src/mcp/tool-schemas.ts`; SDK-facing tool types live in `src/mcp/types.ts`.
 - Tool dispatch goes through `src/mcp/tool-registry.ts` and
@@ -39,6 +41,8 @@ Completed in this branch:
   `structuredContent` and JSON text `content`.
 - `tests/app/memory-routes-boundary.test.ts` now characterizes JSON HTTP route
   handler dispatch before deeper route-handler extraction.
+- `src/app/routes/tool-handler.ts` owns JSON HTTP tool execution while
+  `src/app/routes/memory.ts` owns route table construction.
 
 Known issues:
 - No open P0/P1/P2 backlog item is known from current repo evidence.

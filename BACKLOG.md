@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- JSON HTTP tool execution now lives in `src/app/routes/tool-handler.ts`, with
+  route construction remaining in `src/app/routes/memory.ts`.
 - JSON HTTP route handler dispatch now has direct boundary coverage for success
   envelope behavior, organization resolution precedence, and validation failure
   before registry calls.

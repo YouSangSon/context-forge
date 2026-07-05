@@ -1,5 +1,31 @@
 # DECISIONS
 
+## 2026-07-05 — Split JSON HTTP Tool Handler Execution
+
+Decision: move JSON HTTP tool execution from `src/app/routes/memory.ts` into
+`src/app/routes/tool-handler.ts`, with route types in
+`src/app/routes/types.ts`.
+
+Why:
+- `src/app/routes/memory.ts` should stay focused on route table construction
+  from `TOOL_ROUTES`.
+- The tool execution pipeline combines body parsing, organization resolution,
+  OAuth scope checks, schema validation, registry dispatch, and HTTP envelope
+  responses; that is a clear boundary for future application-service seams.
+- Direct route handler tests now characterize the dispatch and validation
+  behavior before the move.
+
+Implementation:
+- `createMemoryRoutes` now calls `buildToolRouteHandler`.
+- `Route` and `RouteContext` remain exported from `src/app/routes/memory.ts`
+  through a compatibility re-export.
+- `CONTRACTS.md` and the contract-baseline drift guard list the new route
+  modules.
+
+Tradeoff:
+- This keeps JSON HTTP orchestration in the route layer for now. It does not yet
+  introduce a shared application use-case interface across MCP and JSON HTTP.
+
 ## 2026-07-05 — Split MCP Tool Result Formatting
 
 Decision: move MCP tool response formatting into `src/mcp/tool-result.ts`.
