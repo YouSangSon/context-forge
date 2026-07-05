@@ -4,22 +4,27 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Contract Baseline Before Architecture Refactor
+## Current Loop - HTTP Organization Resolution Boundary
 
 Status:
-- Started the clean architecture / DDD transition by freezing public contract
-  inventory before any internal refactor.
-- `CONTRACTS.md` records transport, tool, route, response-envelope, operator
-  endpoint, CLI/package, and DB-facing contract sources.
+- Started the first internal-boundary loop after freezing public contracts.
+- Moved JSON HTTP `organizationId` resolution into
+  `src/app/middleware/organization-resolution.ts`.
+- Kept `src/app/routes/memory.ts` as the public route factory and compatibility
+  re-export path for existing imports.
+- Updated `CONTRACTS.md` so the new boundary remains part of the contract
+  source inventory.
 - Target structure remains staged: preserve contracts first, then split
   internals behind existing descriptors, handlers, repositories, and CLI
   entrypoints.
 
 Verification:
+- `npm test -- tests/mcp/resolve-org.test.ts tests/app/memory-routes-boundary.test.ts --reporter=dot`
+  (`2` files passed; `31` tests)
 - `npm test -- tests/scripts/public-docs-drift.test.ts -t "contract baseline" --reporter=dot`
-  (`1` test passed, `46` skipped)
+  (`1` file passed; `1` test passed, `46` skipped)
 - `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
-  (`47` tests)
+  (`1` file passed; `47` tests)
 - `npm run typecheck`
 - `git diff --check`
 

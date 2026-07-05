@@ -1,5 +1,30 @@
 # DECISIONS
 
+## 2026-07-05 — Extract Organization Resolution Behind Route Compatibility
+
+Decision: move JSON HTTP `organizationId` resolution into
+`src/app/middleware/organization-resolution.ts` while keeping
+`src/app/routes/memory.ts` as the compatibility export path.
+
+Why:
+- `organizationId` precedence and validation are transport-boundary behavior,
+  not route table construction.
+- The clean architecture transition needs smaller HTTP boundary modules before
+  deeper application/domain splits.
+- Existing tests and downstream imports may already use the route module path,
+  so a re-export preserves the current public TypeScript surface.
+
+Implementation:
+- `src/app/routes/memory.ts` imports the resolver from the middleware boundary
+  and re-exports `resolveOrganizationId`.
+- `CONTRACTS.md` lists the new middleware file as a JSON HTTP contract source.
+- Existing route and resolver characterization tests continue to exercise the
+  old import path.
+
+Tradeoff:
+- This is only a boundary extraction. It does not yet introduce application
+  service interfaces or customer/module-specific domain packages.
+
 ## 2026-07-05 — Freeze Public Contracts Before Architecture Refactors
 
 Decision: create a root `CONTRACTS.md` baseline before clean architecture, DDD,

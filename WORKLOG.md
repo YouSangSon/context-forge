@@ -2,6 +2,24 @@
 
 ## 2026-07-05
 
+- 10:07 KST - Started first internal-boundary loop behind JSON HTTP routes:
+  - Moved `organizationId` resolution from `src/app/routes/memory.ts` into
+    `src/app/middleware/organization-resolution.ts`.
+  - Preserved the existing `src/app/routes/memory.ts` re-export for
+    `resolveOrganizationId` so tests and external imports keep the same path.
+  - Added the new middleware file to `CONTRACTS.md` and the contract-baseline
+    drift guard.
+
+Verification:
+- `npm test -- tests/mcp/resolve-org.test.ts tests/app/memory-routes-boundary.test.ts --reporter=dot`
+  (`2` files passed; `31` tests passed)
+- `npm test -- tests/scripts/public-docs-drift.test.ts -t "contract baseline" --reporter=dot`
+  (`1` file passed; `1` test passed, `46` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `47` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:00 KST - Started contract-baseline loop for clean architecture / DDD goal:
   - New goal prioritizes preserving request/response contracts before internal
     refactors.

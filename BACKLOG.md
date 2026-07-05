@@ -25,6 +25,9 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- JSON HTTP organization resolution is now isolated behind an internal
+  middleware boundary while `src/app/routes/memory.ts` preserves the existing
+  route factory and `resolveOrganizationId` re-export.
 - `CONTRACTS.md` now records the public contract baseline for future
   clean-architecture/DDD refactors, and public-docs drift tests guard it against
   route/source drift.
