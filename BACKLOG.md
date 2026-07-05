@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- MCP resource registration now lives in `src/mcp/resources.ts`, with MCP
+  server assembly remaining in `src/mcp/server.ts`.
 - Tool-boundary audit/log instrumentation now lives in
   `src/mcp/tool-registry-instrumentation.ts`, with registry assembly remaining
   in `src/mcp/tool-registry.ts`.

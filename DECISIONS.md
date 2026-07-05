@@ -1,5 +1,27 @@
 # DECISIONS
 
+## 2026-07-05 — Split MCP Resource Registration
+
+Decision: move MCP resource template registration and resource URI parsing into
+`src/mcp/resources.ts`.
+
+Why:
+- `src/mcp/server.ts` should assemble the MCP server and public registrations
+  without owning every resource handler detail.
+- Resource templates are public MCP surface because clients can list/read
+  `recent-project-memory` and `context-pack`.
+- Existing MCP server tests already characterize template names, default recent
+  query behavior, context-pack reads, and invalid resource params.
+
+Implementation:
+- `createMcpServer` still calls `registerAkashaResources`.
+- `src/mcp/resources.ts` owns resource templates and URI query/path validation.
+- Architecture docs and `CONTRACTS.md` list the new module.
+
+Tradeoff:
+- MCP context tools and prompts remain in `src/mcp/server.ts`; they can be split
+  later behind their own focused contract checks.
+
 ## 2026-07-05 — Split Tool Registry Audit Instrumentation
 
 Decision: move tool-boundary audit/log instrumentation into

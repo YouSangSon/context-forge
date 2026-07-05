@@ -26,6 +26,7 @@ for env-var setup see [configuration.md](configuration.md).
 ┌────────────────▼────────────────────────────────────────────────┐
 │ Tool descriptors + registry                                     │
 │   src/mcp/tool-schemas.ts     → shared zod schemas + routes     │
+│   src/mcp/resources.ts        → MCP resource templates          │
 │   src/mcp/tool-registry.ts    → registry assembly               │
 │   src/mcp/tool-registry-instrumentation.ts → audit wrappers     │
 │   src/mcp/tool-handlers.ts    → tool implementations            │
@@ -83,6 +84,9 @@ uses MCP form elicitation to collect user-confirmed memory details, then routes
 accepted input through the same `add_memory` write path above.
 `classify_memory_candidate` uses client sampling to suggest a memory kind and
 summary for candidate text without storing it.
+MCP resource templates are registered from `src/mcp/resources.ts`; they expose
+read-only recent memory and context-pack views backed by the same registry
+methods as the service tools.
 
 Write-ahead outbox: after chunks are committed to Postgres,
 `writeCanonicalMemory` calls `markQdrantPending` to record a scheduled
