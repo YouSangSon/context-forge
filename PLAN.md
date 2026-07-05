@@ -30,6 +30,8 @@ newest local commit:
 Current structure:
 - Public transports live in `src/mcp/server.ts`, `src/app/mcp-http.ts`, and
   `src/app/routes/memory.ts`.
+- MCP-only context tool registration lives in `src/mcp/context-tools.ts` while
+  `src/mcp/server.ts` keeps the public server assembly.
 - MCP resource registration lives in `src/mcp/resources.ts` while
   `src/mcp/server.ts` keeps the public server assembly.
 - MCP prompt registration lives in `src/mcp/prompts.ts` while
@@ -75,6 +77,8 @@ Completed in this branch:
 - `src/mcp/resources.ts` owns Akasha MCP resource registration and URI param
   parsing while `src/mcp/server.ts` keeps server assembly.
 - `src/mcp/prompts.ts` owns Akasha MCP prompt registration while
+  `src/mcp/server.ts` keeps server assembly.
+- `src/mcp/context-tools.ts` owns MCP-only context tool registration while
   `src/mcp/server.ts` keeps server assembly.
 
 Known issues:

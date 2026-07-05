@@ -1,5 +1,30 @@
 # DECISIONS
 
+## 2026-07-05 — Split MCP Context Tool Registration
+
+Decision: move MCP-only context tool registration and helper parsing into
+`src/mcp/context-tools.ts`.
+
+Why:
+- `src/mcp/server.ts` should assemble the MCP server and public registrations
+  without owning every client-capability helper.
+- Context tool names and result shapes are public MCP surface:
+  `list_workspace_roots`, `add_memory_interactive`, and
+  `classify_memory_candidate`.
+- Existing MCP server tests already characterize roots, elicitation, sampling,
+  unsupported-client results, validation before side effects, and OAuth scope
+  enforcement through MCP HTTP.
+
+Implementation:
+- `createMcpServer` still calls `registerMcpContextTools`.
+- `src/mcp/context-tools.ts` owns context tool descriptors, elicitation schema
+  construction, sampling JSON parsing, and registry dispatch to `add_memory`.
+- Architecture docs and `CONTRACTS.md` list the new module.
+
+Tradeoff:
+- The context tools remain MCP-specific. No JSON HTTP route or application
+  abstraction was added because there is no non-MCP caller.
+
 ## 2026-07-05 — Split MCP Prompt Registration
 
 Decision: move MCP prompt registration and prompt argument schemas into

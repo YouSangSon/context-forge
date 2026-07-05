@@ -26,6 +26,7 @@
 ┌────────────────▼────────────────────────────────────────────────┐
 │ Tool descriptor + registry                                      │
 │   src/mcp/tool-schemas.ts     → shared zod schema + route       │
+│   src/mcp/context-tools.ts    → MCP-only context tool           │
 │   src/mcp/resources.ts        → MCP resource template           │
 │   src/mcp/prompts.ts          → MCP prompt template             │
 │   src/mcp/tool-registry.ts    → registry assembly               │
@@ -85,6 +86,7 @@ MCP transport는 capability-gated context helper도 노출합니다.
 수집한 뒤, accept된 입력을 위와 같은 `add_memory` write path로 보냅니다.
 `classify_memory_candidate` 는 client sampling으로 candidate text의 memory kind와
 summary를 제안하며 저장은 하지 않습니다.
+이 MCP-only context tool 등록은 `src/mcp/context-tools.ts` 에 있습니다.
 MCP resource template 등록은 `src/mcp/resources.ts` 에 있으며, service tool과
 같은 registry method로 read-only recent memory와 context-pack view를 노출합니다.
 MCP prompt 등록은 `src/mcp/prompts.ts` 에 있으며, tool contract를 바꾸지 않고

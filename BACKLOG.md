@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- MCP-only context tool registration now lives in `src/mcp/context-tools.ts`,
+  with MCP server assembly remaining in `src/mcp/server.ts`.
 - MCP prompt registration now lives in `src/mcp/prompts.ts`, with MCP server
   assembly remaining in `src/mcp/server.ts`.
 - MCP resource registration now lives in `src/mcp/resources.ts`, with MCP

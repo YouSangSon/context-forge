@@ -2,6 +2,27 @@
 
 ## 2026-07-05
 
+- 11:05 KST - Split MCP-only context tool registration:
+  - Added `src/mcp/context-tools.ts` for `list_workspace_roots`,
+    `add_memory_interactive`, and `classify_memory_candidate` registration plus
+    their capability, elicitation, and sampling helpers.
+  - Kept `src/mcp/server.ts` focused on MCP server assembly, service tool
+    registration, resources, prompts, and stdio startup.
+  - Updated architecture docs, `CONTRACTS.md`, `PLAN.md`, `BACKLOG.md`, and
+    `DECISIONS.md` for the new context tool module.
+
+Verification:
+- `npm test -- tests/mcp/server.test.ts -t "workspace roots|add_memory_interactive|classifies candidate memory|classification content|sampling is not advertised|context tool" --reporter=dot`
+  (`1` file passed; `9` tests passed, `126` skipped)
+- `npm test -- tests/app/mcp-http.test.ts -t "OAuth scopes for MCP-only context tools" --reporter=dot`
+  (`1` file passed; `1` test passed, `20` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `48` tests passed)
+- `npm test -- tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`1` file passed; `6` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:59 KST - Split MCP prompt registration:
   - Added `src/mcp/prompts.ts` for Akasha MCP prompt templates and prompt
     argument schemas.
