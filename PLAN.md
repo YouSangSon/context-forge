@@ -10,6 +10,14 @@ Branch: `docs/contract-architecture-baseline`.
 
 Recent completed architecture-goal commits; run `git log -1 --oneline` for the
 newest local commit:
+- `5aaa78b refactor(app): split mcp http auth guard`
+- `13fe610 docs(worklog): record full suite verification`
+- `09c1491 refactor(app): split json http tool handler`
+- `e897a10 test(app): guard json http route handler contract`
+- `c9a15d7 refactor(mcp): split tool result formatting`
+- `158395b docs(contracts): list mcp response guard`
+- `7ab0c09 test(app): guard json http envelope contract`
+- `bc7b6d2 docs(architecture): expand transition handoff plan`
 - `9534382 refactor(app): share http json body parsing`
 - `ec8bba9 refactor(app): split organization resolution boundary`
 - `47e8e59 docs(contracts): add public contract baseline`
