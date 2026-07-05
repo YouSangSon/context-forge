@@ -57,11 +57,12 @@ Current structure:
   `src/mcp/tool-handlers.ts`.
 - Tool-boundary audit/log instrumentation lives in
   `src/mcp/tool-registry-instrumentation.ts`.
+- Shared service-handler repository fallback/canonical access lives in
+  `src/mcp/tool-repository-access.ts`.
 - Audit-log read service tool adapter lives in `src/audit/tool-handlers.ts`;
   audit persistence stays in `src/audit/audit-log-repository.ts`.
-- Unarchive recovery service tool adapter lives in
-  `src/compact/tool-handlers.ts`; compaction planning/apply helpers stay in
-  `src/compact/`.
+- Compaction service tool adapters live in `src/compact/tool-handlers.ts`;
+  compaction planning/apply helpers stay in `src/compact/`.
 - Goal-run service tool adapters live in `src/goal-run/tool-handlers.ts`;
   goal-run pack/repeat domain helpers stay in `src/goal-run/`.
 - Canonical reindex service tool adapter lives in `src/store/tool-handlers.ts`;
@@ -105,9 +106,9 @@ Completed in this branch:
 - `src/audit/tool-handlers.ts` owns the `list_audit_log` service tool adapter
   while `src/mcp/tool-handlers.ts` keeps registry composition and the remaining
   shared memory/governance handlers.
-- `src/compact/tool-handlers.ts` owns the `unarchive_memory` service tool
-  adapter while `src/mcp/tool-handlers.ts` keeps the remaining shared
-  memory/governance handlers.
+- `src/compact/tool-handlers.ts` owns the `compact_memory` and
+  `unarchive_memory` service tool adapters while `src/mcp/tool-handlers.ts`
+  keeps the remaining shared memory/governance handlers.
 - `src/store/tool-handlers.ts` owns the `reindex_memory` service tool adapter
   while `src/mcp/tool-handlers.ts` keeps the remaining shared memory/governance
   handlers.

@@ -15,6 +15,8 @@ work.
   `src/mcp/tool-handlers.ts`, `src/audit/tool-handlers.ts`,
   `src/compact/tool-handlers.ts`, `src/goal-run/tool-handlers.ts`,
   `src/store/tool-handlers.ts`
+- Shared service-handler repository access:
+  `src/mcp/tool-repository-access.ts`
 - SDK-facing TypeScript tool input/result types:
   `src/mcp/types.ts`
 - HTTP JSON body parsing, organization resolution, and JSON HTTP response

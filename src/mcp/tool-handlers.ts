@@ -1,6 +1,4 @@
 import { createAuditToolHandlers } from "../audit/tool-handlers.js";
-import { applyCompaction } from "../compact/apply-compaction.js";
-import { buildCompactionPlan } from "../compact/compact-memory.js";
 import { createCompactionToolHandlers } from "../compact/tool-handlers.js";
 import { buildContextPack } from "../context-pack/build-context-pack.js";
 import { createGoalRunToolHandlers } from "../goal-run/tool-handlers.js";
@@ -20,7 +18,6 @@ import {
 import { ENTITY_KIND_VALUES } from "../entities/entity-extraction.js";
 import type {
   AddMemoryInput,
-  CanonicalMemoryRepository,
   MemoryRepository,
   SearchMemoryResult,
 } from "../types.js";
@@ -28,11 +25,11 @@ import type {
   AddMemoryToolInput,
   CanonicalServices,
   CreateToolRegistryOptions,
-  MaybePromise,
   RetrieveMemoryServiceInput,
   ToolRegistry,
   WithCanonicalServices,
 } from "./types.js";
+import { createRepositoryAccess } from "./tool-repository-access.js";
 import {
   assertCreateToolRegistryOptions,
   assertFunction,
@@ -42,8 +39,6 @@ import {
 import {
   assertAllowedValue,
   assertOptionalAllowedValue,
-  assertOptionalNonNegativeFiniteNumber,
-  assertOptionalPositiveFiniteNumber,
   assertOptionalPositiveInteger,
   assertOptionalPostgresInteger,
   assertPositiveInteger,
@@ -77,61 +72,11 @@ export function createToolHandlers(input: {
       ? createServiceBackedAuditLog(withCanonicalServices)
       : undefined;
   const auditLogForListing = options.auditLog ?? serviceBackedAuditLog;
-
-  async function withRepositories<T>(
-    repositoryInput: {
-      projectKey?: string;
-      userScopeId?: string;
-      includeUser?: boolean;
-    },
-    callback: (repositories: {
-      projectRepository?: MemoryRepository;
-      userRepository?: MemoryRepository;
-      userScopeId?: string;
-    }) => MaybePromise<T>,
-  ): Promise<T> {
-    assertProvidedScopeIdentifiers(repositoryInput);
-    const userScopeId = requireUserScopeId(
-      resolveUserScopeId({
-        cwd,
-        explicitUserScopeId: repositoryInput.userScopeId,
-        defaultUserScopeId: options.defaultUserScopeId,
-      }),
-    );
-
-    if (options.projectRepository || options.userRepository) {
-      return await callback({
-        projectRepository: options.projectRepository,
-        userRepository:
-          repositoryInput.includeUser === false ? undefined : options.userRepository,
-        userScopeId,
-      });
-    }
-
-    if (options.resolveRepository && repositoryInput.projectKey) {
-      const resolved = options.resolveRepository(repositoryInput.projectKey);
-
-      return await callback({
-        projectRepository: resolved,
-        userScopeId,
-      });
-    }
-
-    if (options.repository) {
-      return await callback({
-        projectRepository: options.repository,
-        userScopeId,
-      });
-    }
-
-    throw new Error("repository fallback not configured");
-  }
-
-  async function withCanonicalRepository<T>(
-    callback: (repository: CanonicalMemoryRepository) => Promise<T>,
-  ): Promise<T> {
-    return withCanonicalServices((services) => callback(services.repository));
-  }
+  const { withCanonicalRepository, withRepositories } = createRepositoryAccess({
+    cwd,
+    options,
+    withCanonicalServices,
+  });
 
   async function retrieveRecordsWithCanonicalServices(
     services: CanonicalServices,
@@ -407,132 +352,6 @@ export function createToolHandlers(input: {
       withCanonicalServices,
     }),
 
-    async compact_memory(toolInput) {
-      assertProvidedScopeIdentifiers(toolInput);
-      assertOptionalAllowedValue(toolInput.scope, "scope", SUPPORTED_SCOPE_TYPES);
-      assertOptionalPositiveInteger(toolInput.limit, "limit", 5000);
-      assertOptionalNonNegativeFiniteNumber(
-        toolInput.decayThreshold,
-        "decayThreshold",
-      );
-      assertOptionalPositiveFiniteNumber(toolInput.halfLifeDays, "halfLifeDays");
-      assertOptionalPositiveFiniteNumber(
-        toolInput.semanticDedupThreshold,
-        "semanticDedupThreshold",
-        1,
-      );
-      const scope = toolInput.scope ?? "project";
-      const dryRun = toolInput.dryRun ?? true;
-      const organizationId = toolInput.organizationId?.trim();
-      const projectKey =
-        toolInput.projectKey === undefined
-          ? undefined
-          : requireProjectKey(toolInput.projectKey, "project");
-      const userScopeId = resolveUserScopeId({
-        cwd,
-        explicitUserScopeId: toolInput.userScopeId,
-        defaultUserScopeId: options.defaultUserScopeId,
-      });
-      const scopeRef =
-        scope === "user"
-          ? {
-              scopeType: "user" as const,
-              scopeId: requireUserScopeId(userScopeId),
-            }
-          : {
-              scopeType: "project" as const,
-              scopeId: requireProjectKey(projectKey, scope),
-            };
-      const records = hasOverrides
-        ? await withRepositories(
-            {
-              projectKey,
-              userScopeId,
-              includeUser: scope === "user",
-            },
-            ({ projectRepository, userRepository }) => {
-              const repository =
-                scope === "user" ? userRepository : projectRepository;
-
-              if (!repository) {
-                throw new Error(`${scope} memory repository not configured`);
-              }
-
-              return repository.listMemory(scopeRef, {
-                limit: toolInput.limit,
-                organizationId,
-                allowLegacyAnonymous: process.env.LEGACY_ANONYMOUS_SEARCH === "true",
-                excludePinnedGoalRuns: true,
-              });
-            },
-          )
-        : await withCanonicalRepository((repository) =>
-            repository.listMemory(scopeRef, {
-              limit: toolInput.limit,
-              organizationId,
-              allowLegacyAnonymous: process.env.LEGACY_ANONYMOUS_SEARCH === "true",
-              excludePinnedGoalRuns: true,
-            }),
-          );
-      const targetLabel =
-        scope === "user"
-          ? requireUserScopeId(userScopeId)
-          : requireProjectKey(projectKey, scope);
-
-      // Legacy override mode (in-process MemoryRepository, no Postgres):
-      // dry-run only; no semantic dedup; no apply path.
-      if (hasOverrides) {
-        if (!dryRun) {
-          throw new Error(
-            "compact_memory apply path requires canonical services (Postgres + Qdrant); " +
-              "legacy repository overrides are read-only. Use dryRun=true.",
-          );
-        }
-        if (toolInput.semanticDedupThreshold !== undefined) {
-          throw new Error(
-            "compact_memory semantic dedup requires canonical services (embedding client). " +
-              "Legacy repository overrides do not provide one.",
-          );
-        }
-        return buildCompactionPlan({
-          records,
-          scope,
-          scopeLabel: targetLabel,
-          projectKey,
-          dryRun: true,
-          decayThreshold: toolInput.decayThreshold,
-          halfLifeDays: toolInput.halfLifeDays,
-        });
-      }
-
-      // Canonical services mode: route through applyCompaction. It handles
-      // both dry-run (returns plan + zero stats, no destructive ops) and
-      // apply. Semantic dedup runs in either case when threshold is set.
-      return await withCanonicalServices(async (services) => {
-        const result = await applyCompaction(
-          {
-            records,
-            scope,
-            scopeLabel: targetLabel,
-            projectKey,
-            dryRun,
-            decayThreshold: toolInput.decayThreshold,
-            halfLifeDays: toolInput.halfLifeDays,
-            semanticDedupThreshold: toolInput.semanticDedupThreshold,
-            organizationId: organizationId ?? "default",
-            actor: "compact_memory",
-          },
-          {
-            archiveRepository: services.archiveRepository,
-            vectorIndex: services.vectorIndex,
-            embeddings: services.embeddings,
-            logger: baseLogger,
-          },
-        );
-        return result;
-      });
-    },
-
     async list_memory(toolInput) {
       ensureGovernanceCanonicalMode(hasGovernanceOverrides);
       assertProvidedScopeIdentifiers(toolInput);
@@ -782,8 +601,10 @@ export function createToolHandlers(input: {
     },
 
     ...createCompactionToolHandlers({
+      cwd,
       hasOverrides,
       logger: baseLogger,
+      options,
       withCanonicalServices,
     }),
     ...createAuditToolHandlers({ auditLog: auditLogForListing }),

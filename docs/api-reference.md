@@ -17,8 +17,8 @@ All three access paths share the same descriptor/schema/registry path in
 `src/mcp/tool-schemas.ts` and `src/mcp/tool-registry.ts`, then dispatch to the
 service tool implementations in `src/mcp/tool-handlers.ts`; goal-run tool
 adapters live in `src/goal-run/tool-handlers.ts`, and the audit-log read
-adapter lives in `src/audit/tool-handlers.ts`. The unarchive recovery adapter
-lives in `src/compact/tool-handlers.ts`, and the canonical reindex adapter
+adapter lives in `src/audit/tool-handlers.ts`. The compaction adapters live in
+`src/compact/tool-handlers.ts`, and the canonical reindex adapter
 lives in `src/store/tool-handlers.ts`. Service tool inputs and outputs are
 identical; only the wire format differs.
 

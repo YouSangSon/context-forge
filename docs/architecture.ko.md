@@ -32,9 +32,10 @@
 │   src/mcp/prompts.ts          → MCP prompt template             │
 │   src/mcp/tool-registry.ts    → registry assembly               │
 │   src/mcp/tool-registry-instrumentation.ts → audit wrapper      │
+│   src/mcp/tool-repository-access.ts → handler repo access        │
 │   src/mcp/tool-handlers.ts    → tool 구현                       │
 │   src/audit/tool-handlers.ts  → audit-log read adapter          │
-│   src/compact/tool-handlers.ts → unarchive recovery adapter      │
+│   src/compact/tool-handlers.ts → compaction tool adapters        │
 │   src/goal-run/tool-handlers.ts → goal-run tool adapter          │
 │   src/store/tool-handlers.ts  → canonical reindex adapter       │
 └────────────────┬────────────────────────────────────────────────┘

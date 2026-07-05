@@ -777,6 +777,8 @@ describe("public documentation drift checks", () => {
     expect(read("docs/architecture.ko.md")).toContain("src/audit/tool-handlers.ts");
     expect(read("docs/architecture.md")).toContain("src/compact/tool-handlers.ts");
     expect(read("docs/architecture.ko.md")).toContain("src/compact/tool-handlers.ts");
+    expect(read("docs/architecture.md")).toContain("src/mcp/tool-repository-access.ts");
+    expect(read("docs/architecture.ko.md")).toContain("src/mcp/tool-repository-access.ts");
     expect(read("docs/architecture.md")).toContain("src/store/tool-handlers.ts");
     expect(read("docs/architecture.ko.md")).toContain("src/store/tool-handlers.ts");
     expect(read("docs/architecture.md")).not.toContain(
@@ -922,6 +924,7 @@ describe("public documentation drift checks", () => {
     expect(contracts).toContain("src/mcp/tool-schemas.ts");
     expect(contracts).toContain("src/mcp/tool-registry.ts");
     expect(contracts).toContain("src/mcp/tool-registry-instrumentation.ts");
+    expect(contracts).toContain("src/mcp/tool-repository-access.ts");
     expect(contracts).toContain("src/mcp/tool-handlers.ts");
     expect(contracts).toContain("src/audit/tool-handlers.ts");
     expect(contracts).toContain("src/compact/tool-handlers.ts");

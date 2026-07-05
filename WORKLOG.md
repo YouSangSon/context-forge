@@ -2,6 +2,39 @@
 
 ## 2026-07-05
 
+- 11:49 KST - Split compact tool handler:
+  - Moved the `compact_memory` service tool adapter into
+    `src/compact/tool-handlers.ts` alongside `unarchive_memory`.
+  - Kept public tool name, JSON HTTP route `/v1/memory/compact`, MCP exposure,
+    shared schema, validation errors, registry key, legacy override behavior,
+    and result fields unchanged by composing the compact adapter from
+    `createToolHandlers`.
+  - Reused legacy repository/canonical repository access through
+    `src/mcp/tool-repository-access.ts`.
+  - Updated architecture docs, API docs, `CONTRACTS.md`, `PLAN.md`,
+    `BACKLOG.md`, and `DECISIONS.md` for the compact adapter boundary.
+
+Verification:
+- `npm test -- tests/mcp/server.test.ts -t "compact_memory|compacts memory|compaction limits|compaction thresholds|semantic dedup|apply path|user memory|registers all service and context tools|advertises output schemas" --reporter=dot`
+  (`1` file passed; `15` tests passed, `120` skipped)
+- `npm test -- tests/compact/compact-memory.test.ts tests/compact/apply-compaction.test.ts --reporter=dot`
+  (`2` files passed; `77` tests passed)
+- `npm test -- tests/app/server.test.ts -t "compact_memory|/v1/memory/compact|CompactionRateLimitError|routes /v1/memory/reindex and /v1/memory/compact" --reporter=dot`
+  (`1` file passed; `6` tests passed, `62` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `48` tests passed)
+- `npm test -- tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`1` file passed; `6` tests passed)
+- `npm test -- tests/mcp/tool-registry.test.ts tests/app/memory-routes-boundary.test.ts --reporter=dot`
+  (`2` files passed; `35` tests passed)
+- `npm test -- tests/app/mcp-http.test.ts -t "serves MCP tools over Streamable HTTP|compact_memory" --reporter=dot`
+  (`1` file passed; `1` test passed, `20` skipped)
+- `npm run typecheck`
+- `npm run build`
+- `npm audit --audit-level=high`
+  (`0` vulnerabilities)
+- `git diff --check`
+
 - 11:42 KST - Split canonical reindex tool handler:
   - Added `src/store/tool-handlers.ts` for the `reindex_memory` service tool
     adapter.

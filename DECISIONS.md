@@ -1,5 +1,33 @@
 # DECISIONS
 
+## 2026-07-05 — Split Compact Tool Handler
+
+Decision: move the `compact_memory` service tool adapter into
+`src/compact/tool-handlers.ts`.
+
+Why:
+- `compact_memory` is the public adapter for compaction dry-run/apply behavior,
+  and the planning/apply domain implementation already lives in `src/compact/`.
+- Existing tests characterize direct registry validation, legacy override
+  dry-run behavior, apply rejection, canonical apply, semantic dedup,
+  HTTP routing, MCP registration, and output schema.
+- Moving this adapter completes the compaction tool boundary without changing
+  shared descriptors or transport entrypoints.
+
+Implementation:
+- `createToolHandlers` now composes `createCompactionToolHandlers` for both
+  `compact_memory` and `unarchive_memory`.
+- Shared repository fallback/canonical repository access now lives in
+  `src/mcp/tool-repository-access.ts` and is reused by MCP and compact
+  adapters.
+- Tool names, shared schemas, JSON HTTP routes, MCP exposure, validation
+  errors, and result fields remain unchanged.
+
+Tradeoff:
+- The compact adapter still reads `CreateToolRegistryOptions` because legacy
+  repository override compatibility is part of the current public test surface.
+  A new application-service abstraction would be larger than this loop needs.
+
 ## 2026-07-05 — Split Reindex Tool Handler
 
 Decision: move the `reindex_memory` service tool adapter into

@@ -1,18 +1,166 @@
 import type { Logger } from "../logger.js";
-import type { ToolRegistry, WithCanonicalServices } from "../mcp/types.js";
-import { assertPositiveIntegerArray } from "../mcp/tool-utils.js";
+import type {
+  CreateToolRegistryOptions,
+  ToolRegistry,
+  WithCanonicalServices,
+} from "../mcp/types.js";
+import { createRepositoryAccess } from "../mcp/tool-repository-access.js";
+import {
+  assertOptionalAllowedValue,
+  assertOptionalNonNegativeFiniteNumber,
+  assertOptionalPositiveFiniteNumber,
+  assertOptionalPositiveInteger,
+  assertPositiveIntegerArray,
+  assertProvidedScopeIdentifiers,
+  requireProjectKey,
+  requireUserScopeId,
+  resolveUserScopeId,
+  SUPPORTED_SCOPE_TYPES,
+} from "../mcp/tool-utils.js";
+import { applyCompaction } from "./apply-compaction.js";
+import { buildCompactionPlan } from "./compact-memory.js";
 import { unarchiveCompaction } from "./unarchive-compaction.js";
 
-type CompactionToolHandlers = Pick<ToolRegistry, "unarchive_memory">;
+type CompactionToolHandlers = Pick<
+  ToolRegistry,
+  "compact_memory" | "unarchive_memory"
+>;
 
 export function createCompactionToolHandlers(input: {
+  cwd: string;
   hasOverrides: boolean;
   logger: Logger;
+  options: CreateToolRegistryOptions;
   withCanonicalServices: WithCanonicalServices;
 }): CompactionToolHandlers {
-  const { hasOverrides, logger, withCanonicalServices } = input;
+  const { cwd, hasOverrides, logger, options, withCanonicalServices } = input;
+  const { withCanonicalRepository, withRepositories } = createRepositoryAccess({
+    cwd,
+    options,
+    withCanonicalServices,
+  });
 
   return {
+    async compact_memory(toolInput) {
+      assertProvidedScopeIdentifiers(toolInput);
+      assertOptionalAllowedValue(toolInput.scope, "scope", SUPPORTED_SCOPE_TYPES);
+      assertOptionalPositiveInteger(toolInput.limit, "limit", 5000);
+      assertOptionalNonNegativeFiniteNumber(
+        toolInput.decayThreshold,
+        "decayThreshold",
+      );
+      assertOptionalPositiveFiniteNumber(toolInput.halfLifeDays, "halfLifeDays");
+      assertOptionalPositiveFiniteNumber(
+        toolInput.semanticDedupThreshold,
+        "semanticDedupThreshold",
+        1,
+      );
+      const scope = toolInput.scope ?? "project";
+      const dryRun = toolInput.dryRun ?? true;
+      const organizationId = toolInput.organizationId?.trim();
+      const projectKey =
+        toolInput.projectKey === undefined
+          ? undefined
+          : requireProjectKey(toolInput.projectKey, "project");
+      const userScopeId = resolveUserScopeId({
+        cwd,
+        explicitUserScopeId: toolInput.userScopeId,
+        defaultUserScopeId: options.defaultUserScopeId,
+      });
+      const scopeRef =
+        scope === "user"
+          ? {
+              scopeType: "user" as const,
+              scopeId: requireUserScopeId(userScopeId),
+            }
+          : {
+              scopeType: "project" as const,
+              scopeId: requireProjectKey(projectKey, scope),
+            };
+      const records = hasOverrides
+        ? await withRepositories(
+            {
+              projectKey,
+              userScopeId,
+              includeUser: scope === "user",
+            },
+            ({ projectRepository, userRepository }) => {
+              const repository =
+                scope === "user" ? userRepository : projectRepository;
+
+              if (!repository) {
+                throw new Error(`${scope} memory repository not configured`);
+              }
+
+              return repository.listMemory(scopeRef, {
+                limit: toolInput.limit,
+                organizationId,
+                allowLegacyAnonymous: process.env.LEGACY_ANONYMOUS_SEARCH === "true",
+                excludePinnedGoalRuns: true,
+              });
+            },
+          )
+        : await withCanonicalRepository((repository) =>
+            repository.listMemory(scopeRef, {
+              limit: toolInput.limit,
+              organizationId,
+              allowLegacyAnonymous: process.env.LEGACY_ANONYMOUS_SEARCH === "true",
+              excludePinnedGoalRuns: true,
+            }),
+          );
+      const targetLabel =
+        scope === "user"
+          ? requireUserScopeId(userScopeId)
+          : requireProjectKey(projectKey, scope);
+
+      if (hasOverrides) {
+        if (!dryRun) {
+          throw new Error(
+            "compact_memory apply path requires canonical services (Postgres + Qdrant); " +
+              "legacy repository overrides are read-only. Use dryRun=true.",
+          );
+        }
+        if (toolInput.semanticDedupThreshold !== undefined) {
+          throw new Error(
+            "compact_memory semantic dedup requires canonical services (embedding client). " +
+              "Legacy repository overrides do not provide one.",
+          );
+        }
+        return buildCompactionPlan({
+          records,
+          scope,
+          scopeLabel: targetLabel,
+          projectKey,
+          dryRun: true,
+          decayThreshold: toolInput.decayThreshold,
+          halfLifeDays: toolInput.halfLifeDays,
+        });
+      }
+
+      return await withCanonicalServices((services) =>
+        applyCompaction(
+          {
+            records,
+            scope,
+            scopeLabel: targetLabel,
+            projectKey,
+            dryRun,
+            decayThreshold: toolInput.decayThreshold,
+            halfLifeDays: toolInput.halfLifeDays,
+            semanticDedupThreshold: toolInput.semanticDedupThreshold,
+            organizationId: organizationId ?? "default",
+            actor: "compact_memory",
+          },
+          {
+            archiveRepository: services.archiveRepository,
+            vectorIndex: services.vectorIndex,
+            embeddings: services.embeddings,
+            logger,
+          },
+        ),
+      );
+    },
+
     async unarchive_memory(toolInput) {
       // Apply path requires canonical services (archiveRepository +
       // chunkRepository + embeddings + qdrantClient). Legacy override mode
