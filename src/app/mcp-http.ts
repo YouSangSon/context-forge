@@ -23,6 +23,7 @@ import {
   type RateLimiter,
 } from "./middleware/rate-limit.js";
 import { checkOAuthScopes } from "./middleware/oauth-token-auth.js";
+import { JsonBodyError, readJsonBody } from "./middleware/json-body.js";
 
 export type HandleMcpHttpRequestOptions = {
   req: IncomingMessage;
@@ -36,7 +37,6 @@ export type HandleMcpHttpRequestOptions = {
   allowedHostnames?: readonly string[];
 };
 
-const MAX_BODY_BYTES = 1_000_000; // 1 MB safety cap
 const ORGANIZATION_MISMATCH_ERROR =
   "organizationId mismatch: token is bound to a different organization";
 
@@ -144,13 +144,16 @@ export async function handleMcpHttpRequest(
 
   try {
     await server.connect(transport);
-    const parsedBody = req.method === "POST" ? await readJsonBody(req) : undefined;
+    const parsedBody =
+      req.method === "POST"
+        ? await readJsonBody(req, { oversizedStatus: 413 })
+        : undefined;
     await transport.handleRequest(req, res, parsedBody);
     cleanupInFinally = false;
   } catch (error: unknown) {
     logger.error({ event: "mcp_http.error", err: error }, "MCP HTTP request failed");
     if (!res.headersSent) {
-      if (error instanceof BadRequestError) {
+      if (error instanceof JsonBodyError) {
         sendJsonRpcError(res, error.status, -32000, error.message);
         return;
       }
@@ -298,39 +301,6 @@ function validateHostHeader(
   }
 
   return null;
-}
-
-class BadRequestError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
-    super(message);
-  }
-}
-
-async function readJsonBody(req: IncomingMessage): Promise<unknown> {
-  const chunks: Buffer[] = [];
-  let total = 0;
-
-  for await (const chunk of req) {
-    const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-    total += buf.length;
-    if (total > MAX_BODY_BYTES) {
-      throw new BadRequestError("request body exceeds 1 MB", 413);
-    }
-    chunks.push(buf);
-  }
-
-  if (chunks.length === 0) {
-    return undefined;
-  }
-
-  try {
-    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
-  } catch (_err: unknown) {
-    throw new BadRequestError("invalid JSON body", 400);
-  }
 }
 
 function withAuthenticatedRegistry(

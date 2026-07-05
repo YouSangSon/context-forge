@@ -903,6 +903,26 @@ describe("createOperatorServer", () => {
     expect(registry.add_memory).not.toHaveBeenCalled();
   });
 
+  it("returns 400 when JSON HTTP body exceeds the size cap", async () => {
+    const res = await fetch(`${handle.baseUrl}/v1/memory`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${tokens[0]}`,
+      },
+      body: JSON.stringify({
+        projectKey: "p",
+        kind: "decision",
+        content: "x".repeat(1_000_100),
+      }),
+    });
+
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { error: { message: string } }).error.message)
+      .toBe("request body exceeds 1 MB");
+    expect(registry.add_memory).not.toHaveBeenCalled();
+  });
+
   it("returns 400 when body is JSON but not an object", async () => {
     const res = await fetch(`${handle.baseUrl}/v1/memory`, {
       method: "POST",

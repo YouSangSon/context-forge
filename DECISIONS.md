@@ -1,5 +1,28 @@
 # DECISIONS
 
+## 2026-07-05 — Share HTTP JSON Body Parsing Without Status Drift
+
+Decision: move bounded JSON body parsing into
+`src/app/middleware/json-body.ts` and reuse it from JSON HTTP routes and MCP
+Streamable HTTP.
+
+Why:
+- Both HTTP transports already had the same parser logic and 1 MB cap.
+- Body parsing is transport-boundary behavior, so keeping it outside route and
+  MCP transport orchestration makes the next architecture splits smaller.
+- The two transports have different existing oversized-body statuses, so the
+  shared helper must preserve call-site status mapping.
+
+Implementation:
+- JSON HTTP calls `readJsonBody(req)` and keeps oversized bodies as 400.
+- MCP Streamable HTTP calls `readJsonBody(req, { oversizedStatus: 413 })`.
+- `tests/app/server.test.ts` now characterizes the JSON HTTP oversized-body
+  status before and after the refactor.
+
+Tradeoff:
+- The helper intentionally exposes only the current status override. No
+  configurable content-type policy or alternate size cap was added.
+
 ## 2026-07-05 — Extract Organization Resolution Behind Route Compatibility
 
 Decision: move JSON HTTP `organizationId` resolution into

@@ -15,6 +15,7 @@ import { SecretDetectedError } from "../../store/secret-scrub.js";
 import type { BearerToken } from "../middleware/bearer-auth.js";
 import { checkOAuthScopes } from "../middleware/oauth-token-auth.js";
 import { sendError, sendOk } from "../middleware/envelope.js";
+import { JsonBodyError, readJsonBody } from "../middleware/json-body.js";
 import {
   normalizeUnresolvedOrganizationId,
   resolveOrganizationId,
@@ -41,37 +42,6 @@ export type Route = {
     auth?: BearerToken | null,
   ): Promise<void>;
 };
-
-const MAX_BODY_BYTES = 1_000_000; // 1 MB safety cap
-
-class BadRequestError extends Error {
-  readonly status = 400;
-}
-
-async function readJsonBody(req: IncomingMessage): Promise<unknown> {
-  const chunks: Buffer[] = [];
-  let total = 0;
-
-  for await (const chunk of req) {
-    const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-    total += buf.length;
-    if (total > MAX_BODY_BYTES) {
-      throw new BadRequestError("request body exceeds 1 MB");
-    }
-    chunks.push(buf);
-  }
-
-  if (chunks.length === 0) {
-    return undefined;
-  }
-
-  const text = Buffer.concat(chunks).toString("utf8");
-  try {
-    return JSON.parse(text);
-  } catch (_err: unknown) {
-    throw new BadRequestError("invalid JSON body");
-  }
-}
 
 function buildHandler<K extends ServiceToolName>(toolName: K, ctx: RouteContext) {
   return async (
@@ -144,7 +114,7 @@ function buildHandler<K extends ServiceToolName>(toolName: K, ctx: RouteContext)
         sendError(res, 400, error.message);
         return;
       }
-      if (error instanceof BadRequestError) {
+      if (error instanceof JsonBodyError) {
         sendError(res, error.status, error.message);
         return;
       }

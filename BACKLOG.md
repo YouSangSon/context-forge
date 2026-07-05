@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- JSON body parsing is now shared by JSON HTTP routes and MCP Streamable HTTP;
+  both transports keep their previous oversized-body status behavior.
 - JSON HTTP organization resolution is now isolated behind an internal
   middleware boundary while `src/app/routes/memory.ts` preserves the existing
   route factory and `resolveOrganizationId` re-export.

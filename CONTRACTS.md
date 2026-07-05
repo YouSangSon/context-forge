@@ -11,8 +11,10 @@ work.
   `src/mcp/tool-schemas.ts`
 - SDK-facing TypeScript tool input/result types:
   `src/mcp/types.ts`
-- JSON HTTP transport, organization resolution, and response envelope:
+- HTTP JSON body parsing, organization resolution, and JSON HTTP response
+  envelope:
   `src/app/routes/memory.ts`,
+  `src/app/middleware/json-body.ts`,
   `src/app/middleware/organization-resolution.ts`,
   `src/app/middleware/envelope.ts`
 - MCP stdio and MCP Streamable HTTP transport wiring:

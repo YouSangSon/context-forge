@@ -2,6 +2,29 @@
 
 ## 2026-07-05
 
+- 10:13 KST - Extracted shared HTTP JSON body parsing boundary:
+  - Added `src/app/middleware/json-body.ts` for bounded JSON body parsing.
+  - Reused it from JSON HTTP routes and MCP Streamable HTTP.
+  - Preserved existing oversized-body behavior: JSON HTTP returns 400, MCP HTTP
+    returns 413.
+  - Added a JSON HTTP characterization test for the 1 MB cap.
+  - Added the new middleware file to `CONTRACTS.md` and the contract-baseline
+    drift guard.
+
+Verification:
+- `npm test -- tests/app/server.test.ts -t "JSON HTTP body exceeds" --reporter=dot`
+  (`1` file passed; `1` test passed, `67` skipped)
+- `npm test -- tests/app/server.test.ts -t "invalid JSON body|JSON HTTP body exceeds|JSON but not an object" --reporter=dot`
+  (`1` file passed; `3` tests passed, `65` skipped)
+- `npm test -- tests/app/mcp-http.test.ts -t "oversized POST bodies|POST JSON is invalid|POST body exceeds" --reporter=dot`
+  (`1` file passed; `3` tests passed, `18` skipped)
+- `npm test -- tests/app/memory-routes-boundary.test.ts --reporter=dot`
+  (`1` file passed; `14` tests passed)
+- `npm test -- tests/app/server.test.ts tests/app/mcp-http.test.ts tests/app/memory-routes-boundary.test.ts tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`4` files passed; `150` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:07 KST - Started first internal-boundary loop behind JSON HTTP routes:
   - Moved `organizationId` resolution from `src/app/routes/memory.ts` into
     `src/app/middleware/organization-resolution.ts`.
