@@ -2,6 +2,22 @@
 
 ## 2026-07-05
 
+- 10:31 KST - Documented the existing MCP response contract guard:
+  - Confirmed `tests/mcp/server.test.ts` already checks `structuredContent`
+    while retaining JSON text `content`.
+  - Updated `CONTRACTS.md` and the contract-baseline drift guard so future
+    transport refactors treat that test as contract evidence.
+
+Verification:
+- `npm test -- tests/mcp/server.test.ts -t "structuredContent while retaining JSON text content" --reporter=dot`
+  (`1` file passed; `1` test passed, `134` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts -t "contract baseline" --reporter=dot`
+  (`1` file passed; `1` test passed, `47` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `48` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:27 KST - Added JSON HTTP envelope contract guard:
   - `tests/app/envelope.test.ts` locks success/failure envelope shape,
     content-type, status pass-through, and field order for `sendOk`/`sendError`.

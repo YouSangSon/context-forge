@@ -105,6 +105,7 @@ structured success results rather than transport failures.
   constructed from `TOOL_ROUTES`.
 - `tests/app/envelope.test.ts` verifies JSON HTTP success/failure envelope
   shape and field order.
-- `tests/mcp/server.test.ts` verifies MCP tool descriptor registration.
+- `tests/mcp/server.test.ts` verifies MCP tool descriptor registration and the
+  structuredContent plus JSON text content response contract.
 - `tests/scripts/package-manifest.test.ts` verifies public package scripts and
   package surface.

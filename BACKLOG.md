@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- Existing MCP structured output coverage is now listed in `CONTRACTS.md` as a
+  current contract guard.
 - JSON HTTP response envelopes now have a focused contract test for success and
   failure field order.
 - `PLAN.md` now records the current architecture state, target structure,
