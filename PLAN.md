@@ -10,6 +10,7 @@ Branch: `docs/contract-architecture-baseline`.
 
 Recent completed architecture-goal commits; run `git log -1 --oneline` for the
 newest local commit:
+- `1e93de7 refactor(compact): split unarchive tool handler`
 - `4faf7a5 refactor(audit): split audit tool handler`
 - `4fb1aaa refactor(goal-run): split tool handlers`
 - `b545085 refactor(mcp): split service tool registration`
