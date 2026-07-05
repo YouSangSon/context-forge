@@ -4,22 +4,27 @@ This file is the durable continuation plan for ongoing Akasha improvement work.
 Keep it short; detailed evidence belongs in `WORKLOG.md` and one-off rationale in
 `DECISIONS.md`.
 
-## Current Loop - Lexical Source Identifier Fallback
+## Current Loop - Code Intelligence Positioning Docs
 
 Status:
-- Lexical scoring now uses the first nonblank source identifier from
-  `sourceRef` and `externalId`.
-- Blank `sourceRef` no longer hides a useful `externalId`.
+- Selected one P2 documentation item from current repo evidence plus a GitHub
+  check of `DeusData/codebase-memory-mcp`.
+- README comparison now distinguishes Akasha's durable agent-memory scope from
+  complementary code-intelligence MCP servers.
+- English and Korean README/CHANGELOG entries are in sync.
+- `BACKLOG.md` has no known open P0/P1/P2 implementation items after this loop.
 
 Verification:
-- Focused lexical source metadata test passed after RED coverage showed blank
-  `sourceRef` preventing `externalId` matches.
-- Related search tests and typecheck passed.
-- Build, audit, full tests, and diff check passed.
-- Local commit is expected/done by the controller; do not push, merge, or
-  delete remote branches from this loop.
+- RED: `npm test -- tests/scripts/public-docs-drift.test.ts -t "code-intelligence MCP" --reporter=dot`
+  failed because README did not yet mention `codebase-memory-mcp`.
+- GREEN focused: same command passed (`1` test passed, `45` skipped).
+- GREEN docs drift: `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  passed (`46` tests).
+- GREEN source conventions: `npm test -- tests/scripts/source-conventions.test.ts --reporter=dot`
+  passed (`6` tests).
+- `git diff --check` passed.
 
 ## Next Loop Candidates
 
-- Pick one clear target from `BACKLOG.md`, preferring stability,
-  tests, scalability, developer experience, documentation, then new features.
+- Audit current `main` for one clear improvement target, preferring stability,
+  tests, scalability, developer experience, documentation, then features.

@@ -44,6 +44,13 @@ If you need a hosted memory product with a polished UI, look at Mem0 or Letta.
 If you need a self-hosted memory MCP server with no API key required, this is
 that.
 
+Code-intelligence MCP servers such as
+[DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)
+are complementary rather than replacements. They index repository symbols,
+routes, call graph, and ADRs for structural code questions; Akasha stores
+durable agent memory: decisions, constraints, summaries, org-scoped audit
+trails, and context packs that follow work across sessions and clients.
+
 ## Features
 
 Beyond the free/local/multi-tenant basics above, Akasha is built to be

@@ -11,6 +11,8 @@ CHANGELOG에서 명시적으로 표기합니다.
 
 ## [Unreleased]
 
+- 문서: README 비교 문단이 `codebase-memory-mcp` 같은 code-intelligence MCP
+  서버를 Akasha의 영구 에이전트 메모리 범위와 보완 관계로 설명하도록 정리합니다.
 - First-class goal run: MCP와 JSON HTTP가 `/v1/goal-run/*` 아래
   `start_goal_run`, `record_iteration`, `get_goal_run`, `list_goal_runs`,
   `complete_goal_run`, `abandon_goal_run`, `build_goal_context`,
