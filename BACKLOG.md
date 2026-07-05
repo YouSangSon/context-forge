@@ -25,6 +25,9 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- Unarchive recovery service tool adapter now lives in
+  `src/compact/tool-handlers.ts`, with the shared registry continuing to expose
+  `unarchive_memory` unchanged.
 - Audit-log read service tool adapter now lives in
   `src/audit/tool-handlers.ts`, with the shared registry continuing to expose
   `list_audit_log` unchanged.

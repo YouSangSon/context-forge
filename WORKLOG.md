@@ -2,6 +2,34 @@
 
 ## 2026-07-05
 
+- 11:36 KST - Split unarchive recovery tool handler:
+  - Added `src/compact/tool-handlers.ts` for the `unarchive_memory` service
+    tool adapter.
+  - Kept public tool name, JSON HTTP route `/v1/memory/unarchive`, MCP
+    exposure, shared schema, validation errors, registry key, and result fields
+    unchanged by composing the new adapter from `createToolHandlers`.
+  - Updated architecture docs, API docs, `CONTRACTS.md`, `PLAN.md`,
+    `BACKLOG.md`, and `DECISIONS.md` for the compact recovery adapter boundary.
+
+Verification:
+- `npm test -- tests/mcp/server.test.ts -t "unarchive_memory|rejects invalid archive ids|registers all service and context tools" --reporter=dot`
+  (`1` file passed; `3` tests passed, `132` skipped)
+- `npm test -- tests/compact/unarchive-compaction.test.ts --reporter=dot`
+  (`1` file passed; `32` tests passed)
+- `npm test -- tests/mcp/tool-registry.test.ts --reporter=dot`
+  (`1` file passed; `19` tests passed)
+- `npm test -- tests/app/memory-routes-boundary.test.ts tests/app/server.test.ts --reporter=dot`
+  (`2` files passed; `84` tests passed)
+- `npm test -- tests/app/mcp-http.test.ts -t "serves MCP tools over Streamable HTTP|unarchive_memory|compact_memory" --reporter=dot`
+  (`1` file passed; `1` test passed, `20` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `48` tests passed)
+- `npm test -- tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`1` file passed; `6` tests passed)
+- `npm run typecheck`
+- `npm run build`
+- `git diff --check`
+
 - 11:29 KST - Split audit-log read tool handler:
   - Added `src/audit/tool-handlers.ts` for the `list_audit_log` service tool
     adapter.

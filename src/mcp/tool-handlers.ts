@@ -1,7 +1,7 @@
 import { createAuditToolHandlers } from "../audit/tool-handlers.js";
 import { applyCompaction } from "../compact/apply-compaction.js";
 import { buildCompactionPlan } from "../compact/compact-memory.js";
-import { unarchiveCompaction } from "../compact/unarchive-compaction.js";
+import { createCompactionToolHandlers } from "../compact/tool-handlers.js";
 import { buildContextPack } from "../context-pack/build-context-pack.js";
 import { createGoalRunToolHandlers } from "../goal-run/tool-handlers.js";
 import { rootLogger } from "../logger.js";
@@ -47,7 +47,6 @@ import {
   assertOptionalPositiveInteger,
   assertOptionalPostgresInteger,
   assertPositiveInteger,
-  assertPositiveIntegerArray,
   assertProvidedScopeIdentifiers,
   ensureGovernanceCanonicalMode,
   normalizeLimit,
@@ -825,62 +824,11 @@ export function createToolHandlers(input: {
       });
     },
 
-    async unarchive_memory(toolInput) {
-      // Apply path requires canonical services (archiveRepository +
-      // chunkRepository + embeddings + qdrantClient). Legacy override mode
-      // doesn't have any of those.
-      if (hasOverrides) {
-        throw new Error(
-          "unarchive_memory requires canonical services (Postgres + Qdrant); " +
-            "legacy repository overrides are not supported.",
-        );
-      }
-      if (!Array.isArray(toolInput.archiveIds)) {
-        throw new Error("archiveIds must be an array");
-      }
-      assertPositiveIntegerArray(toolInput.archiveIds, "archiveIds");
-      if (toolInput.archiveIds.length === 0) {
-        return {
-          ok: true,
-          outcomes: [],
-          restoredCount: 0,
-          skippedCount: 0,
-          failedCount: 0,
-        };
-      }
-      return await withCanonicalServices(async (services) => {
-        const organizationId = toolInput.organizationId?.trim() ?? "default";
-        const result = await unarchiveCompaction(
-          {
-            archiveIds: toolInput.archiveIds,
-            organizationId,
-            actor: "unarchive_memory",
-          },
-          {
-            archiveRepository: services.archiveRepository,
-            chunkRepository: services.chunkRepository,
-            embeddings: services.embeddings,
-            vectorIndex: services.vectorIndex,
-            embedding: {
-              provider: services.config.embedding.provider,
-              model: services.config.embedding.model,
-              dimensions: services.config.embedding.dimensions,
-              version: services.config.embedding.version,
-              targetTokens: services.config.embedding.chunkTargetTokens,
-              overlapTokens: services.config.embedding.chunkOverlapTokens,
-            },
-            logger: baseLogger,
-          },
-        );
-        return {
-          ok: true,
-          outcomes: result.outcomes,
-          restoredCount: result.restoredCount,
-          skippedCount: result.skippedCount,
-          failedCount: result.failedCount,
-        };
-      });
-    },
+    ...createCompactionToolHandlers({
+      hasOverrides,
+      logger: baseLogger,
+      withCanonicalServices,
+    }),
     ...createAuditToolHandlers({ auditLog: auditLogForListing }),
     ...createGoalRunToolHandlers({
       cwd,

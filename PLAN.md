@@ -57,6 +57,9 @@ Current structure:
   `src/mcp/tool-registry-instrumentation.ts`.
 - Audit-log read service tool adapter lives in `src/audit/tool-handlers.ts`;
   audit persistence stays in `src/audit/audit-log-repository.ts`.
+- Unarchive recovery service tool adapter lives in
+  `src/compact/tool-handlers.ts`; compaction planning/apply helpers stay in
+  `src/compact/`.
 - Goal-run service tool adapters live in `src/goal-run/tool-handlers.ts`;
   goal-run pack/repeat domain helpers stay in `src/goal-run/`.
 - Domain work is currently grouped by capability under `src/compact/`,
@@ -98,6 +101,9 @@ Completed in this branch:
 - `src/audit/tool-handlers.ts` owns the `list_audit_log` service tool adapter
   while `src/mcp/tool-handlers.ts` keeps registry composition and the remaining
   shared memory/governance handlers.
+- `src/compact/tool-handlers.ts` owns the `unarchive_memory` service tool
+  adapter while `src/mcp/tool-handlers.ts` keeps the remaining shared
+  memory/governance handlers.
 
 Known issues:
 - No open P0/P1/P2 backlog item is known from current repo evidence.

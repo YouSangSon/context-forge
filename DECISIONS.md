@@ -1,5 +1,28 @@
 # DECISIONS
 
+## 2026-07-05 — Split Unarchive Tool Handler
+
+Decision: move the `unarchive_memory` service tool adapter into
+`src/compact/tool-handlers.ts`.
+
+Why:
+- `unarchive_memory` is the public adapter for the compaction recovery flow,
+  and the domain implementation already lives in `src/compact/`.
+- Existing tests characterize direct registry validation, legacy override
+  rejection, MCP registration/dispatch, output schema, and the underlying
+  unarchive orchestration.
+- Moving only this adapter keeps the loop small while still reducing
+  `src/mcp/tool-handlers.ts` ownership of domain recovery behavior.
+
+Implementation:
+- `createToolHandlers` now composes `createCompactionToolHandlers`.
+- Tool name, shared schema, JSON HTTP route `/v1/memory/unarchive`, MCP
+  exposure, validation errors, and result fields remain unchanged.
+
+Tradeoff:
+- `compact_memory` stays in `src/mcp/tool-handlers.ts` for now because moving
+  the full dry-run/apply adapter is a larger boundary with more dependencies.
+
 ## 2026-07-05 — Split Audit Tool Handler
 
 Decision: move the `list_audit_log` service tool adapter into

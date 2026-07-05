@@ -34,6 +34,7 @@
 │   src/mcp/tool-registry-instrumentation.ts → audit wrapper      │
 │   src/mcp/tool-handlers.ts    → tool 구현                       │
 │   src/audit/tool-handlers.ts  → audit-log read adapter          │
+│   src/compact/tool-handlers.ts → unarchive recovery adapter      │
 │   src/goal-run/tool-handlers.ts → goal-run tool adapter          │
 └────────────────┬────────────────────────────────────────────────┘
                  │
