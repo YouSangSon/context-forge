@@ -10,6 +10,8 @@ Branch: `docs/contract-architecture-baseline`.
 
 Recent completed architecture-goal commits; run `git log -1 --oneline` for the
 newest local commit:
+- `a3d44e0 refactor(cli): split argument parsing`
+- `a3d346d docs(plan): refresh architecture handoff commits`
 - `5aaa78b refactor(app): split mcp http auth guard`
 - `13fe610 docs(worklog): record full suite verification`
 - `09c1491 refactor(app): split json http tool handler`
