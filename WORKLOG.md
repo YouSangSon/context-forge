@@ -2,6 +2,26 @@
 
 ## 2026-07-05
 
+- 10:00 KST - Started contract-baseline loop for clean architecture / DDD goal:
+  - New goal prioritizes preserving request/response contracts before internal
+    refactors.
+  - Switched from pending local dependency branch back to `main` and created
+    `docs/contract-architecture-baseline`.
+  - Inventoried public contract sources: `src/mcp/tool-schemas.ts`,
+    `src/mcp/types.ts`, `src/app/routes/memory.ts`, `src/app/server.ts`,
+    `package.json`, CLI files, docs, migrations, and existing drift tests.
+  - Added `CONTRACTS.md` as the first architecture baseline artifact.
+  - Added a public-docs drift guard to keep `CONTRACTS.md` aligned with
+    `TOOL_ROUTES` and key public endpoints.
+
+Verification:
+- `npm test -- tests/scripts/public-docs-drift.test.ts -t "contract baseline" --reporter=dot`
+  (`1` file passed; `1` test passed, `46` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `47` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 01:40 KST - Selected P2 README comparison positioning item:
   - External check: `DeusData/codebase-memory-mcp` is a code-intelligence MCP
     focused on repository graph/index/search workflows, so it is complementary

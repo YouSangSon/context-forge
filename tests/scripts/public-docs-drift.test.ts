@@ -904,6 +904,37 @@ describe("public documentation drift checks", () => {
     }
   });
 
+  it("keeps the contract baseline aligned with public route sources", () => {
+    const contracts = read("CONTRACTS.md");
+
+    expect(contracts).toContain("src/mcp/tool-schemas.ts");
+    expect(contracts).toContain("src/mcp/types.ts");
+    expect(contracts).toContain("src/app/routes/memory.ts");
+    expect(contracts).toContain("src/app/middleware/envelope.ts");
+    expect(contracts).toContain("src/app/server.ts");
+    expect(contracts).toContain("package.json");
+    expect(contracts).toContain("001_initial.sql");
+    expect(contracts).toContain("015_background_queue_metrics_indexes.sql");
+    expect(contracts).toContain(`${TOOL_ROUTES.length} service tool`);
+
+    for (const route of TOOL_ROUTES) {
+      expect(contracts).toContain(`\`${route.name}\``);
+      expect(contracts).toContain(`\`${route.path}\``);
+    }
+
+    for (const endpoint of [
+      "/mcp",
+      "/healthz",
+      "/readyz",
+      "/metrics",
+      "/admin/memory",
+      "/.well-known/oauth-protected-resource",
+      "/.well-known/oauth-protected-resource/mcp",
+    ]) {
+      expect(contracts).toContain(endpoint);
+    }
+  });
+
   it("documents all three public transports in architecture and security docs", () => {
     for (const path of [
       "docs/architecture.md",

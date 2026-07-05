@@ -1,5 +1,27 @@
 # DECISIONS
 
+## 2026-07-05 — Freeze Public Contracts Before Architecture Refactors
+
+Decision: create a root `CONTRACTS.md` baseline before clean architecture, DDD,
+customer-module, or MSA-readiness refactors.
+
+Why:
+- The current public surface spans MCP stdio, MCP Streamable HTTP, JSON HTTP,
+  CLI/package scripts, migration filenames, and DB-facing schema behavior.
+- The user goal makes request/response contract preservation the top priority.
+- A small contract inventory plus drift guard is cheaper and safer than starting
+  with a broad module rewrite.
+
+Implementation:
+- `CONTRACTS.md` records contract sources, transport envelopes, service tools,
+  JSON HTTP routes, MCP-only tools, operator endpoints, and compatibility rules.
+- `tests/scripts/public-docs-drift.test.ts` checks `CONTRACTS.md` against
+  `TOOL_ROUTES` and core endpoint strings.
+
+Tradeoff:
+- This is not a full OpenAPI replacement. Per-tool schema detail remains in
+  `docs/api-reference.md` and `src/mcp/tool-schemas.ts`.
+
 ## 2026-06-28 — Keep Dedicated Worker Metrics As Guidance
 
 Decision: document the current boundary instead of adding an HTTP metrics

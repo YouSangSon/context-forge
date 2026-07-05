@@ -25,6 +25,9 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- `CONTRACTS.md` now records the public contract baseline for future
+  clean-architecture/DDD refactors, and public-docs drift tests guard it against
+  route/source drift.
 - README comparison now positions code-intelligence MCP servers such as
   `codebase-memory-mcp` as complementary repository-graph tools, not
   replacements for Akasha's durable agent-memory scope.
