@@ -25,6 +25,9 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- JSON HTTP route handler dispatch now has direct boundary coverage for success
+  envelope behavior, organization resolution precedence, and validation failure
+  before registry calls.
 - MCP tool response formatting now lives behind `src/mcp/tool-result.ts` while
   preserving structured output plus JSON text content.
 - Existing MCP structured output coverage is now listed in `CONTRACTS.md` as a

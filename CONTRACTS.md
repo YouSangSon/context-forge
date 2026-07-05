@@ -102,7 +102,9 @@ structured success results rather than transport failures.
 - `tests/scripts/public-docs-drift.test.ts` verifies public docs include every
   service tool and JSON HTTP route from `TOOL_ROUTES`.
 - `tests/app/memory-routes-boundary.test.ts` verifies JSON HTTP routes are
-  constructed from `TOOL_ROUTES`.
+  constructed from `TOOL_ROUTES`, valid route handlers dispatch through the
+  registry with the JSON HTTP envelope, and invalid input is rejected before
+  dispatch.
 - `tests/app/envelope.test.ts` verifies JSON HTTP success/failure envelope
   shape and field order.
 - `tests/mcp/server.test.ts` verifies MCP tool descriptor registration and the

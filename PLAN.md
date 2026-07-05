@@ -37,6 +37,8 @@ Completed in this branch:
   and MCP Streamable HTTP while preserving their previous status behavior.
 - `src/mcp/tool-result.ts` owns MCP tool response formatting while preserving
   `structuredContent` and JSON text `content`.
+- `tests/app/memory-routes-boundary.test.ts` now characterizes JSON HTTP route
+  handler dispatch before deeper route-handler extraction.
 
 Known issues:
 - No open P0/P1/P2 backlog item is known from current repo evidence.

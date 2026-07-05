@@ -2,6 +2,23 @@
 
 ## 2026-07-05
 
+- 10:38 KST - Added JSON HTTP route handler contract coverage:
+  - `tests/app/memory-routes-boundary.test.ts` now invokes a generated route
+    handler directly.
+  - The new tests lock successful registry dispatch through the JSON HTTP
+    envelope, header `organizationId` precedence over body input, and schema
+    validation failure before registry calls.
+  - Updated `CONTRACTS.md`, `PLAN.md`, and `BACKLOG.md` with the new contract
+    evidence.
+
+Verification:
+- `npm test -- tests/app/memory-routes-boundary.test.ts --reporter=dot`
+  (`1` file passed; `16` tests passed)
+- `npm test -- tests/scripts/public-docs-drift.test.ts -t "contract baseline" --reporter=dot`
+  (`1` file passed; `1` test passed, `47` skipped)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:33 KST - Split MCP tool result formatting:
   - Added `src/mcp/tool-result.ts` for the shared `structuredContent` plus JSON
     text `content` response shape.
