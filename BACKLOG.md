@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- MCP prompt registration now lives in `src/mcp/prompts.ts`, with MCP server
+  assembly remaining in `src/mcp/server.ts`.
 - MCP resource registration now lives in `src/mcp/resources.ts`, with MCP
   server assembly remaining in `src/mcp/server.ts`.
 - Tool-boundary audit/log instrumentation now lives in

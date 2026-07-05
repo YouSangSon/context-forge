@@ -31,6 +31,8 @@ Current structure:
   `src/app/routes/memory.ts`.
 - MCP resource registration lives in `src/mcp/resources.ts` while
   `src/mcp/server.ts` keeps the public server assembly.
+- MCP prompt registration lives in `src/mcp/prompts.ts` while
+  `src/mcp/server.ts` keeps the public server assembly.
 - MCP tool result formatting lives in `src/mcp/tool-result.ts`.
 - MCP Streamable HTTP authenticated tool authorization lives in
   `src/app/middleware/mcp-http-auth.ts`.
@@ -71,6 +73,8 @@ Completed in this branch:
   wrapping while `src/mcp/tool-registry.ts` owns registry assembly.
 - `src/mcp/resources.ts` owns Akasha MCP resource registration and URI param
   parsing while `src/mcp/server.ts` keeps server assembly.
+- `src/mcp/prompts.ts` owns Akasha MCP prompt registration while
+  `src/mcp/server.ts` keeps server assembly.
 
 Known issues:
 - No open P0/P1/P2 backlog item is known from current repo evidence.

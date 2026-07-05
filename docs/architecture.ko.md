@@ -27,6 +27,7 @@
 │ Tool descriptor + registry                                      │
 │   src/mcp/tool-schemas.ts     → shared zod schema + route       │
 │   src/mcp/resources.ts        → MCP resource template           │
+│   src/mcp/prompts.ts          → MCP prompt template             │
 │   src/mcp/tool-registry.ts    → registry assembly               │
 │   src/mcp/tool-registry-instrumentation.ts → audit wrapper      │
 │   src/mcp/tool-handlers.ts    → tool 구현                       │
@@ -86,6 +87,8 @@ MCP transport는 capability-gated context helper도 노출합니다.
 summary를 제안하며 저장은 하지 않습니다.
 MCP resource template 등록은 `src/mcp/resources.ts` 에 있으며, service tool과
 같은 registry method로 read-only recent memory와 context-pack view를 노출합니다.
+MCP prompt 등록은 `src/mcp/prompts.ts` 에 있으며, tool contract를 바꾸지 않고
+context-pack startup과 store-memory prompt template을 렌더링합니다.
 
 Write-ahead outbox: chunk이 Postgres에 커밋된 후, `writeCanonicalMemory` 는
 Qdrant 에 접근하기 전에 `markQdrantPending` 을 호출해 `qdrant_next_retry_at`

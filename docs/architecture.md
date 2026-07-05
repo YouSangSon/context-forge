@@ -27,6 +27,7 @@ for env-var setup see [configuration.md](configuration.md).
 │ Tool descriptors + registry                                     │
 │   src/mcp/tool-schemas.ts     → shared zod schemas + routes     │
 │   src/mcp/resources.ts        → MCP resource templates          │
+│   src/mcp/prompts.ts          → MCP prompt templates            │
 │   src/mcp/tool-registry.ts    → registry assembly               │
 │   src/mcp/tool-registry-instrumentation.ts → audit wrappers     │
 │   src/mcp/tool-handlers.ts    → tool implementations            │
@@ -87,6 +88,8 @@ summary for candidate text without storing it.
 MCP resource templates are registered from `src/mcp/resources.ts`; they expose
 read-only recent memory and context-pack views backed by the same registry
 methods as the service tools.
+MCP prompts are registered from `src/mcp/prompts.ts`; they render context-pack
+startup and store-memory prompt templates without changing tool contracts.
 
 Write-ahead outbox: after chunks are committed to Postgres,
 `writeCanonicalMemory` calls `markQdrantPending` to record a scheduled

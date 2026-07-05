@@ -2,6 +2,26 @@
 
 ## 2026-07-05
 
+- 10:59 KST - Split MCP prompt registration:
+  - Added `src/mcp/prompts.ts` for Akasha MCP prompt templates and prompt
+    argument schemas.
+  - Kept `src/mcp/server.ts` focused on MCP server assembly, service tool
+    registration, context tools, resources, and stdio startup.
+  - Updated architecture docs, `CONTRACTS.md`, `PLAN.md`, `BACKLOG.md`, and
+    `DECISIONS.md` for the new prompt module.
+
+Verification:
+- `npm test -- tests/mcp/server.test.ts -t "lists and returns Akasha prompts|session prompt|prompt identifiers|store-memory prompt" --reporter=dot`
+  (`1` file passed; `6` tests passed, `129` skipped)
+- `npm test -- tests/app/mcp-http.test.ts -t "resources and prompts" --reporter=dot`
+  (`1` file passed; `1` test passed, `20` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `48` tests passed)
+- `npm test -- tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`1` file passed; `6` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:54 KST - Split MCP resource registration:
   - Added `src/mcp/resources.ts` for Akasha MCP resource templates and resource
     URI path/query validation.

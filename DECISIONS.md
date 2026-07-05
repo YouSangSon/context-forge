@@ -1,5 +1,27 @@
 # DECISIONS
 
+## 2026-07-05 — Split MCP Prompt Registration
+
+Decision: move MCP prompt registration and prompt argument schemas into
+`src/mcp/prompts.ts`.
+
+Why:
+- `src/mcp/server.ts` should assemble the MCP server and public registrations
+  without owning every prompt template.
+- Prompt names and argument validation are public MCP surface because clients
+  can list and request `akasha_session_start` and `akasha_store_memory`.
+- Existing MCP server tests already characterize prompt names, argument
+  validation, session prompt limit coercion, and rendered text.
+
+Implementation:
+- `createMcpServer` still calls `registerAkashaPrompts`.
+- `src/mcp/prompts.ts` owns prompt templates and prompt argument schemas.
+- Architecture docs and `CONTRACTS.md` list the new module.
+
+Tradeoff:
+- MCP context tools remain in `src/mcp/server.ts`; splitting those is a larger
+  boundary because they depend on client capabilities and authorization.
+
 ## 2026-07-05 — Split MCP Resource Registration
 
 Decision: move MCP resource template registration and resource URI parsing into
