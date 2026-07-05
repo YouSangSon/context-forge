@@ -8,6 +8,7 @@ import {
   SERVICE_TOOL_DESCRIPTORS,
   nonBlankTextInputSchema,
 } from "./tool-schemas.js";
+import { toToolResult } from "./tool-result.js";
 import { createToolRegistry } from "./tool-registry.js";
 import {
   assertCreateToolRegistryOptions,
@@ -172,18 +173,6 @@ function assertCreateMcpServerOptions(
   if (authorizeTool !== undefined) {
     assertFunction(authorizeTool, "authorizeTool");
   }
-}
-
-function toToolResult(result: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify(result, null, 2),
-      },
-    ],
-    structuredContent: result as Record<string, unknown>,
-  };
 }
 
 function registerMcpContextTools(

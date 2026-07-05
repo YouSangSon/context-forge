@@ -17,6 +17,7 @@ newest local commit:
 Current structure:
 - Public transports live in `src/mcp/server.ts`, `src/app/mcp-http.ts`, and
   `src/app/routes/memory.ts`.
+- MCP tool result formatting lives in `src/mcp/tool-result.ts`.
 - Shared public service schemas and JSON HTTP route descriptors live in
   `src/mcp/tool-schemas.ts`; SDK-facing tool types live in `src/mcp/types.ts`.
 - Tool dispatch goes through `src/mcp/tool-registry.ts` and
@@ -34,6 +35,8 @@ Completed in this branch:
   compatibility re-export.
 - `src/app/middleware/json-body.ts` owns bounded JSON body parsing for JSON HTTP
   and MCP Streamable HTTP while preserving their previous status behavior.
+- `src/mcp/tool-result.ts` owns MCP tool response formatting while preserving
+  `structuredContent` and JSON text `content`.
 
 Known issues:
 - No open P0/P1/P2 backlog item is known from current repo evidence.

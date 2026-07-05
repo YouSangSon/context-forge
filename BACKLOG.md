@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- MCP tool response formatting now lives behind `src/mcp/tool-result.ts` while
+  preserving structured output plus JSON text content.
 - Existing MCP structured output coverage is now listed in `CONTRACTS.md` as a
   current contract guard.
 - JSON HTTP response envelopes now have a focused contract test for success and

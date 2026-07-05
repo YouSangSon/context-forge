@@ -1,5 +1,27 @@
 # DECISIONS
 
+## 2026-07-05 — Split MCP Tool Result Formatting
+
+Decision: move MCP tool response formatting into `src/mcp/tool-result.ts`.
+
+Why:
+- `src/mcp/server.ts` should focus on server construction, tool registration,
+  resources, and prompts.
+- MCP response shape is public contract behavior because clients receive both
+  `structuredContent` and text `content`.
+- A narrow formatter module lets future transport or tool-dispatch refactors
+  change internals without rediscovering the response envelope rules.
+
+Implementation:
+- `src/mcp/server.ts` now imports `toToolResult`.
+- `CONTRACTS.md` lists `src/mcp/tool-result.ts` as an MCP contract source.
+- `tests/mcp/server.test.ts` continues to guard the structured output plus JSON
+  text response shape.
+
+Tradeoff:
+- The formatter keeps the existing `Record<string, unknown>` cast instead of
+  introducing a broader MCP response type abstraction in this loop.
+
 ## 2026-07-05 — Share HTTP JSON Body Parsing Without Status Drift
 
 Decision: move bounded JSON body parsing into

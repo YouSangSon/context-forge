@@ -18,7 +18,7 @@ work.
   `src/app/middleware/organization-resolution.ts`,
   `src/app/middleware/envelope.ts`
 - MCP stdio and MCP Streamable HTTP transport wiring:
-  `src/mcp/server.ts`, `src/app/mcp-http.ts`
+  `src/mcp/server.ts`, `src/mcp/tool-result.ts`, `src/app/mcp-http.ts`
 - Operator HTTP endpoints:
   `src/app/server.ts`
 - CLI and package command surface:

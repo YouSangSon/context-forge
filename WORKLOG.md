@@ -2,6 +2,24 @@
 
 ## 2026-07-05
 
+- 10:33 KST - Split MCP tool result formatting:
+  - Added `src/mcp/tool-result.ts` for the shared `structuredContent` plus JSON
+    text `content` response shape.
+  - Updated `src/mcp/server.ts` to import the formatter instead of owning it
+    inside server registration.
+  - Registered the new file in `CONTRACTS.md`, `PLAN.md`, and the
+    contract-baseline drift guard.
+
+Verification:
+- `npm test -- tests/mcp/server.test.ts -t "structuredContent while retaining JSON text content" --reporter=dot`
+  (`1` file passed; `1` test passed, `134` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts -t "contract baseline" --reporter=dot`
+  (`1` file passed; `1` test passed, `47` skipped)
+- `npm test -- tests/mcp/server.test.ts tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`2` files passed; `183` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:31 KST - Documented the existing MCP response contract guard:
   - Confirmed `tests/mcp/server.test.ts` already checks `structuredContent`
     while retaining JSON text `content`.

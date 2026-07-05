@@ -909,6 +909,7 @@ describe("public documentation drift checks", () => {
 
     expect(contracts).toContain("src/mcp/tool-schemas.ts");
     expect(contracts).toContain("src/mcp/types.ts");
+    expect(contracts).toContain("src/mcp/tool-result.ts");
     expect(contracts).toContain("src/app/routes/memory.ts");
     expect(contracts).toContain("src/app/middleware/json-body.ts");
     expect(contracts).toContain("src/app/middleware/organization-resolution.ts");
