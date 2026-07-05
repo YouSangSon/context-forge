@@ -26,6 +26,7 @@
 ┌────────────────▼────────────────────────────────────────────────┐
 │ Tool descriptor + registry                                      │
 │   src/mcp/tool-schemas.ts     → shared zod schema + route       │
+│   src/mcp/service-tools.ts    → MCP service tool registration   │
 │   src/mcp/context-tools.ts    → MCP-only context tool           │
 │   src/mcp/resources.ts        → MCP resource template           │
 │   src/mcp/prompts.ts          → MCP prompt template             │
@@ -65,6 +66,10 @@
 │                 local 결정론적)                                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+MCP service tool 등록은 `src/mcp/service-tools.ts` 에 있으며,
+`src/mcp/tool-schemas.ts` 의 shared descriptor를 사용하고 JSON HTTP와 같은
+registry로 dispatch합니다.
 
 ## 데이터 흐름: 쓰기
 

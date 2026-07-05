@@ -2,6 +2,26 @@
 
 ## 2026-07-05
 
+- 11:09 KST - Split MCP service tool registration:
+  - Added `src/mcp/service-tools.ts` for MCP service tool registration from
+    `SERVICE_TOOL_DESCRIPTORS` and `toToolResult` conversion.
+  - Kept `src/mcp/server.ts` focused on MCP server assembly, registry creation,
+    context tools, resources, prompts, and stdio startup.
+  - Updated architecture docs, `CONTRACTS.md`, `PLAN.md`, `BACKLOG.md`, and
+    `DECISIONS.md` for the new service registration module.
+
+Verification:
+- `npm test -- tests/mcp/server.test.ts -t "registers all service and context tools|dispatches reindex_memory|dispatches unarchive_memory|advertises output schemas|structuredContent while retaining" --reporter=dot`
+  (`1` file passed; `5` tests passed, `130` skipped)
+- `npm test -- tests/app/mcp-http.test.ts -t "serves MCP tools over Streamable HTTP" --reporter=dot`
+  (`1` file passed; `1` test passed, `20` skipped)
+- `npm test -- tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`1` file passed; `48` tests passed)
+- `npm test -- tests/scripts/source-conventions.test.ts --reporter=dot`
+  (`1` file passed; `6` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 11:05 KST - Split MCP-only context tool registration:
   - Added `src/mcp/context-tools.ts` for `list_workspace_roots`,
     `add_memory_interactive`, and `classify_memory_candidate` registration plus

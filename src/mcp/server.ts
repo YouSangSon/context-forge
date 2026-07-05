@@ -1,8 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { pathToFileURL } from "node:url";
-import { SERVICE_TOOL_DESCRIPTORS } from "./tool-schemas.js";
-import { toToolResult } from "./tool-result.js";
 import { createToolRegistry } from "./tool-registry.js";
 import {
   assertCreateToolRegistryOptions,
@@ -13,6 +11,7 @@ import {
 import { registerMcpContextTools } from "./context-tools.js";
 import { registerAkashaPrompts } from "./prompts.js";
 import { registerAkashaResources } from "./resources.js";
+import { registerServiceTools } from "./service-tools.js";
 import type {
   CreateMcpServerOptions,
   ToolRegistry,
@@ -78,23 +77,7 @@ export function createMcpServer(
     version: "0.1.0",
   });
 
-  for (const descriptor of SERVICE_TOOL_DESCRIPTORS) {
-    server.registerTool(
-      descriptor.name,
-      {
-        description: descriptor.description,
-        inputSchema: descriptor.inputSchema,
-        outputSchema: descriptor.outputSchema,
-      },
-      async (input: Record<string, unknown>) => {
-        const handler = registry[descriptor.name] as (
-          toolInput: typeof input,
-        ) => Promise<unknown>;
-        return toToolResult(await handler(input));
-      },
-    );
-  }
-
+  registerServiceTools(server, registry);
   registerMcpContextTools(server, registry, options.authorizeTool);
   registerAkashaResources(server, registry);
   registerAkashaPrompts(server, registry);

@@ -26,6 +26,7 @@ for env-var setup see [configuration.md](configuration.md).
 ┌────────────────▼────────────────────────────────────────────────┐
 │ Tool descriptors + registry                                     │
 │   src/mcp/tool-schemas.ts     → shared zod schemas + routes     │
+│   src/mcp/service-tools.ts    → MCP service tool registration   │
 │   src/mcp/context-tools.ts    → MCP-only context tools          │
 │   src/mcp/resources.ts        → MCP resource templates          │
 │   src/mcp/prompts.ts          → MCP prompt templates            │
@@ -65,6 +66,10 @@ for env-var setup see [configuration.md](configuration.md).
 │                 local deterministic)                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+MCP service tools are registered from `src/mcp/service-tools.ts`, using the
+shared descriptors in `src/mcp/tool-schemas.ts` and dispatching through the
+same registry used by JSON HTTP.
 
 ## Data flow: write
 

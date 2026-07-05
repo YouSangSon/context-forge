@@ -1,5 +1,27 @@
 # DECISIONS
 
+## 2026-07-05 — Split MCP Service Tool Registration
+
+Decision: move MCP service tool registration into `src/mcp/service-tools.ts`.
+
+Why:
+- `src/mcp/server.ts` should assemble the MCP server without owning the service
+  tool registration loop.
+- Service tool registration is public MCP surface because it exposes tool names,
+  input/output schemas, and registry dispatch behavior.
+- Existing MCP server tests already characterize registered service tool names,
+  handler dispatch, output schemas, structured content, and MCP HTTP exposure.
+
+Implementation:
+- `createMcpServer` now calls `registerServiceTools`.
+- `src/mcp/service-tools.ts` owns registration from `SERVICE_TOOL_DESCRIPTORS`
+  and conversion through `toToolResult`.
+- Architecture docs and `CONTRACTS.md` list the new module.
+
+Tradeoff:
+- The module still dispatches to the existing registry. No new application
+  service abstraction was added in this loop.
+
 ## 2026-07-05 — Split MCP Context Tool Registration
 
 Decision: move MCP-only context tool registration and helper parsing into
