@@ -103,6 +103,8 @@ structured success results rather than transport failures.
   service tool and JSON HTTP route from `TOOL_ROUTES`.
 - `tests/app/memory-routes-boundary.test.ts` verifies JSON HTTP routes are
   constructed from `TOOL_ROUTES`.
+- `tests/app/envelope.test.ts` verifies JSON HTTP success/failure envelope
+  shape and field order.
 - `tests/mcp/server.test.ts` verifies MCP tool descriptor registration.
 - `tests/scripts/package-manifest.test.ts` verifies public package scripts and
   package surface.

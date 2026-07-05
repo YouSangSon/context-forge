@@ -25,6 +25,8 @@ experience, documentation, features.
 
 ## Recently Updated
 
+- JSON HTTP response envelopes now have a focused contract test for success and
+  failure field order.
 - `PLAN.md` now records the current architecture state, target structure,
   transition plan, contract gate, risks, rollback, and continuation handoff for
   the clean-architecture/DDD goal.

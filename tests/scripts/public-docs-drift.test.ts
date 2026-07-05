@@ -914,6 +914,7 @@ describe("public documentation drift checks", () => {
     expect(contracts).toContain("src/app/middleware/organization-resolution.ts");
     expect(contracts).toContain("src/app/middleware/envelope.ts");
     expect(contracts).toContain("src/app/server.ts");
+    expect(contracts).toContain("tests/app/envelope.test.ts");
     expect(contracts).toContain("package.json");
     expect(contracts).toContain("001_initial.sql");
     expect(contracts).toContain("015_background_queue_metrics_indexes.sql");

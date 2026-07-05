@@ -2,6 +2,21 @@
 
 ## 2026-07-05
 
+- 10:27 KST - Added JSON HTTP envelope contract guard:
+  - `tests/app/envelope.test.ts` locks success/failure envelope shape,
+    content-type, status pass-through, and field order for `sendOk`/`sendError`.
+  - `CONTRACTS.md` now lists the envelope guard explicitly.
+
+Verification:
+- `npm test -- tests/app/envelope.test.ts --reporter=dot`
+  (`1` file passed; `2` tests passed)
+- `npm test -- tests/scripts/public-docs-drift.test.ts -t "contract baseline" --reporter=dot`
+  (`1` file passed; `1` test passed, `47` skipped)
+- `npm test -- tests/app/envelope.test.ts tests/scripts/public-docs-drift.test.ts --reporter=dot`
+  (`2` files passed; `50` tests passed)
+- `npm run typecheck`
+- `git diff --check`
+
 - 10:20 KST - Expanded the architecture transition handoff:
   - `PLAN.md` now records current structure, completed branch commits, known
     issues, target architecture, staged transition plan, contract gate, risks,
